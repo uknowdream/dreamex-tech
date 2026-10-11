@@ -7,6 +7,12 @@ type Messages = Record<string, string>
 const messages: Record<Language, Messages> = {
   id: {
     home: 'Beranda', blog: 'Blog', topics: 'Topik', articles: 'Artikel', github: 'GitHub',
+    heroEyebrow: 'PLATFORM PENGETAHUAN TEKNOLOGI INDEPENDEN', heroLine1: 'Berpikir lebih dalam.', heroLine2: 'Membangun lebih cerdas.', heroLine3: 'Rilis dengan kualitas.',
+    topicsEyebrow: '01 — JELAJAHI BIDANG', topicsHeading: 'Ide yang layak', topicsHeadingAccent: 'dikembangkan.', featuredHeading: 'PILIHAN EDITOR', articlesEyebrow: '02 — CATATAN PENGETAHUAN', articlesHeading: 'Pemikiran', articlesHeadingAccent: 'terbaru.',
+    trustKnowledge: 'PENGETAHUAN PRAKTIS', trustQuality: 'KUALITAS UTAMA', trustEngineering: 'BERBASIS ENGINEERING', trustAI: 'AI DENGAN KESADARAN',
+    softwareTopic: 'Software Engineering', qaTopic: 'Quality Engineering', aiTopic: 'AI & Teknologi Baru',
+    terminalComment: '// prinsip engineering', terminalLive: 'LANGSUNG', terminalPipeline: 'pipeline', terminalReady: 'siap untuk iterasi',
+    visualChipQuality: 'Direkayasa dengan kualitas', visualChipCuriosity: 'Didorong rasa ingin tahu', visualCaption: '01 / POLA PIKIR', visualIterate: 'SELALU ITERASI', buildInPublic: 'BERKEMBANG SECARA TERBUKA',
     closeMenu: 'Tutup menu', openMenu: 'Buka menu', skip: 'Lewati ke konten utama',
     footerTagline: 'Curiosity into engineering. Ideas into impact.', footerTopics: 'Topik',
     latestArticles: 'Artikel terbaru', openSource: 'Open source', footerCopyright: 'Dibangun untuk terus belajar.',
@@ -39,6 +45,12 @@ const messages: Record<Language, Messages> = {
   },
   en: {
     home: 'Home', blog: 'Blog', topics: 'Topics', articles: 'Articles', github: 'GitHub',
+    heroEyebrow: 'INDEPENDENT TECH KNOWLEDGE PLATFORM', heroLine1: 'Think deeper.', heroLine2: 'Build smarter.', heroLine3: 'Ship with quality.',
+    topicsEyebrow: '01 — EXPLORE THE FIELD', topicsHeading: 'Ideas worth', topicsHeadingAccent: 'building on.', featuredHeading: "EDITOR'S PICK", articlesEyebrow: '02 — THE KNOWLEDGE LOG', articlesHeading: 'Latest', articlesHeadingAccent: 'thinking.',
+    trustKnowledge: 'PRACTICAL KNOWLEDGE', trustQuality: 'QUALITY FIRST', trustEngineering: 'ENGINEERING LED', trustAI: 'AI CONSCIOUS',
+    softwareTopic: 'Software Engineering', qaTopic: 'Quality Engineering', aiTopic: 'AI & Emerging Tech',
+    terminalComment: '// engineering principles', terminalLive: 'LIVE', terminalPipeline: 'pipeline', terminalReady: 'ready for iteration',
+    visualChipQuality: 'Quality engineered', visualChipCuriosity: 'Curiosity driven', visualCaption: '01 / THE MINDSET', visualIterate: 'ALWAYS ITERATE', buildInPublic: 'BUILD IN PUBLIC',
     closeMenu: 'Close menu', openMenu: 'Open menu', skip: 'Skip to main content',
     footerTagline: 'Curiosity into engineering. Ideas into impact.', footerTopics: 'Topics',
     latestArticles: 'Latest articles', openSource: 'Open source', footerCopyright: 'Built to keep learning.',
