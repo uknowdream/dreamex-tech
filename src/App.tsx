@@ -21,7 +21,7 @@ function Header() {
   return <header className="site-header"><div className="container nav-wrap">
     <Link className="brand" to="/" aria-label="DreamEx Tech beranda"><span className="brand-mark"><Braces size={21} /></span><span>DreamEx<span className="brand-muted"> Tech</span></span><span className="brand-beta">ENGINEERING NOTES</span></Link>
     <button className="menu-toggle" aria-label={menuOpen ? t('closeMenu') : t('openMenu')} aria-expanded={menuOpen} onClick={() => setMenuOpen(value => !value)}><span /><span /></button>
-    <nav className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={t('blog')}><NavLink to="/">{t('blog')}</NavLink><a href="/#topics">{t('topics')}</a><a href="/#latest">{t('articles')}</a><a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">GitHub <Github size={15} /></a><div className="language-switch" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div></nav>
+    <nav className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={t('blog')}><NavLink to="/">{t('blog')}</NavLink><a href="/#topics">{t('topics')}</a><a href="/#latest">{t('articles')}</a><NavLink to="/about">{language === 'en' ? 'About' : 'Tentang'}</NavLink><a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">GitHub <Github size={15} /></a><div className="language-switch" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div></nav>
   </div></header>
 }
 
@@ -29,7 +29,7 @@ function Footer() {
   const { t } = useLanguage()
   return <footer className="footer"><div className="container footer-inner">
     <div className="footer-brand"><Link className="brand" to="/"><span className="brand-mark"><Braces size={18} /></span><span>DreamEx<span className="brand-muted"> Tech</span></span></Link><p>{t('footerTagline')}</p></div>
-    <div className="footer-links"><a href="/#topics">{t('footerTopics')}</a><a href="/#latest">{t('latestArticles')}</a><a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">{t('openSource')} <ArrowRight size={13} /></a></div>
+    <div className="footer-links"><a href="/#topics">{t('footerTopics')}</a><a href="/#latest">{t('latestArticles')}</a><Link to="/about">{language === 'en' ? 'About DreamEx' : 'Tentang DreamEx'}</Link><a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">{t('openSource')} <ArrowRight size={13} /></a></div>
     <span className="copyright">© {new Date().getFullYear()} DreamEx Tech · {t('footerCopyright')}</span>
   </div></footer>
 }
@@ -112,6 +112,65 @@ function Home() {
       {filtered.length ? <div className="article-grid">{filtered.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} />)}</div> : <div className="empty-state"><Search size={22} /><strong>{t('noResults')}</strong><span>{t('tryOther')}</span></div>}
     </div></section>
     <section className="newsletter"><div className="container newsletter-inner"><div><span className="section-kicker">{t('buildInPublic')}</span><h2>Better systems.<br /><span>Better questions.</span></h2><p>{t('buildDescription')}</p></div><a className="button button-primary" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">{t('exploreCode')} <ArrowRight size={17} /></a></div></section>
+  </main>
+}
+
+function AboutPage() {
+  const { language } = useLanguage()
+  const en = language === 'en'
+  useEffect(() => {
+    const title = en ? 'About DreamEx Tech — Engineering with Intent' : 'Tentang DreamEx Tech — Rekayasa dengan Tujuan'
+    const description = en
+      ? 'Discover the principles behind DreamEx Tech: practical engineering, quality by design, continuous learning, and responsible technology.'
+      : 'Kenali prinsip DreamEx Tech: engineering praktis, kualitas sejak perancangan, pembelajaran berkelanjutan, dan teknologi yang bertanggung jawab.'
+    document.title = title
+    document.querySelector('meta[name="description"]')?.setAttribute('content', description)
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content', title)
+    document.querySelector('meta[property="og:description"]')?.setAttribute('content', description)
+    document.querySelector('meta[property="og:url"]')?.setAttribute('content', 'https://dreamex.tech/about')
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href', 'https://dreamex.tech/about')
+    return () => {
+      document.title = 'DreamEx Tech — Engineering, AI & QA'
+      document.querySelector('meta[name="description"]')?.setAttribute('content', 'DreamEx Tech — practical notes on software engineering, quality engineering, AI, and modern technology.')
+      document.querySelector('meta[property="og:title"]')?.setAttribute('content', 'DreamEx Tech — Think deeper. Build smarter.')
+      document.querySelector('meta[property="og:description"]')?.setAttribute('content', 'Ruang eksplorasi software engineering, quality engineering, AI, dan teknologi modern.')
+      document.querySelector('meta[property="og:url"]')?.setAttribute('content', 'https://dreamex.tech/')
+      document.querySelector('link[rel="canonical"]')?.setAttribute('href', 'https://dreamex.tech/')
+    }
+  }, [en])
+  const principles = en ? [
+    { number: '01', title: 'Quality by design', text: 'Build quality into the process from the start—not as a final checkpoint. Clear requirements, thoughtful design, and continuous verification reduce avoidable risk.' },
+    { number: '02', title: 'Curiosity with purpose', text: 'Explore emerging ideas, test assumptions, and turn research into practical understanding instead of chasing technology for its own sake.' },
+    { number: '03', title: 'Evidence over guesswork', text: 'Use observable behavior, reproducible tests, and transparent reasoning to make decisions more reliable and easier to improve.' },
+    { number: '04', title: 'Responsible innovation', text: 'Consider security, accessibility, maintainability, privacy, and real-world impact alongside performance and new capabilities.' },
+  ] : [
+    { number: '01', title: 'Kualitas sejak perancangan', text: 'Bangun kualitas sejak awal proses, bukan hanya sebagai pemeriksaan akhir. Requirement yang jelas, desain matang, dan verifikasi berkelanjutan membantu mengurangi risiko.' },
+    { number: '02', title: 'Rasa ingin tahu yang terarah', text: 'Jelajahi gagasan baru, uji asumsi, dan ubah riset menjadi pemahaman praktis—bukan sekadar mengikuti tren teknologi.' },
+    { number: '03', title: 'Bukti, bukan tebakan', text: 'Gunakan perilaku yang terukur, pengujian yang dapat diulang, dan penalaran transparan agar keputusan lebih andal.' },
+    { number: '04', title: 'Inovasi yang bertanggung jawab', text: 'Pertimbangkan keamanan, aksesibilitas, kemudahan pemeliharaan, privasi, dan dampak nyata bersama performa dan kapabilitas baru.' },
+  ]
+  const disciplines = en ? [
+    { icon: <Braces size={20} />, title: 'Software engineering', text: 'Architecture, implementation, maintainability, and developer experience.' },
+    { icon: <ShieldCheck size={20} />, title: 'Quality engineering', text: 'Test strategy, automation, risk-based coverage, and dependable delivery.' },
+    { icon: <Sparkles size={20} />, title: 'AI & emerging technology', text: 'Practical exploration of AI-enabled workflows, tools, and responsible adoption.' },
+  ] : [
+    { icon: <Braces size={20} />, title: 'Software engineering', text: 'Arsitektur, implementasi, maintainability, dan pengalaman developer.' },
+    { icon: <ShieldCheck size={20} />, title: 'Quality engineering', text: 'Strategi pengujian, automation, cakupan berbasis risiko, dan delivery yang andal.' },
+    { icon: <Sparkles size={20} />, title: 'AI & teknologi baru', text: 'Eksplorasi praktis workflow berbasis AI, tools, dan adopsi yang bertanggung jawab.' },
+  ]
+  return <main id="main-content" className="about-page">
+    <section className="about-hero"><div className="about-hero-grid" /><div className="container about-hero-inner">
+      <span className="eyebrow"><span className="eyebrow-dot" /> {en ? 'THE THINKING BEHIND THE BUILD' : 'PRINSIP DI BALIK SETIAP KARYA'}</span>
+      <h1>{en ? <>Engineering with <span>intent.</span><br />Technology with <span>impact.</span></> : <>Rekayasa dengan <span>tujuan.</span><br />Teknologi dengan <span>dampak.</span></>}</h1>
+      <p>{en ? 'DreamEx Tech is an independent knowledge space for exploring software engineering, quality engineering, AI, and modern technology—with a focus on ideas you can understand, test, and put to work.' : 'DreamEx Tech adalah ruang pengetahuan independen untuk mengeksplorasi software engineering, quality engineering, AI, dan teknologi modern—dengan fokus pada gagasan yang bisa dipahami, diuji, dan diterapkan.'}</p>
+      <div className="about-hero-actions"><Link className="button button-primary" to="/">{en ? 'Explore the knowledge base' : 'Jelajahi basis pengetahuan'} <ArrowRight size={17} /></Link><a className="button button-ghost" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer"><Github size={17} /> {en ? 'Explore the source' : 'Lihat source code'}</a></div>
+      <div className="about-signal"><span><i /> {en ? 'PRACTICAL BY DEFAULT' : 'PRAKTIS SEJAK AWAL'}</span><span>{en ? 'LEARN → TEST → IMPROVE' : 'PELAJARI → UJI → TINGKATKAN'}</span></div>
+    </div></section>
+    <section className="about-intro-section"><div className="container about-intro-grid"><div><span className="section-kicker">{en ? '01 / OUR PURPOSE' : '01 / TUJUAN KAMI'}</span><h2>{en ? <>Turn curiosity into <span>capability.</span></> : <>Ubah rasa ingin tahu menjadi <span>kapabilitas.</span></>}</h2></div><div className="about-prose"><p>{en ? 'Technology moves quickly. Understanding what works, why it works, and where it can fail takes deliberate practice. DreamEx Tech documents that process through clear explanations, engineering notes, and quality-minded perspectives.' : 'Teknologi bergerak cepat. Memahami apa yang bekerja, mengapa itu bekerja, dan kapan bisa gagal membutuhkan latihan yang terarah. DreamEx Tech mendokumentasikan proses tersebut melalui penjelasan yang jelas, catatan engineering, dan perspektif yang berorientasi pada kualitas.'}</p><p>{en ? 'The goal is not to promise perfect systems. It is to make better decisions repeatable: ask sharper questions, validate assumptions, share what was learned, and keep improving.' : 'Tujuannya bukan menjanjikan sistem yang sempurna. Tujuannya adalah membuat keputusan yang lebih baik dapat diulang: ajukan pertanyaan yang tepat, validasi asumsi, bagikan pembelajaran, dan terus tingkatkan hasil.'}</p></div></div></section>
+    <section className="about-disciplines"><div className="container"><div className="about-section-heading"><div><span className="section-kicker">{en ? '02 / AREAS OF EXPLORATION' : '02 / AREA EKSPLORASI'}</span><h2>{en ? 'Three disciplines. One mindset.' : 'Tiga disiplin. Satu pola pikir.'}</h2></div><p>{en ? 'Connected practices for building technology that is useful, testable, and maintainable.' : 'Praktik yang saling terhubung untuk membangun teknologi yang berguna, teruji, dan mudah dipelihara.'}</p></div><div className="about-discipline-grid">{disciplines.map((item, index) => <article className="about-discipline-card" key={item.title}><span className="about-discipline-number">0{index + 1}</span><span className="about-discipline-icon">{item.icon}</span><h3>{item.title}</h3><p>{item.text}</p><span className="about-card-line" /></article>)}</div></div></section>
+    <section className="about-principles"><div className="container"><div className="about-section-heading"><div><span className="section-kicker">{en ? '03 / ENGINEERING PRINCIPLES' : '03 / PRINSIP ENGINEERING'}</span><h2>{en ? 'The standards behind the work.' : 'Standar di balik setiap proses.'}</h2></div><p>{en ? 'A practical framework for how we learn, evaluate, and communicate technology.' : 'Kerangka praktis untuk mempelajari, mengevaluasi, dan membahas teknologi.'}</p></div><div className="about-principle-list">{principles.map(item => <article className="about-principle" key={item.number}><span className="about-principle-number">{item.number}</span><div><h3>{item.title}</h3><p>{item.text}</p></div><ArrowDownRight size={19} /></article>)}</div></div></section>
+    <section className="about-workflow"><div className="container about-workflow-inner"><div><span className="section-kicker">{en ? '04 / THE ITERATION LOOP' : '04 / SIKLUS ITERASI'}</span><h2>{en ? <>Progress is a <span>practice.</span></> : <>Kemajuan adalah sebuah <span>praktik.</span></>}</h2><p>{en ? 'Every useful improvement starts with a question and gets stronger through evidence.' : 'Setiap peningkatan yang bermanfaat dimulai dari pertanyaan dan menjadi lebih kuat melalui bukti.'}</p></div><div className="about-loop">{(en ? [['01','Explore','Understand the problem'],['02','Build','Create a focused solution'],['03','Verify','Test the assumptions'],['04','Improve','Learn and iterate']] : [['01','Eksplorasi','Pahami masalah'],['02','Bangun','Buat solusi terarah'],['03','Verifikasi','Uji asumsi'],['04','Tingkatkan','Pelajari dan ulangi']]).map(([number,title,detail]) => <div className="about-loop-step" key={number}><span>{number}</span><div><strong>{title}</strong><small>{detail}</small></div><Check size={15} /></div>)}</div></div></section>
+    <section className="about-cta"><div className="container about-cta-inner"><div><span className="section-kicker">{en ? 'KEEP EXPLORING' : 'LANJUTKAN EKSPLORASI'}</span><h2>{en ? <>Build thoughtfully.<br /><span>Improve continuously.</span></> : <>Bangun dengan matang.<br /><span>Tingkatkan berkelanjutan.</span></>}</h2><p>{en ? 'Explore the articles, inspect the source, and use what is useful in your own work.' : 'Jelajahi artikel, tinjau source code, dan terapkan hal yang bermanfaat dalam pekerjaan Anda.'}</p></div><div className="about-cta-actions"><Link className="button button-primary" to="/#latest">{en ? 'Read engineering notes' : 'Baca catatan engineering'} <ArrowRight size={17} /></Link><a className="button button-ghost" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer"><Github size={17} /> GitHub</a></div></div></section>
   </main>
 }
 
@@ -208,7 +267,7 @@ function CommandPalette() {
   const inputRef = useRef<HTMLInputElement>(null)
   const isEnglish = language === 'en'
   const actions = [
-    { id: 'home', label: isEnglish ? 'Go to home' : 'Ke beranda', detail: isEnglish ? 'Main page' : 'Halaman utama', icon: HomeIcon, run: () => { navigate('/'); window.scrollTo({ top: 0, behavior: 'smooth' }) } },
+    { id: 'home', label: isEnglish ? 'Go to home' : 'Ke beranda', detail: isEnglish ? 'Main page' : 'Halaman utama', icon: HomeIcon, run: () => { navigate('/'); window.scrollTo({ top: 0, behavior: 'smooth' }) } },\n    { id: 'about', label: isEnglish ? 'About DreamEx Tech' : 'Tentang DreamEx Tech', detail: isEnglish ? 'Mission, disciplines, and principles' : 'Misi, disiplin, dan prinsip', icon: Braces, run: () => navigate('/about') },
     { id: 'topics', label: isEnglish ? 'Explore topics' : 'Jelajahi topik', detail: isEnglish ? 'Software · QA · AI' : 'Software · QA · AI', icon: Command, run: () => { if (location.pathname !== '/') navigate('/'); window.setTimeout(() => document.getElementById('topics')?.scrollIntoView({ behavior: 'smooth' }), 60) } },
     { id: 'articles', label: isEnglish ? 'Browse articles' : 'Jelajahi artikel', detail: isEnglish ? 'Search the knowledge base' : 'Cari di basis pengetahuan', icon: BookOpen, run: () => { if (location.pathname !== '/') navigate('/'); window.setTimeout(() => { document.getElementById('latest')?.scrollIntoView({ behavior: 'smooth' }); document.querySelector<HTMLInputElement>('.search-box input')?.focus() }, 60) } },
   ]
@@ -359,5 +418,5 @@ function BackToTop() {
 
 export default function App() {
   const { t } = useLanguage()
-  return <><a className="skip-link" href="#main-content">{t('skip')}</a><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
+  return <><a className="skip-link" href="#main-content">{t('skip')}</a><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/about" element={<AboutPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
 }
