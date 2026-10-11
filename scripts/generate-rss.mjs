@@ -6,7 +6,7 @@ const source = readFileSync(join(root, 'src/articles.ts'), 'utf8')
 const articleObjects = [...source.matchAll(/\{\s*slug:\s*'([^']+)'([\s\S]*?)\n\s*\}/g)]
 
 const readField = (body, field) => {
-  const match = body.match(new RegExp(`(?:^|[,\\n]\\s*)${field}:\\s*'((?:\\\\.|[^'])*)'`))
+  const match = body.match(new RegExp(`(?:^|[,\n]\\s*)${field}:\\s*'((?:\\\\.|[^'])*)'`))
   return match?.[1]?.replaceAll("\\\\'", "'").replaceAll('\\\\\\\\', '\\\\')
 }
 
@@ -28,7 +28,7 @@ const seenSlugs = new Set()
 for (const article of articles) {
   if (!article.title) errors.push(`Article "${article.slug}" is missing a title`)
   if (!article.excerpt) errors.push(`Article "${article.slug}" is missing an excerpt`)
-  if (!article.date || !/^\\d{4}-\\d{2}-\\d{2}$/.test(article.date) || Number.isNaN(Date.parse(`${article.date}T00:00:00Z`))) {
+  if (!article.date || !/^\d{4}-\d{2}-\d{2}$/.test(article.date) || Number.isNaN(Date.parse(`${article.date}T00:00:00Z`))) {
     errors.push(`Article "${article.slug}" has an invalid publication date`)
   }
   if (seenSlugs.has(article.slug)) errors.push(`Duplicate article slug: ${article.slug}`)
@@ -60,8 +60,8 @@ const items = articles.map(article => {
     `      <description>${escapeXml(article.excerpt)}</description>`,
     `      <pubDate>${new Date(`${article.date}T00:00:00Z`).toUTCString()}</pubDate>`,
     '    </item>',
-  ].join('\\n')
-}).join('\\n')
+  ].join('\n')
+}).join('\n')
 
 const xml = [
   '<?xml version="1.0" encoding="UTF-8"?>',
@@ -77,7 +77,7 @@ const xml = [
   '  </channel>',
   '</rss>',
   '',
-].join('\\n')
+].join('\n')
 
 writeFileSync(join(root, 'public/rss.xml'), xml)
 console.log(`RSS generation passed: generated ${articles.length} validated article entries in newest-first order.`)
