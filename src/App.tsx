@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import { ArrowDownRight, ArrowRight, Braces, Check, ChevronUp, Github, Search, ShieldCheck, Sparkles, Terminal, Zap } from 'lucide-react'
 import { articles } from './articles'
@@ -36,6 +36,18 @@ function ArticleCard({ article, index = 0 }: { article: typeof articles[number];
 function Home() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('Semua')
+  const searchInput = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      if (event.key === '/' && !(event.target instanceof HTMLInputElement) && !(event.target instanceof HTMLTextAreaElement)) {
+        event.preventDefault()
+        searchInput.current?.focus()
+      }
+      if (event.key === 'Escape') searchInput.current?.blur()
+    }
+    window.addEventListener('keydown', handleShortcut)
+    return () => window.removeEventListener('keydown', handleShortcut)
+  }, [])
   const filtered = useMemo(() => articles.filter(article => {
     const matchesCategory = category === 'Semua' || article.category === category
     const haystack = `${article.title} ${article.excerpt} ${article.category} ${article.tags.join(' ')} ${article.body.join(' ')}`.toLowerCase()
@@ -66,7 +78,7 @@ function Home() {
     </div></div></section>
     <section className="featured-section"><div className="container featured-wrap"><div className="featured-label"><span className="section-kicker">EDITOR'S PICK</span><span className="featured-line" /></div><div className="featured-card"><div className="featured-art"><div className="art-grid" /><div className="art-symbol"><Braces size={72} strokeWidth={1.1} /></div><span className="art-index">DX / 001</span><span className="art-caption">ENGINEERING<br />FOR WHAT'S NEXT</span></div><div className="featured-copy"><span className="category-pill">{featured.category}</span><p className="featured-overline">FEATURED INSIGHT · {featured.readTime.toUpperCase()}</p><h2>{featured.title}</h2><p>{featured.excerpt}</p><Link className="read-link" to={`/blog/${featured.slug}`}>Baca insight pilihan <ArrowRight size={16} /></Link></div></div></div></section>
     <section className="articles-section" id="latest"><div className="container">
-      <div className="section-heading"><div><span className="section-kicker">02 — THE KNOWLEDGE LOG</span><h2>Latest <span>thinking.</span></h2><p>Catatan, panduan, dan pelajaran engineering yang bisa diterapkan.</p></div><label className="search-box"><Search size={18} /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Cari topik, tools, konsep..." aria-label="Cari artikel" /><kbd>/</kbd></label></div>
+      <div className="section-heading"><div><span className="section-kicker">02 — THE KNOWLEDGE LOG</span><h2>Latest <span>thinking.</span></h2><p>Catatan, panduan, dan pelajaran engineering yang bisa diterapkan.</p></div><label className="search-box"><Search size={18} /><input ref={searchInput} value={query} onChange={event => setQuery(event.target.value)} placeholder="Cari topik, tools, konsep..." aria-label="Cari artikel" /><kbd>/</kbd></label></div>
       <div className="filter-row" aria-label="Filter kategori">{categories.map(item => <button key={item} className={category === item ? 'filter active' : 'filter'} aria-pressed={category === item} onClick={() => setCategory(item)}>{item}</button>)}</div>
       <div className="results-meta"><span>{filtered.length} artikel ditemukan</span>{query && <button onClick={() => setQuery('')}>Hapus pencarian <span>×</span></button>}</div>
       {filtered.length ? <div className="article-grid">{filtered.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} />)}</div> : <div className="empty-state"><Search size={22} /><strong>Belum ada hasil yang cocok.</strong><span>Coba kata kunci atau kategori lain.</span></div>}
