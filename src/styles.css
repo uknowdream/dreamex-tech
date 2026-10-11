@@ -721,3 +721,28 @@ body {
   .terminal-live { font-size: 8px; letter-spacing: .5px; }
   .floating-chip { max-width: 60%; }
 }
+
+
+/* Site-wide reading position indicator. */
+.site-scroll-progress {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  pointer-events: none;
+  background: #ffffff04;
+}
+.site-scroll-progress > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  background: linear-gradient(90deg, #c5ff70 0%, #8ce4c3 48%, #91cfff 100%);
+  box-shadow: 0 0 10px #91cfff55;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-scroll-progress > span { box-shadow: none; }
+}
