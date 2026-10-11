@@ -51,14 +51,14 @@ if (errors.length === 0) {
   const itemBlocks = [...rss.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(match => match[1])
   const rssGuids = [...rss.matchAll(/<guid(?:\s+isPermaLink="true")?>([^<]+)<\/guid>/g)].map(match => match[1])
   const rssDates = [...rss.matchAll(/<pubDate>([^<]+)<\/pubDate>/g)].map(match => Date.parse(match[1]))
-  if (itemBlocks.length !== articleSlugs.length) errors.push(\`RSS item count mismatch: expected \${articleSlugs.length}, found \${itemBlocks.length}\`)
+  if (itemBlocks.length !== articleSlugs.length) errors.push(`RSS item count mismatch: expected ${articleSlugs.length}, found ${itemBlocks.length}`)
   if (new Set(rssGuids).size !== rssGuids.length) errors.push('RSS contains duplicate GUIDs')
   if (rssDates.some(Number.isNaN)) errors.push('RSS contains an invalid pubDate')
   for (let index = 1; index < rssDates.length; index++) {
     if (rssDates[index] > rssDates[index - 1]) errors.push('RSS items are not sorted newest-first')
   }
-  for (const slug of articleSlugs) if (rssSlugs.filter(value => value === slug).length !== 2) errors.push(\`Article should have exactly one link and one GUID in RSS: \${slug}\`)
-  for (const slug of rssSlugs) if (!articleSlugs.includes(slug)) errors.push(\`RSS references unknown article: \${slug}\`)
+  for (const slug of articleSlugs) if (rssSlugs.filter(value => value === slug).length !== 2) errors.push(`Article should have exactly one link and one GUID in RSS: ${slug}`)
+  for (const slug of rssSlugs) if (!articleSlugs.includes(slug)) errors.push(`RSS references unknown article: ${slug}`)
   if (!/<language>id-ID<\/language>/.test(rss)) errors.push('RSS channel language is missing')
   if (!/<atom:link href="https:\/\/dreamex\.tech\/rss\.xml" rel="self" type="application\/rss\+xml"\s*\/>/.test(rss)) errors.push('RSS self link is missing or invalid')
 
