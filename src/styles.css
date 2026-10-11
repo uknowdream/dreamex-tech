@@ -360,3 +360,50 @@ html { scroll-behavior: smooth; }
   .terminal { animation-duration: 7.5s; }
   .topic-card:hover, .article-card:hover { transform: translateY(-3px); }
 }
+
+
+/* Responsive motion system: scroll reveals, hover feedback and touch-safe states. */
+.motion-reveal { will-change: opacity, transform; }
+.article-card.motion-reveal { animation: none; }
+.trust-inner span { transition: color .25s ease, transform .25s var(--motion-ease); }
+.trust-inner span:hover { color: #c5ff70; transform: translateY(-2px); }
+.topic-card:active, .article-card:active, .button:active, .filter:active {
+  transform: translateY(0) scale(.985);
+}
+.language-option { transition: background .2s ease, color .2s ease, transform .2s ease; }
+.language-option:hover { transform: translateY(-1px); }
+.search-box { transition: border-color .25s ease, box-shadow .25s ease, background .25s ease; }
+.search-box:focus-within { background: #101a2b; }
+.article-card h3 a { transition: color .2s ease; }
+.article-card .category-pill { transition: border-color .25s ease, color .25s ease, background .25s ease; }
+.article-card:hover .category-pill { border-color: #657a5b; color: #d9f4b8; background: #c5ff7008; }
+@media (hover: none), (pointer: coarse) {
+  .topic-card:hover, .article-card:hover, .featured-card:hover, .terminal:hover,
+  .button-primary:hover, .button-ghost:hover { transform: none; }
+  .button::after { display: none; }
+  .topic-card:active, .article-card:active, .button:active, .filter:active { transform: scale(.985); }
+}
+@media (max-width: 940px) {
+  .hero:after { width: 72vw; right: -28%; }
+  .terminal-content { font-size: 11px; }
+  .floating-chip { font-size: 10px; }
+}
+@media (max-width: 640px) {
+  .hero:after { width: 120vw; right: -45%; }
+  .hero-visual { isolation: isolate; }
+  .terminal { transform: none; }
+  .terminal:hover { transform: none; }
+  .chip-top { right: 0; }
+  .chip-bottom { left: 0; }
+  .motion-reveal { transition-duration: 450ms; }
+  .trust-inner span:hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .motion-reveal, .hero:after, .hero-gridlines, .terminal, .terminal-content p,
+  .orbit-one, .orbit-two, .floating-chip, .art-grid, .art-symbol, .site-header,
+  .hero-visual, .hero-copy > * {
+    animation: none !important;
+    transition: none !important;
+  }
+  .motion-reveal { opacity: 1 !important; transform: none !important; }
+}
