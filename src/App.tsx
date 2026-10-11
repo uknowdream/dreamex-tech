@@ -26,7 +26,7 @@ function Header() {
 }
 
 function Footer() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   return <footer className="footer"><div className="container footer-inner">
     <div className="footer-brand"><Link className="brand" to="/"><span className="brand-mark"><Braces size={18} /></span><span>DreamEx<span className="brand-muted"> Tech</span></span></Link><p>{t('footerTagline')}</p></div>
     <div className="footer-links"><a href="/#topics">{t('footerTopics')}</a><a href="/#latest">{t('latestArticles')}</a><Link to="/about">{language === 'en' ? 'About DreamEx' : 'Tentang DreamEx'}</Link><a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">{t('openSource')} <ArrowRight size={13} /></a></div>
