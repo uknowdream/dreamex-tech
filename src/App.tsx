@@ -6,6 +6,12 @@ import { articleTranslations } from './articleTranslations'
 import { useLanguage } from './i18n'
 
 const categories = ['Semua', 'Software Engineering', 'QA Automation', 'AI & Technology']
+const categoryLabel = (category: string, language: 'id' | 'en') => {
+  if (category === 'Semua') return language === 'en' ? 'All' : 'Semua'
+  if (category === 'QA Automation') return language === 'en' ? 'QA Automation' : 'QA Automation'
+  if (category === 'AI & Technology') return language === 'en' ? 'AI & Technology' : 'AI & Technology'
+  return category
+}
 
 function Header() {
   const { language, setLanguage, t } = useLanguage()
@@ -32,7 +38,7 @@ function ArticleCard({ article, index = 0 }: { article: typeof articles[number];
   const { t, language } = useLanguage()
   const translated = language === 'en' ? articleTranslations[article.slug] : undefined
   return <article className="article-card" style={{ animationDelay: `${index * 70}ms` }}>
-    <div className="card-top"><span className="category-pill">{article.category}</span><span className="read-time">{language === 'en' ? article.readTime.replace('menit', 'min') : article.readTime}</span></div>
+    <div className="card-top"><span className="category-pill">{categoryLabel(article.category, language)}</span><span className="read-time">{language === 'en' ? article.readTime.replace('menit', 'min') : article.readTime}</span></div>
     <h3><Link to={`/blog/${article.slug}`}>{translated?.title ?? article.title}</Link></h3><p>{translated?.excerpt ?? article.excerpt}</p>
     <div className="tag-row">{article.tags.slice(0, 3).map(tag => <span key={tag}>#{tag.replaceAll(' ', '')}</span>)}</div>
     <Link className="read-link" to={`/blog/${article.slug}`}>{t('readArticle')} <ArrowRight size={16} /></Link>
@@ -85,10 +91,10 @@ function Home() {
       <a className="topic-card" href="#latest" onClick={() => setCategory('QA Automation')}><span className="topic-number">02</span><span className="topic-icon green"><ShieldCheck /></span><h3>Quality Engineering</h3><p>{t('qaDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
       <a className="topic-card" href="#latest" onClick={() => setCategory('AI & Technology')}><span className="topic-number">03</span><span className="topic-icon blue"><Sparkles /></span><h3>AI & Emerging Tech</h3><p>{t('aiDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
     </div></div></section>
-    <section className="featured-section"><div className="container featured-wrap"><div className="featured-label"><span className="section-kicker">EDITOR'S PICK</span><span className="featured-line" /></div><div className="featured-card"><div className="featured-art"><div className="art-grid" /><div className="art-symbol"><Braces size={72} strokeWidth={1.1} /></div><span className="art-index">DX / 001</span><span className="art-caption">ENGINEERING<br />FOR WHAT'S NEXT</span></div><div className="featured-copy"><span className="category-pill">{featured.category}</span><p className="featured-overline">{t('featuredInsight')} · {featured.readTime.toUpperCase()}</p><h2>{featuredTranslation?.title ?? featured.title}</h2><p>{featuredTranslation?.excerpt ?? featured.excerpt}</p><Link className="read-link" to={`/blog/${featured.slug}`}>{t('readFeatured')} <ArrowRight size={16} /></Link></div></div></div></section>
+    <section className="featured-section"><div className="container featured-wrap"><div className="featured-label"><span className="section-kicker">EDITOR'S PICK</span><span className="featured-line" /></div><div className="featured-card"><div className="featured-art"><div className="art-grid" /><div className="art-symbol"><Braces size={72} strokeWidth={1.1} /></div><span className="art-index">DX / 001</span><span className="art-caption">ENGINEERING<br />FOR WHAT'S NEXT</span></div><div className="featured-copy"><span className="category-pill">{categoryLabel(featured.category, language)}</span><p className="featured-overline">{t('featuredInsight')} · {featured.readTime.toUpperCase()}</p><h2>{featuredTranslation?.title ?? featured.title}</h2><p>{featuredTranslation?.excerpt ?? featured.excerpt}</p><Link className="read-link" to={`/blog/${featured.slug}`}>{t('readFeatured')} <ArrowRight size={16} /></Link></div></div></div></section>
     <section className="articles-section" id="latest"><div className="container">
       <div className="section-heading"><div><span className="section-kicker">02 — THE KNOWLEDGE LOG</span><h2>Latest <span>thinking.</span></h2><p>{t('latestDescription')}</p></div><label className="search-box"><Search size={18} /><input ref={searchInput} value={query} onChange={event => setQuery(event.target.value)} placeholder={t('searchPlaceholder')} aria-label={t('searchLabel')} /><kbd>/</kbd></label></div>
-      <div className="filter-row" aria-label={t('topics')}>{categories.map(item => <button key={item} className={category === item ? 'filter active' : 'filter'} aria-pressed={category === item} onClick={() => setCategory(item)}>{item === 'Semua' ? t('all') : item}</button>)}</div>
+      <div className="filter-row" aria-label={t('topics')}>{categories.map(item => <button key={item} className={category === item ? 'filter active' : 'filter'} aria-pressed={category === item} onClick={() => setCategory(item)}>{categoryLabel(item, language)}</button>)}</div>
       <div className="results-meta"><span>{filtered.length} {t('found')}</span>{query && <button onClick={() => setQuery('')}>{t('clearSearch')} <span>×</span></button>}</div>
       {filtered.length ? <div className="article-grid">{filtered.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} />)}</div> : <div className="empty-state"><Search size={22} /><strong>{t('noResults')}</strong><span>{t('tryOther')}</span></div>}
     </div></section>
@@ -169,7 +175,7 @@ function ArticlePage() {
   if (!article) return <main id="main-content" className="container not-found"><h1>{t('articleNotFound')}</h1><p>{t('articleMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>
   return <main id="main-content" className="article-page"><div className="reading-progress" style={{ width: `${progress}%` }} /><div className="container article-container">
     <Link className="back-link" to="/">{t('backAll')}</Link>
-    <div className="article-header"><span className="category-pill">{article.category}</span><h1>{translated?.title ?? article.title}</h1><p>{translated?.excerpt ?? article.excerpt}</p><div className="article-meta"><span>{new Date(article.date + 'T00:00:00').toLocaleDateString(language === 'en' ? 'en-US' : 'id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span><span>•</span><span>{article.readTime}</span><span>•</span><span>{t('editorial')}</span></div></div>
+    <div className="article-header"><span className="category-pill">{categoryLabel(article.category, language)}</span><h1>{translated?.title ?? article.title}</h1><p>{translated?.excerpt ?? article.excerpt}</p><div className="article-meta"><span>{new Date(article.date + 'T00:00:00').toLocaleDateString(language === 'en' ? 'en-US' : 'id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span><span>•</span><span>{article.readTime}</span><span>•</span><span>{t('editorial')}</span></div></div>
     <div className="article-body">{(translated?.body ?? article.body).map((paragraph, index) => <p key={index}>{paragraph}</p>)}<div className="article-note"><strong><ShieldCheck size={16} /> {t('engineeringNote')}</strong><p>{t('noteDescription')}</p></div></div>
     <div className="article-end"><span>{t('topicsLabel')}</span><div className="tag-row">{article.tags.map(tag => <span key={tag}>#{tag.replaceAll(' ', '')}</span>)}</div><button className="copy-link-button" onClick={copyArticleLink}><Copy size={14} /> {linkCopied ? t('copied') : t('copyLink')}</button></div>
     {copyError && <p className="copy-error" role="status">{t('copyError')}</p>}
