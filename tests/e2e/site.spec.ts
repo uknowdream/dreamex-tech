@@ -194,12 +194,13 @@ test('reading list backup can be imported, validated, and merged', async ({ page
     buffer: Buffer.from(JSON.stringify({
       format: 'dreamex-reading-list',
       version: 1,
-      slugs: ['qa-automation-foundations', 'unknown-article', 'qa-automation-foundations'],
+      slugs: ['qa-automation-foundations', 'typescript-for-maintainable-projects', 'unknown-article', 'qa-automation-foundations'],
     })),
   })
   await expect(page.getByRole('status')).toContainText(/imported 2 valid article|2 artikel valid berhasil diimpor/i)
   await expect(page.locator('.reading-list-count')).toContainText(/2/)
   await expect(page.getByRole('heading', { name: /qa automation foundations/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /typescript untuk proyek yang mudah dipelihara/i })).toBeVisible()
   await page.getByLabel(/import reading list json backup/i).setInputFiles({
     name: 'invalid.json',
     mimeType: 'application/json',

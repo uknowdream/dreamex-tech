@@ -293,7 +293,8 @@ function ReadingListPage() {
     setExportStatus(en ? 'Reading list backup downloaded.' : 'Cadangan daftar bacaan berhasil diunduh.')
   }
   const importBackup = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.currentTarget.files?.[0]
+    const input = event.currentTarget
+    const file = input.files?.[0]
     if (!file) return
     setExportStatus('')
     setImporting(true)
@@ -303,7 +304,7 @@ function ReadingListPage() {
       if (!backup || typeof backup !== 'object') throw new Error('invalid-format')
       const record = backup as { format?: unknown; version?: unknown; slugs?: unknown }
       if (record.format !== 'dreamex-reading-list' || record.version !== 1 || !Array.isArray(record.slugs)) throw new Error('invalid-format')
-      const validSlugs = record.slugs.filter((slug): slug is string => typeof slug === 'string' && articles.some(article => article.slug === slug))
+      const validSlugs = [...new Set(record.slugs.filter((slug): slug is string => typeof slug === 'string' && articles.some(article => article.slug === slug)))]
       if (validSlugs.length === 0) throw new Error('no-valid-articles')
       const merged = [...new Set([...readSavedSlugs(), ...validSlugs])]
       window.localStorage.setItem(READING_LIST_KEY, JSON.stringify(merged))
@@ -318,7 +319,7 @@ function ReadingListPage() {
           : (en ? 'Invalid backup file. Use a DreamEx Tech reading-list JSON backup.' : 'File cadangan tidak valid. Gunakan cadangan JSON daftar bacaan DreamEx Tech.'))
     } finally {
       setImporting(false)
-      event.currentTarget.value = ''
+      input.value = ''
     }
   }
   const copyReadingList = async () => {
