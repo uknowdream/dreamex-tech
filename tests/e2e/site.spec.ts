@@ -49,7 +49,7 @@ test('articles can be saved to and removed from the personal reading list', asyn
   await expect(firstArticle.getByRole('button', { name: /remove saved article|hapus artikel tersimpan/i })).toHaveAttribute('aria-pressed', 'true')
   await openMobileNavigation(page, isMobile)
   await page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
-  await expect(page).toHaveURL(/\\/reading-list$/)
+  await expect(page).toHaveURL(/\/reading-list$/)
   await expect(page.getByRole('heading', { name: articleTitle })).toBeVisible()
   await page.getByRole('button', { name: /remove saved article|hapus artikel tersimpan/i }).click()
   await expect(page.getByText(/your reading list is ready|daftar bacaan anda siap/i)).toBeVisible()
