@@ -32,7 +32,7 @@ function ArticleCard({ article, index = 0 }: { article: typeof articles[number];
   const { t, language } = useLanguage()
   const translated = language === 'en' ? articleTranslations[article.slug] : undefined
   return <article className="article-card" style={{ animationDelay: `${index * 70}ms` }}>
-    <div className="card-top"><span className="category-pill">{article.category}</span><span className="read-time">{article.readTime}</span></div>
+    <div className="card-top"><span className="category-pill">{article.category}</span><span className="read-time">{language === 'en' ? article.readTime.replace('menit', 'min') : article.readTime}</span></div>
     <h3><Link to={`/blog/${article.slug}`}>{translated?.title ?? article.title}</Link></h3><p>{translated?.excerpt ?? article.excerpt}</p>
     <div className="tag-row">{article.tags.slice(0, 3).map(tag => <span key={tag}>#{tag.replaceAll(' ', '')}</span>)}</div>
     <Link className="read-link" to={`/blog/${article.slug}`}>{t('readArticle')} <ArrowRight size={16} /></Link>
@@ -126,12 +126,12 @@ function ArticlePage() {
     }
     if (article) {
       const canonicalUrl = `https://dreamex.tech/blog/${article.slug}`
-      setMeta('meta[name="description"]', 'content', article.excerpt)
-      setMeta('meta[property="og:title"]', 'content', `${article.title} — DreamEx Tech`)
-      setMeta('meta[property="og:description"]', 'content', article.excerpt)
+      setMeta('meta[name="description"]', 'content', translated?.excerpt ?? article.excerpt)
+      setMeta('meta[property="og:title"]', 'content', `${translated?.title ?? article.title} — DreamEx Tech`)
+      setMeta('meta[property="og:description"]', 'content', translated?.excerpt ?? article.excerpt)
       setMeta('meta[property="og:url"]', 'content', canonicalUrl)
-      setMeta('meta[name="twitter:title"]', 'content', `${article.title} — DreamEx Tech`)
-      setMeta('meta[name="twitter:description"]', 'content', article.excerpt)
+      setMeta('meta[name="twitter:title"]', 'content', `${translated?.title ?? article.title} — DreamEx Tech`)
+      setMeta('meta[name="twitter:description"]', 'content', translated?.excerpt ?? article.excerpt)
       const canonical = document.querySelector('link[rel="canonical"]')
       canonical?.setAttribute('href', canonicalUrl)
       const structuredData = document.createElement('script')
@@ -164,7 +164,7 @@ function ArticlePage() {
       setMeta('meta[name="twitter:description"]', 'content', 'Ruang eksplorasi software engineering, quality engineering, AI, dan teknologi modern.')
       setMeta('meta[name="description"]', 'content', 'DreamEx Tech — practical notes on software engineering, quality engineering, AI, and modern technology.')
     }
-  }, [article])
+  }, [article, language])
   if (!article) return <main id="main-content" className="container not-found"><h1>{t('articleNotFound')}</h1><p>{t('articleMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>
   return <main id="main-content" className="article-page"><div className="reading-progress" style={{ width: `${progress}%` }} /><div className="container article-container">
     <Link className="back-link" to="/">{t('backAll')}</Link>
