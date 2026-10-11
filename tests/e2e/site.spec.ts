@@ -293,6 +293,25 @@ test('unknown routes render a not-found page', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /Page not found/i })).toBeVisible()
 })
 
+test('desktop navigation adapts to constrained widths without clipping', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'This check targets desktop and tablet navigation')
+  await page.setViewportSize({ width: 1024, height: 900 })
+  const toggle = page.getByRole('button', { name: /open menu|buka menu/i })
+  await expect(toggle).toBeVisible()
+  await expect(page.locator('.nav-links')).toBeHidden()
+  await toggle.click()
+  await expect(page.locator('.nav-links')).toBeVisible()
+  await expect(page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i })).toBeVisible()
+  await expect(page.getByRole('navigation').getByRole('link', { name: /engineering lab|lab engineering/i })).toBeVisible()
+  const dimensions = await page.evaluate(() => ({
+    documentWidth: document.documentElement.scrollWidth,
+    viewportWidth: document.documentElement.clientWidth,
+    nav: document.querySelector('.nav-links')?.getBoundingClientRect(),
+  }))
+  expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth)
+  expect(dimensions.nav?.right).toBeLessThanOrEqual(dimensions.viewportWidth)
+})
+
 test('mobile viewport has no horizontal document overflow', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'This check targets the mobile browser project')
   await page.setViewportSize({ width: 390, height: 844 })
