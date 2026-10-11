@@ -16,6 +16,23 @@ const categoryLabel = (category: string, language: 'id' | 'en') => {
 const READING_LIST_KEY = 'dreamex-reading-list-v1'
 const READING_LIST_EVENT = 'dreamex-reading-list-updated'
 
+const READING_PROGRESS_KEY = 'dreamex-reading-progress-v1'
+const READING_PROGRESS_EVENT = 'dreamex-reading-progress-updated'
+
+type ReadingProgressRecord = { slug: string; progress: number }
+
+function readReadingProgress(): ReadingProgressRecord | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const value: unknown = JSON.parse(window.localStorage.getItem(READING_PROGRESS_KEY) ?? 'null')
+    if (!value || typeof value !== 'object') return null
+    const record = value as Partial<ReadingProgressRecord>
+    if (typeof record.slug !== 'string' || !articles.some(article => article.slug === record.slug)) return null
+    if (typeof record.progress !== 'number' || !Number.isFinite(record.progress) || record.progress < 5 || record.progress >= 100) return null
+    return { slug: record.slug, progress: Math.round(record.progress) }
+  } catch { return null }
+}
+
 function readSavedSlugs(): string[] {
   if (typeof window === 'undefined') return []
   try {
@@ -158,6 +175,17 @@ function Home() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('Semua')
   const searchInput = useRef<HTMLInputElement>(null)
+
+  const [resumeRecord, setResumeRecord] = useState<ReadingProgressRecord | null>(readReadingProgress)
+  useEffect(() => {
+    const syncProgress = () => setResumeRecord(readReadingProgress())
+    window.addEventListener('storage', syncProgress)
+    window.addEventListener(READING_PROGRESS_EVENT, syncProgress)
+    return () => {
+      window.removeEventListener('storage', syncProgress)
+      window.removeEventListener(READING_PROGRESS_EVENT, syncProgress)
+    }
+  }, [])
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
       if (event.key === '/' && !(event.target instanceof HTMLInputElement) && !(event.target instanceof HTMLTextAreaElement)) {
@@ -214,6 +242,22 @@ function Home() {
     </div></div></section>
     <section className="featured-section"><div className="container featured-wrap"><div className="featured-label"><span className="section-kicker">{t('featuredHeading')}</span><span className="featured-line" /></div><div className="featured-card"><div className="featured-art"><div className="art-grid" /><div className="art-symbol"><Braces size={72} strokeWidth={1.1} /></div><span className="art-index">DX / 001</span><span className="art-caption">ENGINEERING<br />FOR WHAT'S NEXT</span></div><div className="featured-copy"><span className="category-pill">{categoryLabel(featured.category, language)}</span><p className="featured-overline">{t('featuredInsight')} · {featured.readTime.toUpperCase()}</p><h2>{featuredTranslation?.title ?? featured.title}</h2><p>{featuredTranslation?.excerpt ?? featured.excerpt}</p><Link className="read-link" to={`/blog/${featured.slug}`}>{t('readFeatured')} <ArrowRight size={16} /></Link></div></div></div></section>
     <section className="articles-section" id="latest"><div className="container">
+      {resumeRecord && (() => {
+        const resumeArticle = articles.find(item => item.slug === resumeRecord.slug)
+        if (!resumeArticle) return null
+        const resumeTranslation = language === 'en' ? articleTranslations[resumeArticle.slug] : undefined
+        return <section className="resume-reading" aria-label={language === 'en' ? 'Resume reading' : 'Lanjutkan membaca'}>
+          <div className="resume-reading-icon"><BookOpen size={21} /></div>
+          <div className="resume-reading-copy">
+            <span className="section-kicker">{language === 'en' ? 'PICK UP WHERE YOU LEFT OFF' : 'LANJUTKAN DARI TERAKHIR'}</span>
+            <h2>{resumeTranslation?.title ?? resumeArticle.title}</h2>
+            <p>{language === 'en' ? 'You have read about ' + resumeRecord.progress + '% of this article.' : 'Anda sudah membaca sekitar ' + resumeRecord.progress + '% artikel ini.'}</p>
+            <div className="resume-progress-track" role="progressbar" aria-label={language === 'en' ? 'Reading progress' : 'Progres membaca'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={resumeRecord.progress}><span style={{ width: resumeRecord.progress + '%' }} /></div>
+          </div>
+          <Link className="button button-primary resume-reading-action" to={'/blog/' + resumeArticle.slug}>{language === 'en' ? 'Continue reading' : 'Lanjut membaca'} <ArrowRight size={16} /></Link>
+        </section>
+      })()}
+
       <div className="section-heading"><div><span className="section-kicker">{t('articlesEyebrow')}</span><h2>{t('articlesHeading')} <span>{t('articlesHeadingAccent')}</span></h2><p>{t('latestDescription')}</p></div><label className="search-box"><Search size={18} /><input ref={searchInput} value={query} onChange={event => setQuery(event.target.value)} placeholder={t('searchPlaceholder')} aria-label={t('searchLabel')} /><kbd>/</kbd></label></div>
       <div className="filter-row" aria-label={t('topics')}>{categories.map(item => <button key={item} className={category === item ? 'filter active' : 'filter'} aria-pressed={category === item} onClick={() => setCategory(item)}>{categoryLabel(item, language)}</button>)}</div>
       <div className="results-meta"><span>{filtered.length} {t('found')}</span>{query && <button onClick={() => setQuery('')}>{t('clearSearch')} <span>×</span></button>}</div>
@@ -532,6 +576,7 @@ function ArticlePage() {
   const article = articles.find(item => item.slug === slug)
   const translated = article && language === 'en' ? articleTranslations[article.slug] : undefined
   const [progress, setProgress] = useState(0)
+  const lastSavedProgress = useRef(-1)
   const { isSaved, toggleSaved } = useReadingList()
   const [linkCopied, setLinkCopied] = useState(false)
   const [copyError, setCopyError] = useState(false)
@@ -595,7 +640,23 @@ function ArticlePage() {
     }
     const updateProgress = () => {
       const scrollable = document.documentElement.scrollHeight - window.innerHeight
-      setProgress(scrollable > 0 ? Math.min(100, Math.round(window.scrollY / scrollable * 100)) : 0)
+      const nextProgress = scrollable > 0 ? Math.min(100, Math.round(window.scrollY / scrollable * 100)) : 0
+      setProgress(nextProgress)
+      if (!article || nextProgress === lastSavedProgress.current) return
+      lastSavedProgress.current = nextProgress
+      try {
+        if (nextProgress >= 100) window.localStorage.removeItem(READING_PROGRESS_KEY)
+        else if (nextProgress >= 5) window.localStorage.setItem(READING_PROGRESS_KEY, JSON.stringify({ slug: article.slug, progress: nextProgress }))
+        window.dispatchEvent(new Event(READING_PROGRESS_EVENT))
+      } catch { /* Reading progress is optional when browser storage is unavailable. */ }
+    }
+    lastSavedProgress.current = -1
+    const savedProgress = readReadingProgress()
+    if (article && savedProgress?.slug === article.slug) {
+      window.requestAnimationFrame(() => {
+        const scrollable = document.documentElement.scrollHeight - window.innerHeight
+        if (scrollable > 0) window.scrollTo({ top: scrollable * savedProgress.progress / 100, behavior: 'auto' })
+      })
     }
     updateProgress()
     window.addEventListener('scroll', updateProgress, { passive: true })

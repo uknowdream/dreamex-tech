@@ -113,6 +113,7 @@ const appSource = readFileSync(join(root, 'src', 'App.tsx'), 'utf8')
 if (!appSource.includes('path="/reading-list"') || !appSource.includes('function ReadingListPage') || !appSource.includes('READING_LIST_KEY')) {
   errors.push('Personal reading list route and persistence are required')
 }
+if (!appSource.includes('READING_PROGRESS_KEY') || !appSource.includes('function readReadingProgress') || !appSource.includes('resume-reading')) errors.push('Resume reading progress persistence and home card are required')
 
 if (!appSource.includes('path="/lab"') || !appSource.includes('function EngineeringLabPage')) {
   errors.push('Engineering Lab route and toolkit are required')

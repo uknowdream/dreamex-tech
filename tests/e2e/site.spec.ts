@@ -128,6 +128,20 @@ test('installable PWA exposes an install action when the browser supports it', a
 })
 
 test('sitemap includes the public knowledge and engineering routes', async ({ request }) => {
+test('reading progress is saved and surfaced as a resume-reading card', async ({ page }) => {
+  await page.goto('/blog/qa-automation-foundations')
+  await page.evaluate(() => {
+    document.documentElement.style.scrollBehavior = 'auto'
+    window.scrollTo(0, document.documentElement.scrollHeight * 0.3)
+    window.dispatchEvent(new Event('scroll'))
+  })
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('dreamex-reading-progress-v1') ?? 'null'))).toMatchObject({ slug: 'qa-automation-foundations' })
+  await page.goto('/')
+  await expect(page.getByRole('region', { name: /resume reading|lanjutkan membaca/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /continue reading|lanjut membaca/i })).toHaveAttribute('href', '/blog/qa-automation-foundations')
+})
+
+
   const response = await request.get('/sitemap.xml')
   expect(response.ok()).toBeTruthy()
   const xml = await response.text()

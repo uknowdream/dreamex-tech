@@ -1597,3 +1597,17 @@ main, header, footer, section, .container {
 .offline-notice > span { width: .45rem; height: .45rem; flex: 0 0 auto; border-radius: 50%; background: #fbbf24; }
 @media (max-width: 900px) { .install-app-button { width: 100%; justify-content: flex-start; padding: .7rem .8rem; } }
 @media (prefers-reduced-motion: reduce) { .install-app-button { transition: none; } }
+
+
+/* Resume reading */
+.resume-reading { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1.1rem; margin: 0 0 2rem; padding: 1.2rem 1.35rem; border: 1px solid rgba(197,255,112,.25); border-radius: 1rem; background: linear-gradient(115deg, rgba(197,255,112,.07), rgba(131,213,255,.035)); }
+.resume-reading-icon { display: grid; place-items: center; width: 3rem; height: 3rem; color: var(--green); border: 1px solid rgba(197,255,112,.22); border-radius: .8rem; background: rgba(197,255,112,.07); }
+.resume-reading-copy { min-width: 0; }
+.resume-reading-copy .section-kicker { font-size: .65rem; }
+.resume-reading-copy h2 { margin: .35rem 0; overflow-wrap: anywhere; font: 600 1.05rem var(--display); }
+.resume-reading-copy p { margin: 0 0 .65rem; color: var(--muted); font-size: .82rem; }
+.resume-progress-track { height: 4px; max-width: 28rem; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.1); }
+.resume-progress-track span { display: block; height: 100%; border-radius: inherit; background: var(--green); transition: width .2s ease; }
+.resume-reading-action { white-space: nowrap; }
+@media (max-width: 640px) { .resume-reading { grid-template-columns: auto minmax(0,1fr); align-items: start; padding: 1rem; gap: .8rem; } .resume-reading-icon { width: 2.5rem; height: 2.5rem; } .resume-reading-action { grid-column: 2; justify-self: start; } }
+@media (prefers-reduced-motion: reduce) { .resume-progress-track span { transition: none; } }
