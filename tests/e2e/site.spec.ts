@@ -1,20 +1,29 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
+
+async function openMobileNavigation(page: Page, isMobile: boolean) {
+  if (!isMobile) return
+  const toggle = page.getByRole('button', { name: /open navigation menu|buka menu/i })
+  if (await toggle.isVisible()) await toggle.click()
+}
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
 })
 
-test('homepage renders primary content and skip navigation', async ({ page }) => {
+test('homepage renders primary content and skip navigation', async ({ page, isMobile }) => {
   await expect(page.locator('h1').first()).toBeVisible()
   await expect(page.locator('a.skip-link')).toHaveAttribute('href', '#main-content')
   await expect(page.locator('#latest')).toBeVisible()
+  await openMobileNavigation(page, isMobile)
   await expect(page.getByRole('navigation').first()).toBeVisible()
 })
 
-test('language switch updates interface language and document lang', async ({ page }) => {
+test('language switch updates interface language and document lang', async ({ page, isMobile }) => {
+  await openMobileNavigation(page, isMobile)
   await page.getByRole('button', { name: 'ID', exact: true }).click()
   await expect(page.locator('html')).toHaveAttribute('lang', 'id')
   await expect(page.getByRole('heading', { name: /Berpikir lebih dalam/i })).toBeVisible()
+  await openMobileNavigation(page, isMobile)
   await page.getByRole('button', { name: 'EN', exact: true }).click()
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
   await expect(page.getByRole('heading', { name: /Think deeper/i })).toBeVisible()
@@ -43,7 +52,8 @@ test('category filters expose selected state and can be reset', async ({ page })
   await expect(allFilter).toHaveAttribute('aria-pressed', 'true')
 })
 
-test('about page loads through client navigation', async ({ page }) => {
+test('about page loads through client navigation', async ({ page, isMobile }) => {
+  await openMobileNavigation(page, isMobile)
   await page.getByRole('link', { name: 'About', exact: true }).click()
   await expect(page).toHaveURL(/\/about$/)
   await expect(page.getByRole('heading', { name: /Turn curiosity into/i })).toBeVisible()
