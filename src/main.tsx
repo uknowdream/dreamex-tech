@@ -12,7 +12,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 )
 
 
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+if (window.location.protocol === 'https:' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {
       // Progressive enhancement: the site remains fully usable if offline support cannot register.
