@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom'
-import { ArrowDownRight, ArrowRight, Braces, Check, ChevronUp, Github, Search, ShieldCheck, Sparkles, Terminal, Zap } from 'lucide-react'
+import { ArrowDownRight, ArrowRight, Braces, Check, ChevronUp, Copy, Github, Search, ShieldCheck, Sparkles, Terminal, Zap } from 'lucide-react'
 import { articles } from './articles'
 
 const categories = ['Semua', 'Software Engineering', 'QA Automation', 'AI & Technology']
@@ -91,24 +91,78 @@ function ArticlePage() {
   const { slug } = useParams()
   const article = articles.find(item => item.slug === slug)
   const [progress, setProgress] = useState(0)
+  const [linkCopied, setLinkCopied] = useState(false)
+  const [copyError, setCopyError] = useState(false)
+  const relatedArticles = useMemo(() => article ? articles
+    .filter(item => item.slug !== article.slug)
+    .map(item => ({ item, score: (item.category === article.category ? 3 : 0) + item.tags.filter(tag => article.tags.includes(tag)).length }))
+    .sort((left, right) => right.score - left.score)
+    .slice(0, 2)
+    .map(result => result.item) : [], [article])
+  const copyArticleLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setLinkCopied(true)
+      setCopyError(false)
+    } catch {
+      setCopyError(true)
+    }
+  }
   useEffect(() => {
     document.title = article ? `${article.title} — DreamEx Tech` : 'Artikel tidak ditemukan — DreamEx Tech'
-    const description = document.querySelector('meta[name="description"]')
-    if (description && article) description.setAttribute('content', article.excerpt)
+    const setMeta = (selector: string, attribute: string, value: string) => {
+      const element = document.querySelector(selector)
+      if (element) element.setAttribute(attribute, value)
+    }
+    if (article) {
+      const canonicalUrl = `https://dreamex.tech/blog/${article.slug}`
+      setMeta('meta[name="description"]', 'content', article.excerpt)
+      setMeta('meta[property="og:title"]', 'content', `${article.title} — DreamEx Tech`)
+      setMeta('meta[property="og:description"]', 'content', article.excerpt)
+      setMeta('meta[property="og:url"]', 'content', canonicalUrl)
+      setMeta('meta[name="twitter:title"]', 'content', `${article.title} — DreamEx Tech`)
+      setMeta('meta[name="twitter:description"]', 'content', article.excerpt)
+      const canonical = document.querySelector('link[rel="canonical"]')
+      canonical?.setAttribute('href', canonicalUrl)
+      const structuredData = document.createElement('script')
+      structuredData.type = 'application/ld+json'
+      structuredData.dataset.articleSchema = 'true'
+      structuredData.textContent = JSON.stringify({
+        '@context': 'https://schema.org', '@type': 'Article', headline: article.title,
+        description: article.excerpt, datePublished: article.date,
+        author: { '@type': 'Organization', name: 'DreamEx Tech' },
+        publisher: { '@type': 'Organization', name: 'DreamEx Tech' },
+        mainEntityOfPage: canonicalUrl,
+      })
+      document.head.appendChild(structuredData)
+    }
     const updateProgress = () => {
       const scrollable = document.documentElement.scrollHeight - window.innerHeight
       setProgress(scrollable > 0 ? Math.min(100, Math.round(window.scrollY / scrollable * 100)) : 0)
     }
     updateProgress()
     window.addEventListener('scroll', updateProgress, { passive: true })
-    return () => window.removeEventListener('scroll', updateProgress)
+    return () => {
+      window.removeEventListener('scroll', updateProgress)
+      document.querySelector('script[data-article-schema="true"]')?.remove()
+      const canonical = document.querySelector('link[rel="canonical"]')
+      canonical?.setAttribute('href', 'https://dreamex.tech/')
+      setMeta('meta[property="og:title"]', 'content', 'DreamEx Tech — Think deeper. Build smarter.')
+      setMeta('meta[property="og:description"]', 'content', 'Ruang eksplorasi software engineering, quality engineering, AI, dan teknologi modern.')
+      setMeta('meta[property="og:url"]', 'content', 'https://dreamex.tech/')
+      setMeta('meta[name="twitter:title"]', 'content', 'DreamEx Tech — Think deeper. Build smarter.')
+      setMeta('meta[name="twitter:description"]', 'content', 'Ruang eksplorasi software engineering, quality engineering, AI, dan teknologi modern.')
+      setMeta('meta[name="description"]', 'content', 'DreamEx Tech — practical notes on software engineering, quality engineering, AI, and modern technology.')
+    }
   }, [article])
   if (!article) return <main className="container not-found"><h1>Artikel tidak ditemukan</h1><p>Artikel mungkin dipindahkan atau belum tersedia.</p><Link className="read-link" to="/">Kembali ke beranda <ArrowRight size={16} /></Link></main>
   return <main className="article-page"><div className="reading-progress" style={{ width: `${progress}%` }} /><div className="container article-container">
     <Link className="back-link" to="/">← Semua artikel</Link>
     <div className="article-header"><span className="category-pill">{article.category}</span><h1>{article.title}</h1><p>{article.excerpt}</p><div className="article-meta"><span>{new Date(article.date + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span><span>•</span><span>{article.readTime}</span><span>•</span><span>DreamEx Editorial</span></div></div>
     <div className="article-body">{article.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}<div className="article-note"><strong><ShieldCheck size={16} /> Engineering note</strong><p>Gunakan artikel ini sebagai titik awal. Validasi pendekatan terhadap konteks, risiko, dan kebutuhan proyek nyata.</p></div></div>
-    <div className="article-end"><span>TOPICS</span><div className="tag-row">{article.tags.map(tag => <span key={tag}>#{tag.replaceAll(' ', '')}</span>)}</div></div>
+    <div className="article-end"><span>TOPICS</span><div className="tag-row">{article.tags.map(tag => <span key={tag}>#{tag.replaceAll(' ', '')}</span>)}</div><button className="copy-link-button" onClick={copyArticleLink}><Copy size={14} /> {linkCopied ? 'Link tersalin' : 'Salin tautan'}</button></div>
+    {copyError && <p className="copy-error" role="status">Browser tidak mengizinkan penyalinan otomatis. Salin URL dari bilah alamat.</p>}
+    {relatedArticles.length > 0 && <section className="related-section"><div className="related-heading"><span className="section-kicker">NEXT IN YOUR LEARNING PATH</span><h2>Continue exploring.</h2></div><div className="related-grid">{relatedArticles.map((related, index) => <ArticleCard key={related.slug} article={related} index={index} />)}</div></section>}
     <div className="article-next"><div><span className="section-kicker">KEEP EXPLORING</span><h2>Pengetahuan berkembang saat dibagikan.</h2></div><Link className="button button-primary" to="/">Jelajahi artikel <ArrowRight size={16} /></Link></div>
   </div></main>
 }
