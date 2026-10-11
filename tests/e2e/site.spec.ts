@@ -143,6 +143,26 @@ test('installable PWA exposes an install action when the browser supports it', a
   await expect(page.getByRole('status').filter({ hasText: /installation accepted|pemasangan disetujui/i })).toBeVisible()
 })
 
+test('article citation can be copied as a Markdown reference', async ({ page }) => {
+  await page.goto('/blog/qa-automation-foundations')
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async (text: string) => {
+          ;(window as Window & { __copiedCitation?: string }).__copiedCitation = text
+        },
+      },
+    })
+  })
+  const citationButton = page.getByRole('button', { name: /copy markdown citation/i })
+  await expect(citationButton).toBeVisible()
+  await citationButton.click()
+  await expect(page.getByRole('button', { name: /citation copied/i })).toBeVisible()
+  const citation = await page.evaluate(() => (window as Window & { __copiedCitation?: string }).__copiedCitation ?? '')
+  expect(citation).toMatch(/^\[.+\]\(https:\/\/dreamex\.tech\/blog\/qa-automation-foundations\) — DreamEx Tech \(\d{4}-\d{2}-\d{2}\)$/)
+})
+
 test('reading progress is saved and surfaced as a resume-reading card', async ({ page }) => {
   await page.goto('/blog/qa-automation-foundations')
   await page.evaluate(() => {
