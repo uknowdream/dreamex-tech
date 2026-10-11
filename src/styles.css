@@ -925,3 +925,83 @@ main, header, footer, section, .container {
   .trust-inner span { font-size: 7px; letter-spacing: .35px; }
   .topics-heading h2, .section-heading h2 { font-size: 28px; }
 }
+
+
+/* Hero visual: keep floating quality/curiosity labels inside the terminal frame
+   on touch layouts, and give the code header enough room to flex. */
+@media (max-width: 640px) {
+  .hero-visual {
+    padding: 34px 0 32px;
+    overflow: visible;
+  }
+  .terminal {
+    width: 100%;
+    border-radius: 13px;
+    transform: none;
+  }
+  .terminal-bar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 7px;
+    padding-inline: 10px;
+  }
+  .terminal-dots { gap: 4px; }
+  .terminal-bar small {
+    margin-left: 0;
+    font-size: clamp(7px, 2.1vw, 9px);
+    gap: 4px;
+  }
+  .terminal-live {
+    white-space: nowrap;
+    font-size: 8px;
+    letter-spacing: 0;
+    gap: 4px;
+  }
+  .floating-chip {
+    max-width: calc(100% - 24px);
+    padding: 8px 10px;
+    font-size: 10px;
+    line-height: 1.25;
+    white-space: nowrap;
+  }
+  .chip-top {
+    top: 8px;
+    right: 8px;
+    left: auto;
+    z-index: 3;
+  }
+  .chip-bottom {
+    bottom: 6px;
+    left: 8px;
+    right: auto;
+    z-index: 3;
+  }
+  .visual-caption {
+    position: relative;
+    inset: auto;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding: 10px 2px 0;
+    font-size: 7px;
+    line-height: 1.5;
+    letter-spacing: .65px;
+  }
+  .visual-caption span:last-child {
+    margin-left: auto;
+    text-align: right;
+  }
+  .orbit-one { width: min(310px, 90vw); height: min(310px, 90vw); top: 20px; }
+  .orbit-two { display: none; }
+}
+@media (max-width: 380px) {
+  .hero-visual { padding-top: 38px; }
+  .terminal-bar { grid-template-columns: auto minmax(0, 1fr) auto; gap: 5px; padding-inline: 8px; }
+  .terminal-live { font-size: 7px; }
+  .floating-chip { max-width: calc(100% - 20px); font-size: 9px; padding: 7px 8px; }
+  .chip-top { right: 5px; }
+  .chip-bottom { left: 5px; }
+  .visual-caption { font-size: 6.5px; letter-spacing: .4px; }
+}
