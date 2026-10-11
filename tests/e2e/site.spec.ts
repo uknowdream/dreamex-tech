@@ -127,6 +127,17 @@ test('installable PWA exposes an install action when the browser supports it', a
   await expect(page.getByRole('status').filter({ hasText: /installation accepted|pemasangan disetujui/i })).toBeVisible()
 })
 
+test('sitemap includes the public knowledge and engineering routes', async ({ request }) => {
+  const response = await request.get('/sitemap.xml')
+  expect(response.ok()).toBeTruthy()
+  const xml = await response.text()
+  for (const route of ['/', '/about', '/lab', '/learn', '/rss']) {
+    expect(xml).toContain(`https://dreamex.tech${route}`)
+  }
+  expect(xml).toContain('<lastmod>')
+  expect(xml).not.toContain('/reading-list')
+})
+
 test('PWA manifest, icons, and service worker are available', async ({ request }) => {
   const manifestResponse = await request.get('/manifest.webmanifest')
   expect(manifestResponse.ok()).toBeTruthy()

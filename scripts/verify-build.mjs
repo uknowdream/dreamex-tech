@@ -102,10 +102,11 @@ if (errors.length === 0) {
 
 if (existsSync(join(dist, 'sitemap.xml'))) {
   const sitemapOutput = readFileSync(join(dist, 'sitemap.xml'), 'utf8')
-  for (const route of ['https://dreamex.tech/about', 'https://dreamex.tech/rss']) {
+  for (const route of ['https://dreamex.tech/about', 'https://dreamex.tech/lab', 'https://dreamex.tech/learn', 'https://dreamex.tech/rss']) {
     if (!sitemapOutput.includes(`<loc>${route}</loc>`)) errors.push(`Sitemap is missing canonical route: ${route}`)
   }
   if (!sitemapOutput.includes('<lastmod>')) errors.push('Sitemap is missing article publication dates')
+  if (!sitemapOutput.includes('<loc>https://dreamex.tech/learn</loc>') || !sitemapOutput.includes('<loc>https://dreamex.tech/lab</loc>')) errors.push('Sitemap is missing public learning and engineering-tool routes')
 }
 
 const appSource = readFileSync(join(root, 'src', 'App.tsx'), 'utf8')
