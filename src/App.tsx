@@ -205,7 +205,19 @@ function AboutPage() {
 function RssPage() {
   const { language } = useLanguage()
   const en = language === 'en'
+  const [feedCopied, setFeedCopied] = useState(false)
+  const [copyFailed, setCopyFailed] = useState(false)
   const sortedArticles = useMemo(() => [...articles].sort((a, b) => b.date.localeCompare(a.date)), [])
+  const copyRssUrl = async () => {
+    try {
+      await navigator.clipboard.writeText('https://www.dreamex.tech/rss.xml')
+      setFeedCopied(true)
+      setCopyFailed(false)
+    } catch {
+      setFeedCopied(false)
+      setCopyFailed(true)
+    }
+  }
   useEffect(() => {
     const previousTitle = document.title
     document.title = en ? 'Latest Articles & RSS — DreamEx Tech' : 'Artikel Terbaru & RSS — DreamEx Tech'
@@ -232,9 +244,16 @@ function RssPage() {
           ? 'Practical notes on software engineering, quality engineering, AI, and modern technology — collected in one clean reading view.'
           : 'Catatan praktis tentang software engineering, quality engineering, AI, dan teknologi modern — dirangkum dalam satu halaman yang nyaman dibaca.'}</p>
         <div className="rss-hero-actions">
-          <a className="button button-primary" href="/rss.xml"><Rss size={16} /> {en ? 'Subscribe to RSS' : 'Berlangganan RSS'}</a>
+          <button className="button button-primary" type="button" onClick={copyRssUrl}><Rss size={16} /> {en ? 'Copy RSS subscription URL' : 'Salin URL langganan RSS'}</button>
           <Link className="button button-secondary" to="/">{en ? 'Back to homepage' : 'Kembali ke beranda'} <ArrowRight size={16} /></Link>
         </div>
+        <p className="rss-subscribe-status" aria-live="polite">
+          {feedCopied
+            ? (en ? 'RSS URL copied. Paste it into your preferred feed reader.' : 'URL RSS berhasil disalin. Tempelkan ke aplikasi pembaca RSS pilihan Anda.')
+            : copyFailed
+              ? (en ? 'Clipboard access is unavailable. Copy this feed URL manually: https://www.dreamex.tech/rss.xml' : 'Clipboard tidak tersedia. Salin URL feed ini secara manual: https://www.dreamex.tech/rss.xml')
+              : (en ? 'Subscribe using a feed reader; this page stays open as the readable web version.' : 'Berlangganan melalui aplikasi pembaca RSS; halaman web ini tetap terbuka sebagai versi yang nyaman dibaca.')}
+        </p>
       </div>
       <section className="rss-list-section" aria-labelledby="rss-list-heading">
         <div className="rss-list-heading"><div><span className="section-kicker">{en ? 'THE LATEST' : 'TERBARU'}</span><h2 id="rss-list-heading">{en ? 'Latest articles' : 'Artikel terbaru'}</h2></div><span className="rss-count">{sortedArticles.length} {en ? 'articles' : 'artikel'}</span></div>
@@ -253,7 +272,7 @@ function RssPage() {
           })}
         </div>
       </section>
-      <div className="rss-bottom-note"><Rss size={18} /><p>{en ? 'Prefer a feed reader? Use the RSS subscription link above. This page is the human-friendly view; the XML feed remains available for apps.' : 'Lebih suka aplikasi pembaca feed? Gunakan tautan berlangganan RSS di atas. Halaman ini untuk dibaca langsung; feed XML tetap tersedia untuk aplikasi.'}</p></div>
+      <div className="rss-bottom-note"><Rss size={18} /><p>{en ? 'This is the human-friendly web view. The RSS XML URL is copied for your feed reader instead of navigating away to raw XML.' : 'Ini adalah tampilan web yang nyaman dibaca. URL RSS XML disalin untuk aplikasi pembaca feed sehingga Anda tidak dialihkan ke tampilan XML mentah.'}</p></div>
     </div>
   </main>
 }
