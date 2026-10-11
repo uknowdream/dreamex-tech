@@ -199,14 +199,14 @@ test('reading list backup can be imported, validated, and merged', async ({ page
   })
   await expect(page.getByRole('status')).toContainText(/imported 2 valid article|2 artikel valid berhasil diimpor/i)
   await expect(page.locator('.reading-list-count')).toContainText(/2/)
-  await expect(page.getByRole('heading', { name: /qa automation foundations/i })).toBeVisible()
-  await expect(page.getByRole('heading', { name: /typescript untuk proyek yang mudah dipelihara/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /building a reliable qa automation foundation|membangun fondasi qa automation yang andal/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /typescript for maintainable projects|typescript untuk proyek yang mudah dipelihara/i })).toBeVisible()
   await page.getByLabel(/import reading list json backup/i).setInputFiles({
     name: 'invalid.json',
     mimeType: 'application/json',
     buffer: Buffer.from('{"format":"not-dreamex","version":1,"slugs":["qa-automation-foundations"]}'),
   })
-  await expect(page.getByRole('status')).toContainText(/invalid backup file/i)
+  await expect(page.getByRole('status')).toContainText(/invalid backup file|file cadangan tidak valid/i)
   await expect(page.locator('.reading-list-count')).toContainText(/2/)
 })
 
@@ -215,9 +215,27 @@ test('reading list backup downloads a versioned JSON file', async ({ page, isMob
   await openMobileNavigation(page, isMobile)
   await page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
   const downloadPromise = page.waitForEvent('download')
-  await page.getByRole('button', { name: /download json backup/i }).click()
+  await page.getByRole('button', { name: /download json backup|unduh cadangan json/i }).click()
   const download = await downloadPromise
   expect(download.suggestedFilename()).toBe('dreamex-reading-list.json')
+})
+
+test('reading list can search and sort saved articles without losing saved items', async ({ page, isMobile }) => {
+  await page.locator('.article-card').nth(0).getByRole('button', { name: /save article|simpan artikel/i }).click()
+  await page.locator('.article-card').nth(1).getByRole('button', { name: /save article|simpan artikel/i }).click()
+  await openMobileNavigation(page, isMobile)
+  await page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
+  const search = page.getByRole('searchbox', { name: /search saved articles|cari artikel tersimpan/i })
+  await expect(page.locator('.article-card')).toHaveCount(2)
+  await search.fill('typescript')
+  await expect(page.locator('.article-card')).toHaveCount(1)
+  await expect(page.locator('.article-card h3')).toContainText(/typescript for maintainable projects|typescript untuk proyek yang mudah dipelihara/i)
+  await search.fill('no-such-reading-item')
+  await expect(page.locator('.reading-list-no-results')).toBeVisible()
+  await page.getByRole('button', { name: /clear search|hapus pencarian/i }).click()
+  await expect(page.locator('.article-card')).toHaveCount(2)
+  await page.getByRole('combobox', { name: /sort saved articles|urutkan artikel tersimpan/i }).selectOption('title')
+  await expect(page.locator('.reading-list-count')).toContainText(/2/)
 })
 
 test('reading progress is saved and surfaced as a resume-reading card', async ({ page }) => {

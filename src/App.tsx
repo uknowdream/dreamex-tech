@@ -274,6 +274,20 @@ function ReadingListPage() {
   const [exportStatus, setExportStatus] = useState('')
   const [importing, setImporting] = useState(false)
   const savedArticles = savedSlugs.map(slug => articles.find(article => article.slug === slug)).filter((article): article is typeof articles[number] => Boolean(article))
+  const [readingQuery, setReadingQuery] = useState('')
+  const [readingSort, setReadingSort] = useState<'saved' | 'newest' | 'title' | 'shortest'>('saved')
+  const visibleSavedArticles = useMemo(() => {
+    const query = readingQuery.trim().toLocaleLowerCase()
+    const matches = savedArticles.filter(article => {
+      const translated = en ? articleTranslations[article.slug] : undefined
+      return `${translated?.title ?? article.title} ${translated?.excerpt ?? article.excerpt} ${article.tags.join(' ')} ${article.category}`.toLocaleLowerCase().includes(query)
+    })
+    if (readingSort === 'newest') return [...matches].sort((a, b) => b.date.localeCompare(a.date))
+    if (readingSort === 'title') return [...matches].sort((a, b) => (en ? articleTranslations[a.slug]?.title ?? a.title : a.title).localeCompare(en ? articleTranslations[b.slug]?.title ?? b.title : b.title))
+    if (readingSort === 'shortest') return [...matches].sort((a, b) => Number.parseInt(a.readTime, 10) - Number.parseInt(b.readTime, 10))
+    return matches
+  }, [savedArticles, readingQuery, readingSort, en])
+  const estimatedMinutes = savedArticles.reduce((total, article) => total + (Number.parseInt(article.readTime, 10) || 0), 0)
   const exportBackup = () => {
     const backup = {
       format: 'dreamex-reading-list',
@@ -343,7 +357,16 @@ function ReadingListPage() {
     return () => { document.title = 'DreamEx Tech — Engineering, AI & QA' }
   }, [en])
   return <main id="main-content" className="reading-list-page container">
-    <div className="reading-list-header"><span className="section-kicker">{en ? 'YOUR KNOWLEDGE SPACE' : 'RUANG PENGETAHUAN ANDA'}</span><h1>{en ? 'Reading list' : 'Daftar bacaan'} <span>{en ? 'for later.' : 'untuk nanti.'}</span></h1><p>{en ? 'Keep useful engineering notes close and return whenever you are ready.' : 'Simpan catatan engineering yang berguna dan baca kembali kapan pun Anda siap.'}</p><span className="reading-list-count">{savedArticles.length} {en ? (savedArticles.length === 1 ? 'article saved' : 'articles saved') : 'artikel tersimpan'}</span>
+    <div className="reading-list-header"><span className="section-kicker">{en ? 'YOUR KNOWLEDGE SPACE' : 'RUANG PENGETAHUAN ANDA'}</span><h1>{en ? 'Reading list' : 'Daftar bacaan'} <span>{en ? 'for later.' : 'untuk nanti.'}</span></h1><p>{en ? 'Keep useful engineering notes close and return whenever you are ready.' : 'Simpan catatan engineering yang berguna dan baca kembali kapan pun Anda siap.'}</p><span className="reading-list-count">{savedArticles.length} {en ? (savedArticles.length === 1 ? 'article saved' : 'articles saved') : 'artikel tersimpan'} · {en ? `about ${estimatedMinutes} min to read` : `estimasi ${estimatedMinutes} menit membaca`}</span>
+    {savedArticles.length > 0 && <div className="reading-list-controls">
+      <label className="reading-list-search"><Search size={16} /><span className="sr-only">{en ? 'Search saved articles' : 'Cari artikel tersimpan'}</span><input type="search" value={readingQuery} onChange={event => setReadingQuery(event.target.value)} placeholder={en ? 'Search saved articles…' : 'Cari artikel tersimpan…'} /></label>
+      <label className="reading-list-sort"><span>{en ? 'Sort' : 'Urutkan'}</span><select value={readingSort} onChange={event => setReadingSort(event.target.value as typeof readingSort)} aria-label={en ? 'Sort saved articles' : 'Urutkan artikel tersimpan'}>
+        <option value="saved">{en ? 'Saved order' : 'Urutan tersimpan'}</option>
+        <option value="newest">{en ? 'Newest articles' : 'Artikel terbaru'}</option>
+        <option value="title">{en ? 'Title A–Z' : 'Judul A–Z'}</option>
+        <option value="shortest">{en ? 'Shortest read' : 'Bacaan tercepat'}</option>
+      </select></label>
+    </div>}
     {savedArticles.length > 0 && <div className="reading-list-tools">
       <button type="button" className="copy-link-button reading-list-export" onClick={copyReadingList}><Copy size={14} /> {en ? 'Copy as Markdown' : 'Salin sebagai Markdown'}</button>
       <button type="button" className="copy-link-button reading-list-export" onClick={exportBackup}><ArrowDownRight size={14} /> {en ? 'Download JSON backup' : 'Unduh cadangan JSON'}</button>
@@ -353,7 +376,9 @@ function ReadingListPage() {
       </label>
     </div>}
     {exportStatus && <p className="reading-list-export-status" role="status" aria-live="polite">{exportStatus}</p>}</div>
-    {savedArticles.length ? <div className="article-grid">{savedArticles.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} />)}</div> : <div className="reading-list-empty"><Bookmark size={24} /><h2>{en ? 'Your reading list is ready.' : 'Daftar bacaan Anda siap.'}</h2><p>{en ? 'Save an article with the bookmark icon to build your personal reading list.' : 'Tekan ikon bookmark pada artikel untuk membuat daftar bacaan pribadi.'}</p><Link className="button button-primary" to="/#latest">{en ? 'Explore articles' : 'Jelajahi artikel'} <ArrowRight size={16} /></Link></div>}
+    {savedArticles.length > 0 && visibleSavedArticles.length > 0 && <div className="article-grid">{visibleSavedArticles.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} />)}</div>}
+    {savedArticles.length > 0 && visibleSavedArticles.length === 0 && <div className="reading-list-no-results"><Search size={20} /><h2>{en ? 'No saved articles match.' : 'Tidak ada artikel tersimpan yang cocok.'}</h2><p>{en ? 'Try another title, topic, or tag.' : 'Coba judul, topik, atau tag lain.'}</p><button className="copy-link-button" onClick={() => setReadingQuery('')}>{en ? 'Clear search' : 'Hapus pencarian'}</button></div>}
+    {savedArticles.length === 0 && <div className="reading-list-empty"><Bookmark size={24} /><h2>{en ? 'Your reading list is ready.' : 'Daftar bacaan Anda siap.'}</h2><p>{en ? 'Save an article with the bookmark icon to build your personal reading list.' : 'Tekan ikon bookmark pada artikel untuk membuat daftar bacaan pribadi.'}</p><Link className="button button-primary" to="/#latest">{en ? 'Explore articles' : 'Jelajahi artikel'} <ArrowRight size={16} /></Link></div>}
   </main>
 }
 
