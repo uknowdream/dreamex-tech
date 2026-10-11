@@ -42,6 +42,19 @@ test('search filters articles and clear-search restores results', async ({ page 
   await expect(page.locator('.article-card')).toHaveCount(initialCount)
 })
 
+test('articles can be saved to and removed from the personal reading list', async ({ page, isMobile }) => {
+  const firstArticle = page.locator('.article-card').first()
+  const articleTitle = (await firstArticle.locator('h3 a').innerText()).trim()
+  await firstArticle.getByRole('button', { name: /save article|simpan artikel/i }).click()
+  await expect(firstArticle.getByRole('button', { name: /remove saved article|hapus artikel tersimpan/i })).toHaveAttribute('aria-pressed', 'true')
+  await openMobileNavigation(page, isMobile)
+  await page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
+  await expect(page).toHaveURL(/\\/reading-list$/)
+  await expect(page.getByRole('heading', { name: articleTitle })).toBeVisible()
+  await page.getByRole('button', { name: /remove saved article|hapus artikel tersimpan/i }).click()
+  await expect(page.getByText(/your reading list is ready|daftar bacaan anda siap/i)).toBeVisible()
+})
+
 test('category filters expose selected state and can be reset', async ({ page }) => {
   const qaFilter = page.getByRole('button', { name: 'QA Automation', exact: true })
   await qaFilter.click()

@@ -94,6 +94,11 @@ if (existsSync(join(dist, 'sitemap.xml'))) {
   if (!sitemapOutput.includes('<lastmod>')) errors.push('Sitemap is missing article publication dates')
 }
 
+const appSource = readFileSync(join(root, 'src', 'App.tsx'), 'utf8')
+if (!appSource.includes('path="/reading-list"') || !appSource.includes('function ReadingListPage') || !appSource.includes('READING_LIST_KEY')) {
+  errors.push('Personal reading list route and persistence are required')
+}
+
 if (errors.length > 0) {
   console.error('Build verification failed:')
   for (const error of errors) console.error(` - ${error}`)

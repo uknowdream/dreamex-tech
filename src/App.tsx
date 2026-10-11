@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowDownRight, ArrowRight, BookOpen, Braces, Check, ChevronUp, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap, Rss } from 'lucide-react'
+import { ArrowDownRight, ArrowRight, BookOpen, Bookmark, BookmarkCheck, Braces, Check, ChevronUp, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap, Rss } from 'lucide-react'
 import { articles } from './articles'
 import { articleTranslations } from './articleTranslations'
 import { useLanguage } from './i18n'
@@ -13,6 +13,40 @@ const categoryLabel = (category: string, language: 'id' | 'en') => {
   return category
 }
 
+const READING_LIST_KEY = 'dreamex-reading-list-v1'
+const READING_LIST_EVENT = 'dreamex-reading-list-updated'
+
+function readSavedSlugs(): string[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const value: unknown = JSON.parse(window.localStorage.getItem(READING_LIST_KEY) ?? '[]')
+    return Array.isArray(value) ? value.filter((slug): slug is string => typeof slug === 'string' && articles.some(article => article.slug === slug)) : []
+  } catch {
+    return []
+  }
+}
+
+function useReadingList() {
+  const [savedSlugs, setSavedSlugs] = useState<string[]>(readSavedSlugs)
+  useEffect(() => {
+    const sync = () => setSavedSlugs(readSavedSlugs())
+    window.addEventListener('storage', sync)
+    window.addEventListener(READING_LIST_EVENT, sync)
+    return () => {
+      window.removeEventListener('storage', sync)
+      window.removeEventListener(READING_LIST_EVENT, sync)
+    }
+  }, [])
+  const toggleSaved = (slug: string) => {
+    const current = readSavedSlugs()
+    const next = current.includes(slug) ? current.filter(item => item !== slug) : [...current, slug]
+    try { window.localStorage.setItem(READING_LIST_KEY, JSON.stringify(next)) } catch { /* Keep the current session usable when storage is blocked. */ }
+    setSavedSlugs(next)
+    window.dispatchEvent(new Event(READING_LIST_EVENT))
+  }
+  return { savedSlugs, toggleSaved, isSaved: (slug: string) => savedSlugs.includes(slug) }
+}
+
 function Header() {
   const { language, setLanguage, t } = useLanguage()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -21,7 +55,7 @@ function Header() {
   return <header className="site-header"><div className="container nav-wrap">
     <Link className="brand" to="/" aria-label="DreamEx Tech beranda"><span className="brand-mark"><Braces size={21} /></span><span>DreamEx<span className="brand-muted"> Tech</span></span><span className="brand-beta">ENGINEERING NOTES</span></Link>
     <button className="menu-toggle" aria-label={menuOpen ? t('closeMenu') : t('openMenu')} aria-expanded={menuOpen} onClick={() => setMenuOpen(value => !value)}><span /><span /></button>
-    <nav className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={t('blog')}><NavLink to="/">{t('blog')}</NavLink><a href="/#topics">{t('topics')}</a><a href="/#latest">{t('articles')}</a><NavLink to="/about">{language === 'en' ? 'About' : 'Tentang'}</NavLink><a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">GitHub <Github size={15} /></a><div className="language-switch" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div></nav>
+    <nav className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={t('blog')}><NavLink to="/">{t('blog')}</NavLink><a href="/#topics">{t('topics')}</a><a href="/#latest">{t('articles')}</a><NavLink to="/reading-list">{language === 'en' ? 'Reading list' : 'Daftar bacaan'}</NavLink><NavLink to="/about">{language === 'en' ? 'About' : 'Tentang'}</NavLink><a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">GitHub <Github size={15} /></a><div className="language-switch" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div></nav>
   </div></header>
 }
 
@@ -43,6 +77,7 @@ function Footer() {
           <span className="footer-heading">{en ? 'EXPLORE' : 'JELAJAHI'}</span>
           <Link to="/#topics">{t('footerTopics')} <ArrowRight size={13} /></Link>
           <Link to="/#latest">{t('latestArticles')} <ArrowRight size={13} /></Link>
+          <Link to="/reading-list">{en ? 'Reading list' : 'Daftar bacaan'} <ArrowRight size={13} /></Link>
           <Link to="/about">{en ? 'About DreamEx' : 'Tentang DreamEx'} <ArrowRight size={13} /></Link>
         </div>
         <div className="footer-column">
@@ -63,9 +98,11 @@ function Footer() {
 
 function ArticleCard({ article, index = 0 }: { article: typeof articles[number]; index?: number }) {
   const { t, language } = useLanguage()
+  const { isSaved, toggleSaved } = useReadingList()
   const translated = language === 'en' ? articleTranslations[article.slug] : undefined
+  const saved = isSaved(article.slug)
   return <article className="article-card" style={{ animationDelay: `${index * 70}ms` }}>
-    <div className="card-top"><span className="category-pill">{categoryLabel(article.category, language)}</span><span className="read-time">{language === 'en' ? article.readTime.replace('menit', 'min') : article.readTime}</span></div>
+    <div className="card-top"><span className="category-pill">{categoryLabel(article.category, language)}</span><div className="card-meta-actions"><span className="read-time">{language === 'en' ? article.readTime.replace('menit', 'min') : article.readTime}</span><button className="bookmark-button" type="button" aria-pressed={saved} aria-label={`${saved ? (language === 'en' ? 'Remove saved article' : 'Hapus artikel tersimpan') : (language === 'en' ? 'Save article' : 'Simpan artikel')}: ${translated?.title ?? article.title}`} onClick={() => toggleSaved(article.slug)} title={saved ? (language === 'en' ? 'Remove from reading list' : 'Hapus dari daftar bacaan') : (language === 'en' ? 'Save to reading list' : 'Simpan ke daftar bacaan')}>{saved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}</button></div></div>
     <h3><Link to={`/blog/${article.slug}`}>{translated?.title ?? article.title}</Link></h3><p>{translated?.excerpt ?? article.excerpt}</p>
     <div className="tag-row">{article.tags.slice(0, 3).map(tag => <span key={tag}>#{tag.replaceAll(' ', '')}</span>)}</div>
     <Link className="read-link" to={`/blog/${article.slug}`}>{t('readArticle')} <ArrowRight size={16} /></Link>
@@ -139,6 +176,21 @@ function Home() {
       {filtered.length ? <div className="article-grid">{filtered.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} />)}</div> : <div className="empty-state"><Search size={22} /><strong>{t('noResults')}</strong><span>{t('tryOther')}</span></div>}
     </div></section>
     <section className="newsletter"><div className="container newsletter-inner"><div><span className="section-kicker">{t('buildInPublic')}</span><h2>Better systems.<br /><span>Better questions.</span></h2><p>{t('buildDescription')}</p></div><a className="button button-primary" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">{t('exploreCode')} <ArrowRight size={17} /></a></div></section>
+  </main>
+}
+
+function ReadingListPage() {
+  const { language } = useLanguage()
+  const { savedSlugs } = useReadingList()
+  const en = language === 'en'
+  const savedArticles = savedSlugs.map(slug => articles.find(article => article.slug === slug)).filter((article): article is typeof articles[number] => Boolean(article))
+  useEffect(() => {
+    document.title = en ? 'Reading List — DreamEx Tech' : 'Daftar Bacaan — DreamEx Tech'
+    return () => { document.title = 'DreamEx Tech — Engineering, AI & QA' }
+  }, [en])
+  return <main id="main-content" className="reading-list-page container">
+    <div className="reading-list-header"><span className="section-kicker">{en ? 'YOUR KNOWLEDGE SPACE' : 'RUANG PENGETAHUAN ANDA'}</span><h1>{en ? 'Reading list' : 'Daftar bacaan'} <span>{en ? 'for later.' : 'untuk nanti.'}</span></h1><p>{en ? 'Keep useful engineering notes close and return whenever you are ready.' : 'Simpan catatan engineering yang berguna dan baca kembali kapan pun Anda siap.'}</p><span className="reading-list-count">{savedArticles.length} {en ? (savedArticles.length === 1 ? 'article saved' : 'articles saved') : 'artikel tersimpan'}</span></div>
+    {savedArticles.length ? <div className="article-grid">{savedArticles.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} />)}</div> : <div className="reading-list-empty"><Bookmark size={24} /><h2>{en ? 'Your reading list is ready.' : 'Daftar bacaan Anda siap.'}</h2><p>{en ? 'Save an article with the bookmark icon to build your personal reading list.' : 'Tekan ikon bookmark pada artikel untuk membuat daftar bacaan pribadi.'}</p><Link className="button button-primary" to="/#latest">{en ? 'Explore articles' : 'Jelajahi artikel'} <ArrowRight size={16} /></Link></div>}
   </main>
 }
 
@@ -283,6 +335,7 @@ function ArticlePage() {
   const article = articles.find(item => item.slug === slug)
   const translated = article && language === 'en' ? articleTranslations[article.slug] : undefined
   const [progress, setProgress] = useState(0)
+  const { isSaved, toggleSaved } = useReadingList()
   const [linkCopied, setLinkCopied] = useState(false)
   const [copyError, setCopyError] = useState(false)
   const relatedArticles = useMemo(() => article ? articles
@@ -367,7 +420,7 @@ function ArticlePage() {
     <Link className="back-link" to="/">{t('backAll')}</Link>
     <div className="article-header"><span className="category-pill">{categoryLabel(article.category, language)}</span><h1>{translated?.title ?? article.title}</h1><p>{translated?.excerpt ?? article.excerpt}</p><div className="article-meta"><span>{new Date(article.date + 'T00:00:00').toLocaleDateString(language === 'en' ? 'en-US' : 'id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span><span>•</span><span>{language === 'en' ? article.readTime.replace('menit', 'min') : article.readTime}</span><span>•</span><span>{t('editorial')}</span></div></div>
     <div className="article-body">{(translated?.body ?? article.body).map((paragraph, index) => <p key={index}>{paragraph}</p>)}<div className="article-note"><strong><ShieldCheck size={16} /> {t('engineeringNote')}</strong><p>{t('noteDescription')}</p></div></div>
-    <div className="article-end"><span>{t('topicsLabel')}</span><div className="tag-row">{article.tags.map(tag => <span key={tag}>#{tag.replaceAll(' ', '')}</span>)}</div><button className="copy-link-button" onClick={shareArticle}><Share2 size={14} /> {language === 'en' ? 'Share article' : 'Bagikan artikel'}</button><button className="copy-link-button" onClick={copyArticleLink}><Copy size={14} /> {linkCopied ? t('copied') : t('copyLink')}</button></div>
+    <div className="article-end"><span>{t('topicsLabel')}</span><div className="tag-row">{article.tags.map(tag => <span key={tag}>#{tag.replaceAll(' ', '')}</span>)}</div><button className="copy-link-button" onClick={() => toggleSaved(article.slug)} aria-pressed={isSaved(article.slug)}><Bookmark size={14} /> {isSaved(article.slug) ? (language === 'en' ? 'Saved to reading list' : 'Tersimpan di daftar bacaan') : (language === 'en' ? 'Save to reading list' : 'Simpan ke daftar bacaan')}</button><button className="copy-link-button" onClick={shareArticle}><Share2 size={14} /> {language === 'en' ? 'Share article' : 'Bagikan artikel'}</button><button className="copy-link-button" onClick={copyArticleLink}><Copy size={14} /> {linkCopied ? t('copied') : t('copyLink')}</button></div>
     {copyError && <p className="copy-error" role="status">{t('copyError')}</p>}
     {relatedArticles.length > 0 && <section className="related-section"><div className="related-heading"><span className="section-kicker">{t('nextLearning')}</span><h2>{t('continueExploring')}</h2></div><div className="related-grid">{relatedArticles.map((related, index) => <ArticleCard key={related.slug} article={related} index={index} />)}</div></section>}
     <div className="article-next"><div><span className="section-kicker">{t('keepExploring')}</span><h2>{t('shareKnowledge')}</h2></div><Link className="button button-primary" to="/">{t('exploreArticles')} <ArrowRight size={16} /></Link></div>
@@ -389,6 +442,7 @@ function CommandPalette() {
     { id: 'about', label: isEnglish ? 'About DreamEx Tech' : 'Tentang DreamEx Tech', detail: isEnglish ? 'Mission, disciplines, and principles' : 'Misi, disiplin, dan prinsip', icon: Braces, run: () => navigate('/about') },
     { id: 'topics', label: isEnglish ? 'Explore topics' : 'Jelajahi topik', detail: isEnglish ? 'Software · QA · AI' : 'Software · QA · AI', icon: Command, run: () => { if (location.pathname !== '/') navigate('/'); window.setTimeout(() => document.getElementById('topics')?.scrollIntoView({ behavior: 'smooth' }), 60) } },
     { id: 'articles', label: isEnglish ? 'Browse articles' : 'Jelajahi artikel', detail: isEnglish ? 'Search the knowledge base' : 'Cari di basis pengetahuan', icon: BookOpen, run: () => { if (location.pathname !== '/') navigate('/'); window.setTimeout(() => { document.getElementById('latest')?.scrollIntoView({ behavior: 'smooth' }); document.querySelector<HTMLInputElement>('.search-box input')?.focus() }, 60) } },
+    { id: 'reading-list', label: isEnglish ? 'Open reading list' : 'Buka daftar bacaan', detail: isEnglish ? 'Your saved engineering notes' : 'Catatan engineering tersimpan', icon: Bookmark, run: () => navigate('/reading-list') },
   ]
   const term = query.trim().toLowerCase()
   const filteredArticles = articles.filter(article => {
@@ -537,5 +591,5 @@ function BackToTop() {
 
 export default function App() {
   const { t } = useLanguage()
-  return <><a className="skip-link" href="#main-content">{t('skip')}</a><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/about" element={<AboutPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
+  return <><a className="skip-link" href="#main-content">{t('skip')}</a><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
 }

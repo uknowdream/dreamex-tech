@@ -1467,3 +1467,29 @@ main, header, footer, section, .container {
 .rss-subscribe-status { margin: 13px 0 0; color: #93a4bd; font-size: 12px; line-height: 1.7; }
 .rss-hero-actions .button { cursor: pointer; }
 .rss-hero-actions .button:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+
+
+/* Personal reading list */
+.card-meta-actions { display: inline-flex; align-items: center; gap: .65rem; }
+.bookmark-button {
+  display: inline-grid; place-items: center; width: 2rem; height: 2rem; flex: 0 0 auto;
+  color: var(--text-muted, #8c91a2); background: transparent;
+  border: 1px solid var(--border, rgba(255,255,255,.12)); border-radius: .65rem;
+  cursor: pointer; transition: color .2s ease, border-color .2s ease, background .2s ease, transform .2s ease;
+}
+.bookmark-button:hover, .bookmark-button[aria-pressed="true"] {
+  color: var(--accent, #a78bfa); border-color: currentColor; background: rgba(139, 92, 246, .09);
+}
+.bookmark-button:active { transform: scale(.94); }
+.bookmark-button:focus-visible { outline: 2px solid var(--accent, #a78bfa); outline-offset: 3px; }
+.reading-list-page { min-height: 55vh; padding-top: clamp(3.5rem, 8vw, 6.5rem); padding-bottom: clamp(4rem, 8vw, 7rem); }
+.reading-list-header { max-width: 760px; margin: 0 auto 2.75rem; text-align: center; }
+.reading-list-header h1 { margin: .8rem 0 1rem; font-size: clamp(2.4rem, 6vw, 4.5rem); letter-spacing: -.055em; line-height: 1.05; }
+.reading-list-header h1 span { color: var(--accent, #a78bfa); }
+.reading-list-header p { max-width: 600px; margin: 0 auto 1.2rem; color: var(--text-muted, #9ca3af); line-height: 1.75; }
+.reading-list-count { display: inline-flex; padding: .45rem .8rem; border: 1px solid var(--border, rgba(255,255,255,.12)); border-radius: 999px; color: var(--text-muted, #9ca3af); font-size: .82rem; }
+.reading-list-empty { display: flex; flex-direction: column; align-items: center; gap: .75rem; max-width: 540px; margin: 0 auto; padding: 3rem 1.5rem; text-align: center; border: 1px dashed var(--border, rgba(255,255,255,.16)); border-radius: 1.25rem; }
+.reading-list-empty > svg { color: var(--accent, #a78bfa); }
+.reading-list-empty h2 { margin: .25rem 0 0; font-size: 1.4rem; }
+.reading-list-empty p { margin: 0 0 .75rem; color: var(--text-muted, #9ca3af); line-height: 1.7; }
+@media (prefers-reduced-motion: reduce) { .bookmark-button { transition: none; } }
