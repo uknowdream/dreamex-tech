@@ -3,7 +3,7 @@ import { join } from 'node:path'
 
 const root = process.cwd()
 const source = readFileSync(join(root, 'src/articles.ts'), 'utf8')
-const articleObjects = [...source.matchAll(/\{\s*slug:\s*'([^']+)'([\s\S]*?)\n\s*\}/g)]
+const articleObjects = [...source.matchAll(/\\{\\s*slug:\\s*'([^']+)'([\\s\\S]*?)\\s*\\},?/g)]
 
 const readField = (body, field) => {
   const match = body.match(new RegExp(`(?:^|[,\n]\\s*)${field}:\\s*'((?:\\\\.|[^'])*)'`))
