@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, Route, Routes, useLocation, useParams } from 'react-router-dom'
-import { ArrowDownRight, ArrowRight, BookOpen, Braces, Check, ChevronUp, Github, Search, ShieldCheck, Sparkles, Terminal, Zap } from 'lucide-react'
+import { ArrowDownRight, ArrowRight, Braces, Check, ChevronUp, Github, Search, ShieldCheck, Sparkles, Terminal, Zap } from 'lucide-react'
 import { articles } from './articles'
 
 const categories = ['Semua', 'Software Engineering', 'QA Automation', 'AI & Technology']
