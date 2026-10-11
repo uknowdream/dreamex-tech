@@ -163,6 +163,26 @@ test('article citation can be copied as a Markdown reference', async ({ page }) 
   expect(citation).toMatch(/^\[.+\]\(https:\/\/dreamex\.tech\/blog\/qa-automation-foundations\) — DreamEx Tech \(\d{4}-\d{2}-\d{2}\)$/)
 })
 
+test('reading list can be exported as portable Markdown', async ({ page, isMobile }) => {
+  const firstArticle = page.locator('.article-card').first()
+  const title = (await firstArticle.locator('h3 a').innerText()).trim()
+  await firstArticle.getByRole('button', { name: /save article|simpan artikel/i }).click()
+  await openMobileNavigation(page, isMobile)
+  await page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: async (text: string) => { (window as Window & { __readingListExport?: string }).__readingListExport = text } },
+    })
+  })
+  await page.getByRole('button', { name: /copy as markdown/i }).click()
+  await expect(page.getByRole('status')).toContainText(/reading list copied as markdown/i)
+  const markdown = await page.evaluate(() => (window as Window & { __readingListExport?: string }).__readingListExport ?? '')
+  expect(markdown).toContain('# My DreamEx Tech Reading List')
+  expect(markdown).toContain(title)
+  expect(markdown).toContain('https://dreamex.tech/blog/')
+})
+
 test('reading progress is saved and surfaced as a resume-reading card', async ({ page }) => {
   await page.goto('/blog/qa-automation-foundations')
   await page.evaluate(() => {

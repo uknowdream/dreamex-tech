@@ -271,13 +271,32 @@ function ReadingListPage() {
   const { language } = useLanguage()
   const { savedSlugs } = useReadingList()
   const en = language === 'en'
+  const [exportStatus, setExportStatus] = useState('')
   const savedArticles = savedSlugs.map(slug => articles.find(article => article.slug === slug)).filter((article): article is typeof articles[number] => Boolean(article))
+  const copyReadingList = async () => {
+    const markdown = [
+      `# ${en ? 'My DreamEx Tech Reading List' : 'Daftar Bacaan DreamEx Tech Saya'}`,
+      '',
+      ...savedArticles.flatMap(article => {
+        const translated = en ? articleTranslations[article.slug] : undefined
+        return [`- [${translated?.title ?? article.title}](https://dreamex.tech/blog/${article.slug})`, `  ${translated?.excerpt ?? article.excerpt}`]
+      }),
+    ].join('\\n')
+    try {
+      await navigator.clipboard.writeText(markdown)
+      setExportStatus(en ? 'Reading list copied as Markdown.' : 'Daftar bacaan disalin dalam format Markdown.')
+    } catch {
+      setExportStatus(en ? 'Clipboard unavailable. Allow clipboard access and try again.' : 'Clipboard tidak tersedia. Izinkan akses clipboard lalu coba lagi.')
+    }
+  }
   useEffect(() => {
     document.title = en ? 'Reading List — DreamEx Tech' : 'Daftar Bacaan — DreamEx Tech'
     return () => { document.title = 'DreamEx Tech — Engineering, AI & QA' }
   }, [en])
   return <main id="main-content" className="reading-list-page container">
-    <div className="reading-list-header"><span className="section-kicker">{en ? 'YOUR KNOWLEDGE SPACE' : 'RUANG PENGETAHUAN ANDA'}</span><h1>{en ? 'Reading list' : 'Daftar bacaan'} <span>{en ? 'for later.' : 'untuk nanti.'}</span></h1><p>{en ? 'Keep useful engineering notes close and return whenever you are ready.' : 'Simpan catatan engineering yang berguna dan baca kembali kapan pun Anda siap.'}</p><span className="reading-list-count">{savedArticles.length} {en ? (savedArticles.length === 1 ? 'article saved' : 'articles saved') : 'artikel tersimpan'}</span></div>
+    <div className="reading-list-header"><span className="section-kicker">{en ? 'YOUR KNOWLEDGE SPACE' : 'RUANG PENGETAHUAN ANDA'}</span><h1>{en ? 'Reading list' : 'Daftar bacaan'} <span>{en ? 'for later.' : 'untuk nanti.'}</span></h1><p>{en ? 'Keep useful engineering notes close and return whenever you are ready.' : 'Simpan catatan engineering yang berguna dan baca kembali kapan pun Anda siap.'}</p><span className="reading-list-count">{savedArticles.length} {en ? (savedArticles.length === 1 ? 'article saved' : 'articles saved') : 'artikel tersimpan'}</span>
+    {savedArticles.length > 0 && <button type="button" className="copy-link-button reading-list-export" onClick={copyReadingList}><Copy size={14} /> {en ? 'Copy as Markdown' : 'Salin sebagai Markdown'}</button>}
+    {exportStatus && <p className="reading-list-export-status" role="status" aria-live="polite">{exportStatus}</p>}</div>
     {savedArticles.length ? <div className="article-grid">{savedArticles.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} />)}</div> : <div className="reading-list-empty"><Bookmark size={24} /><h2>{en ? 'Your reading list is ready.' : 'Daftar bacaan Anda siap.'}</h2><p>{en ? 'Save an article with the bookmark icon to build your personal reading list.' : 'Tekan ikon bookmark pada artikel untuk membuat daftar bacaan pribadi.'}</p><Link className="button button-primary" to="/#latest">{en ? 'Explore articles' : 'Jelajahi artikel'} <ArrowRight size={16} /></Link></div>}
   </main>
 }
