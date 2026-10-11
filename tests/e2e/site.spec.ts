@@ -183,6 +183,42 @@ test('reading list can be exported as portable Markdown', async ({ page, isMobil
   expect(markdown).toContain('https://dreamex.tech/blog/')
 })
 
+test('reading list backup can be imported, validated, and merged', async ({ page, isMobile }) => {
+  const firstArticle = page.locator('.article-card').first()
+  await firstArticle.getByRole('button', { name: /save article|simpan artikel/i }).click()
+  await openMobileNavigation(page, isMobile)
+  await page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
+  await page.getByLabel(/import reading list json backup/i).setInputFiles({
+    name: 'reading-list.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({
+      format: 'dreamex-reading-list',
+      version: 1,
+      slugs: ['qa-automation-foundations', 'unknown-article', 'qa-automation-foundations'],
+    })),
+  })
+  await expect(page.getByRole('status')).toContainText(/imported 2 valid article|2 artikel valid berhasil diimpor/i)
+  await expect(page.locator('.reading-list-count')).toContainText(/2/)
+  await expect(page.getByRole('heading', { name: /qa automation foundations/i })).toBeVisible()
+  await page.getByLabel(/import reading list json backup/i).setInputFiles({
+    name: 'invalid.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{"format":"not-dreamex","version":1,"slugs":["qa-automation-foundations"]}'),
+  })
+  await expect(page.getByRole('status')).toContainText(/invalid backup file/i)
+  await expect(page.locator('.reading-list-count')).toContainText(/2/)
+})
+
+test('reading list backup downloads a versioned JSON file', async ({ page, isMobile }) => {
+  await page.locator('.article-card').first().getByRole('button', { name: /save article|simpan artikel/i }).click()
+  await openMobileNavigation(page, isMobile)
+  await page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: /download json backup/i }).click()
+  const download = await downloadPromise
+  expect(download.suggestedFilename()).toBe('dreamex-reading-list.json')
+})
+
 test('reading progress is saved and surfaced as a resume-reading card', async ({ page }) => {
   await page.goto('/blog/qa-automation-foundations')
   await page.evaluate(() => {

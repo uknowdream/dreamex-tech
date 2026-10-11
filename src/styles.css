@@ -1611,3 +1611,10 @@ main, header, footer, section, .container {
 .resume-reading-action { white-space: nowrap; }
 @media (max-width: 640px) { .resume-reading { grid-template-columns: auto minmax(0,1fr); align-items: start; padding: 1rem; gap: .8rem; } .resume-reading-icon { width: 2.5rem; height: 2.5rem; } .resume-reading-action { grid-column: 2; justify-self: start; } }
 @media (prefers-reduced-motion: reduce) { .resume-progress-track span { transition: none; } }
+
+.reading-list-tools { display: flex; align-items: center; justify-content: center; gap: .65rem; flex-wrap: wrap; margin-top: 1rem; }
+.reading-list-import { position: relative; overflow: hidden; cursor: pointer; }
+.reading-list-import input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.reading-list-import.is-disabled { opacity: .6; cursor: wait; }
+.reading-list-export-status { margin: .8rem auto 0; color: var(--text-muted, #9ca3af); font-size: .85rem; line-height: 1.6; }
+@media (max-width: 600px) { .reading-list-tools { align-items: stretch; flex-direction: column; } .reading-list-tools > * { justify-content: center; min-height: 42px; } }

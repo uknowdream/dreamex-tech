@@ -272,7 +272,55 @@ function ReadingListPage() {
   const { savedSlugs } = useReadingList()
   const en = language === 'en'
   const [exportStatus, setExportStatus] = useState('')
+  const [importing, setImporting] = useState(false)
   const savedArticles = savedSlugs.map(slug => articles.find(article => article.slug === slug)).filter((article): article is typeof articles[number] => Boolean(article))
+  const exportBackup = () => {
+    const backup = {
+      format: 'dreamex-reading-list',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      slugs: savedArticles.map(article => article.slug),
+    }
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = 'dreamex-reading-list.json'
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(url)
+    setExportStatus(en ? 'Reading list backup downloaded.' : 'Cadangan daftar bacaan berhasil diunduh.')
+  }
+  const importBackup = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0]
+    if (!file) return
+    setExportStatus('')
+    setImporting(true)
+    try {
+      if (file.size > 1024 * 1024) throw new Error('file-too-large')
+      const backup: unknown = JSON.parse(await file.text())
+      if (!backup || typeof backup !== 'object') throw new Error('invalid-format')
+      const record = backup as { format?: unknown; version?: unknown; slugs?: unknown }
+      if (record.format !== 'dreamex-reading-list' || record.version !== 1 || !Array.isArray(record.slugs)) throw new Error('invalid-format')
+      const validSlugs = record.slugs.filter((slug): slug is string => typeof slug === 'string' && articles.some(article => article.slug === slug))
+      if (validSlugs.length === 0) throw new Error('no-valid-articles')
+      const merged = [...new Set([...readSavedSlugs(), ...validSlugs])]
+      window.localStorage.setItem(READING_LIST_KEY, JSON.stringify(merged))
+      window.dispatchEvent(new Event(READING_LIST_EVENT))
+      setExportStatus(en ? `Imported ${validSlugs.length} valid article(s) into your reading list.` : `${validSlugs.length} artikel valid berhasil diimpor ke daftar bacaan.`)
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : 'invalid-format'
+      setExportStatus(reason === 'file-too-large'
+        ? (en ? 'Backup is too large. Choose a file under 1 MB.' : 'File cadangan terlalu besar. Pilih file di bawah 1 MB.')
+        : reason === 'no-valid-articles'
+          ? (en ? 'No valid article links were found in this backup.' : 'Tidak ditemukan tautan artikel valid dalam cadangan ini.')
+          : (en ? 'Invalid backup file. Use a DreamEx Tech reading-list JSON backup.' : 'File cadangan tidak valid. Gunakan cadangan JSON daftar bacaan DreamEx Tech.'))
+    } finally {
+      setImporting(false)
+      event.currentTarget.value = ''
+    }
+  }
   const copyReadingList = async () => {
     const markdown = [
       `# ${en ? 'My DreamEx Tech Reading List' : 'Daftar Bacaan DreamEx Tech Saya'}`,
@@ -281,7 +329,7 @@ function ReadingListPage() {
         const translated = en ? articleTranslations[article.slug] : undefined
         return [`- [${translated?.title ?? article.title}](https://dreamex.tech/blog/${article.slug})`, `  ${translated?.excerpt ?? article.excerpt}`]
       }),
-    ].join('\\n')
+    ].join('\n')
     try {
       await navigator.clipboard.writeText(markdown)
       setExportStatus(en ? 'Reading list copied as Markdown.' : 'Daftar bacaan disalin dalam format Markdown.')
@@ -295,7 +343,14 @@ function ReadingListPage() {
   }, [en])
   return <main id="main-content" className="reading-list-page container">
     <div className="reading-list-header"><span className="section-kicker">{en ? 'YOUR KNOWLEDGE SPACE' : 'RUANG PENGETAHUAN ANDA'}</span><h1>{en ? 'Reading list' : 'Daftar bacaan'} <span>{en ? 'for later.' : 'untuk nanti.'}</span></h1><p>{en ? 'Keep useful engineering notes close and return whenever you are ready.' : 'Simpan catatan engineering yang berguna dan baca kembali kapan pun Anda siap.'}</p><span className="reading-list-count">{savedArticles.length} {en ? (savedArticles.length === 1 ? 'article saved' : 'articles saved') : 'artikel tersimpan'}</span>
-    {savedArticles.length > 0 && <button type="button" className="copy-link-button reading-list-export" onClick={copyReadingList}><Copy size={14} /> {en ? 'Copy as Markdown' : 'Salin sebagai Markdown'}</button>}
+    {savedArticles.length > 0 && <div className="reading-list-tools">
+      <button type="button" className="copy-link-button reading-list-export" onClick={copyReadingList}><Copy size={14} /> {en ? 'Copy as Markdown' : 'Salin sebagai Markdown'}</button>
+      <button type="button" className="copy-link-button reading-list-export" onClick={exportBackup}><ArrowDownRight size={14} /> {en ? 'Download JSON backup' : 'Unduh cadangan JSON'}</button>
+      <label className={importing ? 'copy-link-button reading-list-import is-disabled' : 'copy-link-button reading-list-import'}>
+        <ArrowRight size={14} /> {importing ? (en ? 'Importing…' : 'Mengimpor…') : (en ? 'Import JSON backup' : 'Impor cadangan JSON')}
+        <input type="file" accept="application/json,.json" aria-label={en ? 'Import reading list JSON backup' : 'Impor cadangan JSON daftar bacaan'} disabled={importing} onChange={importBackup} />
+      </label>
+    </div>}
     {exportStatus && <p className="reading-list-export-status" role="status" aria-live="polite">{exportStatus}</p>}</div>
     {savedArticles.length ? <div className="article-grid">{savedArticles.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} />)}</div> : <div className="reading-list-empty"><Bookmark size={24} /><h2>{en ? 'Your reading list is ready.' : 'Daftar bacaan Anda siap.'}</h2><p>{en ? 'Save an article with the bookmark icon to build your personal reading list.' : 'Tekan ikon bookmark pada artikel untuk membuat daftar bacaan pribadi.'}</p><Link className="button button-primary" to="/#latest">{en ? 'Explore articles' : 'Jelajahi artikel'} <ArrowRight size={16} /></Link></div>}
   </main>
