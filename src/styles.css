@@ -753,3 +753,67 @@ body {
 @keyframes command-fade-in{from{opacity:0}to{opacity:1}}@keyframes command-pop-in{from{opacity:0;transform:translateY(-8px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:640px){.command-trigger{right:14px;bottom:14px;padding:10px 11px}.command-trigger span{display:none}.command-trigger kbd{font-size:9px}.back-to-top{bottom:67px}.command-backdrop{padding:8vh 10px 15px}.command-dialog{max-height:84vh;border-radius:12px}.command-search-row{padding:14px 13px;gap:9px}.command-search-row input{font-size:13px}.command-results{padding:8px}.command-item{padding:10px 8px}.command-footer{gap:10px;padding:10px 12px}}
 @media(prefers-reduced-motion:reduce){.command-backdrop,.command-dialog{animation:none!important}}
+
+
+/* Mobile viewport containment: prevent decorative elements and fixed controls from
+   expanding the document's horizontal scroll area on touch browsers. */
+html, body, #root {
+  width: 100%;
+  max-width: 100%;
+}
+html, body {
+  overflow-x: clip;
+}
+#root {
+  overflow-x: clip;
+}
+main, header, footer, section, .container {
+  min-width: 0;
+}
+.hero, .hero-grid, .hero-visual, .topics-section, .featured-section,
+.articles-section, .newsletter, .footer {
+  max-width: 100%;
+}
+.footer-inner, .footer-brand, .footer-links, .copyright {
+  min-width: 0;
+  max-width: 100%;
+}
+.footer-links {
+  flex-wrap: wrap;
+}
+.footer-brand > p, .copyright {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  .container {
+    width: calc(100% - 24px);
+    max-width: 100%;
+  }
+  .hero-visual {
+    overflow: clip;
+  }
+  .chip-top { right: 3px; }
+  .chip-bottom { left: 3px; }
+  .orbit-one, .orbit-two { max-width: 100vw; }
+  .footer-inner {
+    width: calc(100% - 24px);
+    gap: 18px;
+  }
+  .footer-links {
+    gap: 12px 18px;
+    width: 100%;
+  }
+  .copyright {
+    line-height: 1.8;
+    width: 100%;
+  }
+  .command-trigger {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    max-width: calc(100vw - 24px);
+  }
+  .back-to-top {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(68px, calc(env(safe-area-inset-bottom) + 60px));
+  }
+}
