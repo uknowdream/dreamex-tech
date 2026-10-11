@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 async function openMobileNavigation(page: Page, isMobile: boolean) {
   if (!isMobile) return
-  const toggle = page.getByRole('button', { name: /open navigation menu|buka menu/i })
+  const toggle = page.getByRole('button', { name: /open menu|buka menu/i })
   if (await toggle.isVisible()) await toggle.click()
 }
 
