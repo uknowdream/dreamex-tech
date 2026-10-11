@@ -1450,3 +1450,7 @@ main, header, footer, section, .container {
   .rss-article-card, .rss-read-link svg { transition: none !important; }
   .rss-article-card:hover { transform: none; }
 }
+
+.rss-subscribe-status { margin: 13px 0 0; color: #93a4bd; font-size: 12px; line-height: 1.7; }
+.rss-hero-actions .button { cursor: pointer; }
+.rss-hero-actions .button:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
