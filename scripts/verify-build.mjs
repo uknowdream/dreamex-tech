@@ -22,6 +22,7 @@ if (errors.length === 0) {
   const sitemap = readFileSync(join(dist, 'sitemap.xml'), 'utf8')
   const rss = readFileSync(join(dist, 'rss.xml'), 'utf8')
   const source = readFileSync(join(root, 'src/articles.ts'), 'utf8')
+  const appSource = readFileSync(join(root, 'src/App.tsx'), 'utf8')
 
   for (const [label, pattern] of [
     ['page title', /<title>[^<]+<\/title>/i],
@@ -45,6 +46,9 @@ if (errors.length === 0) {
     if (!articleSlugs.includes(slug)) errors.push(`Sitemap references unknown article: ${slug}`)
   }
 
+  if (!appSource.includes('function RssPage()') || !appSource.includes('path="/rss" element={<RssPage />}')) errors.push('Human-readable RSS web route is missing')
+  if (!appSource.includes("navigator.clipboard.writeText('https://www.dreamex.tech/rss.xml')")) errors.push('RSS subscription action must copy the feed URL without navigating to raw XML')
+  if (appSource.includes('href="/rss.xml"><Rss size={16} />')) errors.push('RSS subscription CTA still navigates directly to raw XML')
   if (!rss.includes('<?xml-stylesheet type="text/xsl" href="/rss.xsl"?>')) errors.push('RSS browser stylesheet reference is missing')
   if (!rss.includes('<rss version="2.0"') || !rss.includes('<channel>') || !rss.includes('https://dreamex.tech/rss.xml')) {
     errors.push('RSS feed is missing required channel metadata')
