@@ -127,7 +127,6 @@ test('installable PWA exposes an install action when the browser supports it', a
   await expect(page.getByRole('status').filter({ hasText: /installation accepted|pemasangan disetujui/i })).toBeVisible()
 })
 
-test('sitemap includes the public knowledge and engineering routes', async ({ request }) => {
 test('reading progress is saved and surfaced as a resume-reading card', async ({ page }) => {
   await page.goto('/blog/qa-automation-foundations')
   await page.evaluate(() => {
@@ -141,7 +140,7 @@ test('reading progress is saved and surfaced as a resume-reading card', async ({
   await expect(page.getByRole('link', { name: /continue reading|lanjut membaca/i })).toHaveAttribute('href', '/blog/qa-automation-foundations')
 })
 
-
+test('sitemap includes the public knowledge and engineering routes', async ({ request }) => {
   const response = await request.get('/sitemap.xml')
   expect(response.ok()).toBeTruthy()
   const xml = await response.text()
