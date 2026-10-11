@@ -57,7 +57,7 @@ function Home() {
 
   useEffect(() => { document.title = 'DreamEx Tech — Engineering, AI & QA' }, [])
 
-  return <main>
+  return <main id="main-content">
     <section className="hero"><div className="hero-gridlines" /><div className="container hero-grid">
       <div className="hero-copy"><div className="eyebrow"><span className="eyebrow-dot" /> INDEPENDENT TECH KNOWLEDGE PLATFORM</div>
         <h1>Think deeper.<br /><span>Build smarter.</span><br />Ship with quality.</h1>
@@ -155,8 +155,8 @@ function ArticlePage() {
       setMeta('meta[name="description"]', 'content', 'DreamEx Tech — practical notes on software engineering, quality engineering, AI, and modern technology.')
     }
   }, [article])
-  if (!article) return <main className="container not-found"><h1>Artikel tidak ditemukan</h1><p>Artikel mungkin dipindahkan atau belum tersedia.</p><Link className="read-link" to="/">Kembali ke beranda <ArrowRight size={16} /></Link></main>
-  return <main className="article-page"><div className="reading-progress" style={{ width: `${progress}%` }} /><div className="container article-container">
+  if (!article) return <main id="main-content" className="container not-found"><h1>Artikel tidak ditemukan</h1><p>Artikel mungkin dipindahkan atau belum tersedia.</p><Link className="read-link" to="/">Kembali ke beranda <ArrowRight size={16} /></Link></main>
+  return <main id="main-content" className="article-page"><div className="reading-progress" style={{ width: `${progress}%` }} /><div className="container article-container">
     <Link className="back-link" to="/">← Semua artikel</Link>
     <div className="article-header"><span className="category-pill">{article.category}</span><h1>{article.title}</h1><p>{article.excerpt}</p><div className="article-meta"><span>{new Date(article.date + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span><span>•</span><span>{article.readTime}</span><span>•</span><span>DreamEx Editorial</span></div></div>
     <div className="article-body">{article.body.map((paragraph, index) => <p key={index}>{paragraph}</p>)}<div className="article-note"><strong><ShieldCheck size={16} /> Engineering note</strong><p>Gunakan artikel ini sebagai titik awal. Validasi pendekatan terhadap konteks, risiko, dan kebutuhan proyek nyata.</p></div></div>
@@ -184,5 +184,5 @@ function BackToTop() {
 }
 
 export default function App() {
-  return <><ScrollToTop /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main className="container not-found"><h1>Halaman tidak ditemukan</h1><p>Alamat yang dibuka tidak tersedia.</p><Link className="read-link" to="/">Kembali ke beranda <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
+  return <><a className="skip-link" href="#main-content">Lewati ke konten utama</a><ScrollToTop /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>Halaman tidak ditemukan</h1><p>Alamat yang dibuka tidak tersedia.</p><Link className="read-link" to="/">Kembali ke beranda <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
 }
