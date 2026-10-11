@@ -1,0 +1,83 @@
+import { expect, test } from '@playwright/test'
+
+test.beforeEach(async ({ page }) => {
+  await page.goto('/')
+})
+
+test('homepage renders primary content and skip navigation', async ({ page }) => {
+  await expect(page.locator('h1').first()).toBeVisible()
+  await expect(page.locator('a.skip-link')).toHaveAttribute('href', '#main-content')
+  await expect(page.locator('#latest')).toBeVisible()
+  await expect(page.getByRole('navigation').first()).toBeVisible()
+})
+
+test('language switch updates interface language and document lang', async ({ page }) => {
+  await page.getByRole('button', { name: 'ID', exact: true }).click()
+  await expect(page.locator('html')).toHaveAttribute('lang', 'id')
+  await expect(page.getByRole('heading', { name: /Berpikir lebih dalam/i })).toBeVisible()
+  await page.getByRole('button', { name: 'EN', exact: true }).click()
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(page.getByRole('heading', { name: /Think deeper/i })).toBeVisible()
+})
+
+test('search filters articles and clear-search restores results', async ({ page }) => {
+  const search = page.getByRole('textbox', { name: /search articles/i })
+  const initialCount = await page.locator('.article-card').count()
+  expect(initialCount).toBeGreaterThan(0)
+  await search.fill('zz-no-matching-dreamex-query-zz')
+  await expect(page.locator('.empty-state')).toBeVisible()
+  await search.fill('QA')
+  await expect(page.locator('.article-card').first()).toBeVisible()
+  await page.getByRole('button', { name: /clear search/i }).click()
+  await expect(search).toHaveValue('')
+  await expect(page.locator('.article-card')).toHaveCount(initialCount)
+})
+
+test('category filters expose selected state and can be reset', async ({ page }) => {
+  const qaFilter = page.getByRole('button', { name: 'QA Automation', exact: true })
+  await qaFilter.click()
+  await expect(qaFilter).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.article-card').first()).toBeVisible()
+  const allFilter = page.getByRole('button', { name: 'All', exact: true })
+  await allFilter.click()
+  await expect(allFilter).toHaveAttribute('aria-pressed', 'true')
+})
+
+test('about page loads through client navigation', async ({ page }) => {
+  await page.getByRole('link', { name: 'About', exact: true }).click()
+  await expect(page).toHaveURL(/\/about$/)
+  await expect(page.getByRole('heading', { name: /Turn curiosity into/i })).toBeVisible()
+})
+
+test('article routes load and invalid article slugs show a useful not-found state', async ({ page }) => {
+  const articleLink = page.locator('.article-card h3 a').first()
+  await articleLink.click()
+  await expect(page).toHaveURL(/\/blog\//)
+  await expect(page.locator('main h1').first()).toBeVisible()
+  await page.goto('/blog/this-article-does-not-exist')
+  await expect(page.getByRole('heading', { name: /Article not found/i })).toBeVisible()
+})
+
+test('RSS reading page and machine-readable feed are available', async ({ page, request }) => {
+  await page.goto('/rss')
+  await expect(page.getByRole('heading', { name: /Ideas worth your time/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Subscribe to RSS/i })).toHaveAttribute('href', '/rss.xml')
+  const response = await request.get('/rss.xml')
+  expect(response.ok()).toBeTruthy()
+  expect(await response.text()).toContain('<rss version="2.0"')
+})
+
+test('unknown routes render a not-found page', async ({ page }) => {
+  await page.goto('/this-route-should-not-exist')
+  await expect(page.getByRole('heading', { name: /Page not found/i })).toBeVisible()
+})
+
+test('mobile viewport has no horizontal document overflow', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'This check targets the mobile browser project')
+  await page.setViewportSize({ width: 390, height: 844 })
+  const dimensions = await page.evaluate(() => ({
+    documentWidth: document.documentElement.scrollWidth,
+    viewportWidth: document.documentElement.clientWidth,
+  }))
+  expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth)
+})
