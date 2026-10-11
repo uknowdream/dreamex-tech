@@ -22,6 +22,7 @@ if (errors.length === 0) {
   const sitemap = readFileSync(join(dist, 'sitemap.xml'), 'utf8')
   const rss = readFileSync(join(dist, 'rss.xml'), 'utf8')
   const source = readFileSync(join(root, 'src/articles.ts'), 'utf8')
+  const styles = readFileSync(join(root, 'src/styles.css'), 'utf8')
 
   for (const [label, pattern] of [
     ['page title', /<title>[^<]+<\/title>/i],
@@ -34,6 +35,8 @@ if (errors.length === 0) {
   if (!robots.includes('Sitemap: https://dreamex.tech/sitemap.xml')) {
     errors.push('robots.txt does not reference the production sitemap')
   }
+
+  if (!styles.includes('@media (prefers-reduced-motion: reduce)')) errors.push('Stylesheet does not respect reduced-motion preferences')
 
   const articleSlugs = [...source.matchAll(/slug:\s*'([^']+)'/g)].map(match => match[1])
   const sitemapSlugs = [...sitemap.matchAll(/https:\/\/dreamex\.tech\/blog\/([^<\s]+)/g)].map(match => match[1])
