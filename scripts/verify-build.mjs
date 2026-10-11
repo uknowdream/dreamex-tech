@@ -99,7 +99,6 @@ if (!appSource.includes('path="/reading-list"') || !appSource.includes('function
   errors.push('Personal reading list route and persistence are required')
 }
 
-const appSource = readFileSync(join(root, 'src', 'App.tsx'), 'utf8')
 if (!appSource.includes('path="/lab"') || !appSource.includes('function EngineeringLabPage')) {
   errors.push('Engineering Lab route and toolkit are required')
 }
