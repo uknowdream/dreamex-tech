@@ -817,3 +817,111 @@ main, header, footer, section, .container {
     bottom: max(68px, calc(env(safe-area-inset-bottom) + 60px));
   }
 }
+
+
+/* Final narrow-screen pass: prevent floating controls from covering content. */
+@media (max-width: 640px) {
+  html, body, #root {
+    width: 100%;
+    max-width: 100%;
+  }
+  .hero-grid,
+  .hero-grid > *,
+  .topics-heading,
+  .topics-heading > *,
+  .section-heading,
+  .section-heading > *,
+  .newsletter-inner,
+  .footer-inner,
+  .featured-copy {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .hero h1,
+  .topics-heading h2,
+  .topics-heading > p,
+  .section-heading h2,
+  .section-heading > div > p,
+  .newsletter h2,
+  .newsletter p,
+  .hero-description {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  .hero-actions {
+    width: 100%;
+    align-items: stretch;
+  }
+  .hero-actions .button {
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+  }
+  .hero-visual {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 0;
+    overflow: clip;
+  }
+  .terminal {
+    max-width: 100%;
+    transform: none;
+  }
+  .terminal-bar {
+    min-width: 0;
+  }
+  .terminal-bar small {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .terminal-content {
+    overflow-wrap: anywhere;
+  }
+  .topics-heading {
+    gap: 12px;
+  }
+  .topics-heading > p {
+    margin-top: 0;
+  }
+  .command-trigger {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    padding: 0;
+    justify-content: center;
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .command-trigger span,
+  .command-trigger kbd {
+    display: none !important;
+  }
+  .back-to-top {
+    width: 40px;
+    height: 40px;
+    right: max(13px, env(safe-area-inset-right));
+    bottom: max(64px, calc(env(safe-area-inset-bottom) + 58px));
+  }
+  .footer-links a {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+}
+@media (max-width: 380px) {
+  .container { width: calc(100% - 28px); }
+  .hero h1 { font-size: clamp(39px, 12vw, 46px); letter-spacing: -2px; }
+  .hero-actions { flex-direction: column; }
+  .hero-actions .button { width: 100%; }
+  .hero-stats { gap: 0; }
+  .hero-stats > div { padding-right: 7px; }
+  .hero-stats > div + div { padding-left: 7px; }
+  .hero-stats span { font-size: 8px; overflow-wrap: anywhere; }
+  .terminal-content { padding-inline: 12px; font-size: 9px; }
+  .terminal-bar { gap: 5px; padding-inline: 8px; }
+  .terminal-bar small { font-size: 7px; }
+  .terminal-live { font-size: 7px; }
+  .trust-inner span { font-size: 7px; letter-spacing: .35px; }
+  .topics-heading h2, .section-heading h2 { font-size: 28px; }
+}
