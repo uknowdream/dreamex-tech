@@ -44,6 +44,8 @@ if (errors.length === 0) {
   if (!app.includes("navigator.clipboard.writeText('https://www.dreamex.tech/rss.xml')")) errors.push('RSS subscription action must copy the feed URL without navigating to raw XML')
   if (app.includes('href="/rss.xml"><Rss size={16} />')) errors.push('RSS subscription CTA still navigates directly to raw XML')
 
+  if (!/"@type"\s*:\s*"Organization"/.test(html) || !/"@type"\s*:\s*"WebSite"/.test(html) || !html.includes('https://dreamex.tech/#organization')) errors.push('Homepage Organization and WebSite structured data are missing or invalid')
+
   for (const [label, pattern] of [
     ['page title', /<title>[^<]+<\/title>/i],
     ['meta description', /<meta\s+name="description"\s+content="[^"]+"/i],

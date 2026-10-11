@@ -18,6 +18,22 @@ test('homepage renders primary content and skip navigation', async ({ page, isMo
   await expect(page.getByRole('navigation').first()).toBeVisible()
 })
 
+test('homepage and article expose valid JSON-LD and page-specific canonical metadata', async ({ page }) => {
+  const homepageSchemas = await page.locator('script[type="application/ld+json"]').evaluateAll(nodes =>
+    nodes.map(node => JSON.parse(node.textContent ?? '{}'))
+  )
+  expect(homepageSchemas.some(schema => schema['@graph']?.some((entry: { '@type'?: string }) => entry['@type'] === 'Organization'))).toBeTruthy()
+  expect(homepageSchemas.some(schema => schema['@graph']?.some((entry: { '@type'?: string }) => entry['@type'] === 'WebSite'))).toBeTruthy()
+  await page.locator('.article-card h3 a').first().click()
+  await expect(page).toHaveURL(/\/blog\//)
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /^https:\/\/dreamex\.tech\/blog\//)
+  await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', /^https:\/\/dreamex\.tech\/blog\//)
+  const articleSchema = await page.locator('script[data-article-schema="true"]').evaluate(node => JSON.parse(node.textContent ?? '{}'))
+  expect(articleSchema['@type']).toBe('Article')
+  expect(articleSchema.headline).toBeTruthy()
+  expect(articleSchema.mainEntityOfPage).toMatch(/^https:\/\/dreamex\.tech\/blog\//)
+})
+
 test('language switch updates interface language and document lang', async ({ page, isMobile }) => {
   await openMobileNavigation(page, isMobile)
   await page.getByRole('button', { name: 'ID', exact: true }).click()

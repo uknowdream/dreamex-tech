@@ -24,6 +24,36 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
     <link rel="alternate" type="application/rss+xml" title="DreamEx Tech RSS Feed" href="https://dreamex.tech/rss.xml" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://dreamex.tech/#organization",
+          "name": "DreamEx Tech",
+          "url": "https://dreamex.tech/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://dreamex.tech/icon-512.png"
+          },
+          "sameAs": [
+            "https://github.com/uknowdream",
+            "https://github.com/uknowdream/dreamex-tech"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://dreamex.tech/#website",
+          "name": "DreamEx Tech",
+          "url": "https://dreamex.tech/",
+          "description": "Practical notes on software engineering, quality engineering, AI, and modern technology.",
+          "publisher": { "@id": "https://dreamex.tech/#organization" },
+          "inLanguage": ["en", "id"]
+        }
+      ]
+    }
+    </script>
     <title>DreamEx Tech — Engineering, AI & QA</title>
   </head>
   <body>
