@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   quality:
-    name: Typecheck, lint, and build
+    name: Typecheck, lint, build, and verify output
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,3 +28,5 @@ jobs:
         run: npm run lint
       - name: Production build
         run: npm run build
+      - name: Verify production output
+        run: npm run verify:build
