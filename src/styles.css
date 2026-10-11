@@ -26,3 +26,170 @@
 .language-option.active{background:var(--green);color:#101827}
 .language-option:focus-visible{outline:2px solid var(--green);outline-offset:2px}
 @media(max-width:640px){.language-switch{margin:7px 0 3px;align-self:flex-start}.language-option{min-height:36px;min-width:42px}}
+
+/* Motion system: restrained, performance-friendly motion for a premium engineering feel */
+:root {
+  --motion-fast: 180ms;
+  --motion-base: 280ms;
+  --motion-slow: 700ms;
+  --ease-out: cubic-bezier(.2,.75,.25,1);
+}
+.site-header {
+  animation: header-enter 650ms var(--ease-out) both;
+}
+.brand-mark {
+  transition: transform var(--motion-base) var(--ease-out), box-shadow var(--motion-base) ease;
+}
+.brand:hover .brand-mark {
+  transform: rotate(-7deg) scale(1.06);
+  box-shadow: 0 0 30px #c5ff7040;
+}
+.hero-gridlines {
+  animation: grid-drift 34s linear infinite;
+}
+.hero-copy > * {
+  animation: hero-enter 760ms var(--ease-out) both;
+}
+.hero-copy > :nth-child(1) { animation-delay: 70ms; }
+.hero-copy > :nth-child(2) { animation-delay: 150ms; }
+.hero-copy > :nth-child(3) { animation-delay: 240ms; }
+.hero-copy > :nth-child(4) { animation-delay: 320ms; }
+.hero-copy > :nth-child(5) { animation-delay: 400ms; }
+.eyebrow-dot,
+.terminal-live i {
+  animation: status-pulse 2.4s ease-in-out infinite;
+}
+.hero-visual {
+  animation: visual-enter 900ms var(--ease-out) both;
+  perspective: 1000px;
+}
+.terminal {
+  transform-origin: center;
+  animation: terminal-float 7s ease-in-out infinite;
+  transition: border-color var(--motion-base) ease, box-shadow var(--motion-base) ease;
+}
+.terminal:hover {
+  border-color: #657b72;
+  box-shadow: 0 30px 95px #0008, 0 0 40px #c5ff7010;
+}
+.orbit-one {
+  animation: orbit-turn 38s linear infinite;
+}
+.orbit-two {
+  animation: orbit-turn 58s linear infinite reverse;
+}
+.floating-chip {
+  animation: chip-float 5.5s ease-in-out infinite;
+  transition: border-color var(--motion-base) ease, box-shadow var(--motion-base) ease;
+}
+.chip-bottom { animation-delay: -2.4s; }
+.floating-chip:hover {
+  border-color: #82986e;
+  box-shadow: 0 14px 34px #0007, 0 0 22px #c5ff7010;
+}
+.trust-inner span {
+  transition: color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+}
+.trust-inner span:hover {
+  color: #dbe8f8;
+  transform: translateY(-2px);
+}
+.trust-inner span svg {
+  transition: transform var(--motion-fast) var(--ease-out);
+}
+.trust-inner span:hover svg { transform: scale(1.12); }
+.topic-card {
+  isolation: isolate;
+}
+.topic-card:before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  background: linear-gradient(120deg, transparent 15%, #c5ff700b 50%, transparent 85%);
+  transform: translateX(-45%);
+  transition: opacity var(--motion-base) ease, transform 600ms var(--ease-out);
+}
+.topic-card:hover:before {
+  opacity: 1;
+  transform: translateX(20%);
+}
+.topic-icon { transition: transform var(--motion-base) var(--ease-out); }
+.topic-card:hover .topic-icon { transform: translateY(-3px) rotate(-4deg); }
+.featured-art .art-symbol {
+  animation: symbol-breathe 6s ease-in-out infinite;
+  transition: box-shadow var(--motion-base) ease, border-color var(--motion-base) ease;
+}
+.featured-card:hover .art-symbol {
+  border-color: #c5ff7066;
+  box-shadow: 0 0 70px #8b77ff22, 0 0 35px #c5ff7010;
+}
+.filter, .button, .read-link, .language-option, .back-to-top {
+  transition-timing-function: var(--ease-out);
+}
+.filter:active, .button:active, .back-to-top:active {
+  transform: translateY(1px) scale(.985);
+}
+.search-box:focus-within {
+  transition: border-color var(--motion-base) ease, box-shadow var(--motion-base) ease;
+}
+.article-card:nth-child(3n + 1) { animation-delay: 40ms; }
+.article-card:nth-child(3n + 2) { animation-delay: 100ms; }
+.article-card:nth-child(3n) { animation-delay: 160ms; }
+.article-card:hover h3 a { transition: color var(--motion-fast) ease; }
+.footer-links a { transition: color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); }
+.footer-links a:hover { transform: translateX(2px); }
+@keyframes header-enter {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes hero-enter {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes visual-enter {
+  from { opacity: 0; transform: translateY(16px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes grid-drift {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 48px 48px, 48px 48px; }
+}
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 7px #c5ff7066; }
+  50% { opacity: .58; box-shadow: 0 0 15px #c5ff70b3; }
+}
+@keyframes terminal-float {
+  0%, 100% { transform: translateY(0) rotate(.6deg); }
+  50% { transform: translateY(-7px) rotate(0deg); }
+}
+@keyframes chip-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@keyframes orbit-turn {
+  from { rotate: 0deg; }
+  to { rotate: 360deg; }
+}
+@keyframes symbol-breathe {
+  0%, 100% { transform: rotate(-8deg) scale(1); }
+  50% { transform: rotate(-4deg) scale(1.035); }
+}
+@media (max-width: 640px) {
+  .hero-copy > * { animation-duration: 600ms; }
+  .terminal { animation-duration: 8s; }
+  .orbit-two { animation-duration: 72s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-header, .hero-copy > *, .hero-visual, .hero-gridlines, .terminal,
+  .orbit-one, .orbit-two, .floating-chip, .eyebrow-dot, .terminal-live i,
+  .featured-art .art-symbol {
+    animation: none !important;
+  }
+  .brand:hover .brand-mark, .trust-inner span:hover, .topic-card:hover .topic-icon,
+  .footer-links a:hover, .filter:active, .button:active, .back-to-top:active {
+    transform: none !important;
+  }
+}
+
