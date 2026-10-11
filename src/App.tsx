@@ -203,6 +203,38 @@ function ScrollToTop() {
   return null
 }
 
+function MotionOnScroll() {
+  useEffect(() => {
+    const selector = '.topics-heading, .topic-card, .featured-card, .section-heading, .newsletter-inner'
+    const observed = new WeakSet<Element>()
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible')
+          observer.unobserve(entry.target)
+        }
+      })
+    }, { threshold: 0.12, rootMargin: '0px 0px -35px 0px' })
+    const reveal = () => {
+      document.querySelectorAll(selector).forEach((element, index) => {
+        if (observed.has(element)) return
+        observed.add(element)
+        element.classList.add('motion-reveal')
+        element.setAttribute('style', `${element.getAttribute('style') ?? ''};--reveal-delay:${Math.min(index % 3, 2) * 90}ms`)
+        observer.observe(element)
+      })
+    }
+    reveal()
+    const mutationObserver = new MutationObserver(reveal)
+    mutationObserver.observe(document.body, { childList: true, subtree: true })
+    return () => {
+      observer.disconnect()
+      mutationObserver.disconnect()
+    }
+  }, [])
+  return null
+}
+
 function BackToTop() {
   const [visible, setVisible] = useState(false)
   useEffect(() => {
@@ -215,5 +247,5 @@ function BackToTop() {
 
 export default function App() {
   const { t } = useLanguage()
-  return <><a className="skip-link" href="#main-content">{t('skip')}</a><ScrollToTop /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
+  return <><a className="skip-link" href="#main-content">{t('skip')}</a><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
 }
