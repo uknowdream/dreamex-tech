@@ -26,7 +26,6 @@ if (errors.length === 0) {
   const serviceWorker = readFileSync(join(dist, 'sw.js'), 'utf8')
   const mainSource = readFileSync(join(root, 'src', 'main.tsx'), 'utf8')
   if (!html.includes('rel="manifest"') || !mainSource.includes("serviceWorker.register('/sw.js')")) errors.push('PWA manifest link or service worker registration is missing')
-  if (!app.includes('function InstallAppButton()') || !app.includes('beforeinstallprompt') || !app.includes('function OfflineNotice()')) errors.push('PWA install action and offline status are required')
   try {
     const parsedManifest = JSON.parse(manifest)
     if (parsedManifest.name !== 'DreamEx Tech' || !parsedManifest.icons?.some(icon => icon.src === '/icon-192.png') || !parsedManifest.icons?.some(icon => icon.src === '/icon-512.png')) errors.push('PWA manifest name or required icons are invalid')
@@ -39,6 +38,7 @@ if (errors.length === 0) {
   const styles = readFileSync(join(root, 'src/styles.css'), 'utf8')
   const i18n = readFileSync(join(root, 'src/i18n.tsx'), 'utf8')
   const app = readFileSync(join(root, 'src/App.tsx'), 'utf8')
+  if (!app.includes('function InstallAppButton()') || !app.includes('beforeinstallprompt') || !app.includes('function OfflineNotice()')) errors.push('PWA install action and offline status are required')
 
   if (!app.includes('function RssPage()') || !app.includes('path="/rss" element={<RssPage />}')) errors.push('Human-readable RSS web route is missing')
   if (!app.includes("navigator.clipboard.writeText('https://www.dreamex.tech/rss.xml')")) errors.push('RSS subscription action must copy the feed URL without navigating to raw XML')
