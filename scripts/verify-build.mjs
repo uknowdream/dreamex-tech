@@ -74,6 +74,14 @@ if (errors.length === 0) {
   }
 }
 
+if (existsSync(join(dist, 'sitemap.xml'))) {
+  const sitemapOutput = readFileSync(join(dist, 'sitemap.xml'), 'utf8')
+  for (const route of ['https://dreamex.tech/about', 'https://dreamex.tech/rss']) {
+    if (!sitemapOutput.includes(`<loc>${route}</loc>`)) errors.push(`Sitemap is missing canonical route: ${route}`)
+  }
+  if (!sitemapOutput.includes('<lastmod>')) errors.push('Sitemap is missing article publication dates')
+}
+
 if (errors.length > 0) {
   console.error('Build verification failed:')
   for (const error of errors) console.error(` - ${error}`)
