@@ -13,6 +13,7 @@ requireFile(join(dist, 'index.html'), 'dist/index.html')
 requireFile(join(dist, 'robots.txt'), 'dist/robots.txt')
 requireFile(join(dist, 'sitemap.xml'), 'dist/sitemap.xml')
 requireFile(join(dist, 'rss.xml'), 'dist/rss.xml')
+requireFile(join(dist, 'rss.xsl'), 'dist/rss.xsl')
 requireFile(join(dist, 'favicon.svg'), 'dist/favicon.svg')
 
 if (errors.length === 0) {
@@ -44,6 +45,7 @@ if (errors.length === 0) {
     if (!articleSlugs.includes(slug)) errors.push(`Sitemap references unknown article: ${slug}`)
   }
 
+  if (!rss.includes('<?xml-stylesheet type="text/xsl" href="/rss.xsl"?>')) errors.push('RSS browser stylesheet reference is missing')
   if (!rss.includes('<rss version="2.0"') || !rss.includes('<channel>') || !rss.includes('https://dreamex.tech/rss.xml')) {
     errors.push('RSS feed is missing required channel metadata')
   }
