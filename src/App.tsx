@@ -8,6 +8,7 @@ import { useLanguage } from './i18n'
 const categories = ['Semua', 'Software Engineering', 'QA Automation', 'AI & Technology']
 
 function Header() {
+  const { language, setLanguage, t } = useLanguage()
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
   useEffect(() => setMenuOpen(false), [location.pathname])
@@ -21,9 +22,9 @@ function Header() {
 function Footer() {
   const { t } = useLanguage()
   return <footer className="footer"><div className="container footer-inner">
-    <div className="footer-brand"><Link className="brand" to="/"><span className="brand-mark"><Braces size={18} /></span><span>DreamEx<span className="brand-muted"> Tech</span></span></Link><p>Curiosity into engineering. Ideas into impact.</p></div>
-    <div className="footer-links"><a href="/#topics">Topics</a><a href="/#latest">Latest articles</a><a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">Open source <ArrowRight size={13} /></a></div>
-    <span className="copyright">© {new Date().getFullYear()} DreamEx Tech · Built to keep learning.</span>
+    <div className="footer-brand"><Link className="brand" to="/"><span className="brand-mark"><Braces size={18} /></span><span>DreamEx<span className="brand-muted"> Tech</span></span></Link><p>{t('footerTagline')}</p></div>
+    <div className="footer-links"><a href="/#topics">{t('footerTopics')}</a><a href="/#latest">{t('latestArticles')}</a><a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">{t('openSource')} <ArrowRight size={13} /></a></div>
+    <span className="copyright">© {new Date().getFullYear()} DreamEx Tech · {t('footerCopyright')}</span>
   </div></footer>
 }
 
@@ -39,6 +40,7 @@ function ArticleCard({ article, index = 0 }: { article: typeof articles[number];
 }
 
 function Home() {
+  const { t, language } = useLanguage()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('Semua')
   const searchInput = useRef<HTMLInputElement>(null)
@@ -82,7 +84,7 @@ function Home() {
       <a className="topic-card" href="#latest" onClick={() => setCategory('QA Automation')}><span className="topic-number">02</span><span className="topic-icon green"><ShieldCheck /></span><h3>Quality Engineering</h3><p>{t('qaDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
       <a className="topic-card" href="#latest" onClick={() => setCategory('AI & Technology')}><span className="topic-number">03</span><span className="topic-icon blue"><Sparkles /></span><h3>AI & Emerging Tech</h3><p>{t('aiDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
     </div></div></section>
-    <section className="featured-section"><div className="container featured-wrap"><div className="featured-label"><span className="section-kicker">EDITOR'S PICK</span><span className="featured-line" /></div><div className="featured-card"><div className="featured-art"><div className="art-grid" /><div className="art-symbol"><Braces size={72} strokeWidth={1.1} /></div><span className="art-index">DX / 001</span><span className="art-caption">ENGINEERING<br />FOR WHAT'S NEXT</span></div><div className="featured-copy"><span className="category-pill">{featured.category}</span><p className="featured-overline">FEATURED INSIGHT · {featured.readTime.toUpperCase()}</p><h2>{featured.title}</h2><p>{featured.excerpt}</p><Link className="read-link" to={`/blog/${featured.slug}`}>Baca insight pilihan <ArrowRight size={16} /></Link></div></div></div></section>
+    <section className="featured-section"><div className="container featured-wrap"><div className="featured-label"><span className="section-kicker">EDITOR'S PICK</span><span className="featured-line" /></div><div className="featured-card"><div className="featured-art"><div className="art-grid" /><div className="art-symbol"><Braces size={72} strokeWidth={1.1} /></div><span className="art-index">DX / 001</span><span className="art-caption">ENGINEERING<br />FOR WHAT'S NEXT</span></div><div className="featured-copy"><span className="category-pill">{featured.category}</span><p className="featured-overline">{t('featuredInsight')} · {featured.readTime.toUpperCase()}</p><h2>{featured.title}</h2><p>{featured.excerpt}</p><Link className="read-link" to={`/blog/${featured.slug}`}>Baca insight pilihan <ArrowRight size={16} /></Link></div></div></div></section>
     <section className="articles-section" id="latest"><div className="container">
       <div className="section-heading"><div><span className="section-kicker">02 — THE KNOWLEDGE LOG</span><h2>Latest <span>thinking.</span></h2><p>{t('latestDescription')}</p></div><label className="search-box"><Search size={18} /><input ref={searchInput} value={query} onChange={event => setQuery(event.target.value)} placeholder={t('searchPlaceholder')} aria-label={t('searchLabel')} /><kbd>/</kbd></label></div>
       <div className="filter-row" aria-label="Filter kategori">{categories.map(item => <button key={item} className={category === item ? 'filter active' : 'filter'} aria-pressed={category === item} onClick={() => setCategory(item)}>{item === 'Semua' ? t('all') : item}</button>)}</div>
@@ -192,5 +194,6 @@ function BackToTop() {
 }
 
 export default function App() {
-  return <><a className="skip-link" href="#main-content">{useLanguage().t('skip')}</a><ScrollToTop /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{useLanguage().t('pageNotFound')}</h1><p>{useLanguage().t('pageMissingDescription')}</p><Link className="read-link" to="/">Kembali ke beranda <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
+  const { t } = useLanguage()
+  return <><a className="skip-link" href="#main-content">{t('skip')}</a><ScrollToTop /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">Kembali ke beranda <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
 }
