@@ -10,3 +10,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <LanguageProvider><BrowserRouter><App /></BrowserRouter></LanguageProvider>
   </React.StrictMode>,
 )
+
+
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Progressive enhancement: the site remains fully usable if offline support cannot register.
+    })
+  })
+}

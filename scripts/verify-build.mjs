@@ -15,9 +15,22 @@ requireFile(join(dist, 'sitemap.xml'), 'dist/sitemap.xml')
 requireFile(join(dist, 'rss.xml'), 'dist/rss.xml')
 requireFile(join(dist, 'rss.xsl'), 'dist/rss.xsl')
 requireFile(join(dist, 'favicon.svg'), 'dist/favicon.svg')
+requireFile(join(dist, 'manifest.webmanifest'), 'dist/manifest.webmanifest')
+requireFile(join(dist, 'sw.js'), 'dist/sw.js')
+requireFile(join(dist, 'icon-192.png'), 'dist/icon-192.png')
+requireFile(join(dist, 'icon-512.png'), 'dist/icon-512.png')
 
 if (errors.length === 0) {
   const html = readFileSync(join(dist, 'index.html'), 'utf8')
+  const manifest = readFileSync(join(dist, 'manifest.webmanifest'), 'utf8')
+  const serviceWorker = readFileSync(join(dist, 'sw.js'), 'utf8')
+  const mainSource = readFileSync(join(root, 'src', 'main.tsx'), 'utf8')
+  if (!html.includes('rel="manifest"') || !mainSource.includes("serviceWorker.register('/sw.js')")) errors.push('PWA manifest link or service worker registration is missing')
+  try {
+    const parsedManifest = JSON.parse(manifest)
+    if (parsedManifest.name !== 'DreamEx Tech' || !parsedManifest.icons?.some(icon => icon.src === '/icon-192.png') || !parsedManifest.icons?.some(icon => icon.src === '/icon-512.png')) errors.push('PWA manifest name or required icons are invalid')
+  } catch { errors.push('PWA manifest is not valid JSON') }
+  if (!serviceWorker.includes("addEventListener('fetch'") || !serviceWorker.includes('CACHE_NAME')) errors.push('Offline service worker strategy is missing')
   const robots = readFileSync(join(dist, 'robots.txt'), 'utf8')
   const sitemap = readFileSync(join(dist, 'sitemap.xml'), 'utf8')
   const rss = readFileSync(join(dist, 'rss.xml'), 'utf8')

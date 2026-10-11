@@ -99,6 +99,18 @@ test('article routes load and invalid article slugs show a useful not-found stat
   await expect(page.getByRole('heading', { name: /Article not found/i })).toBeVisible()
 })
 
+test('PWA manifest, icons, and service worker are available', async ({ request }) => {
+  const manifestResponse = await request.get('/manifest.webmanifest')
+  expect(manifestResponse.ok()).toBeTruthy()
+  const manifest = await manifestResponse.json()
+  expect(manifest.name).toBe('DreamEx Tech')
+  expect(manifest.icons.some((icon: { src: string }) => icon.src === '/icon-192.png')).toBeTruthy()
+  expect((await request.get('/icon-192.png')).ok()).toBeTruthy()
+  const serviceWorker = await request.get('/sw.js')
+  expect(serviceWorker.ok()).toBeTruthy()
+  expect(await serviceWorker.text()).toContain("addEventListener('fetch'")
+})
+
 test('RSS reading page and machine-readable feed are available', async ({ page, request }) => {
   await page.goto('/rss')
   await expect(page.getByRole('heading', { name: /Ideas worth your time/i })).toBeVisible()
