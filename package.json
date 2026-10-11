@@ -10,7 +10,9 @@
     "verify:i18n": "node scripts/verify-i18n.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
-    "typecheck": "tsc -b --pretty"
+    "typecheck": "tsc -b --pretty",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
@@ -29,6 +31,7 @@
     "globals": "^15.14.0",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.19.1",
-    "vite": "^6.0.7"
+    "vite": "^6.0.7",
+    "@playwright/test": "^1.55.0"
   }
 }
