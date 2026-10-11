@@ -1005,3 +1005,103 @@ main, header, footer, section, .container {
   .chip-bottom { left: 5px; }
   .visual-caption { font-size: 6.5px; letter-spacing: .4px; }
 }
+
+
+/* Final mobile hero layout: chips are part of the visual flow, never overlays
+   on the code panel or its caption. */
+@media (max-width: 640px) {
+  .hero-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 0 0 4px;
+    overflow: visible;
+  }
+  .hero-visual > .visual-orbit { display: none; }
+  .hero-visual > .terminal {
+    order: 1;
+    width: 100%;
+    min-width: 0;
+    transform: none;
+  }
+  .hero-visual > .floating-chip {
+    position: relative;
+    inset: auto;
+    align-self: flex-start;
+    max-width: 100%;
+    margin: 0;
+    white-space: normal;
+    line-height: 1.35;
+    animation: none;
+  }
+  .hero-visual > .chip-top {
+    order: 0;
+    margin: 0 0 8px auto;
+  }
+  .hero-visual > .chip-bottom {
+    order: 2;
+    margin: 8px 0 0;
+  }
+  .hero-visual > .visual-caption {
+    order: 3;
+    position: relative;
+    inset: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 2px 0;
+    font-size: 7px;
+    line-height: 1.6;
+    letter-spacing: .6px;
+  }
+  .hero-visual > .visual-caption span {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  .hero-visual > .visual-caption span:last-child {
+    margin-left: auto;
+    text-align: right;
+  }
+  .terminal-bar {
+    display: flex;
+    min-width: 0;
+    gap: 7px;
+    padding-inline: 10px;
+  }
+  .terminal-dots { flex: 0 0 auto; }
+  .terminal-bar small {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-left: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 8px;
+    gap: 4px;
+  }
+  .terminal-live {
+    flex: 0 0 auto;
+    margin-left: 0;
+    white-space: nowrap;
+    font-size: 8px;
+    letter-spacing: 0;
+    gap: 4px;
+  }
+  .terminal-content {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    padding: 20px 14px 18px;
+    font-size: clamp(8px, 2.4vw, 10px);
+  }
+}
+@media (max-width: 380px) {
+  .terminal-bar { gap: 5px; padding-inline: 8px; }
+  .terminal-bar small { font-size: 7px; }
+  .terminal-live { font-size: 7px; }
+  .terminal-content { padding-inline: 11px; }
+  .hero-visual > .visual-caption { font-size: 6.5px; }
+}
