@@ -218,7 +218,6 @@ function RssPage() {
       setCopyFailed(true)
     }
   }
-  const sortedArticles = useMemo(() => [...articles].sort((a, b) => b.date.localeCompare(a.date)), [])
   useEffect(() => {
     const previousTitle = document.title
     document.title = en ? 'Latest Articles & RSS — DreamEx Tech' : 'Artikel Terbaru & RSS — DreamEx Tech'
