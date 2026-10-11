@@ -235,10 +235,16 @@ function CommandPalette() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [])
   useEffect(() => {
-    if (open) {
-      setQuery('')
-      setActiveIndex(0)
-      window.requestAnimationFrame(() => inputRef.current?.focus())
+    if (!open) return
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    setQuery('')
+    setActiveIndex(0)
+    window.requestAnimationFrame(() => inputRef.current?.focus())
+    return () => {
+      document.body.style.overflow = previousOverflow
+      previousFocus?.focus()
     }
   }, [open])
   useEffect(() => setActiveIndex(0), [query])
@@ -252,6 +258,16 @@ function CommandPalette() {
     {open && <div className="command-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setOpen(false) }}>
       <section className="command-dialog" role="dialog" aria-modal="true" aria-labelledby="command-title">
         <div className="command-search-row"><Search size={19} /><input ref={inputRef} value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => {
+          if (event.key === 'Tab') {
+            const dialog = event.currentTarget.closest('[role="dialog"]')
+            const focusable = dialog?.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])')
+            if (focusable?.length) {
+              const first = focusable[0]
+              const last = focusable[focusable.length - 1]
+              if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+              else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+            }
+          }
           if (event.key === 'ArrowDown') { event.preventDefault(); setActiveIndex(index => Math.min(index + 1, items.length - 1)) }
           if (event.key === 'ArrowUp') { event.preventDefault(); setActiveIndex(index => Math.max(0, index - 1)) }
           if (event.key === 'Enter' && items[activeIndex]) { event.preventDefault(); runItem(items[activeIndex]) }
