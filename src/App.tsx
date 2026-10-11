@@ -205,7 +205,7 @@ function ScrollToTop() {
 
 function MotionOnScroll() {
   useEffect(() => {
-    const selector = '.topics-heading, .topic-card, .featured-card, .section-heading, .newsletter-inner'
+    const selector = '.topics-heading, .topic-card, .featured-card, .section-heading, .newsletter-inner, .article-card, .trust-inner span, .featured-art, .article-header, .article-body > p, .article-note, .article-next, .footer-inner'
     const observed = new WeakSet<Element>()
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
