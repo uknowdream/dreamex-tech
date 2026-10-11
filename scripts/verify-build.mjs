@@ -23,6 +23,8 @@ if (errors.length === 0) {
   const rss = readFileSync(join(dist, 'rss.xml'), 'utf8')
   const source = readFileSync(join(root, 'src/articles.ts'), 'utf8')
   const styles = readFileSync(join(root, 'src/styles.css'), 'utf8')
+  const i18n = readFileSync(join(root, 'src/i18n.tsx'), 'utf8')
+  const app = readFileSync(join(root, 'src/App.tsx'), 'utf8')
 
   for (const [label, pattern] of [
     ['page title', /<title>[^<]+<\/title>/i],
@@ -36,6 +38,9 @@ if (errors.length === 0) {
     errors.push('robots.txt does not reference the production sitemap')
   }
 
+  if (!/^<!doctype html>\s*<html lang="en">/i.test(html)) errors.push('Initial HTML language must match the default English experience')
+  if (!/document\.documentElement\.lang\s*=\s*language/.test(i18n)) errors.push('Document language is not synchronized with the selected UI language')
+  if (!app.includes('className="skip-link"') || !app.includes('href="#main-content"')) errors.push('Skip link to main content is missing')
   if (!styles.includes('@media (prefers-reduced-motion: reduce)')) errors.push('Stylesheet does not respect reduced-motion preferences')
 
   const articleSlugs = [...source.matchAll(/slug:\s*'([^']+)'/g)].map(match => match[1])
