@@ -60,8 +60,9 @@ function Home() {
     const translated = language === 'en' ? articleTranslations[article.slug] : undefined
     const haystack = `${translated?.title ?? article.title} ${translated?.excerpt ?? article.excerpt} ${article.category} ${article.tags.join(' ')} ${article.body.join(' ')}`.toLowerCase()
     return matchesCategory && haystack.includes(query.toLowerCase().trim())
-  }), [category, query])
+  }), [category, query, language])
   const featured = articles[0]
+  const featuredTranslation = language === 'en' ? articleTranslations[featured.slug] : undefined
 
   useEffect(() => { document.title = 'DreamEx Tech — Engineering, AI & QA' }, [language])
 
@@ -84,10 +85,10 @@ function Home() {
       <a className="topic-card" href="#latest" onClick={() => setCategory('QA Automation')}><span className="topic-number">02</span><span className="topic-icon green"><ShieldCheck /></span><h3>Quality Engineering</h3><p>{t('qaDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
       <a className="topic-card" href="#latest" onClick={() => setCategory('AI & Technology')}><span className="topic-number">03</span><span className="topic-icon blue"><Sparkles /></span><h3>AI & Emerging Tech</h3><p>{t('aiDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
     </div></div></section>
-    <section className="featured-section"><div className="container featured-wrap"><div className="featured-label"><span className="section-kicker">EDITOR'S PICK</span><span className="featured-line" /></div><div className="featured-card"><div className="featured-art"><div className="art-grid" /><div className="art-symbol"><Braces size={72} strokeWidth={1.1} /></div><span className="art-index">DX / 001</span><span className="art-caption">ENGINEERING<br />FOR WHAT'S NEXT</span></div><div className="featured-copy"><span className="category-pill">{featured.category}</span><p className="featured-overline">{t('featuredInsight')} · {featured.readTime.toUpperCase()}</p><h2>{featured.title}</h2><p>{featured.excerpt}</p><Link className="read-link" to={`/blog/${featured.slug}`}>Baca insight pilihan <ArrowRight size={16} /></Link></div></div></div></section>
+    <section className="featured-section"><div className="container featured-wrap"><div className="featured-label"><span className="section-kicker">EDITOR'S PICK</span><span className="featured-line" /></div><div className="featured-card"><div className="featured-art"><div className="art-grid" /><div className="art-symbol"><Braces size={72} strokeWidth={1.1} /></div><span className="art-index">DX / 001</span><span className="art-caption">ENGINEERING<br />FOR WHAT'S NEXT</span></div><div className="featured-copy"><span className="category-pill">{featured.category}</span><p className="featured-overline">{t('featuredInsight')} · {featured.readTime.toUpperCase()}</p><h2>{featuredTranslation?.title ?? featured.title}</h2><p>{featuredTranslation?.excerpt ?? featured.excerpt}</p><Link className="read-link" to={`/blog/${featured.slug}`}>{t('readFeatured')} <ArrowRight size={16} /></Link></div></div></div></section>
     <section className="articles-section" id="latest"><div className="container">
       <div className="section-heading"><div><span className="section-kicker">02 — THE KNOWLEDGE LOG</span><h2>Latest <span>thinking.</span></h2><p>{t('latestDescription')}</p></div><label className="search-box"><Search size={18} /><input ref={searchInput} value={query} onChange={event => setQuery(event.target.value)} placeholder={t('searchPlaceholder')} aria-label={t('searchLabel')} /><kbd>/</kbd></label></div>
-      <div className="filter-row" aria-label="Filter kategori">{categories.map(item => <button key={item} className={category === item ? 'filter active' : 'filter'} aria-pressed={category === item} onClick={() => setCategory(item)}>{item === 'Semua' ? t('all') : item}</button>)}</div>
+      <div className="filter-row" aria-label={t('topics')}>{categories.map(item => <button key={item} className={category === item ? 'filter active' : 'filter'} aria-pressed={category === item} onClick={() => setCategory(item)}>{item === 'Semua' ? t('all') : item}</button>)}</div>
       <div className="results-meta"><span>{filtered.length} {t('found')}</span>{query && <button onClick={() => setQuery('')}>{t('clearSearch')} <span>×</span></button>}</div>
       {filtered.length ? <div className="article-grid">{filtered.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} />)}</div> : <div className="empty-state"><Search size={22} /><strong>{t('noResults')}</strong><span>{t('tryOther')}</span></div>}
     </div></section>
