@@ -104,9 +104,9 @@ const sitemapXml = [
     `    <changefreq>${url.changefreq}</changefreq>`,
     `    <priority>${url.priority}</priority>`,
     '  </url>',
-  ].join('\\n')),
+  ].join(String.fromCharCode(10))),
   '</urlset>',
   '',
-].join('\\n')
+].join(String.fromCharCode(10))
 writeFileSync(join(root, 'public/sitemap.xml'), sitemapXml)
 console.log(`Sitemap generation passed: ${sitemapUrls.length} canonical routes included.`)
