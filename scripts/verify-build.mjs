@@ -115,6 +115,9 @@ if (!appSource.includes('path="/reading-list"') || !appSource.includes('function
 if (!appSource.includes('path="/lab"') || !appSource.includes('function EngineeringLabPage')) {
   errors.push('Engineering Lab route and toolkit are required')
 }
+if (!appSource.includes('path="/learn"') || !appSource.includes('function LearningHubPage') || !appSource.includes('Engineering glossary')) {
+  errors.push('Learning Hub route, curated paths, and glossary are required')
+}
 
 if (errors.length > 0) {
   console.error('Build verification failed:')

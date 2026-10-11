@@ -83,6 +83,17 @@ test('Engineering Lab generates QA cases, bug reports, and formatted JSON', asyn
   await expect(page.locator('.lab-output')).toContainText('Button does not respond')
 })
 
+test('Learning Hub exposes curated paths and searchable glossary', async ({ page }) => {
+  await page.goto('/learn')
+  await expect(page.getByRole('heading', { name: /learn with|belajar lebih/i })).toBeVisible()
+  await expect(page.locator('.learning-path-card')).toHaveCount(3)
+  await page.getByRole('tab', { name: /engineering glossary|glosarium engineering/i }).click()
+  await expect(page.locator('.glossary-card')).toHaveCount(12)
+  await page.getByRole('textbox', { name: /search glossary|cari glosarium/i }).fill('idempotency')
+  await expect(page.locator('.glossary-card')).toHaveCount(1)
+  await expect(page.getByRole('heading', { name: 'Idempotency' })).toBeVisible()
+})
+
 test('about page loads through client navigation', async ({ page, isMobile }) => {
   await openMobileNavigation(page, isMobile)
   await page.getByRole('link', { name: 'About', exact: true }).click()

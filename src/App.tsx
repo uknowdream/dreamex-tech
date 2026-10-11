@@ -55,7 +55,7 @@ function Header() {
   return <header className="site-header"><div className="container nav-wrap">
     <Link className="brand" to="/" aria-label="DreamEx Tech beranda"><span className="brand-mark"><Braces size={21} /></span><span>DreamEx<span className="brand-muted"> Tech</span></span><span className="brand-beta">ENGINEERING NOTES</span></Link>
     <button className="menu-toggle" aria-label={menuOpen ? t('closeMenu') : t('openMenu')} aria-expanded={menuOpen} onClick={() => setMenuOpen(value => !value)}><span /><span /></button>
-    <nav className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={t('blog')}><NavLink to="/">{t('blog')}</NavLink><a href="/#topics">{t('topics')}</a><a href="/#latest">{t('articles')}</a><NavLink to="/reading-list">{language === 'en' ? 'Reading list' : 'Daftar bacaan'}</NavLink><NavLink to="/lab">{language === 'en' ? 'Engineering Lab' : 'Lab Engineering'}</NavLink><NavLink to="/about">{language === 'en' ? 'About' : 'Tentang'}</NavLink><a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">GitHub <Github size={15} /></a><div className="language-switch" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div></nav>
+    <nav className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={t('blog')}><NavLink to="/">{t('blog')}</NavLink><a href="/#topics">{t('topics')}</a><a href="/#latest">{t('articles')}</a><NavLink to="/reading-list">{language === 'en' ? 'Reading list' : 'Daftar bacaan'}</NavLink><NavLink to="/lab">{language === 'en' ? 'Engineering Lab' : 'Lab Engineering'}</NavLink><NavLink to="/learn">{language === 'en' ? 'Learning Hub' : 'Pusat Belajar'}</NavLink><NavLink to="/about">{language === 'en' ? 'About' : 'Tentang'}</NavLink><a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">GitHub <Github size={15} /></a><div className="language-switch" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div></nav>
   </div></header>
 }
 
@@ -79,6 +79,7 @@ function Footer() {
           <Link to="/#latest">{t('latestArticles')} <ArrowRight size={13} /></Link>
           <Link to="/reading-list">{en ? 'Reading list' : 'Daftar bacaan'} <ArrowRight size={13} /></Link>
           <Link to="/lab">Engineering Lab <ArrowRight size={13} /></Link>
+          <Link to="/learn">{en ? 'Learning hub' : 'Pusat belajar'} <ArrowRight size={13} /></Link>
           <Link to="/about">{en ? 'About DreamEx' : 'Tentang DreamEx'} <ArrowRight size={13} /></Link>
         </div>
         <div className="footer-column">
@@ -303,6 +304,48 @@ function EngineeringLabPage() {
       {copyStatus && <p className="lab-copy-status" role="status">{copyStatus}</p>}
     </section>
     <p className="lab-disclaimer">{en ? 'Generated checklists are starting points, not a substitute for risk analysis, product requirements, or human review.' : 'Checklist yang dihasilkan adalah titik awal, bukan pengganti analisis risiko, kebutuhan produk, atau review manusia.'}</p>
+  </main>
+}
+
+type LearningPath = { id: string; title: string; description: string; level: string; duration: string; slugs: string[] }
+
+function LearningHubPage() {
+  const { language } = useLanguage()
+  const en = language === 'en'
+  const [tab, setTab] = useState<'paths' | 'glossary'>('paths')
+  const [glossaryQuery, setGlossaryQuery] = useState('')
+  const paths: LearningPath[] = [
+    { id: 'quality-engineering', title: en ? 'Quality Engineering Foundations' : 'Fondasi Quality Engineering', description: en ? 'Build a reliable test strategy, then scale stable browser automation and CI feedback.' : 'Bangun strategi pengujian yang andal, lalu kembangkan otomasi browser dan umpan balik CI yang stabil.', level: en ? 'Beginner → Intermediate' : 'Pemula → Menengah', duration: en ? '3 articles · 22 min' : '3 artikel · 22 menit', slugs: ['qa-automation-foundations', 'playwright-test-architecture', 'evaluating-ai-features'] },
+    { id: 'secure-delivery', title: en ? 'Secure Software Delivery' : 'Pengiriman Software yang Aman', description: en ? 'Understand maintainable contracts, pipeline permissions, and practical DevSecOps controls.' : 'Pahami kontrak kode yang mudah dirawat, izin pipeline, dan kontrol DevSecOps praktis.', level: en ? 'Beginner → Intermediate' : 'Pemula → Menengah', duration: en ? '2 articles · 12 min' : '2 artikel · 12 menit', slugs: ['typescript-for-maintainable-projects', 'secure-ci-cd-basics'] },
+    { id: 'production-ai', title: en ? 'Engineering Reliable AI' : 'Membangun AI yang Andal', description: en ? 'Learn evaluation design, regression testing, observability, and safe rollout thinking.' : 'Pelajari desain evaluasi, regression testing, observability, dan strategi rilis yang aman.', level: en ? 'Intermediate' : 'Menengah', duration: en ? '2 articles · 15 min' : '2 artikel · 15 menit', slugs: ['practical-ai-engineering', 'evaluating-ai-features'] },
+  ]
+  const glossary = [
+    { term: 'CI/CD', category: en ? 'Delivery' : 'Delivery', definition: en ? 'Automated practices that integrate changes, validate them, and deliver software through repeatable pipelines.' : 'Praktik otomatis untuk mengintegrasikan perubahan, memvalidasinya, dan merilis software melalui pipeline yang berulang.' },
+    { term: 'E2E Testing', category: 'QA', definition: en ? 'Testing a complete user journey across the application to validate behavior from the user perspective.' : 'Pengujian alur pengguna secara menyeluruh di aplikasi untuk memvalidasi perilaku dari sudut pandang pengguna.' },
+    { term: 'Flaky Test', category: 'QA', definition: en ? 'A test that produces inconsistent results without a relevant change to the product or test conditions.' : 'Tes yang memberikan hasil tidak konsisten tanpa perubahan relevan pada produk atau kondisi pengujian.' },
+    { term: 'Observability', category: en ? 'Reliability' : 'Reliability', definition: en ? 'The ability to infer internal system behavior from outputs such as logs, metrics, and traces.' : 'Kemampuan memahami perilaku internal sistem melalui output seperti log, metrik, dan trace.' },
+    { term: 'Least Privilege', category: en ? 'Security' : 'Security', definition: en ? 'Granting each user, service, or pipeline only the permissions required to perform its task.' : 'Memberikan setiap pengguna, layanan, atau pipeline hanya izin yang diperlukan untuk menjalankan tugasnya.' },
+    { term: 'Idempotency', category: en ? 'Architecture' : 'Architecture', definition: en ? 'A property where repeating the same operation has the same intended effect as performing it once.' : 'Sifat operasi yang ketika diulang menghasilkan efek yang sama seperti saat dijalankan sekali.' },
+    { term: 'Type Safety', category: en ? 'Engineering' : 'Engineering', definition: en ? 'Using type constraints to catch invalid operations and contract mismatches before runtime where possible.' : 'Penggunaan batasan tipe untuk mendeteksi operasi tidak valid dan ketidakcocokan kontrak sebelum runtime jika memungkinkan.' },
+    { term: 'Regression Testing', category: 'QA', definition: en ? 'Re-running relevant checks to detect whether a change has broken previously working behavior.' : 'Menjalankan ulang pemeriksaan relevan untuk mendeteksi apakah perubahan merusak perilaku yang sebelumnya berjalan.' },
+    { term: 'Threat Modeling', category: en ? 'Security' : 'Security', definition: en ? 'A structured process for identifying assets, trust boundaries, likely threats, and mitigations.' : 'Proses terstruktur untuk mengidentifikasi aset, batas kepercayaan, ancaman yang mungkin, dan mitigasinya.' },
+    { term: 'Evaluation Dataset', category: en ? 'AI' : 'AI', definition: en ? 'A curated set of representative cases used to measure model or AI-feature quality consistently.' : 'Kumpulan kasus representatif yang dikurasi untuk mengukur kualitas model atau fitur AI secara konsisten.' },
+    { term: 'RAG', category: en ? 'AI' : 'AI', definition: en ? 'Retrieval-augmented generation: retrieving relevant sources to ground a model response in external knowledge.' : 'Retrieval-augmented generation: mengambil sumber relevan agar respons model berpijak pada pengetahuan eksternal.' },
+    { term: 'Core Web Vitals', category: en ? 'Performance' : 'Performance', definition: en ? 'Google user-experience metrics focused on loading, interactivity, and visual stability.' : 'Metrik pengalaman pengguna Google yang berfokus pada pemuatan, interaktivitas, dan stabilitas visual.' },
+  ]
+  const filteredGlossary = glossary.filter(item => `${item.term} ${item.category} ${item.definition}`.toLowerCase().includes(glossaryQuery.trim().toLowerCase()))
+  useEffect(() => {
+    document.title = en ? 'Learning Hub — DreamEx Tech' : 'Pusat Belajar — DreamEx Tech'
+    return () => { document.title = 'DreamEx Tech — Engineering, AI & QA' }
+  }, [en])
+  return <main id="main-content" className="learning-hub container">
+    <header className="learning-header"><span className="section-kicker">{en ? 'STRUCTURED KNOWLEDGE, PRACTICAL PROGRESS' : 'PENGETAHUAN TERSTRUKTUR, PROGRES PRAKTIS'}</span><h1>{en ? 'Learn with' : 'Belajar lebih'} <span>{en ? 'direction.' : 'terarah.'}</span></h1><p>{en ? 'Follow a curated path, connect the concepts, and turn engineering knowledge into practical skills.' : 'Ikuti jalur belajar terkurasi, hubungkan konsep, dan ubah pengetahuan engineering menjadi keterampilan praktis.'}</p></header>
+    <div className="learning-tabs" role="tablist" aria-label={en ? 'Learning hub sections' : 'Bagian pusat belajar'}>
+      <button role="tab" aria-selected={tab === 'paths'} className={tab === 'paths' ? 'active' : ''} onClick={() => setTab('paths')}><BookOpen size={16} /> {en ? 'Learning paths' : 'Jalur belajar'}</button>
+      <button role="tab" aria-selected={tab === 'glossary'} className={tab === 'glossary' ? 'active' : ''} onClick={() => setTab('glossary')}><Braces size={16} /> {en ? 'Engineering glossary' : 'Glosarium engineering'}</button>
+    </div>
+    {tab === 'paths' ? <section className="learning-path-grid" aria-label={en ? 'Curated learning paths' : 'Jalur belajar terkurasi'}>{paths.map((path, index) => <article className="learning-path-card" key={path.id}><div className="learning-path-top"><span>PATH / 0{index + 1}</span><span className="learning-level">{path.level}</span></div><h2>{path.title}</h2><p>{path.description}</p><div className="learning-path-meta"><span><BookOpen size={14} /> {path.duration}</span></div><ol>{path.slugs.map((slug, stepIndex) => { const article = articles.find(item => item.slug === slug); return article ? <li key={slug}><span className="learning-step-number">{String(stepIndex + 1).padStart(2, '0')}</span><Link to={`/blog/${slug}`}>{(en ? articleTranslations[slug]?.title : undefined) ?? article.title}</Link><ArrowRight size={14} /></li> : null })}</ol></article>)}</section> : <section className="glossary-section"><label className="glossary-search"><Search size={17} /><input value={glossaryQuery} onChange={event => setGlossaryQuery(event.target.value)} placeholder={en ? 'Search a term, topic, or definition…' : 'Cari istilah, topik, atau definisi…'} aria-label={en ? 'Search glossary' : 'Cari glosarium'} /><kbd>/</kbd></label><p className="glossary-results">{filteredGlossary.length} {en ? 'terms found' : 'istilah ditemukan'}</p>{filteredGlossary.length ? <div className="glossary-grid">{filteredGlossary.map(item => <article className="glossary-card" key={item.term}><div><h2>{item.term}</h2><span>{item.category}</span></div><p>{item.definition}</p></article>)}</div> : <div className="empty-state"><Search size={22} /><strong>{en ? 'No matching terms' : 'Istilah tidak ditemukan'}</strong><span>{en ? 'Try another keyword.' : 'Coba kata kunci lain.'}</span></div>}</section>}
+    <aside className="learning-next"><Sparkles size={18} /><p>{en ? 'Learning tip: read actively, try the ideas in a small project, and revisit the concepts when you encounter them in real work.' : 'Tips belajar: baca secara aktif, coba idenya dalam proyek kecil, lalu tinjau kembali konsep saat menemukannya dalam pekerjaan nyata.'}</p><Link className="read-link" to="/lab">{en ? 'Practice in Engineering Lab' : 'Praktik di Lab Engineering'} <ArrowRight size={16} /></Link></aside>
   </main>
 }
 
@@ -556,6 +599,7 @@ function CommandPalette() {
     { id: 'articles', label: isEnglish ? 'Browse articles' : 'Jelajahi artikel', detail: isEnglish ? 'Search the knowledge base' : 'Cari di basis pengetahuan', icon: BookOpen, run: () => { if (location.pathname !== '/') navigate('/'); window.setTimeout(() => { document.getElementById('latest')?.scrollIntoView({ behavior: 'smooth' }); document.querySelector<HTMLInputElement>('.search-box input')?.focus() }, 60) } },
     { id: 'reading-list', label: isEnglish ? 'Open reading list' : 'Buka daftar bacaan', detail: isEnglish ? 'Your saved engineering notes' : 'Catatan engineering tersimpan', icon: Bookmark, run: () => navigate('/reading-list') },
     { id: 'lab', label: isEnglish ? 'Open Engineering Lab' : 'Buka Lab Engineering', detail: isEnglish ? 'QA tools, bug reports, and JSON utilities' : 'Tool QA, laporan bug, dan utilitas JSON', icon: Terminal, run: () => navigate('/lab') },
+    { id: 'learn', label: isEnglish ? 'Open Learning Hub' : 'Buka Pusat Belajar', detail: isEnglish ? 'Curated paths and engineering glossary' : 'Jalur belajar dan glosarium engineering', icon: BookOpen, run: () => navigate('/learn') },
   ]
   const term = query.trim().toLowerCase()
   const filteredArticles = articles.filter(article => {
@@ -704,5 +748,5 @@ function BackToTop() {
 
 export default function App() {
   const { t } = useLanguage()
-  return <><a className="skip-link" href="#main-content">{t('skip')}</a><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
+  return <><a className="skip-link" href="#main-content">{t('skip')}</a><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
 }
