@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowDownRight, ArrowRight, BookOpen, Braces, Check, ChevronUp, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap } from 'lucide-react'
+import { ArrowDownRight, ArrowRight, BookOpen, Braces, Check, ChevronUp, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap, Rss } from 'lucide-react'
 import { articles } from './articles'
 import { articleTranslations } from './articleTranslations'
 import { useLanguage } from './i18n'
@@ -49,7 +49,7 @@ function Footer() {
           <span className="footer-heading">{en ? 'ENGINEERING' : 'ENGINEERING'}</span>
           <a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">{en ? 'Open-source repository' : 'Repositori open-source'} <ArrowRight size={13} /></a>
           <a href="https://github.com/uknowdream" target="_blank" rel="noreferrer">{en ? 'GitHub profile' : 'Profil GitHub'} <ArrowRight size={13} /></a>
-          <a href="/rss.xml">{en ? 'RSS feed' : 'Feed RSS'} <ArrowRight size={13} /></a>
+          <a href="/rss">{en ? 'RSS feed' : 'Feed RSS'} <ArrowRight size={13} /></a>
         </div>
       </div>
       <div className="footer-bottom">
@@ -198,6 +198,63 @@ function AboutPage() {
     <section className="about-principles"><div className="container"><div className="about-section-heading"><div><span className="section-kicker">{en ? '03 / ENGINEERING PRINCIPLES' : '03 / PRINSIP ENGINEERING'}</span><h2>{en ? 'The standards behind the work.' : 'Standar di balik setiap proses.'}</h2></div><p>{en ? 'A practical framework for how we learn, evaluate, and communicate technology.' : 'Kerangka praktis untuk mempelajari, mengevaluasi, dan membahas teknologi.'}</p></div><div className="about-principle-list">{principles.map(item => <article className="about-principle" key={item.number}><span className="about-principle-number">{item.number}</span><div><h3>{item.title}</h3><p>{item.text}</p></div><ArrowDownRight size={19} /></article>)}</div></div></section>
     <section className="about-workflow"><div className="container about-workflow-inner"><div><span className="section-kicker">{en ? '04 / THE ITERATION LOOP' : '04 / SIKLUS ITERASI'}</span><h2>{en ? <>Progress is a <span>practice.</span></> : <>Kemajuan adalah sebuah <span>praktik.</span></>}</h2><p>{en ? 'Every useful improvement starts with a question and gets stronger through evidence.' : 'Setiap peningkatan yang bermanfaat dimulai dari pertanyaan dan menjadi lebih kuat melalui bukti.'}</p></div><div className="about-loop">{(en ? [['01','Explore','Understand the problem'],['02','Build','Create a focused solution'],['03','Verify','Test the assumptions'],['04','Improve','Learn and iterate']] : [['01','Eksplorasi','Pahami masalah'],['02','Bangun','Buat solusi terarah'],['03','Verifikasi','Uji asumsi'],['04','Tingkatkan','Pelajari dan ulangi']]).map(([number,title,detail]) => <div className="about-loop-step" key={number}><span>{number}</span><div><strong>{title}</strong><small>{detail}</small></div><Check size={15} /></div>)}</div></div></section>
     <section className="about-cta"><div className="container about-cta-inner"><div><span className="section-kicker">{en ? 'KEEP EXPLORING' : 'LANJUTKAN EKSPLORASI'}</span><h2>{en ? <>Build thoughtfully.<br /><span>Improve continuously.</span></> : <>Bangun dengan matang.<br /><span>Tingkatkan berkelanjutan.</span></>}</h2><p>{en ? 'Explore the articles, inspect the source, and use what is useful in your own work.' : 'Jelajahi artikel, tinjau source code, dan terapkan hal yang bermanfaat dalam pekerjaan Anda.'}</p></div><div className="about-cta-actions"><Link className="button button-primary" to="/#latest">{en ? 'Read engineering notes' : 'Baca catatan engineering'} <ArrowRight size={17} /></Link><a className="button button-ghost" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer"><Github size={17} /> GitHub</a></div></div></section>
+  </main>
+}
+
+
+function RssPage() {
+  const { language } = useLanguage()
+  const en = language === 'en'
+  const sortedArticles = useMemo(() => [...articles].sort((a, b) => b.date.localeCompare(a.date)), [])
+  useEffect(() => {
+    const previousTitle = document.title
+    document.title = en ? 'Latest Articles & RSS — DreamEx Tech' : 'Artikel Terbaru & RSS — DreamEx Tech'
+    const description = document.querySelector('meta[name="description"]')
+    const previousDescription = description?.getAttribute('content')
+    description?.setAttribute('content', en
+      ? 'Browse the latest DreamEx Tech articles on software engineering, QA automation, AI, and modern technology.'
+      : 'Jelajahi artikel terbaru DreamEx Tech tentang software engineering, QA automation, AI, dan teknologi modern.')
+    const canonical = document.querySelector('link[rel="canonical"]')
+    const previousCanonical = canonical?.getAttribute('href')
+    canonical?.setAttribute('href', 'https://dreamex.tech/rss')
+    return () => {
+      document.title = previousTitle
+      if (previousDescription) description?.setAttribute('content', previousDescription)
+      if (previousCanonical) canonical?.setAttribute('href', previousCanonical)
+    }
+  }, [en])
+  return <main id="main-content" className="rss-page">
+    <div className="container rss-container">
+      <div className="rss-hero">
+        <span className="section-kicker"><Rss size={14} /> {en ? 'DREAMEX TECH / READING ROOM' : 'DREAMEX TECH / RUANG BACA'}</span>
+        <h1>{en ? 'Ideas worth your time.' : 'Ide yang layak dibaca.'}</h1>
+        <p>{en
+          ? 'Practical notes on software engineering, quality engineering, AI, and modern technology — collected in one clean reading view.'
+          : 'Catatan praktis tentang software engineering, quality engineering, AI, dan teknologi modern — dirangkum dalam satu halaman yang nyaman dibaca.'}</p>
+        <div className="rss-hero-actions">
+          <a className="button button-primary" href="/rss.xml"><Rss size={16} /> {en ? 'Subscribe to RSS' : 'Berlangganan RSS'}</a>
+          <Link className="button button-secondary" to="/">{en ? 'Back to homepage' : 'Kembali ke beranda'} <ArrowRight size={16} /></Link>
+        </div>
+      </div>
+      <section className="rss-list-section" aria-labelledby="rss-list-heading">
+        <div className="rss-list-heading"><div><span className="section-kicker">{en ? 'THE LATEST' : 'TERBARU'}</span><h2 id="rss-list-heading">{en ? 'Latest articles' : 'Artikel terbaru'}</h2></div><span className="rss-count">{sortedArticles.length} {en ? 'articles' : 'artikel'}</span></div>
+        <div className="rss-article-list">
+          {sortedArticles.map((article, index) => {
+            const translated = en ? articleTranslations[article.slug] : undefined
+            return <article className="rss-article-card" key={article.slug}>
+              <div className="rss-article-index">{String(index + 1).padStart(2, '0')}</div>
+              <div className="rss-article-content">
+                <div className="rss-article-meta"><span>{categoryLabel(article.category, language)}</span><span>·</span><time dateTime={article.date}>{new Date(article.date + 'T00:00:00').toLocaleDateString(en ? 'en-US' : 'id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</time><span>·</span><span>{en ? article.readTime.replace('menit', 'min') : article.readTime}</span></div>
+                <h3><Link to={`/blog/${article.slug}`}>{translated?.title ?? article.title}</Link></h3>
+                <p>{translated?.excerpt ?? article.excerpt}</p>
+                <Link className="rss-read-link" to={`/blog/${article.slug}`}>{en ? 'Read article' : 'Baca artikel'} <ArrowRight size={15} /></Link>
+              </div>
+            </article>
+          })}
+        </div>
+      </section>
+      <div className="rss-bottom-note"><Rss size={18} /><p>{en ? 'Prefer a feed reader? Use the RSS subscription link above. This page is the human-friendly view; the XML feed remains available for apps.' : 'Lebih suka aplikasi pembaca feed? Gunakan tautan berlangganan RSS di atas. Halaman ini untuk dibaca langsung; feed XML tetap tersedia untuk aplikasi.'}</p></div>
+    </div>
   </main>
 }
 
@@ -461,5 +518,5 @@ function BackToTop() {
 
 export default function App() {
   const { t } = useLanguage()
-  return <><a className="skip-link" href="#main-content">{t('skip')}</a><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/about" element={<AboutPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
+  return <><a className="skip-link" href="#main-content">{t('skip')}</a><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/about" element={<AboutPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
 }
