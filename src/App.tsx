@@ -27,11 +27,38 @@ function Header() {
 
 function Footer() {
   const { t, language } = useLanguage()
-  return <footer className="footer"><div className="container footer-inner">
-    <div className="footer-brand"><Link className="brand" to="/"><span className="brand-mark"><Braces size={18} /></span><span>DreamEx<span className="brand-muted"> Tech</span></span></Link><p>{t('footerTagline')}</p></div>
-    <div className="footer-links"><a href="/#topics">{t('footerTopics')}</a><a href="/#latest">{t('latestArticles')}</a><Link to="/about">{language === 'en' ? 'About DreamEx' : 'Tentang DreamEx'}</Link><a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">{t('openSource')} <ArrowRight size={13} /></a></div>
-    <span className="copyright">© {new Date().getFullYear()} DreamEx Tech · {t('footerCopyright')}</span>
-  </div></footer>
+  const en = language === 'en'
+  return <footer className="footer">
+    <div className="container footer-inner">
+      <div className="footer-main">
+        <div className="footer-brand">
+          <Link className="brand" to="/" aria-label="DreamEx Tech home">
+            <span className="brand-mark"><Braces size={19} /></span>
+            <span>DreamEx<span className="brand-muted"> Tech</span></span>
+          </Link>
+          <p>{t('footerTagline')}</p>
+          <span className="footer-status"><i /> {en ? 'Built with curiosity. Refined through iteration.' : 'Dibangun dengan rasa ingin tahu. Disempurnakan lewat iterasi.'}</span>
+        </div>
+        <div className="footer-column">
+          <span className="footer-heading">{en ? 'EXPLORE' : 'JELAJAHI'}</span>
+          <Link to="/#topics">{t('footerTopics')} <ArrowRight size={13} /></Link>
+          <Link to="/#latest">{t('latestArticles')} <ArrowRight size={13} /></Link>
+          <Link to="/about">{en ? 'About DreamEx' : 'Tentang DreamEx'} <ArrowRight size={13} /></Link>
+        </div>
+        <div className="footer-column">
+          <span className="footer-heading">{en ? 'ENGINEERING' : 'ENGINEERING'}</span>
+          <a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">{en ? 'Open-source repository' : 'Repositori open-source'} <ArrowRight size={13} /></a>
+          <a href="https://github.com/uknowdream" target="_blank" rel="noreferrer">{en ? 'GitHub profile' : 'Profil GitHub'} <ArrowRight size={13} /></a>
+          <a href="/rss.xml">{en ? 'RSS feed' : 'Feed RSS'} <ArrowRight size={13} /></a>
+        </div>
+      </div>
+      <div className="footer-bottom">
+        <span className="copyright">© {new Date().getFullYear()} DreamEx Tech. {t('footerCopyright')}</span>
+        <span className="footer-manifesto">{en ? 'THINK DEEPER. BUILD SMARTER.' : 'BERPIKIR LEBIH DALAM. MEMBANGUN LEBIH CERDAS.'}</span>
+        <Link className="footer-top-link" to="/" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>{en ? 'Back to top' : 'Kembali ke atas'} <ChevronUp size={14} /></Link>
+      </div>
+    </div>
+  </footer>
 }
 
 function ArticleCard({ article, index = 0 }: { article: typeof articles[number]; index?: number }) {
