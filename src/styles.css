@@ -622,3 +622,102 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .trust-strip::before, .trust-strip::after { animation: none !important; }
 }
+
+
+/* Hero command-center polish: editorial stats and a more technical code surface. */
+.hero-stats {
+  gap: 0;
+  border-top-color: #34415a;
+}
+.hero-stats > div {
+  position: relative;
+  min-width: 0;
+  flex: 1;
+  padding: 4px 18px 3px 0;
+}
+.hero-stats > div + div {
+  padding-left: 18px;
+  border-left: 1px solid #263149;
+}
+.hero-stats strong {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  font-size: clamp(25px, 2.6vw, 31px);
+  letter-spacing: -1.2px;
+  background: linear-gradient(180deg, #f4f7ff, #b7c4dc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero-stats strong i { color: var(--green); }
+.hero-stats span {
+  font-size: 10px;
+  line-height: 1.5;
+  max-width: 105px;
+}
+.terminal {
+  border-color: #3b4965;
+  background:
+    linear-gradient(135deg, #151f34f7, #0b1221fa 76%),
+    #101827;
+  box-shadow: 0 28px 90px #0008, inset 0 1px 0 #ffffff08;
+}
+.terminal-bar {
+  height: 49px;
+  background: linear-gradient(90deg, #ffffff06, transparent);
+}
+.terminal-bar small {
+  color: #a2b1ca;
+  letter-spacing: .15px;
+}
+.terminal-content {
+  position: relative;
+  padding: 27px 28px 22px;
+  background-image: linear-gradient(90deg, #91a7d109 1px, transparent 1px);
+  background-size: 42px 100%;
+}
+.terminal-content p {
+  position: relative;
+  z-index: 1;
+}
+.terminal-comment {
+  margin-bottom: 8px !important;
+  color: #7f91ae;
+}
+.terminal-content .indent {
+  border-left: 1px solid #34435c70;
+  margin-left: 4px;
+}
+.terminal-status {
+  position: relative;
+  margin-top: 20px;
+  padding-top: 14px;
+}
+.terminal-status b {
+  color: #d8e6f4;
+}
+.floating-chip {
+  border-color: #52617a;
+  background: linear-gradient(135deg, #1b2940f2, #111a2bf2);
+  box-shadow: 0 15px 36px #0005, inset 0 1px 0 #ffffff0a;
+}
+.chip-top { right: -8px; }
+.chip-bottom { left: -11px; }
+.visual-caption {
+  color: #8291ac;
+  letter-spacing: 1.35px;
+}
+.hero:after {
+  opacity: .8;
+}
+@media (max-width: 640px) {
+  .hero-stats > div { padding-right: 10px; }
+  .hero-stats > div + div { padding-left: 10px; }
+  .hero-stats span { font-size: 9px; }
+  .terminal-content { padding: 22px 16px 18px; }
+  .terminal-bar { gap: 7px; }
+  .terminal-bar small { font-size: 8px; }
+  .terminal-live { font-size: 8px; letter-spacing: .5px; }
+  .floating-chip { max-width: 60%; }
+}
