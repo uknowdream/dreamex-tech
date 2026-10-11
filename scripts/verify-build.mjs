@@ -44,6 +44,13 @@ if (errors.length === 0) {
     if (!articleSlugs.includes(slug)) errors.push(`Sitemap references unknown article: ${slug}`)
   }
 
+  if (!rss.includes('<rss version="2.0"') || !rss.includes('<channel>') || !rss.includes('https://dreamex.tech/rss.xml')) {
+    errors.push('RSS feed is missing required channel metadata')
+  }
+  const rssSlugs = [...rss.matchAll(/https:\/\/dreamex\.tech\/blog\/([^<\s]+)/g)].map(match => match[1])
+  for (const slug of articleSlugs) if (!rssSlugs.includes(slug)) errors.push(`Article missing from RSS feed: ${slug}`)
+  for (const slug of rssSlugs) if (!articleSlugs.includes(slug)) errors.push(`RSS feed references unknown article: ${slug}`)
+
   const assets = [...html.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)].map(match => match[1])
   for (const asset of assets) {
     requireFile(join(dist, asset.replace(/^\//, '')), asset)
