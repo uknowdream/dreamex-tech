@@ -1450,3 +1450,16 @@ main, header, footer, section, .container {
   .rss-article-card, .rss-read-link svg { transition: none !important; }
   .rss-article-card:hover { transform: none; }
 }
+
+/* Respect operating-system motion preferences without hiding page content. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .motion-reveal { opacity: 1 !important; transform: none !important; filter: none !important; }
+  .hero-visual::before, .visual-orbit, .terminal-live i, .footer-status i { animation: none !important; }
+}
