@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
-async function openMobileNavigation(page: Page, isMobile: boolean) {
-  if (!isMobile) return
+async function openMobileNavigation(page: Page, _isMobile: boolean) {
+  // Navigation collapses at tablet and compact desktop widths, not only on phones.
   const toggle = page.getByRole('button', { name: /open menu|buka menu/i })
   if (await toggle.isVisible()) await toggle.click()
 }
