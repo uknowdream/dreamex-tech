@@ -287,3 +287,76 @@
   }
 }
 
+
+
+/* Interaction polish: clear, intentional motion across the full experience. */
+:root { --motion-ease: cubic-bezier(.2,.75,.25,1); }
+html { scroll-behavior: smooth; }
+.site-header { animation: nav-drop-in .7s var(--motion-ease) both; }
+.hero-copy > * { will-change: transform, opacity; }
+.hero-visual { animation: visual-arrive 1s .18s var(--motion-ease) both; }
+.hero:after {
+  content: "";
+  position: absolute;
+  width: min(62vw, 760px);
+  aspect-ratio: 1;
+  right: -18%;
+  top: -45%;
+  border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(from 0deg, transparent 0 18%, #91cfff10 25%, #c5ff7018 33%, transparent 43% 68%, #9a83ff13 78%, transparent 88%);
+  filter: blur(36px);
+  animation: aurora-turn 34s linear infinite, aurora-breathe 8s ease-in-out infinite;
+}
+.hero-gridlines { animation: grid-drift 18s linear infinite; }
+.orbit-one { animation: orbit-breathe 7s ease-in-out infinite; }
+.orbit-two { animation: orbit-turn 48s linear infinite; }
+.terminal {
+  transform-origin: 50% 55%;
+  animation: terminal-float 6s ease-in-out infinite;
+  transition: border-color .35s ease, box-shadow .35s ease, transform .35s ease;
+}
+.terminal:hover {
+  border-color: #7d9368;
+  box-shadow: 0 28px 90px #0008, 0 0 34px #c5ff7012;
+  transform: translateY(-5px) rotate(0deg);
+}
+.terminal-live i, .eyebrow-dot, .terminal-status > span:first-child { animation: status-pulse 2.2s ease-in-out infinite; }
+.terminal-content p:not(.terminal-comment) { animation: code-glow 7s ease-in-out infinite; }
+.floating-chip { animation: chip-float 5s ease-in-out infinite; }
+.chip-bottom { animation-delay: -2.3s; }
+.button, .filter, .language-option, .back-to-top { position: relative; overflow: hidden; }
+.button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-130%) skewX(-18deg);
+  background: linear-gradient(100deg, transparent 25%, #ffffff42 50%, transparent 75%);
+  transition: transform .65s var(--motion-ease);
+  pointer-events: none;
+}
+.button:hover::after { transform: translateX(130%) skewX(-18deg); }
+.button-primary { box-shadow: 0 0 0 1px #c5ff7025, 0 7px 24px #c5ff7018; }
+.button-primary:hover { transform: translateY(-3px) scale(1.015); box-shadow: 0 10px 34px #c5ff7033, 0 0 0 4px #c5ff700b; }
+.button-ghost:hover { transform: translateY(-3px); box-shadow: 0 9px 25px #0003; }
+.topic-card, .article-card, .featured-card {
+  transition: transform .35s var(--motion-ease), border-color .35s ease, box-shadow .35s ease, background .35s ease;
+}
+.topic-card:hover, .article-card:hover { transform: translateY(-7px); box-shadow: 0 18px 38px #0003, 0 0 0 1px #c5ff7008; }
+.featured-card:hover { transform: translateY(-4px); border-color: #52654f; box-shadow: 0 24px 55px #0003; }
+.art-grid { animation: grid-drift 22s linear infinite; }
+.art-symbol { animation: symbol-breathe 5s ease-in-out infinite; transition: box-shadow .4s ease, border-color .4s ease; }
+.featured-card:hover .art-symbol { box-shadow: 0 0 75px #c5ff7020; border-color: #c5ff7060; }
+.read-link svg, .topic-arrow { transition: transform .3s var(--motion-ease), color .3s ease; }
+.read-link:hover svg { transform: translateX(6px); }
+.back-to-top { animation: back-to-top-in .3s var(--motion-ease) both; transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+.back-to-top:hover { transform: translateY(-4px); box-shadow: 0 12px 30px #0005, 0 0 22px #c5ff7012; }
+@keyframes nav-drop-in { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes visual-arrive { from { opacity: 0; transform: translateY(22px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes orbit-breathe { 0%,100% { opacity: .45; transform: translateX(-50%) scale(.98); } 50% { opacity: 1; transform: translateX(-50%) scale(1.035); } }
+@keyframes back-to-top-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 640px) {
+  .hero:after { width: 115vw; right: -40%; top: -8%; filter: blur(28px); }
+  .terminal { animation-duration: 7.5s; }
+  .topic-card:hover, .article-card:hover { transform: translateY(-3px); }
+}
