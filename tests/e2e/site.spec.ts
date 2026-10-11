@@ -110,7 +110,7 @@ test('article routes load and invalid article slugs show a useful not-found stat
   await expect(page.getByRole('heading', { name: /Article not found/i })).toBeVisible()
 })
 
-test('installable PWA exposes an install action when the browser supports it', async ({ page }) => {
+test('installable PWA exposes an install action when the browser supports it', async ({ page, isMobile }) => {
   await page.goto('/')
   await page.evaluate(() => {
     const installEvent = new Event('beforeinstallprompt', { cancelable: true })
@@ -120,6 +120,7 @@ test('installable PWA exposes an install action when the browser supports it', a
     })
     window.dispatchEvent(installEvent)
   })
+  await openMobileNavigation(page, isMobile)
   const installButton = page.getByRole('button', { name: /install app|pasang aplikasi/i })
   await expect(installButton).toBeVisible()
   await installButton.click()
