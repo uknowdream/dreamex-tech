@@ -82,3 +82,31 @@ const xml = [
 
 writeFileSync(join(root, 'public/rss.xml'), xml)
 console.log(`RSS generation passed: generated ${articles.length} validated article entries in newest-first order.`)
+
+const sitemapUrls = [
+  { loc: `${siteUrl}/`, changefreq: 'weekly', priority: '1.0' },
+  { loc: `${siteUrl}/about`, changefreq: 'monthly', priority: '0.6' },
+  { loc: `${siteUrl}/rss`, changefreq: 'daily', priority: '0.7' },
+  ...articles.map(article => ({
+    loc: `${siteUrl}/blog/${article.slug}`,
+    lastmod: article.date,
+    changefreq: 'monthly',
+    priority: '0.8',
+  })),
+]
+const sitemapXml = [
+  '<?xml version="1.0" encoding="UTF-8"?>',
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+  ...sitemapUrls.map(url => [
+    '  <url>',
+    `    <loc>${url.loc}</loc>`,
+    ...(url.lastmod ? [`    <lastmod>${url.lastmod}</lastmod>`] : []),
+    `    <changefreq>${url.changefreq}</changefreq>`,
+    `    <priority>${url.priority}</priority>`,
+    '  </url>',
+  ].join('\\n')),
+  '</urlset>',
+  '',
+].join('\\n')
+writeFileSync(join(root, 'public/sitemap.xml'), sitemapXml)
+console.log(`Sitemap generation passed: ${sitemapUrls.length} canonical routes included.`)
