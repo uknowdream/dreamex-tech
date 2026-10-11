@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowDownRight, ArrowRight, BookOpen, Braces, Check, ChevronUp, Command, Copy, Github, Home as HomeIcon, Search, ShieldCheck, Sparkles, Terminal, X, Zap } from 'lucide-react'
+import { ArrowDownRight, ArrowRight, BookOpen, Braces, Check, ChevronUp, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap } from 'lucide-react'
 import { articles } from './articles'
 import { articleTranslations } from './articleTranslations'
 import { useLanguage } from './i18n'
@@ -224,6 +224,21 @@ function ArticlePage() {
       setCopyError(true)
     }
   }
+  const shareArticle = async () => {
+    if (!article) return
+    const title = `${translated?.title ?? article.title} — DreamEx Tech`
+    const shareData = { title, text: translated?.excerpt ?? article.excerpt, url: window.location.href }
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share(shareData)
+        setCopyError(false)
+        return
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return
+      }
+    }
+    await copyArticleLink()
+  }
   useEffect(() => {
     document.title = article ? `${translated?.title ?? article.title} — DreamEx Tech` : `${t('articleNotFound')} — DreamEx Tech`
     const setMeta = (selector: string, attribute: string, value: string) => {
@@ -276,7 +291,7 @@ function ArticlePage() {
     <Link className="back-link" to="/">{t('backAll')}</Link>
     <div className="article-header"><span className="category-pill">{categoryLabel(article.category, language)}</span><h1>{translated?.title ?? article.title}</h1><p>{translated?.excerpt ?? article.excerpt}</p><div className="article-meta"><span>{new Date(article.date + 'T00:00:00').toLocaleDateString(language === 'en' ? 'en-US' : 'id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span><span>•</span><span>{language === 'en' ? article.readTime.replace('menit', 'min') : article.readTime}</span><span>•</span><span>{t('editorial')}</span></div></div>
     <div className="article-body">{(translated?.body ?? article.body).map((paragraph, index) => <p key={index}>{paragraph}</p>)}<div className="article-note"><strong><ShieldCheck size={16} /> {t('engineeringNote')}</strong><p>{t('noteDescription')}</p></div></div>
-    <div className="article-end"><span>{t('topicsLabel')}</span><div className="tag-row">{article.tags.map(tag => <span key={tag}>#{tag.replaceAll(' ', '')}</span>)}</div><button className="copy-link-button" onClick={copyArticleLink}><Copy size={14} /> {linkCopied ? t('copied') : t('copyLink')}</button></div>
+    <div className="article-end"><span>{t('topicsLabel')}</span><div className="tag-row">{article.tags.map(tag => <span key={tag}>#{tag.replaceAll(' ', '')}</span>)}</div><button className="copy-link-button" onClick={shareArticle}><Share2 size={14} /> {language === 'en' ? 'Share article' : 'Bagikan artikel'}</button><button className="copy-link-button" onClick={copyArticleLink}><Copy size={14} /> {linkCopied ? t('copied') : t('copyLink')}</button></div>
     {copyError && <p className="copy-error" role="status">{t('copyError')}</p>}
     {relatedArticles.length > 0 && <section className="related-section"><div className="related-heading"><span className="section-kicker">{t('nextLearning')}</span><h2>{t('continueExploring')}</h2></div><div className="related-grid">{relatedArticles.map((related, index) => <ArticleCard key={related.slug} article={related} index={index} />)}</div></section>}
     <div className="article-next"><div><span className="section-kicker">{t('keepExploring')}</span><h2>{t('shareKnowledge')}</h2></div><Link className="button button-primary" to="/">{t('exploreArticles')} <ArrowRight size={16} /></Link></div>
