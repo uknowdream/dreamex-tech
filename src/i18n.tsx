@@ -94,9 +94,11 @@ const LanguageContext = createContext<LanguageContextValue | null>(null)
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => {
     try {
-      return localStorage.getItem('dreamex-language') === 'en' ? 'en' : 'id'
+      const savedLanguage = localStorage.getItem('dreamex-language')
+      if (savedLanguage === 'id' || savedLanguage === 'en') return savedLanguage
+      return 'en'
     } catch {
-      return 'id'
+      return 'en'
     }
   })
 
