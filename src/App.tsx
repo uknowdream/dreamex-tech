@@ -70,7 +70,20 @@ function Home() {
   const featured = articles[0]
   const featuredTranslation = language === 'en' ? articleTranslations[featured.slug] : undefined
 
-  useEffect(() => { document.title = 'DreamEx Tech — Engineering, AI & QA' }, [language])
+  useEffect(() => {
+    document.title = language === 'en' ? 'DreamEx Tech — Engineering, AI & QA' : 'DreamEx Tech — Engineering, AI & QA'
+    const description = t('heroDescription')
+    const setMeta = (selector: string, attribute: string, value: string) => {
+      document.querySelector(selector)?.setAttribute(attribute, value)
+    }
+    setMeta('meta[name="description"]', 'content', description)
+    setMeta('meta[property="og:title"]', 'content', 'DreamEx Tech — Think deeper. Build smarter.')
+    setMeta('meta[property="og:description"]', 'content', description)
+    setMeta('meta[property="og:url"]', 'content', 'https://dreamex.tech/')
+    setMeta('meta[name="twitter:title"]', 'content', 'DreamEx Tech — Think deeper. Build smarter.')
+    setMeta('meta[name="twitter:description"]', 'content', description)
+    setMeta('link[rel="canonical"]', 'href', 'https://dreamex.tech/')
+  }, [language, t])
 
   return <main id="main-content">
     <section className="hero"><div className="hero-gridlines" /><div className="container hero-grid">
