@@ -55,7 +55,7 @@ function Header() {
   return <header className="site-header"><div className="container nav-wrap">
     <Link className="brand" to="/" aria-label="DreamEx Tech beranda"><span className="brand-mark"><Braces size={21} /></span><span>DreamEx<span className="brand-muted"> Tech</span></span><span className="brand-beta">ENGINEERING NOTES</span></Link>
     <button className="menu-toggle" aria-label={menuOpen ? t('closeMenu') : t('openMenu')} aria-expanded={menuOpen} onClick={() => setMenuOpen(value => !value)}><span /><span /></button>
-    <nav className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={t('blog')}><NavLink to="/">{t('blog')}</NavLink><a href="/#topics">{t('topics')}</a><a href="/#latest">{t('articles')}</a><NavLink to="/reading-list">{language === 'en' ? 'Reading list' : 'Daftar bacaan'}</NavLink><NavLink to="/about">{language === 'en' ? 'About' : 'Tentang'}</NavLink><a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">GitHub <Github size={15} /></a><div className="language-switch" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div></nav>
+    <nav className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={t('blog')}><NavLink to="/">{t('blog')}</NavLink><a href="/#topics">{t('topics')}</a><a href="/#latest">{t('articles')}</a><NavLink to="/reading-list">{language === 'en' ? 'Reading list' : 'Daftar bacaan'}</NavLink><NavLink to="/lab">{language === 'en' ? 'Engineering Lab' : 'Lab Engineering'}</NavLink><NavLink to="/about">{language === 'en' ? 'About' : 'Tentang'}</NavLink><a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">GitHub <Github size={15} /></a><div className="language-switch" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div></nav>
   </div></header>
 }
 
@@ -78,6 +78,7 @@ function Footer() {
           <Link to="/#topics">{t('footerTopics')} <ArrowRight size={13} /></Link>
           <Link to="/#latest">{t('latestArticles')} <ArrowRight size={13} /></Link>
           <Link to="/reading-list">{en ? 'Reading list' : 'Daftar bacaan'} <ArrowRight size={13} /></Link>
+          <Link to="/lab">Engineering Lab <ArrowRight size={13} /></Link>
           <Link to="/about">{en ? 'About DreamEx' : 'Tentang DreamEx'} <ArrowRight size={13} /></Link>
         </div>
         <div className="footer-column">
@@ -191,6 +192,117 @@ function ReadingListPage() {
   return <main id="main-content" className="reading-list-page container">
     <div className="reading-list-header"><span className="section-kicker">{en ? 'YOUR KNOWLEDGE SPACE' : 'RUANG PENGETAHUAN ANDA'}</span><h1>{en ? 'Reading list' : 'Daftar bacaan'} <span>{en ? 'for later.' : 'untuk nanti.'}</span></h1><p>{en ? 'Keep useful engineering notes close and return whenever you are ready.' : 'Simpan catatan engineering yang berguna dan baca kembali kapan pun Anda siap.'}</p><span className="reading-list-count">{savedArticles.length} {en ? (savedArticles.length === 1 ? 'article saved' : 'articles saved') : 'artikel tersimpan'}</span></div>
     {savedArticles.length ? <div className="article-grid">{savedArticles.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} />)}</div> : <div className="reading-list-empty"><Bookmark size={24} /><h2>{en ? 'Your reading list is ready.' : 'Daftar bacaan Anda siap.'}</h2><p>{en ? 'Save an article with the bookmark icon to build your personal reading list.' : 'Tekan ikon bookmark pada artikel untuk membuat daftar bacaan pribadi.'}</p><Link className="button button-primary" to="/#latest">{en ? 'Explore articles' : 'Jelajahi artikel'} <ArrowRight size={16} /></Link></div>}
+  </main>
+}
+
+function EngineeringLabPage() {
+  const { language } = useLanguage()
+  const en = language === 'en'
+  const [activeTool, setActiveTool] = useState<'test-cases' | 'bug-report' | 'json'>('test-cases')
+  const [feature, setFeature] = useState(en ? 'Login form' : 'Form login')
+  const [generated, setGenerated] = useState(false)
+  const [bugTitle, setBugTitle] = useState('')
+  const [environment, setEnvironment] = useState('Chrome / Windows 11')
+  const [steps, setSteps] = useState('')
+  const [actual, setActual] = useState('')
+  const [expected, setExpected] = useState('')
+  const [severity, setSeverity] = useState('High')
+  const [bugReport, setBugReport] = useState('')
+  const [jsonInput, setJsonInput] = useState('{"status":"ok","data":[1,2,3]}')
+  const [jsonOutput, setJsonOutput] = useState('')
+  const [jsonError, setJsonError] = useState('')
+  const [copyStatus, setCopyStatus] = useState('')
+  const generatedCases = useMemo(() => {
+    const subject = feature.trim() || (en ? 'the feature' : 'fitur ini')
+    return en ? [
+      { title: `Verify the happy path for ${subject}`, steps: 'Provide valid input and submit the primary action.', expected: 'The operation succeeds and the expected result is shown.' },
+      { title: `Validate required fields in ${subject}`, steps: 'Leave each required field empty and submit.', expected: 'Submission is blocked and clear field-level guidance appears.' },
+      { title: `Reject invalid input in ${subject}`, steps: 'Submit malformed or unsupported values.', expected: 'Invalid data is rejected without corrupting application state.' },
+      { title: `Check boundary values in ${subject}`, steps: 'Test minimum, maximum, and just-outside-limit values.', expected: 'Documented limits are enforced consistently.' },
+      { title: `Prevent duplicate submission in ${subject}`, steps: 'Trigger the primary action repeatedly in quick succession.', expected: 'Duplicate processing is prevented or handled idempotently.' },
+      { title: `Verify keyboard accessibility for ${subject}`, steps: 'Navigate controls with Tab, Shift+Tab, Enter, and Space.', expected: 'Focus order is logical and every action is keyboard operable.' },
+      { title: `Handle service failure in ${subject}`, steps: 'Simulate a timeout or server error during submission.', expected: 'A helpful error appears and the user can recover safely.' },
+      { title: `Recover after an error in ${subject}`, steps: 'Correct invalid input or retry after a failed request.', expected: 'The operation can complete without refreshing the page.' },
+    ] : [
+      { title: `Verifikasi alur normal ${subject}`, steps: 'Masukkan data valid lalu jalankan aksi utama.', expected: 'Proses berhasil dan hasil yang diharapkan ditampilkan.' },
+      { title: `Validasi field wajib pada ${subject}`, steps: 'Kosongkan setiap field wajib lalu kirim.', expected: 'Pengiriman dicegah dan petunjuk yang jelas ditampilkan.' },
+      { title: `Tolak input tidak valid pada ${subject}`, steps: 'Kirim nilai dengan format salah atau tidak didukung.', expected: 'Data tidak valid ditolak tanpa merusak state aplikasi.' },
+      { title: `Uji batas nilai pada ${subject}`, steps: 'Uji nilai minimum, maksimum, dan di luar batas.', expected: 'Batas yang didokumentasikan diterapkan secara konsisten.' },
+      { title: `Cegah pengiriman duplikat pada ${subject}`, steps: 'Jalankan aksi utama berulang kali dalam waktu singkat.', expected: 'Pemrosesan duplikat dicegah atau ditangani secara idempoten.' },
+      { title: `Uji aksesibilitas keyboard pada ${subject}`, steps: 'Navigasikan kontrol dengan Tab, Shift+Tab, Enter, dan Space.', expected: 'Urutan fokus logis dan seluruh aksi dapat dijalankan dengan keyboard.' },
+      { title: `Tangani kegagalan layanan pada ${subject}`, steps: 'Simulasikan timeout atau error server saat pengiriman.', expected: 'Pesan error yang membantu muncul dan pengguna dapat pulih dengan aman.' },
+      { title: `Pulihkan proses setelah error pada ${subject}`, steps: 'Perbaiki input atau ulangi setelah request gagal.', expected: 'Proses dapat selesai tanpa memuat ulang halaman.' },
+    ]
+  }, [feature, en])
+  useEffect(() => {
+    document.title = en ? 'Engineering Lab — DreamEx Tech' : 'Lab Engineering — DreamEx Tech'
+    return () => { document.title = 'DreamEx Tech — Engineering, AI & QA' }
+  }, [en])
+  const copyText = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopyStatus(en ? 'Copied to clipboard.' : 'Berhasil disalin.')
+    } catch {
+      setCopyStatus(en ? 'Clipboard unavailable. Select and copy the output manually.' : 'Clipboard tidak tersedia. Pilih dan salin hasil secara manual.')
+    }
+  }
+  const generateBugReport = () => setBugReport([
+    `# ${bugTitle.trim() || (en ? 'Bug report title' : 'Judul laporan bug')}`,
+    '',
+    `- Severity: ${severity}`,
+    `- Environment: ${environment.trim() || (en ? 'Not specified' : 'Belum ditentukan')}`,
+    '',
+    '## Steps to Reproduce',
+    steps.trim() || (en ? '1. Add reproduction steps.' : '1. Tambahkan langkah reproduksi.'),
+    '',
+    '## Actual Result',
+    actual.trim() || (en ? 'Describe what happened.' : 'Jelaskan apa yang terjadi.'),
+    '',
+    '## Expected Result',
+    expected.trim() || (en ? 'Describe the expected behavior.' : 'Jelaskan perilaku yang diharapkan.'),
+  ].join('\n'))
+  const formatJson = () => {
+    try {
+      setJsonOutput(JSON.stringify(JSON.parse(jsonInput), null, 2))
+      setJsonError('')
+    } catch (error) {
+      setJsonOutput('')
+      setJsonError(error instanceof Error ? error.message : (en ? 'Invalid JSON.' : 'JSON tidak valid.'))
+    }
+  }
+  return <main id="main-content" className="engineering-lab container">
+    <header className="lab-header"><span className="section-kicker">{en ? 'PRACTICAL ENGINEERING TOOLKIT' : 'TOOLKIT ENGINEERING PRAKTIS'}</span><h1>{en ? 'Engineering' : 'Engineering'} <span>Lab.</span></h1><p>{en ? 'Small, useful tools for QA workflows, clearer bug reports, and safer data handling. Processing runs locally in your browser.' : 'Perangkat praktis untuk alur kerja QA, laporan bug yang jelas, dan pengolahan data yang aman. Pemrosesan berjalan lokal di browser Anda.'}</p><div className="lab-local-note"><ShieldCheck size={16} /> {en ? 'No account or backend required — your inputs stay in this browser session.' : 'Tanpa akun atau backend — input Anda tetap diproses di browser ini.'}</div></header>
+    <div className="lab-tool-tabs" role="tablist" aria-label={en ? 'Engineering tools' : 'Tool engineering'}>
+      <button role="tab" aria-selected={activeTool === 'test-cases'} className={activeTool === 'test-cases' ? 'active' : ''} onClick={() => { setActiveTool('test-cases'); setCopyStatus('') }}><ShieldCheck size={16} /> {en ? 'Test Case Builder' : 'Pembuat Test Case'}</button>
+      <button role="tab" aria-selected={activeTool === 'bug-report'} className={activeTool === 'bug-report' ? 'active' : ''} onClick={() => { setActiveTool('bug-report'); setCopyStatus('') }}><BookOpen size={16} /> {en ? 'Bug Report' : 'Laporan Bug'}</button>
+      <button role="tab" aria-selected={activeTool === 'json'} className={activeTool === 'json' ? 'active' : ''} onClick={() => { setActiveTool('json'); setCopyStatus('') }}><Braces size={16} /> JSON {en ? 'Formatter' : 'Formatter'}</button>
+    </div>
+    <section className="lab-tool-panel" role="tabpanel">
+      {activeTool === 'test-cases' && <div className="lab-form">
+        <div className="lab-panel-heading"><span className="section-kicker">01 / QA AUTOMATION</span><h2>{en ? 'Test case starter kit' : 'Starter kit test case'}</h2><p>{en ? 'Create a baseline checklist, then refine each case against the product requirements.' : 'Buat checklist awal, lalu sesuaikan setiap kasus dengan kebutuhan produk.'}</p></div>
+        <label className="lab-field"><span>{en ? 'Feature or user journey' : 'Fitur atau alur pengguna'}</span><input value={feature} onChange={event => { setFeature(event.target.value); setGenerated(false) }} placeholder={en ? 'e.g. Password reset' : 'mis. Reset password'} /></label>
+        <button className="button button-primary lab-action" onClick={() => setGenerated(true)}>{en ? 'Generate test cases' : 'Buat test case'} <ArrowRight size={16} /></button>
+        {generated && <div className="lab-generated"><div className="lab-output-heading"><h3>{en ? 'Generated test cases' : 'Test case yang dihasilkan'}</h3><button className="copy-link-button" onClick={() => copyText(generatedCases.map((item, index) => `TC-${String(index + 1).padStart(2, '0')} — ${item.title}\nSteps: ${item.steps}\nExpected: ${item.expected}`).join('\n\n'))}><Copy size={14} /> {en ? 'Copy all' : 'Salin semua'}</button></div><div className="lab-case-list">{generatedCases.map((item, index) => <article className="lab-case" key={item.title}><span className="lab-case-id">TC-{String(index + 1).padStart(2, '0')}</span><div><h4>{item.title}</h4><p><strong>{en ? 'Steps' : 'Langkah'}:</strong> {item.steps}</p><p><strong>{en ? 'Expected' : 'Hasil yang diharapkan'}:</strong> {item.expected}</p></div></article>)}</div></div>}
+      </div>}
+      {activeTool === 'bug-report' && <div className="lab-form">
+        <div className="lab-panel-heading"><span className="section-kicker">02 / DEFECT MANAGEMENT</span><h2>{en ? 'Build a clear bug report' : 'Susun laporan bug yang jelas'}</h2><p>{en ? 'Capture reproducible steps, impact, and expected behavior in a consistent format.' : 'Catat langkah reproduksi, dampak, dan perilaku yang diharapkan dengan format konsisten.'}</p></div>
+        <label className="lab-field"><span>{en ? 'Bug title' : 'Judul bug'}</span><input value={bugTitle} onChange={event => setBugTitle(event.target.value)} placeholder={en ? 'e.g. Login button stays disabled' : 'mis. Tombol login tetap nonaktif'} /></label>
+        <div className="lab-field-row"><label className="lab-field"><span>{en ? 'Severity' : 'Severity'}</span><select value={severity} onChange={event => setSeverity(event.target.value)}><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></label><label className="lab-field"><span>{en ? 'Environment' : 'Lingkungan'}</span><input value={environment} onChange={event => setEnvironment(event.target.value)} /></label></div>
+        <label className="lab-field"><span>{en ? 'Steps to reproduce' : 'Langkah reproduksi'}</span><textarea rows={3} value={steps} onChange={event => setSteps(event.target.value)} placeholder={en ? '1. Open the page…' : '1. Buka halaman…'} /></label>
+        <div className="lab-field-row"><label className="lab-field"><span>{en ? 'Actual result' : 'Hasil aktual'}</span><textarea rows={3} value={actual} onChange={event => setActual(event.target.value)} /></label><label className="lab-field"><span>{en ? 'Expected result' : 'Hasil yang diharapkan'}</span><textarea rows={3} value={expected} onChange={event => setExpected(event.target.value)} /></label></div>
+        <button className="button button-primary lab-action" onClick={generateBugReport}>{en ? 'Generate bug report' : 'Buat laporan bug'} <ArrowRight size={16} /></button>
+        {bugReport && <div className="lab-generated"><div className="lab-output-heading"><h3>{en ? 'Ready-to-copy report' : 'Laporan siap disalin'}</h3><button className="copy-link-button" onClick={() => copyText(bugReport)}><Copy size={14} /> {en ? 'Copy report' : 'Salin laporan'}</button></div><pre className="lab-output">{bugReport}</pre></div>}
+      </div>}
+      {activeTool === 'json' && <div className="lab-form">
+        <div className="lab-panel-heading"><span className="section-kicker">03 / DATA UTILITIES</span><h2>{en ? 'Format and validate JSON' : 'Rapikan dan validasi JSON'}</h2><p>{en ? 'Validate syntax and format JSON locally. No payload is sent to a server.' : 'Validasi sintaks dan rapikan JSON secara lokal. Tidak ada payload yang dikirim ke server.'}</p></div>
+        <label className="lab-field"><span>{en ? 'JSON input' : 'Input JSON'}</span><textarea rows={9} spellCheck={false} value={jsonInput} onChange={event => { setJsonInput(event.target.value); setJsonOutput(''); setJsonError('') }} /></label>
+        <button className="button button-primary lab-action" onClick={formatJson}>{en ? 'Format JSON' : 'Rapikan JSON'} <Braces size={16} /></button>
+        {jsonError && <p className="lab-error" role="alert">{en ? 'Invalid JSON:' : 'JSON tidak valid:'} {jsonError}</p>}
+        {jsonOutput && <div className="lab-generated"><div className="lab-output-heading"><h3>{en ? 'Formatted output' : 'Hasil format'}</h3><button className="copy-link-button" onClick={() => copyText(jsonOutput)}><Copy size={14} /> {en ? 'Copy JSON' : 'Salin JSON'}</button></div><pre className="lab-output" aria-label={en ? 'Formatted JSON output' : 'Hasil JSON terformat'}>{jsonOutput}</pre></div>}
+      </div>}
+      {copyStatus && <p className="lab-copy-status" role="status">{copyStatus}</p>}
+    </section>
+    <p className="lab-disclaimer">{en ? 'Generated checklists are starting points, not a substitute for risk analysis, product requirements, or human review.' : 'Checklist yang dihasilkan adalah titik awal, bukan pengganti analisis risiko, kebutuhan produk, atau review manusia.'}</p>
   </main>
 }
 
@@ -443,6 +555,7 @@ function CommandPalette() {
     { id: 'topics', label: isEnglish ? 'Explore topics' : 'Jelajahi topik', detail: isEnglish ? 'Software · QA · AI' : 'Software · QA · AI', icon: Command, run: () => { if (location.pathname !== '/') navigate('/'); window.setTimeout(() => document.getElementById('topics')?.scrollIntoView({ behavior: 'smooth' }), 60) } },
     { id: 'articles', label: isEnglish ? 'Browse articles' : 'Jelajahi artikel', detail: isEnglish ? 'Search the knowledge base' : 'Cari di basis pengetahuan', icon: BookOpen, run: () => { if (location.pathname !== '/') navigate('/'); window.setTimeout(() => { document.getElementById('latest')?.scrollIntoView({ behavior: 'smooth' }); document.querySelector<HTMLInputElement>('.search-box input')?.focus() }, 60) } },
     { id: 'reading-list', label: isEnglish ? 'Open reading list' : 'Buka daftar bacaan', detail: isEnglish ? 'Your saved engineering notes' : 'Catatan engineering tersimpan', icon: Bookmark, run: () => navigate('/reading-list') },
+    { id: 'lab', label: isEnglish ? 'Open Engineering Lab' : 'Buka Lab Engineering', detail: isEnglish ? 'QA tools, bug reports, and JSON utilities' : 'Tool QA, laporan bug, dan utilitas JSON', icon: Terminal, run: () => navigate('/lab') },
   ]
   const term = query.trim().toLowerCase()
   const filteredArticles = articles.filter(article => {
@@ -591,5 +704,5 @@ function BackToTop() {
 
 export default function App() {
   const { t } = useLanguage()
-  return <><a className="skip-link" href="#main-content">{t('skip')}</a><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
+  return <><a className="skip-link" href="#main-content">{t('skip')}</a><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
 }

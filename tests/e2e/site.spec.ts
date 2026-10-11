@@ -65,6 +65,24 @@ test('category filters expose selected state and can be reset', async ({ page })
   await expect(allFilter).toHaveAttribute('aria-pressed', 'true')
 })
 
+test('Engineering Lab generates QA cases, bug reports, and formatted JSON', async ({ page }) => {
+  await page.goto('/lab')
+  await page.getByRole('button', { name: /generate test cases|buat test case/i }).click()
+  await expect(page.getByRole('heading', { name: /generated test cases|test case yang dihasilkan/i })).toBeVisible()
+  await expect(page.locator('.lab-case')).toHaveCount(8)
+
+  await page.getByRole('tab', { name: /JSON formatter|JSON Formatter/i }).click()
+  await page.getByRole('textbox', { name: /JSON input|input JSON/i }).fill('{"ok":true,"count":2}')
+  await page.getByRole('button', { name: /format JSON|rapikan JSON/i }).click()
+  await expect(page.getByLabel(/formatted JSON output|hasil JSON terformat/i)).toContainText('"ok": true')
+
+  await page.getByRole('tab', { name: /bug report|laporan bug/i }).click()
+  await page.getByRole('textbox', { name: /bug title|judul bug/i }).fill('Button does not respond')
+  await page.getByRole('button', { name: /generate bug report|buat laporan bug/i }).click()
+  await expect(page.getByRole('heading', { name: /ready-to-copy report|laporan siap disalin/i })).toBeVisible()
+  await expect(page.locator('.lab-output')).toContainText('Button does not respond')
+})
+
 test('about page loads through client navigation', async ({ page, isMobile }) => {
   await openMobileNavigation(page, isMobile)
   await page.getByRole('link', { name: 'About', exact: true }).click()
