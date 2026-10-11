@@ -47,6 +47,48 @@ function useReadingList() {
   return { savedSlugs, toggleSaved, isSaved: (slug: string) => savedSlugs.includes(slug) }
 }
 
+type InstallPromptEvent = Event & {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>
+}
+
+function InstallAppButton() {
+  const { language } = useLanguage()
+  const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null)
+  const [status, setStatus] = useState('')
+  useEffect(() => {
+    const capturePrompt = (event: Event) => {
+      event.preventDefault()
+      setInstallPrompt(event as InstallPromptEvent)
+    }
+    const installed = () => {
+      setInstallPrompt(null)
+      setStatus(language === 'en' ? 'DreamEx Tech is installed.' : 'DreamEx Tech berhasil dipasang.')
+    }
+    window.addEventListener('beforeinstallprompt', capturePrompt)
+    window.addEventListener('appinstalled', installed)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', capturePrompt)
+      window.removeEventListener('appinstalled', installed)
+    }
+  }, [language])
+  const install = async () => {
+    if (!installPrompt) return
+    try {
+      await installPrompt.prompt()
+      const choice = await installPrompt.userChoice
+      setInstallPrompt(null)
+      setStatus(choice.outcome === 'accepted'
+        ? (language === 'en' ? 'Installation accepted.' : 'Pemasangan disetujui.')
+        : (language === 'en' ? 'Installation was dismissed.' : 'Pemasangan dibatalkan.'))
+    } catch {
+      setStatus(language === 'en' ? 'Use your browser menu to install this app.' : 'Gunakan menu browser untuk memasang aplikasi ini.')
+      setInstallPrompt(null)
+    }
+  }
+  return <>{installPrompt && <button type="button" className="install-app-button" onClick={install}><Zap size={14} /> {language === 'en' ? 'Install app' : 'Pasang aplikasi'}</button>}{status && <span className="install-app-status" role="status">{status}</span>}</>
+}
+
 function Header() {
   const { language, setLanguage, t } = useLanguage()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -55,7 +97,7 @@ function Header() {
   return <header className="site-header"><div className="container nav-wrap">
     <Link className="brand" to="/" aria-label="DreamEx Tech beranda"><span className="brand-mark"><Braces size={21} /></span><span>DreamEx<span className="brand-muted"> Tech</span></span><span className="brand-beta">ENGINEERING NOTES</span></Link>
     <button className="menu-toggle" aria-label={menuOpen ? t('closeMenu') : t('openMenu')} aria-expanded={menuOpen} onClick={() => setMenuOpen(value => !value)}><span /><span /></button>
-    <nav className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={t('blog')}><NavLink to="/">{t('blog')}</NavLink><a href="/#topics">{t('topics')}</a><a href="/#latest">{t('articles')}</a><NavLink to="/reading-list">{language === 'en' ? 'Reading list' : 'Daftar bacaan'}</NavLink><NavLink to="/lab">{language === 'en' ? 'Engineering Lab' : 'Lab Engineering'}</NavLink><NavLink to="/learn">{language === 'en' ? 'Learning Hub' : 'Pusat Belajar'}</NavLink><NavLink to="/about">{language === 'en' ? 'About' : 'Tentang'}</NavLink><a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">GitHub <Github size={15} /></a><div className="language-switch" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div></nav>
+    <nav className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={t('blog')}><NavLink to="/">{t('blog')}</NavLink><a href="/#topics">{t('topics')}</a><a href="/#latest">{t('articles')}</a><NavLink to="/reading-list">{language === 'en' ? 'Reading list' : 'Daftar bacaan'}</NavLink><NavLink to="/lab">{language === 'en' ? 'Engineering Lab' : 'Lab Engineering'}</NavLink><NavLink to="/learn">{language === 'en' ? 'Learning Hub' : 'Pusat Belajar'}</NavLink><NavLink to="/about">{language === 'en' ? 'About' : 'Tentang'}</NavLink><a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">GitHub <Github size={15} /></a><InstallAppButton /><div className="language-switch" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div></nav>
   </div></header>
 }
 
@@ -712,6 +754,22 @@ function MotionOnScroll() {
   return null
 }
 
+function OfflineNotice() {
+  const { language } = useLanguage()
+  const [offline, setOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false)
+  useEffect(() => {
+    const online = () => setOffline(false)
+    const offlineEvent = () => setOffline(true)
+    window.addEventListener('online', online)
+    window.addEventListener('offline', offlineEvent)
+    return () => {
+      window.removeEventListener('online', online)
+      window.removeEventListener('offline', offlineEvent)
+    }
+  }, [])
+  return offline ? <div className="offline-notice" role="status"><span />{language === 'en' ? 'You are offline. Cached pages may still be available.' : 'Anda sedang offline. Halaman yang tersimpan mungkin tetap tersedia.'}</div> : null
+}
+
 function ScrollProgress() {
   const [progress, setProgress] = useState(0)
   useEffect(() => {
@@ -748,5 +806,5 @@ function BackToTop() {
 
 export default function App() {
   const { t } = useLanguage()
-  return <><a className="skip-link" href="#main-content">{t('skip')}</a><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
+  return <><a className="skip-link" href="#main-content">{t('skip')}</a><OfflineNotice /><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
 }

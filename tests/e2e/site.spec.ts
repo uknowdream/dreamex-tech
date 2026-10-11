@@ -110,6 +110,22 @@ test('article routes load and invalid article slugs show a useful not-found stat
   await expect(page.getByRole('heading', { name: /Article not found/i })).toBeVisible()
 })
 
+test('installable PWA exposes an install action when the browser supports it', async ({ page }) => {
+  await page.goto('/')
+  await page.evaluate(() => {
+    const installEvent = new Event('beforeinstallprompt', { cancelable: true })
+    Object.assign(installEvent, {
+      prompt: async () => undefined,
+      userChoice: Promise.resolve({ outcome: 'accepted', platform: 'web' }),
+    })
+    window.dispatchEvent(installEvent)
+  })
+  const installButton = page.getByRole('button', { name: /install app|pasang aplikasi/i })
+  await expect(installButton).toBeVisible()
+  await installButton.click()
+  await expect(page.getByRole('status').filter({ hasText: /installation accepted|pemasangan disetujui/i })).toBeVisible()
+})
+
 test('PWA manifest, icons, and service worker are available', async ({ request }) => {
   const manifestResponse = await request.get('/manifest.webmanifest')
   expect(manifestResponse.ok()).toBeTruthy()
