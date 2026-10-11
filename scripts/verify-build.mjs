@@ -26,6 +26,10 @@ if (errors.length === 0) {
   const i18n = readFileSync(join(root, 'src/i18n.tsx'), 'utf8')
   const app = readFileSync(join(root, 'src/App.tsx'), 'utf8')
 
+  if (!app.includes('function RssPage()') || !app.includes('path="/rss" element={<RssPage />}')) errors.push('Human-readable RSS web route is missing')
+  if (!app.includes("navigator.clipboard.writeText('https://www.dreamex.tech/rss.xml')")) errors.push('RSS subscription action must copy the feed URL without navigating to raw XML')
+  if (app.includes('href="/rss.xml"><Rss size={16} />')) errors.push('RSS subscription CTA still navigates directly to raw XML')
+
   for (const [label, pattern] of [
     ['page title', /<title>[^<]+<\/title>/i],
     ['meta description', /<meta\s+name="description"\s+content="[^"]+"/i],

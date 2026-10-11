@@ -71,7 +71,12 @@ test('article routes load and invalid article slugs show a useful not-found stat
 test('RSS reading page and machine-readable feed are available', async ({ page, request }) => {
   await page.goto('/rss')
   await expect(page.getByRole('heading', { name: /Ideas worth your time/i })).toBeVisible()
-  await expect(page.getByRole('link', { name: /Subscribe to RSS/i })).toHaveAttribute('href', '/rss.xml')
+  const subscribeButton = page.getByRole('button', { name: /Copy RSS subscription URL/i })
+  await expect(subscribeButton).toBeVisible()
+  await expect(page.getByRole('link', { name: /Subscribe to RSS/i })).toHaveCount(0)
+  await subscribeButton.click()
+  await expect(page.locator('.rss-subscribe-status')).toContainText(/copied|berhasil disalin|https:\/\/www\.dreamex\.tech\/rss\.xml/i)
+  await expect(page).toHaveURL(/\/rss$/)
   const response = await request.get('/rss.xml')
   expect(response.ok()).toBeTruthy()
   expect(await response.text()).toContain('<rss version="2.0"')
