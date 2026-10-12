@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-async function openMobileNavigation(page: Page, _isMobile: boolean) {
+async function openMobileNavigation(page: Page) {
   // Navigation collapses at tablet and compact desktop widths, not only on phones.
   const toggle = page.getByRole('button', { name: /open menu|buka menu/i })
   if (await toggle.isVisible()) await toggle.click()
@@ -14,7 +14,7 @@ test('homepage renders primary content and skip navigation', async ({ page, isMo
   await expect(page.locator('h1').first()).toBeVisible()
   await expect(page.locator('a.skip-link')).toHaveAttribute('href', '#main-content')
   await expect(page.locator('#latest')).toBeVisible()
-  await openMobileNavigation(page, isMobile)
+  await openMobileNavigation(page)
   await expect(page.getByRole('navigation').first()).toBeVisible()
 })
 
@@ -35,11 +35,11 @@ test('homepage and article expose valid JSON-LD and page-specific canonical meta
 })
 
 test('language switch updates interface language and document lang', async ({ page, isMobile }) => {
-  await openMobileNavigation(page, isMobile)
+  await openMobileNavigation(page)
   await page.getByRole('button', { name: 'ID', exact: true }).click()
   await expect(page.locator('html')).toHaveAttribute('lang', 'id')
   await expect(page.getByRole('heading', { name: /Berpikir lebih dalam/i })).toBeVisible()
-  await openMobileNavigation(page, isMobile)
+  await openMobileNavigation(page)
   await page.getByRole('button', { name: 'EN', exact: true }).click()
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
   await expect(page.getByRole('heading', { name: /Think deeper/i })).toBeVisible()
@@ -63,7 +63,7 @@ test('articles can be saved to and removed from the personal reading list', asyn
   const articleTitle = (await firstArticle.locator('h3 a').innerText()).trim()
   await firstArticle.getByRole('button', { name: /save article|simpan artikel/i }).click()
   await expect(firstArticle.getByRole('button', { name: /remove saved article|hapus artikel tersimpan/i })).toHaveAttribute('aria-pressed', 'true')
-  await openMobileNavigation(page, isMobile)
+  await openMobileNavigation(page)
   await page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
   await expect(page).toHaveURL(/\/reading-list$/)
   await expect(page.getByRole('heading', { name: articleTitle })).toBeVisible()
@@ -111,7 +111,7 @@ test('Learning Hub exposes curated paths and searchable glossary', async ({ page
 })
 
 test('about page loads through client navigation', async ({ page, isMobile }) => {
-  await openMobileNavigation(page, isMobile)
+  await openMobileNavigation(page)
   await page.getByRole('link', { name: 'About', exact: true }).click()
   await expect(page).toHaveURL(/\/about$/)
   await expect(page.getByRole('heading', { name: /Turn curiosity into/i })).toBeVisible()
@@ -136,7 +136,7 @@ test('installable PWA exposes an install action when the browser supports it', a
     })
     window.dispatchEvent(installEvent)
   })
-  await openMobileNavigation(page, isMobile)
+  await openMobileNavigation(page)
   const installButton = page.getByRole('button', { name: /install app|pasang aplikasi/i })
   await expect(installButton).toBeVisible()
   await installButton.click()
@@ -167,7 +167,7 @@ test('reading list can be exported as portable Markdown', async ({ page, isMobil
   const firstArticle = page.locator('.article-card').first()
   const title = (await firstArticle.locator('h3 a').innerText()).trim()
   await firstArticle.getByRole('button', { name: /save article|simpan artikel/i }).click()
-  await openMobileNavigation(page, isMobile)
+  await openMobileNavigation(page)
   await page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
   await page.evaluate(() => {
     Object.defineProperty(navigator, 'clipboard', {
@@ -186,7 +186,7 @@ test('reading list can be exported as portable Markdown', async ({ page, isMobil
 test('reading list backup can be imported, validated, and merged', async ({ page, isMobile }) => {
   const firstArticle = page.locator('.article-card').first()
   await firstArticle.getByRole('button', { name: /save article|simpan artikel/i }).click()
-  await openMobileNavigation(page, isMobile)
+  await openMobileNavigation(page)
   await page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
   await page.getByLabel(/import reading list json backup/i).setInputFiles({
     name: 'reading-list.json',
@@ -212,7 +212,7 @@ test('reading list backup can be imported, validated, and merged', async ({ page
 
 test('reading list backup downloads a versioned JSON file', async ({ page, isMobile }) => {
   await page.locator('.article-card').first().getByRole('button', { name: /save article|simpan artikel/i }).click()
-  await openMobileNavigation(page, isMobile)
+  await openMobileNavigation(page)
   await page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
   const downloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: /download json backup|unduh cadangan json/i }).click()
@@ -223,7 +223,7 @@ test('reading list backup downloads a versioned JSON file', async ({ page, isMob
 test('reading list can search and sort saved articles without losing saved items', async ({ page, isMobile }) => {
   await page.locator('.article-card').nth(0).getByRole('button', { name: /save article|simpan artikel/i }).click()
   await page.locator('.article-card').nth(1).getByRole('button', { name: /save article|simpan artikel/i }).click()
-  await openMobileNavigation(page, isMobile)
+  await openMobileNavigation(page)
   await page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
   const search = page.getByRole('searchbox', { name: /search saved articles|cari artikel tersimpan/i })
   await expect(page.locator('.article-card')).toHaveCount(2)
