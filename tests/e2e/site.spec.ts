@@ -238,6 +238,15 @@ test('reading list can search and sort saved articles without losing saved items
   await expect(page.locator('.reading-list-count')).toContainText(/2/)
 })
 
+test('article reading progress exposes accessible percentage semantics', async ({ page }) => {
+  await page.goto('/blog/qa-automation-foundations')
+  const progress = page.getByRole('progressbar', { name: /article reading progress/i })
+  await expect(progress).toBeVisible()
+  await expect(progress).toHaveAttribute('aria-valuemin', '0')
+  await expect(progress).toHaveAttribute('aria-valuemax', '100')
+  await expect(progress).toHaveAttribute('aria-valuenow', /\\d+/)
+})
+
 test('reading progress is saved and surfaced as a resume-reading card', async ({ page }) => {
   await page.goto('/blog/qa-automation-foundations')
   await page.evaluate(() => {
