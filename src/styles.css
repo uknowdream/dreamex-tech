@@ -819,6 +819,9 @@ main, header, footer, section, .container {
 }
 
 
+/* Fix back-to-top positioning: keep it pinned to the viewport */
+.back-to-top { position: fixed; }
+
 /* Final narrow-screen pass: prevent floating controls from covering content. */
 @media (max-width: 640px) {
   html, body, #root {
