@@ -244,7 +244,9 @@ test('article reading progress exposes accessible percentage semantics', async (
   await expect(progress).toBeVisible()
   await expect(progress).toHaveAttribute('aria-valuemin', '0')
   await expect(progress).toHaveAttribute('aria-valuemax', '100')
-  await expect(progress).toHaveAttribute('aria-valuenow', /\\d+/)
+  await expect(progress).toHaveAttribute('aria-valuenow', /^\d+$/)
+  await page.evaluate(() => window.scrollTo(0, 500))
+  await expect.poll(async () => Number(await progress.getAttribute('aria-valuenow'))).toBeGreaterThan(0)
 })
 
 test('reading progress is saved and surfaced as a resume-reading card', async ({ page }) => {
