@@ -245,7 +245,11 @@ test('article reading progress exposes accessible percentage semantics', async (
   await expect(progress).toHaveAttribute('aria-valuemin', '0')
   await expect(progress).toHaveAttribute('aria-valuemax', '100')
   await expect(progress).toHaveAttribute('aria-valuenow', /^\d+$/)
-  await page.evaluate(() => window.scrollTo(0, 500))
+  await page.evaluate(() => {
+    document.documentElement.style.scrollBehavior = 'auto'
+    window.scrollTo(0, document.documentElement.scrollHeight)
+    window.dispatchEvent(new Event('scroll'))
+  })
   await expect.poll(async () => Number(await progress.getAttribute('aria-valuenow'))).toBeGreaterThan(0)
 })
 
