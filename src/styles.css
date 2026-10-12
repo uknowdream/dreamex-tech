@@ -1661,3 +1661,50 @@ main, header, footer, section, .container {
   .nav-links > a { white-space: nowrap; }
   .nav-links .install-app-button { white-space: nowrap; }
 }
+
+
+/* Reference-inspired motion refinement: keep the existing DreamEx visual identity. */
+@keyframes dreamex-copy-enter {
+  from { opacity: 0; transform: translate3d(0, 18px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes dreamex-orbit-drift {
+  0%, 100% { transform: translate3d(-50%, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(-50%, -7px, 0) rotate(1deg); }
+}
+@keyframes dreamex-status-breathe {
+  0%, 100% { opacity: .72; box-shadow: 0 0 0 0 #c5ff7022; }
+  50% { opacity: 1; box-shadow: 0 0 0 5px #c5ff7000; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-copy > .eyebrow { animation: dreamex-copy-enter .65s .05s var(--motion-ease, ease-out) both; }
+  .hero-copy > h1 { animation: dreamex-copy-enter .75s .14s var(--motion-ease, ease-out) both; }
+  .hero-copy > .hero-description { animation: dreamex-copy-enter .75s .23s var(--motion-ease, ease-out) both; }
+  .hero-copy > .hero-actions { animation: dreamex-copy-enter .75s .32s var(--motion-ease, ease-out) both; }
+  .hero-copy > .hero-stats { animation: dreamex-copy-enter .75s .4s var(--motion-ease, ease-out) both; }
+  .orbit-two { animation: orbit-breathe 9s ease-in-out infinite, dreamex-orbit-drift 13s ease-in-out infinite; }
+  .terminal-bar::after { animation: dreamex-status-breathe 2.4s ease-in-out infinite; }
+  .topic-card, .article-card, .featured-card, .about-discipline-card, .rss-article-card {
+    transition-timing-function: cubic-bezier(.2,.75,.25,1);
+  }
+  .topic-card:hover, .article-card:hover, .featured-card:hover, .about-discipline-card:hover {
+    box-shadow: 0 18px 42px #0003, 0 0 0 1px #c5ff7010;
+  }
+  .button, .read-link, .nav-links a, .language-option, .install-app-button {
+    transition-timing-function: cubic-bezier(.2,.75,.25,1);
+  }
+}
+@media (max-width: 640px) {
+  .hero-copy > * { animation-duration: .5s; }
+  .orbit-two { animation-duration: 10s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-copy > .eyebrow, .hero-copy > h1, .hero-copy > .hero-description,
+  .hero-copy > .hero-actions, .hero-copy > .hero-stats {
+    animation: none !important;
+  }
+  .orbit-two, .terminal-bar::after { animation: none !important; }
+  .topic-card:hover, .article-card:hover, .featured-card:hover, .about-discipline-card:hover {
+    box-shadow: none;
+  }
+}
