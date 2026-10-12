@@ -336,3 +336,22 @@ test('mobile viewport has no horizontal document overflow', async ({ page, isMob
   }))
   expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth)
 })
+
+test('command palette supports keyboard search, navigation, and dismissal', async ({ page }) => {
+  await page.keyboard.press('Control+k')
+  const dialog = page.getByRole('dialog', { name: /quick actions & articles|aksi cepat & artikel/i })
+  await expect(dialog).toBeVisible()
+  const search = page.getByRole('textbox', { name: /search commands|cari perintah/i })
+  await expect(search).toBeFocused()
+  await search.fill('qa automation foundations')
+  const result = page.getByRole('button', { name: /qa automation foundations/i })
+  await expect(result).toBeVisible()
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/blog\/qa-automation-foundations$/)
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+
+  await page.keyboard.press('Control+k')
+  await expect(page.getByRole('dialog')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+})
