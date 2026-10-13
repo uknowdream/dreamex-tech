@@ -658,6 +658,10 @@ test('Security Center runs a browser-side baseline and exports a report', async 
   const downloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: /Export JSON/i }).click()
   expect((await downloadPromise).suggestedFilename()).toBe('dreamex-security-audit.json')
+  await expect(page.getByText('dreamex-security-audit-v1')).toBeVisible()
+  const privacyBackup = page.waitForEvent('download')
+  await page.getByRole('button', { name: /Export local data/i }).click()
+  expect((await privacyBackup).suggestedFilename()).toBe('dreamex-local-data-backup.json')
 })
 
 
