@@ -394,7 +394,7 @@ function WebQualityObservatoryPage() {
   const [running, setRunning] = useState(false)
   const [ranAt, setRanAt] = useState('')
   const [copied, setCopied] = useState(false)
-  const checks: ObservatoryCheck[] = [
+  const checks = useMemo<ObservatoryCheck[]>(() => [
     { id: 'https', category: en ? 'Security & transport' : 'Keamanan & transport', title: en ? 'HTTPS page context' : 'Konteks halaman HTTPS', description: en ? 'Confirms the current page uses a secure transport context.' : 'Memastikan halaman saat ini menggunakan konteks transport yang aman.', severity: 'high', run: async () => ({ status: window.location.protocol === 'https:' || window.location.hostname === 'localhost' ? 'pass' : 'fail', detail: window.location.protocol + '//' + window.location.host }) },
     { id: 'viewport', category: en ? 'Responsive experience' : 'Pengalaman responsif', title: en ? 'Viewport configuration' : 'Konfigurasi viewport', description: en ? 'Checks whether a viewport meta tag is present.' : 'Memeriksa keberadaan meta tag viewport.', severity: 'high', run: async () => { const tag = document.querySelector<HTMLMetaElement>('meta[name="viewport"]'); return { status: tag?.content.includes('width=device-width') ? 'pass' : 'fail', detail: tag?.content || (en ? 'Viewport meta tag is missing.' : 'Meta tag viewport tidak ditemukan.') } } },
     { id: 'title', category: en ? 'Search & metadata' : 'Pencarian & metadata', title: en ? 'Unique page title' : 'Judul halaman', description: en ? 'Checks for a non-empty document title.' : 'Memeriksa judul dokumen yang tidak kosong.', severity: 'high', run: async () => ({ status: document.title.trim() ? 'pass' : 'fail', detail: document.title.trim() || (en ? 'Document title is empty.' : 'Judul dokumen kosong.') }) },
@@ -407,13 +407,13 @@ function WebQualityObservatoryPage() {
     { id: 'links', category: en ? 'Navigation integrity' : 'Integritas navigasi', title: en ? 'Empty link labels' : 'Label tautan kosong', description: en ? 'Finds links without readable text or an accessible name.' : 'Mencari tautan tanpa teks terbaca atau nama aksesibel.', severity: 'medium', run: async () => { const links = [...document.querySelectorAll<HTMLAnchorElement>('a[href]')]; const missing = links.filter(link => !(link.innerText || link.getAttribute('aria-label') || link.querySelector('img[alt]')?.getAttribute('alt') || '').trim()).length; return { status: missing === 0 ? 'pass' : 'warn', detail: en ? missing + ' of ' + links.length + ' links have no detectable label' : missing + ' dari ' + links.length + ' tautan tidak memiliki label terdeteksi' } } },
     { id: 'motion', category: en ? 'Accessibility & structure' : 'Aksesibilitas & struktur', title: en ? 'Reduced-motion support' : 'Dukungan reduced-motion', description: en ? 'Checks whether the site defines a reduced-motion CSS preference.' : 'Memeriksa apakah situs mendefinisikan preferensi CSS reduced-motion.', severity: 'info', run: async () => { const rules = [...document.styleSheets].flatMap(sheet => { try { return [...(sheet.cssRules || [])] } catch { return [] } }); const found = rules.some(rule => rule instanceof CSSMediaRule && rule.conditionText.includes('prefers-reduced-motion')); return { status: found ? 'pass' : 'warn', detail: found ? (en ? 'Reduced-motion media rule found in accessible stylesheets.' : 'Aturan media reduced-motion ditemukan pada stylesheet yang dapat dibaca.') : (en ? 'No accessible reduced-motion media rule detected; cross-origin stylesheets may be unreadable.' : 'Aturan reduced-motion tidak terdeteksi; stylesheet lintas origin mungkin tidak dapat dibaca.') } } },
     { id: 'storage', category: en ? 'Privacy & resilience' : 'Privasi & ketahanan', title: en ? 'Browser storage availability' : 'Ketersediaan penyimpanan browser', description: en ? 'Tests whether local storage can be accessed without writing user data.' : 'Menguji akses local storage tanpa menulis data pengguna.', severity: 'info', run: async () => { try { void window.localStorage.length; return { status: 'pass', detail: en ? 'Local storage is readable.' : 'Local storage dapat dibaca.' } } catch { return { status: 'warn', detail: en ? 'Storage is restricted in this context.' : 'Penyimpanan dibatasi pada konteks ini.' } } } },
-  ]
+  ], [en])
   const score = useMemo(() => {
     const values = checks.map(check => results[check.id]).filter(Boolean)
     const weights = checks.reduce((sum, check) => sum + (check.severity === 'high' ? 2 : 1), 0)
     const earned = checks.reduce((sum, check) => sum + (results[check.id]?.status === 'pass' ? (check.severity === 'high' ? 2 : 1) : 0), 0)
     return { value: Math.round(earned / weights * 100), complete: values.length, pass: values.filter(value => value.status === 'pass').length, warn: values.filter(value => value.status === 'warn').length, fail: values.filter(value => value.status === 'fail').length }
-  }, [results, checks.length])
+  }, [results, checks])
   const runChecks = async () => {
     setRunning(true)
     setResults({})
@@ -1482,7 +1482,7 @@ function ArticlePage() {
       setMeta('meta[name="twitter:description"]', 'content', 'Ruang eksplorasi software engineering, quality engineering, AI, dan teknologi modern.')
       setMeta('meta[name="description"]', 'content', 'DreamEx Tech — practical notes on software engineering, quality engineering, AI, and modern technology.')
     }
-  }, [article, language])
+  }, [article, language, t, translated?.excerpt, translated?.title])
   if (!article) return <main id="main-content" className="container not-found"><h1>{t('articleNotFound')}</h1><p>{t('articleMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>
   return <main id="main-content" className="article-page"><div className="reading-progress" role="progressbar" aria-label={language === 'en' ? 'Article reading progress' : 'Progres membaca artikel'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><span style={{ transform: `scaleX(${progress / 100})` }} /></div><div className="container article-container">
     <Link className="back-link" to="/">{t('backAll')}</Link>
