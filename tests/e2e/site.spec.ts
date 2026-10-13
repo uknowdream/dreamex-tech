@@ -659,3 +659,19 @@ test('Security Center runs a browser-side baseline and exports a report', async 
   await page.getByRole('button', { name: /Export JSON/i }).click()
   expect((await downloadPromise).suggestedFilename()).toBe('dreamex-security-audit.json')
 })
+
+
+test('workspace search and command palette discover the new QA and security tools', async ({ page }) => {
+  await page.goto('/workspace')
+  const search = page.getByRole('textbox', { name: /Search workspace tools/i })
+  await search.fill('gherkin')
+  await expect(page.getByRole('link', { name: /QA Automation Studio/i })).toBeVisible()
+  await search.fill('security headers')
+  await expect(page.getByRole('link', { name: /Security & Privacy Center/i })).toBeVisible()
+  await page.keyboard.press('Control+k')
+  const dialog = page.getByRole('dialog')
+  await dialog.getByRole('textbox', { name: /Search commands/i }).fill('QA Automation Studio')
+  await expect(dialog.getByRole('button', { name: /QA Automation Studio/i })).toBeVisible()
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/qa-studio$/)
+})
