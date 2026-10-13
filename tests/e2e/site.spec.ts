@@ -431,6 +431,35 @@ test('release readiness scorecard marks release ready only after every check is 
   await expect(page.getByRole('progressbar', { name: /Release checklist completion|Penyelesaian checklist rilis/i })).toHaveAttribute('aria-valuenow', '100')
 })
 
+test('incident postmortem builder creates a blameless Markdown report and supports export', async ({ page }) => {
+  await page.goto('/lab')
+  await page.getByRole('tab', { name: /Incident Postmortem|Postmortem Insiden/i }).click()
+  await expect(page.getByRole('heading', { name: /Build a blameless incident postmortem|Susun postmortem insiden tanpa menyalahkan/i })).toBeVisible()
+  await page.getByLabel(/Incident title|Judul insiden/i).fill('Checkout latency spike')
+  await page.getByLabel(/Customer and business impact|Dampak terhadap pelanggan dan bisnis/i).fill('Checkout requests timed out for 12% of users.')
+  await page.getByLabel(/Root cause|Akar penyebab/i).fill('A connection pool limit was too low after traffic increased.')
+  await page.getByLabel(/Follow-up actions|Tindak lanjut/i).fill('Raise connection pool capacity — Platform — 2026-10-20')
+  await page.getByRole('button', { name: /Generate postmortem|Buat postmortem/i }).click()
+  const output = page.getByLabel(/Postmortem Markdown output|Output Markdown postmortem/i)
+  await expect(output).toContainText('# Checkout latency spike')
+  await expect(output).toContainText('Blameless review')
+  await expect(output).toContainText('connection pool limit')
+  await expect(output).toContainText('- [ ] Raise connection pool capacity')
+  await page.evaluate(() => {
+    const original = URL.createObjectURL.bind(URL)
+    URL.createObjectURL = ((blob: Blob) => {
+      ;(window as Window & { __postmortemBlob?: Blob }).__postmortemBlob = blob
+      return original(blob)
+    }) as typeof URL.createObjectURL
+  })
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: /Download \.md|Unduh \.md/i }).click()
+  const download = await downloadPromise
+  expect(download.suggestedFilename()).toBe('checkout-latency-spike-postmortem.md')
+  const markdown = await page.evaluate(async () => await (window as Window & { __postmortemBlob?: Blob }).__postmortemBlob?.text() ?? '')
+  expect(markdown).toContain('Checkout requests timed out for 12% of users.')
+})
+
 test('mobile viewport has no horizontal document overflow', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'This check targets the mobile browser project')
   await page.setViewportSize({ width: 390, height: 844 })

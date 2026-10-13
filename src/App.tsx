@@ -385,7 +385,7 @@ function ReadingListPage() {
 function EngineeringLabPage() {
   const { language } = useLanguage()
   const en = language === 'en'
-  const [activeTool, setActiveTool] = useState<'test-cases' | 'bug-report' | 'json' | 'api-matrix' | 'openapi' | 'release-scorecard'>('test-cases')
+  const [activeTool, setActiveTool] = useState<'test-cases' | 'bug-report' | 'json' | 'api-matrix' | 'openapi' | 'release-scorecard' | 'postmortem'>('test-cases')
   const [releaseChecked, setReleaseChecked] = useState<Record<string, boolean>>({})
   const [feature, setFeature] = useState(en ? 'Login form' : 'Form login')
   const [generated, setGenerated] = useState(false)
@@ -422,6 +422,19 @@ function EngineeringLabPage() {
   const [openApiAnalyzed, setOpenApiAnalyzed] = useState(false)
   const [openApiIssues, setOpenApiIssues] = useState<Array<{ method: string; path: string; severity: 'error' | 'warning' | 'info'; code: string; message: string }>>([])
   const [copyStatus, setCopyStatus] = useState('')
+  const [incidentTitle, setIncidentTitle] = useState('')
+  const [incidentSeverity, setIncidentSeverity] = useState('SEV-2')
+  const [incidentStatus, setIncidentStatus] = useState('Resolved')
+  const [incidentStart, setIncidentStart] = useState('')
+  const [incidentEnd, setIncidentEnd] = useState('')
+  const [incidentImpact, setIncidentImpact] = useState('')
+  const [incidentDetection, setIncidentDetection] = useState('')
+  const [incidentTimeline, setIncidentTimeline] = useState('')
+  const [incidentRootCause, setIncidentRootCause] = useState('')
+  const [incidentContributors, setIncidentContributors] = useState('')
+  const [incidentResolution, setIncidentResolution] = useState('')
+  const [incidentFollowUps, setIncidentFollowUps] = useState('')
+  const [postmortemReport, setPostmortemReport] = useState('')
 
   const releaseChecks = [
     { id: 'requirements', category: en ? 'Product & scope' : 'Produk & ruang lingkup', title: en ? 'Acceptance criteria are reviewed and traceable' : 'Acceptance criteria telah ditinjau dan dapat ditelusuri', critical: true },
@@ -476,6 +489,62 @@ function EngineeringLabPage() {
     } catch {
       setCopyStatus(en ? 'Clipboard unavailable. Select and copy the output manually.' : 'Clipboard tidak tersedia. Pilih dan salin hasil secara manual.')
     }
+  }
+  const generatePostmortem = () => {
+    const lines = (value: string) => value.trim() ? value.trim().split(/\r?\n/).map(line => line.trim()).filter(Boolean) : []
+    const timeline = lines(incidentTimeline)
+    const followUps = lines(incidentFollowUps)
+    const report = [
+      '# ' + (incidentTitle.trim() || (en ? 'Incident postmortem' : 'Postmortem insiden')),
+      '',
+      '> ' + (en ? 'Blameless review: focus on system conditions, learning, and prevention.' : 'Tinjauan tanpa menyalahkan: fokus pada kondisi sistem, pembelajaran, dan pencegahan.'),
+      '',
+      '## Incident summary',
+      '- **Severity:** ' + incidentSeverity,
+      '- **Status:** ' + incidentStatus,
+      '- **Start:** ' + (incidentStart || (en ? 'Not recorded' : 'Belum dicatat')),
+      '- **End:** ' + (incidentEnd || (en ? 'Not recorded' : 'Belum dicatat')),
+      '',
+      '## Customer and business impact',
+      incidentImpact.trim() || (en ? 'Describe affected users, services, duration, and measurable impact.' : 'Jelaskan pengguna/layanan terdampak, durasi, dan dampak terukur.'),
+      '',
+      '## Detection',
+      incidentDetection.trim() || (en ? 'Explain how the incident was detected and why earlier signals did or did not help.' : 'Jelaskan bagaimana insiden terdeteksi dan apakah sinyal sebelumnya membantu.'),
+      '',
+      '## Timeline',
+      ...(timeline.length ? timeline.map(line => '- ' + line) : ['- ' + (en ? 'Add timestamped events in chronological order.' : 'Tambahkan peristiwa bertimestamp secara kronologis.')]),
+      '',
+      '## Root cause',
+      incidentRootCause.trim() || (en ? 'Describe the underlying system conditions, not an individual to blame.' : 'Jelaskan kondisi sistem yang mendasari, bukan menyalahkan individu.'),
+      '',
+      '## Contributing factors',
+      ...(lines(incidentContributors).length ? lines(incidentContributors).map(line => '- ' + line) : ['- ' + (en ? 'No contributing factors documented yet.' : 'Belum ada faktor kontribusi yang didokumentasikan.')]),
+      '',
+      '## Resolution and recovery',
+      incidentResolution.trim() || (en ? 'Document mitigation, recovery steps, and validation performed.' : 'Dokumentasikan mitigasi, langkah pemulihan, dan validasi yang dilakukan.'),
+      '',
+      '## Follow-up actions',
+      ...(followUps.length ? followUps.map(line => '- [ ] ' + line) : ['- [ ] ' + (en ? 'Add an owner, due date, and measurable completion criteria.' : 'Tambahkan penanggung jawab, tenggat, dan kriteria penyelesaian terukur.')]),
+      '',
+      '## Review notes',
+      en ? 'Review this document with relevant stakeholders. Avoid sensitive credentials, personal data, and blame-focused language.' : 'Tinjau dokumen ini bersama stakeholder terkait. Hindari kredensial sensitif, data pribadi, dan bahasa yang menyalahkan individu.',
+    ].join('\n')
+    setPostmortemReport(report)
+    setCopyStatus('')
+  }
+  const downloadPostmortem = () => {
+    if (!postmortemReport) return
+    const blob = new Blob([postmortemReport], { type: 'text/markdown;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    const slug = (incidentTitle.trim() || 'incident-postmortem').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'incident-postmortem'
+    anchor.href = url
+    anchor.download = slug + '-postmortem.md'
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(url)
+    setCopyStatus(en ? 'Postmortem Markdown downloaded.' : 'Markdown postmortem berhasil diunduh.')
   }
   const generateBugReport = () => setBugReport([
     `# ${bugTitle.trim() || (en ? 'Bug report title' : 'Judul laporan bug')}`,
@@ -744,6 +813,7 @@ function EngineeringLabPage() {
       <button role="tab" aria-selected={activeTool === 'api-matrix'} className={activeTool === 'api-matrix' ? 'active' : ''} onClick={() => { setActiveTool('api-matrix'); setCopyStatus(''); setApiMatrixGenerated(false) }}><ShieldCheck size={16} /> {en ? 'API Test Matrix' : 'Matriks Tes API'}</button>
       <button role="tab" aria-selected={activeTool === 'openapi'} className={activeTool === 'openapi' ? 'active' : ''} onClick={() => { setActiveTool('openapi'); setCopyStatus(''); setOpenApiError(''); setOpenApiAnalyzed(false) }}><Braces size={16} /> {en ? 'OpenAPI Analyzer' : 'Analyzer OpenAPI'}</button>
       <button role="tab" aria-selected={activeTool === 'release-scorecard'} className={activeTool === 'release-scorecard' ? 'active' : ''} onClick={() => { setActiveTool('release-scorecard'); setCopyStatus('') }}><ShieldCheck size={16} /> {en ? 'Release Readiness' : 'Kesiapan Rilis'}</button>
+      <button role="tab" aria-selected={activeTool === 'postmortem'} className={activeTool === 'postmortem' ? 'active' : ''} onClick={() => { setActiveTool('postmortem'); setCopyStatus('') }}><BookOpen size={16} /> {en ? 'Incident Postmortem' : 'Postmortem Insiden'}</button>
     </div>
     <section className="lab-tool-panel" role="tabpanel">
       {activeTool === 'test-cases' && <div className="lab-form">
@@ -790,6 +860,34 @@ function EngineeringLabPage() {
         <div className="release-checklist-heading"><div><h3>{en ? 'Evidence checklist' : 'Checklist bukti'}</h3><p>{en ? 'Mark a check complete only when supporting evidence has been reviewed.' : 'Tandai selesai hanya jika bukti pendukung sudah ditinjau.'}</p></div><div className="release-score-actions"><button className="copy-link-button" onClick={copyReleaseScorecard}><Copy size={14} /> {en ? 'Copy report' : 'Salin laporan'}</button><button className="copy-link-button" onClick={downloadReleaseScorecard}><ArrowDownRight size={14} /> {en ? 'Export CSV' : 'Ekspor CSV'}</button></div></div>
         <div className="release-check-groups">{[...new Set(releaseChecks.map(item => item.category))].map(category => <section className="release-check-group" key={category}><h4>{category}<span>{releaseChecks.filter(item => item.category === category && releaseChecked[item.id]).length}/{releaseChecks.filter(item => item.category === category).length}</span></h4>{releaseChecks.filter(item => item.category === category).map(item => <label className={'release-check-item ' + (releaseChecked[item.id] ? 'is-complete' : '')} key={item.id}><input type="checkbox" checked={Boolean(releaseChecked[item.id])} onChange={event => setReleaseChecked(current => ({ ...current, [item.id]: event.target.checked }))} /><span className="release-check-copy"><strong>{item.title}</strong><small>{item.critical ? (en ? 'Critical gate' : 'Gerbang kritis') : (en ? 'Quality check' : 'Pemeriksaan kualitas')}</small></span>{item.critical && <span className="release-critical-tag">{en ? 'CRITICAL' : 'KRITIS'}</span>}</label>)}</section>)}</div>
         <p className="release-score-footnote"><ShieldCheck size={15} /> {en ? 'Local-only checklist: selections stay in this browser session. Export the report before leaving if you need a record.' : 'Checklist lokal: pilihan tersimpan selama sesi browser ini. Ekspor laporan sebelum keluar jika Anda memerlukan catatan.'}</p>
+      </div>}
+      {activeTool === 'postmortem' && <div className="lab-form postmortem-form">
+        <div className="lab-panel-heading"><span className="section-kicker">07 / INCIDENT LEARNING</span><h2>{en ? 'Build a blameless incident postmortem' : 'Susun postmortem insiden tanpa menyalahkan'}</h2><p>{en ? 'Turn an incident into a structured learning record: impact, timeline, root cause, recovery, and accountable follow-ups. Everything is processed locally.' : 'Ubah insiden menjadi catatan pembelajaran terstruktur: dampak, linimasa, akar penyebab, pemulihan, dan tindak lanjut yang jelas. Semua diproses secara lokal.'}</p></div>
+        <div className="api-matrix-note"><ShieldCheck size={15} /><span>{en ? 'Blameless by design · local-only processing · no incident data is uploaded. Avoid entering credentials or personal data.' : 'Dirancang tanpa menyalahkan · pemrosesan lokal · data insiden tidak diunggah. Hindari memasukkan kredensial atau data pribadi.'}</span></div>
+        <div className="postmortem-section"><h3>{en ? 'Incident overview' : 'Ringkasan insiden'}</h3>
+          <label className="lab-field"><span>{en ? 'Incident title' : 'Judul insiden'}</span><input value={incidentTitle} onChange={event => setIncidentTitle(event.target.value)} placeholder={en ? 'e.g. Checkout latency spike' : 'mis. Lonjakan latensi checkout'} /></label>
+          <div className="postmortem-grid">
+            <label className="lab-field"><span>{en ? 'Severity' : 'Tingkat keparahan'}</span><select value={incidentSeverity} onChange={event => setIncidentSeverity(event.target.value)}><option value="SEV-1">SEV-1 — {en ? 'Critical' : 'Kritis'}</option><option value="SEV-2">SEV-2 — {en ? 'High' : 'Tinggi'}</option><option value="SEV-3">SEV-3 — {en ? 'Moderate' : 'Sedang'}</option><option value="SEV-4">SEV-4 — {en ? 'Low' : 'Rendah'}</option></select></label>
+            <label className="lab-field"><span>{en ? 'Current status' : 'Status saat ini'}</span><select value={incidentStatus} onChange={event => setIncidentStatus(event.target.value)}><option value="Investigating">{en ? 'Investigating' : 'Diinvestigasi'}</option><option value="Monitoring">{en ? 'Monitoring' : 'Dipantau'}</option><option value="Resolved">{en ? 'Resolved' : 'Selesai'}</option></select></label>
+          </div>
+          <div className="postmortem-grid">
+            <label className="lab-field"><span>{en ? 'Start time' : 'Waktu mulai'}</span><input type="datetime-local" value={incidentStart} onChange={event => setIncidentStart(event.target.value)} /></label>
+            <label className="lab-field"><span>{en ? 'End time' : 'Waktu berakhir'}</span><input type="datetime-local" value={incidentEnd} onChange={event => setIncidentEnd(event.target.value)} /></label>
+          </div>
+        </div>
+        <div className="postmortem-section"><h3>{en ? 'Impact and detection' : 'Dampak dan deteksi'}</h3>
+          <label className="lab-field"><span>{en ? 'Customer and business impact' : 'Dampak terhadap pelanggan dan bisnis'}</span><textarea rows={3} value={incidentImpact} onChange={event => setIncidentImpact(event.target.value)} placeholder={en ? 'Affected services, users, duration, and measurable impact…' : 'Layanan/pengguna terdampak, durasi, dan dampak terukur…'} /></label>
+          <label className="lab-field"><span>{en ? 'Detection and signals' : 'Deteksi dan sinyal'}</span><textarea rows={2} value={incidentDetection} onChange={event => setIncidentDetection(event.target.value)} placeholder={en ? 'Alert, monitoring signal, or customer report…' : 'Alert, sinyal monitoring, atau laporan pelanggan…'} /></label>
+          <label className="lab-field"><span>{en ? 'Timeline (one event per line)' : 'Linimasa (satu peristiwa per baris)'}</span><textarea rows={4} value={incidentTimeline} onChange={event => setIncidentTimeline(event.target.value)} placeholder={en ? '09:02 UTC — Alert triggered\n09:08 UTC — Mitigation started\n09:21 UTC — Service recovered' : '16:02 WIB — Alert terpicu\n16:08 WIB — Mitigasi dimulai\n16:21 WIB — Layanan pulih'} /></label>
+        </div>
+        <div className="postmortem-section"><h3>{en ? 'Analysis and recovery' : 'Analisis dan pemulihan'}</h3>
+          <label className="lab-field"><span>{en ? 'Root cause' : 'Akar penyebab'}</span><textarea rows={3} value={incidentRootCause} onChange={event => setIncidentRootCause(event.target.value)} placeholder={en ? 'Which system conditions made this incident possible?' : 'Kondisi sistem apa yang memungkinkan insiden ini terjadi?'} /></label>
+          <label className="lab-field"><span>{en ? 'Contributing factors (one per line)' : 'Faktor kontribusi (satu per baris)'}</span><textarea rows={2} value={incidentContributors} onChange={event => setIncidentContributors(event.target.value)} placeholder={en ? 'Missing alert\nInsufficient load test' : 'Alert belum tersedia\nLoad test belum memadai'} /></label>
+          <label className="lab-field"><span>{en ? 'Resolution and recovery' : 'Resolusi dan pemulihan'}</span><textarea rows={3} value={incidentResolution} onChange={event => setIncidentResolution(event.target.value)} placeholder={en ? 'Mitigation, rollback, recovery, and verification…' : 'Mitigasi, rollback, pemulihan, dan verifikasi…'} /></label>
+          <label className="lab-field"><span>{en ? 'Follow-up actions (one per line)' : 'Tindak lanjut (satu per baris)'}</span><textarea rows={3} value={incidentFollowUps} onChange={event => setIncidentFollowUps(event.target.value)} placeholder={en ? 'Add latency alert — Platform — 2026-10-20' : 'Tambah alert latensi — Platform — 2026-10-20'} /></label>
+        </div>
+        <div className="postmortem-actions"><button className="button button-primary lab-action" onClick={generatePostmortem}>{en ? 'Generate postmortem' : 'Buat postmortem'} <ArrowRight size={16} /></button></div>
+        {postmortemReport && <div className="lab-generated"><div className="lab-output-heading"><div><h3>{en ? 'Postmortem report' : 'Laporan postmortem'}</h3><p>{en ? 'Review the report and assign follow-up owners before sharing.' : 'Tinjau laporan dan tetapkan penanggung jawab tindak lanjut sebelum dibagikan.'}</p></div><div className="postmortem-actions"><button className="copy-link-button" onClick={() => copyText(postmortemReport)}><Copy size={14} /> {en ? 'Copy Markdown' : 'Salin Markdown'}</button><button className="copy-link-button" onClick={downloadPostmortem}><ArrowDownRight size={14} /> {en ? 'Download .md' : 'Unduh .md'}</button></div></div><pre className="lab-output postmortem-output" aria-label={en ? 'Postmortem Markdown output' : 'Output Markdown postmortem'}>{postmortemReport}</pre></div>}
       </div>}
       {activeTool === 'openapi' && <div className="lab-form openapi-form">
         <div className="lab-panel-heading"><span className="section-kicker">05 / CONTRACT QUALITY</span><h2>{en ? 'Inspect an OpenAPI contract' : 'Periksa kontrak OpenAPI'}</h2><p>{en ? 'Paste an OpenAPI 3.x JSON document to inventory endpoints, methods, response codes, parameters, request bodies, and declared security. Analysis runs locally; it never calls your API.' : 'Tempel dokumen JSON OpenAPI 3.x untuk memetakan endpoint, method, kode respons, parameter, request body, dan keamanan yang dideklarasikan. Analisis berjalan lokal dan tidak memanggil API Anda.'}</p></div>

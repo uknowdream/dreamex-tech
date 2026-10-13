@@ -1824,3 +1824,15 @@ main, header, footer, section, .container {
 .release-score-footnote svg { flex: 0 0 auto; margin-top: 2px; }
 @media (max-width: 640px) { .release-score-overview { grid-template-columns: 1fr; justify-items: center; text-align: center; } .release-score-ring { width: 132px; } .release-score-summary { width: 100%; text-align: left; } .release-status-pill { margin: auto; } .release-checklist-heading { align-items: flex-start; flex-direction: column; } .release-score-actions { width: 100%; } .release-score-actions button { flex: 1; } .release-check-item { align-items: flex-start; } .release-critical-tag { margin-left: auto; } }
 @media (prefers-reduced-motion: reduce) { .release-progress-track span, .release-check-item { transition: none; } }
+
+
+/* Incident postmortem builder */
+.postmortem-form { gap: 18px; }
+.postmortem-section { display: grid; gap: 14px; padding: clamp(14px, 2.5vw, 20px); border: 1px solid var(--border, rgba(148, 163, 184, .18)); border-radius: 15px; background: var(--surface, rgba(148, 163, 184, .025)); }
+.postmortem-section > h3 { margin: 0; font-size: .98rem; letter-spacing: -.01em; }
+.postmortem-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.postmortem-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.postmortem-actions .lab-action { margin-top: 0; }
+.postmortem-output { max-height: 620px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 640px) { .postmortem-grid { grid-template-columns: minmax(0, 1fr); } .postmortem-actions { width: 100%; } .postmortem-actions .button, .postmortem-actions .copy-link-button { flex: 1; justify-content: center; } }
+@media (prefers-reduced-motion: reduce) { .postmortem-form *, .postmortem-form *::before, .postmortem-form *::after { scroll-behavior: auto; } }
