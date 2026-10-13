@@ -13,6 +13,8 @@ const items=[
  {id:'graph',title:'Engineering Knowledge Graph',description:'Explore connections between concepts, articles, and tools.',category:'Knowledge',route:'/knowledge-graph',keywords:'graph concept related knowledge',icon:Share2},
  {id:'roadmap',title:'Product Roadmap & Readiness',description:'Track platform priorities, assess release readiness, write ADRs, and model STRIDE threats.',category:'Engineering Governance',route:'/roadmap',keywords:'roadmap project scorecard release readiness adr architecture threat model stride',icon:ClipboardCheck},
  {id:'command-center',title:'Engineering Command Center',description:'Track work items, manage incident records, document architecture decisions, and review release gates.',category:'Engineering Governance',route:'/command-center',keywords:'command center incident postmortem tasks release readiness adr operations',icon:Activity},
+ {id:'qa-studio',title:'QA Automation Studio',description:'Generate editable test cases, Gherkin scenarios, bug reports, and test plans from explicit requirements.',category:'Quality Engineering',route:'/qa-studio',keywords:'test case test plan gherkin bdd bug report qa automation',icon:ClipboardCheck},
+ {id:'security-center',title:'Security & Privacy Center',description:'Review same-origin security headers, browser-visible quality signals, and export a verification report.',category:'Security Engineering',route:'/security-center',keywords:'security headers csp hsts privacy audit owasp hardening',icon:ShieldCheck},
  {id:'reading-list',title:'Reading List',description:'Return to saved engineering articles.',category:'Knowledge',route:'/reading-list',keywords:'bookmark saved reading',icon:Bookmark},
 ]
 export function EngineeringWorkspacePage(){
