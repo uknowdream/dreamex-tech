@@ -388,7 +388,7 @@ test('OpenAPI CSV export safely quotes commas, quotes, and newlines', async ({ p
     openapi: '3.0.3',
     info: { title: 'CSV export', version: '1.0.0' },
     paths: { '/api/items': { get: {
-      summary: 'List, "all" items\\nwith details',
+      summary: 'List, "all" items\nwith details',
       responses: { 200: { description: 'OK', content: { 'application/json': { schema: { type: 'array', items: { type: 'object' } } } } } },
     } } },
   }))
@@ -402,8 +402,7 @@ test('OpenAPI CSV export safely quotes commas, quotes, and newlines', async ({ p
   })
   await page.getByRole('button', { name: /Export CSV|Ekspor CSV/i }).click()
   const csv = await page.evaluate(async () => await (window as Window & { __openApiCsvBlob?: Blob }).__openApiCsvBlob?.text() ?? '')
-  expect(csv).toContain('"List, ""all"" items')
-  expect(csv).toContain('with details"')
+  expect(csv).toContain('"List, ""all"" items\nwith details"')
   await expect(page.getByRole('status')).toContainText(/CSV downloaded|CSV matriks kontrak OpenAPI berhasil diunduh/i)
 })
 
