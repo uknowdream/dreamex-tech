@@ -16,6 +16,7 @@ const items=[
  {id:'qa-studio',title:'QA Automation Studio',description:'Generate editable test cases, Gherkin scenarios, bug reports, and test plans from explicit requirements.',category:'Quality Engineering',route:'/qa-studio',keywords:'test case test plan gherkin bdd bug report qa automation',icon:ClipboardCheck},
  {id:'security-center',title:'Security & Privacy Center',description:'Review same-origin security headers, browser-visible quality signals, and export a verification report.',category:'Security Engineering',route:'/security-center',keywords:'security headers csp hsts privacy audit owasp hardening',icon:ShieldCheck},
  {id:'engineering-intelligence',title:'Engineering Intelligence',description:'Maintain a local software catalog, inspect OpenAPI contracts, and compare likely breaking changes.',category:'Engineering Governance',route:'/engineering-intelligence',keywords:'software catalog architecture explorer api contract openapi schema breaking change compatibility',icon:Network},
+ {id:'control-plane',title:'Engineering Control Plane',description:'Unify engineering workflows, review browser-session signals, and maintain a release checklist.',category:'Engineering Governance',route:'/control-plane',keywords:'control plane dashboard release checklist workflow engineering overview',icon:Activity},
  {id:'reading-list',title:'Reading List',description:'Return to saved engineering articles.',category:'Knowledge',route:'/reading-list',keywords:'bookmark saved reading',icon:Bookmark},
 ]
 export function EngineeringWorkspacePage(){
