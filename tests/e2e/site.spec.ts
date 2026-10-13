@@ -357,6 +357,57 @@ test('OpenAPI analyzer shows a clear error for invalid JSON', async ({ page }) =
   await expect(page.locator('.openapi-endpoint')).toHaveCount(0)
 })
 
+
+test('OpenAPI analyzer reports missing responses and invalid path parameter contracts', async ({ page }) => {
+  await page.goto('/lab')
+  await page.getByRole('tab', { name: /OpenAPI Analyzer|Analyzer OpenAPI/i }).click()
+  await page.getByLabel(/OpenAPI JSON document|Dokumen JSON OpenAPI/i).fill(JSON.stringify({
+    openapi: '3.0.3',
+    info: { title: 'Contract issues', version: '1.0.0' },
+    paths: {
+      '/api/items/{itemId}': {
+        get: {
+          parameters: [{ name: 'itemId', in: 'path', required: false, schema: { type: 'string' } }],
+          responses: { 200: {} },
+        },
+      },
+      '/api/items': { post: { requestBody: { required: true, content: { 'application/json': {} } } } },
+    },
+  }))
+  await page.getByRole('button', { name: /Analyze contract|Analisis kontrak/i }).click()
+  await expect(page.getByRole('heading', { name: /Contract quality checks|Pemeriksaan kualitas kontrak/i })).toBeVisible()
+  await expect(page.locator('.openapi-issue')).toContainText('RESPONSES_MISSING')
+  await expect(page.locator('.openapi-issue')).toContainText('PATH_PARAM_NOT_REQUIRED')
+  await expect(page.locator('.openapi-issue')).toContainText('RESPONSE_DESCRIPTION_MISSING')
+  await expect(page.locator('.openapi-issue')).toContainText('REQUEST_SCHEMA_MISSING')
+})
+
+test('OpenAPI CSV export safely quotes commas, quotes, and newlines', async ({ page }) => {
+  await page.goto('/lab')
+  await page.getByRole('tab', { name: /OpenAPI Analyzer|Analyzer OpenAPI/i }).click()
+  await page.getByLabel(/OpenAPI JSON document|Dokumen JSON OpenAPI/i).fill(JSON.stringify({
+    openapi: '3.0.3',
+    info: { title: 'CSV export', version: '1.0.0' },
+    paths: { '/api/items': { get: {
+      summary: 'List, "all" items\\nwith details',
+      responses: { 200: { description: 'OK', content: { 'application/json': { schema: { type: 'array', items: { type: 'object' } } } } },
+    } } },
+  }))
+  await page.getByRole('button', { name: /Analyze contract|Analisis kontrak/i }).click()
+  await page.evaluate(() => {
+    const original = URL.createObjectURL.bind(URL)
+    URL.createObjectURL = ((blob: Blob) => {
+      ;(window as Window & { __openApiCsvBlob?: Blob }).__openApiCsvBlob = blob
+      return original(blob)
+    }) as typeof URL.createObjectURL
+  })
+  await page.getByRole('button', { name: /Export CSV|Ekspor CSV/i }).click()
+  const csv = await page.evaluate(async () => await (window as Window & { __openApiCsvBlob?: Blob }).__openApiCsvBlob?.text() ?? '')
+  expect(csv).toContain('"List, ""all"" items')
+  expect(csv).toContain('with details"')
+  await expect(page.getByRole('status')).toContainText(/CSV downloaded|CSV matriks kontrak OpenAPI berhasil diunduh/i)
+})
+
 test('mobile viewport has no horizontal document overflow', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'This check targets the mobile browser project')
   await page.setViewportSize({ width: 390, height: 844 })

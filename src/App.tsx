@@ -419,6 +419,7 @@ function EngineeringLabPage() {
   const [openApiError, setOpenApiError] = useState('')
   const [openApiResults, setOpenApiResults] = useState<Array<{ method: string; path: string; summary: string; operationId: string; responses: string; parameters: string; requestBody: boolean; security: boolean }>>([])
   const [openApiAnalyzed, setOpenApiAnalyzed] = useState(false)
+  const [openApiIssues, setOpenApiIssues] = useState<Array<{ method: string; path: string; severity: 'error' | 'warning' | 'info'; code: string; message: string }>>([])
   const [copyStatus, setCopyStatus] = useState('')
   const generatedCases = useMemo(() => {
     const subject = feature.trim() || (en ? 'the feature' : 'fitur ini')
@@ -603,6 +604,54 @@ function EngineeringLabPage() {
           })
         })
       })
+
+      const findings: Array<{ method: string; path: string; severity: 'error' | 'warning' | 'info'; code: string; message: string }> = []
+      const addFinding = (method: string, path: string, severity: 'error' | 'warning' | 'info', code: string, english: string, indonesian: string) => {
+        findings.push({ method, path, severity, code, message: en ? english : indonesian })
+      }
+      Object.entries(paths).forEach(([path, rawPathItem]) => {
+        if (!rawPathItem || typeof rawPathItem !== 'object' || Array.isArray(rawPathItem)) return
+        const pathItem = rawPathItem as Record<string, unknown>
+        methods.forEach(method => {
+          const rawOperation = pathItem[method]
+          if (!rawOperation || typeof rawOperation !== 'object' || Array.isArray(rawOperation)) return
+          const operation = rawOperation as Record<string, unknown>
+          const responses = operation.responses && typeof operation.responses === 'object' && !Array.isArray(operation.responses) ? operation.responses as Record<string, unknown> : {}
+          const responseCodes = Object.keys(responses)
+          if (!responseCodes.length) addFinding(method.toUpperCase(), path, 'error', 'RESPONSES_MISSING', 'No responses are documented for this operation.', 'Operasi ini belum mendokumentasikan respons.')
+          else {
+            if (!responseCodes.some(code => code.length === 3 && code.startsWith('2')) && !responseCodes.includes('default')) addFinding(method.toUpperCase(), path, 'warning', 'SUCCESS_RESPONSE_MISSING', 'No 2xx success response or default response is documented.', 'Belum ada respons sukses 2xx atau respons default yang didokumentasikan.')
+            responseCodes.forEach(code => {
+              const response = responses[code]
+              if (response && typeof response === 'object' && !Array.isArray(response) && (typeof (response as Record<string, unknown>).description !== 'string' || !String((response as Record<string, unknown>).description ?? '').trim())) {
+                addFinding(method.toUpperCase(), path, 'warning', 'RESPONSE_DESCRIPTION_MISSING', 'Response "' + code + '" has no description.', 'Respons "' + code + '" belum memiliki deskripsi.')
+              }
+            })
+          }
+          const pathParameters = Array.isArray(pathItem.parameters) ? pathItem.parameters : []
+          const operationParameters = Array.isArray(operation.parameters) ? operation.parameters : []
+          const parameters = [...pathParameters, ...operationParameters].filter(parameter => parameter && typeof parameter === 'object' && !Array.isArray(parameter)) as Record<string, unknown>[]
+          const byName = new Map<string, Record<string, unknown>>()
+          parameters.forEach(parameter => { if (parameter.in === 'path' && typeof parameter.name === 'string') byName.set(parameter.name, parameter) })
+          const variables = path.split('{').slice(1).map(part => part.split('}')[0]).filter(Boolean)
+          variables.forEach(name => {
+            const parameter = byName.get(name)
+            if (!parameter) addFinding(method.toUpperCase(), path, 'error', 'PATH_PARAM_MISSING', 'Path variable "' + name + '" has no declared path parameter.', 'Variabel path "' + name + '" belum memiliki deklarasi parameter path.')
+            else if (parameter.required !== true) addFinding(method.toUpperCase(), path, 'error', 'PATH_PARAM_NOT_REQUIRED', 'Path parameter "' + name + '" must set required: true.', 'Parameter path "' + name + '" harus menetapkan required: true.')
+            else if (!parameter.schema || typeof parameter.schema !== 'object' || Array.isArray(parameter.schema)) addFinding(method.toUpperCase(), path, 'warning', 'PATH_PARAM_SCHEMA_MISSING', 'Path parameter "' + name + '" has no schema.', 'Parameter path "' + name + '" belum memiliki schema.')
+          })
+          if (['post', 'put', 'patch'].includes(method) && operation.requestBody && typeof operation.requestBody === 'object' && !Array.isArray(operation.requestBody)) {
+            const body = operation.requestBody as Record<string, unknown>
+            const content = body.content && typeof body.content === 'object' && !Array.isArray(body.content) ? body.content as Record<string, unknown> : {}
+            const hasRequestSchema = Object.values(content).some(media => media && typeof media === 'object' && !Array.isArray(media) && (media as Record<string, unknown>).schema && typeof (media as Record<string, unknown>).schema === 'object')
+            if (!hasRequestSchema) addFinding(method.toUpperCase(), path, 'warning', 'REQUEST_SCHEMA_MISSING', 'Request body is declared but has no usable schema.', 'Request body dideklarasikan tetapi belum memiliki schema yang dapat digunakan.')
+          } else if (['post', 'put', 'patch'].includes(method) && !operation.requestBody) {
+            addFinding(method.toUpperCase(), path, 'info', 'REQUEST_BODY_UNDECLARED', 'Write operation has no request body; confirm this is intentional.', 'Operasi penulisan tidak memiliki request body; pastikan ini memang disengaja.')
+          }
+          if (typeof operation.operationId !== 'string' || !operation.operationId.trim()) addFinding(method.toUpperCase(), path, 'info', 'OPERATION_ID_MISSING', 'No operationId is declared; generated clients may have less stable names.', 'operationId belum dideklarasikan; nama pada client hasil generasi mungkin kurang stabil.')
+        })
+      })
+      setOpenApiIssues(findings)
       if (!results.length) throw new Error(en ? 'No HTTP operations were found under "paths".' : 'Tidak ada operasi HTTP yang ditemukan di dalam "paths".')
       setOpenApiResults(results)
       setOpenApiError('')
@@ -610,6 +659,7 @@ function EngineeringLabPage() {
       setCopyStatus('')
     } catch (error) {
       setOpenApiResults([])
+      setOpenApiIssues([])
       setOpenApiAnalyzed(false)
       setOpenApiError(error instanceof Error ? error.message : (en ? 'Unable to analyze this document.' : 'Dokumen tidak dapat dianalisis.'))
     }
@@ -681,7 +731,7 @@ function EngineeringLabPage() {
         <div className="api-matrix-note"><ShieldCheck size={15} /><span>{en ? 'Local-only parsing · OpenAPI 3.x JSON · no network requests · required path parameters are marked with *' : 'Parsing lokal · JSON OpenAPI 3.x · tanpa request jaringan · parameter path wajib ditandai *'}</span></div>
         <button className="button button-primary lab-action" onClick={analyzeOpenApi}>{en ? 'Analyze contract' : 'Analisis kontrak'} <ArrowRight size={16} /></button>
         {openApiError && <p className="lab-error" role="alert">{openApiError}</p>}
-        {openApiAnalyzed && <div className="lab-generated"><div className="lab-output-heading"><div><h3>{en ? 'Endpoint inventory' : 'Inventaris endpoint'}</h3><p className="api-matrix-count">{openApiResults.length} {en ? 'operations discovered' : 'operasi ditemukan'}</p></div><div className="api-matrix-actions"><button className="copy-link-button" onClick={() => copyText(openApiResults.map(item => `## ${item.method} ${item.path}\n\n- Summary: ${item.summary}\n- Operation ID: ${item.operationId || '—'}\n- Responses: ${item.responses}\n- Parameters: ${item.parameters || '—'}\n- Request body: ${item.requestBody ? 'Yes' : 'No'}\n- Security declared: ${item.security ? 'Yes' : 'No'}`).join('\n\n'))}><Copy size={14} /> {en ? 'Copy Markdown' : 'Salin Markdown'}</button><button className="copy-link-button" onClick={downloadOpenApiMatrix}><ArrowDownRight size={14} /> {en ? 'Export CSV' : 'Ekspor CSV'}</button></div></div><div className="openapi-summary-grid"><div><span>{en ? 'Operations' : 'Operasi'}</span><strong>{openApiResults.length}</strong></div><div><span>{en ? 'With request body' : 'Dengan request body'}</span><strong>{openApiResults.filter(item => item.requestBody).length}</strong></div><div><span>{en ? 'Security declared' : 'Keamanan dideklarasikan'}</span><strong>{openApiResults.filter(item => item.security).length}</strong></div><div><span>{en ? 'No documented responses' : 'Tanpa kode respons'}</span><strong>{openApiResults.filter(item => item.responses === 'Undocumented' || item.responses === 'Belum didokumentasikan').length}</strong></div></div><div className="openapi-endpoint-list">{openApiResults.map((item, index) => <article className="openapi-endpoint" key={item.method + item.path + index}><div className="openapi-endpoint-top"><span className={'openapi-method method-' + item.method.toLowerCase()}>{item.method}</span><code>{item.path}</code></div><h4>{item.summary}</h4>{item.operationId && <p className="openapi-operation">{en ? 'Operation ID' : 'ID Operasi'}: <code>{item.operationId}</code></p>}<div className="openapi-meta"><span>{en ? 'Responses' : 'Respons'}: <strong>{item.responses}</strong></span><span>{en ? 'Body' : 'Body'}: <strong>{item.requestBody ? (en ? 'Yes' : 'Ya') : (en ? 'No' : 'Tidak')}</strong></span><span>{en ? 'Security' : 'Keamanan'}: <strong>{item.security ? (en ? 'Declared' : 'Dideklarasikan') : (en ? 'Not declared' : 'Tidak dideklarasikan')}</strong></span></div>{item.parameters && <p className="openapi-parameters">{en ? 'Parameters' : 'Parameter'}: {item.parameters}</p>}</article>)}</div></div>}
+        {openApiAnalyzed && <div className="lab-generated"><div className="lab-output-heading"><div><h3>{en ? 'Endpoint inventory' : 'Inventaris endpoint'}</h3><p className="api-matrix-count">{openApiResults.length} {en ? 'operations discovered' : 'operasi ditemukan'}</p></div><div className="api-matrix-actions"><button className="copy-link-button" onClick={() => copyText(openApiResults.map(item => `## ${item.method} ${item.path}\n\n- Summary: ${item.summary}\n- Operation ID: ${item.operationId || '—'}\n- Responses: ${item.responses}\n- Parameters: ${item.parameters || '—'}\n- Request body: ${item.requestBody ? 'Yes' : 'No'}\n- Security declared: ${item.security ? 'Yes' : 'No'}`).join('\n\n'))}><Copy size={14} /> {en ? 'Copy Markdown' : 'Salin Markdown'}</button><button className="copy-link-button" onClick={downloadOpenApiMatrix}><ArrowDownRight size={14} /> {en ? 'Export CSV' : 'Ekspor CSV'}</button></div></div><div className="openapi-summary-grid"><div><span>{en ? 'Operations' : 'Operasi'}</span><strong>{openApiResults.length}</strong></div><div><span>{en ? 'Errors' : 'Error'}</span><strong>{openApiIssues.filter(issue => issue.severity === 'error').length}</strong></div><div><span>{en ? 'Warnings' : 'Peringatan'}</span><strong>{openApiIssues.filter(issue => issue.severity === 'warning').length}</strong></div><div><span>{en ? 'Info' : 'Info'}</span><strong>{openApiIssues.filter(issue => issue.severity === 'info').length}</strong></div></div><section className="openapi-issues" aria-label={en ? 'Contract validation issues' : 'Temuan validasi kontrak'}><div className="openapi-issues-heading"><div><h3>{en ? 'Contract quality checks' : 'Pemeriksaan kualitas kontrak'}</h3><p>{en ? 'Static checks for response coverage, path parameters, request schemas, and operation metadata.' : 'Pemeriksaan statis untuk cakupan respons, parameter path, schema request, dan metadata operasi.'}</p></div><span className={openApiIssues.some(issue => issue.severity === 'error') ? 'openapi-quality-status has-errors' : openApiIssues.some(issue => issue.severity === 'warning') ? 'openapi-quality-status has-warnings' : 'openapi-quality-status'}>{openApiIssues.length} {en ? 'findings' : 'temuan'}</span></div>{openApiIssues.length ? <div className="openapi-issue-list">{openApiIssues.map((issue, index) => <article className={'openapi-issue issue-' + issue.severity} key={issue.method + issue.path + issue.code + index}><span className="openapi-issue-severity">{issue.severity.toUpperCase()}</span><div><strong>{issue.code}</strong><p>{issue.method} {issue.path} — {issue.message}</p></div></article>)}</div> : <p className="openapi-no-issues"><Check size={16} /> {en ? 'No issues found by the current static checks.' : 'Tidak ada temuan dari pemeriksaan statis saat ini.'}</p>}</section><div className="openapi-endpoint-list">{openApiResults.map((item, index) => <article className="openapi-endpoint" key={item.method + item.path + index}><div className="openapi-endpoint-top"><span className={'openapi-method method-' + item.method.toLowerCase()}>{item.method}</span><code>{item.path}</code></div><h4>{item.summary}</h4>{item.operationId && <p className="openapi-operation">{en ? 'Operation ID' : 'ID Operasi'}: <code>{item.operationId}</code></p>}<div className="openapi-meta"><span>{en ? 'Responses' : 'Respons'}: <strong>{item.responses}</strong></span><span>{en ? 'Body' : 'Body'}: <strong>{item.requestBody ? (en ? 'Yes' : 'Ya') : (en ? 'No' : 'Tidak')}</strong></span><span>{en ? 'Security' : 'Keamanan'}: <strong>{item.security ? (en ? 'Declared' : 'Dideklarasikan') : (en ? 'Not declared' : 'Tidak dideklarasikan')}</strong></span></div>{item.parameters && <p className="openapi-parameters">{en ? 'Parameters' : 'Parameter'}: {item.parameters}</p>}</article>)}</div></div>}
       </div>}
       {copyStatus && <p className="lab-copy-status" role="status">{copyStatus}</p>}
     </section>

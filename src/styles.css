@@ -1768,3 +1768,22 @@ main, header, footer, section, .container {
 .openapi-parameters { margin-bottom: 0; }
 @media (max-width: 700px) { .openapi-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .openapi-endpoint { padding: 13px; } }
 @media (max-width: 390px) { .openapi-summary-grid { gap: 8px; } .openapi-summary-grid > div { padding: 11px; } .openapi-summary-grid strong { font-size: 1.35rem; } }
+
+/* OpenAPI contract quality findings */
+.openapi-issues { margin: 20px 0; padding: 18px; border: 1px solid var(--border, rgba(148, 163, 184, .18)); border-radius: 16px; background: var(--surface, rgba(148, 163, 184, .035)); }
+.openapi-issues-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+.openapi-issues-heading h3 { margin: 0 0 5px; font-size: 1rem; }
+.openapi-issues-heading p { margin: 0; color: var(--muted, #94a3b8); font-size: .82rem; line-height: 1.55; }
+.openapi-quality-status { display: inline-flex; align-items: center; white-space: nowrap; border: 1px solid var(--border, rgba(148, 163, 184, .2)); border-radius: 999px; padding: 5px 9px; font-size: .72rem; font-weight: 750; }
+.openapi-quality-status.has-errors { color: #f87171; border-color: rgba(248, 113, 113, .35); background: rgba(248, 113, 113, .08); }
+.openapi-quality-status.has-warnings { color: #fbbf24; border-color: rgba(251, 191, 36, .3); background: rgba(251, 191, 36, .07); }
+.openapi-issue-list { display: grid; gap: 8px; }
+.openapi-issue { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px; padding: 11px 12px; border: 1px solid var(--border, rgba(148, 163, 184, .16)); border-radius: 10px; background: var(--background, rgba(15, 23, 42, .12)); }
+.openapi-issue-severity { align-self: start; width: fit-content; padding: 3px 7px; border-radius: 6px; font-size: .68rem; font-weight: 800; letter-spacing: .04em; }
+.issue-error .openapi-issue-severity { color: #f87171; background: rgba(248, 113, 113, .12); }
+.issue-warning .openapi-issue-severity { color: #fbbf24; background: rgba(251, 191, 36, .12); }
+.issue-info .openapi-issue-severity { color: #7dd3fc; background: rgba(56, 189, 248, .12); }
+.openapi-issue strong { font-size: .78rem; font-family: var(--font-mono, ui-monospace, monospace); overflow-wrap: anywhere; }
+.openapi-issue p { margin: 4px 0 0; color: var(--muted, #94a3b8); font-size: .8rem; line-height: 1.55; overflow-wrap: anywhere; }
+.openapi-no-issues { display: flex; align-items: center; gap: 8px; margin: 0; color: #4ade80; font-size: .86rem; }
+@media (max-width: 520px) { .openapi-issues { padding: 13px; } .openapi-issues-heading { flex-direction: column; } .openapi-issue { grid-template-columns: 1fr; gap: 6px; } }
