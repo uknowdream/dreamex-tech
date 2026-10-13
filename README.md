@@ -35,6 +35,7 @@ DreamEx Tech combines editorial knowledge with practical, browser-first engineer
 - `/command-center` — local work queue, incident register, architecture decision records, and release checklist.
 - `/qa-studio` — editable test-case tables, BDD/Gherkin scenarios, bug reports, and test plans; supports local draft snapshots and Markdown export.
 - `/quality-intelligence` — local-first Playwright JSON and JUnit XML report analysis, pass-rate and duration summaries, retry-based flaky-test signals, failure clustering, report exports, and browser-local summary history.
+- `/reliability-center` — local incident records, severity and status tracking, timestamped response timelines, postmortem export, and manually entered DORA-style delivery metrics.
 - `/security-center` — same-origin security-header review, visible document-quality signals, local-storage inventory, JSON/Markdown audit exports, and scoped deletion of DreamEx browser data.
 
 Engineering Intelligence starts with clearly labelled example inventory records; replace them with real metadata before using catalog metrics. Catalog data stays in browser storage and can be exported as JSON. OpenAPI contract text is analyzed locally in the browser and is not automatically persisted or sent to a server. Contract comparison is heuristic and does not prove runtime compatibility.
