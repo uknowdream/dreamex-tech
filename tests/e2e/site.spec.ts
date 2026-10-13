@@ -337,6 +337,26 @@ test('Engineering Lab generates an API test matrix for the selected endpoint', a
   await expect(page.locator('.api-matrix-case').first()).toContainText('POST /api/v1/users')
 })
 
+test('Engineering Lab analyzes OpenAPI 3 JSON and lists endpoint operations', async ({ page }) => {
+  await page.goto('/lab')
+  await page.getByRole('tab', { name: /OpenAPI Analyzer|Analyzer OpenAPI/i }).click()
+  await expect(page.getByLabel(/OpenAPI JSON document|Dokumen JSON OpenAPI/i)).toBeVisible()
+  await page.getByRole('button', { name: /Analyze contract|Analisis kontrak/i }).click()
+  await expect(page.getByRole('heading', { name: /Endpoint inventory|Inventaris endpoint/i })).toBeVisible()
+  await expect(page.locator('.openapi-endpoint')).toHaveCount(3)
+  await expect(page.locator('.openapi-endpoint').first()).toContainText('/api/v1/users')
+  await expect(page.locator('.openapi-endpoint').filter({ hasText: 'POST' })).toContainText('Create a user')
+})
+
+test('OpenAPI analyzer shows a clear error for invalid JSON', async ({ page }) => {
+  await page.goto('/lab')
+  await page.getByRole('tab', { name: /OpenAPI Analyzer|Analyzer OpenAPI/i }).click()
+  await page.getByLabel(/OpenAPI JSON document|Dokumen JSON OpenAPI/i).fill('{ invalid json')
+  await page.getByRole('button', { name: /Analyze contract|Analisis kontrak/i }).click()
+  await expect(page.getByRole('alert')).toContainText(/JSON|json/i)
+  await expect(page.locator('.openapi-endpoint')).toHaveCount(0)
+})
+
 test('mobile viewport has no horizontal document overflow', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'This check targets the mobile browser project')
   await page.setViewportSize({ width: 390, height: 844 })

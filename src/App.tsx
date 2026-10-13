@@ -385,7 +385,7 @@ function ReadingListPage() {
 function EngineeringLabPage() {
   const { language } = useLanguage()
   const en = language === 'en'
-  const [activeTool, setActiveTool] = useState<'test-cases' | 'bug-report' | 'json' | 'api-matrix'>('test-cases')
+  const [activeTool, setActiveTool] = useState<'test-cases' | 'bug-report' | 'json' | 'api-matrix' | 'openapi'>('test-cases')
   const [feature, setFeature] = useState(en ? 'Login form' : 'Form login')
   const [generated, setGenerated] = useState(false)
   const [bugTitle, setBugTitle] = useState('')
@@ -403,6 +403,22 @@ function EngineeringLabPage() {
   const [apiAuth, setApiAuth] = useState('required')
   const [apiPayload, setApiPayload] = useState('json')
   const [apiMatrixGenerated, setApiMatrixGenerated] = useState(false)
+  const [openApiSpec, setOpenApiSpec] = useState('{
+  "openapi": "3.0.3",
+  "info": { "title": "Sample Users API", "version": "1.0.0" },
+  "paths": {
+    "/api/v1/users": {
+      "get": { "summary": "List users", "operationId": "listUsers", "responses": { "200": { "description": "Users returned" }, "401": { "description": "Unauthorized" } } },
+      "post": { "summary": "Create a user", "operationId": "createUser", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object" } } } }, "responses": { "201": { "description": "Created" }, "400": { "description": "Invalid input" } } }
+    },
+    "/api/v1/users/{userId}": {
+      "get": { "summary": "Get user by ID", "parameters": [{ "name": "userId", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "User returned" }, "404": { "description": "Not found" } } }
+    }
+  }
+}')
+  const [openApiError, setOpenApiError] = useState('')
+  const [openApiResults, setOpenApiResults] = useState<Array<{ method: string; path: string; summary: string; operationId: string; responses: string; parameters: string; requestBody: boolean; security: boolean }>>([])
+  const [openApiAnalyzed, setOpenApiAnalyzed] = useState(false)
   const [copyStatus, setCopyStatus] = useState('')
   const generatedCases = useMemo(() => {
     const subject = feature.trim() || (en ? 'the feature' : 'fitur ini')
@@ -548,6 +564,73 @@ function EngineeringLabPage() {
     URL.revokeObjectURL(url)
     setCopyStatus(en ? 'API test matrix CSV downloaded.' : 'CSV matriks pengujian API berhasil diunduh.')
   }
+  const analyzeOpenApi = () => {
+    try {
+      const document = JSON.parse(openApiSpec) as Record<string, unknown>
+      const version = typeof document.openapi === 'string' ? document.openapi : ''
+      if (!version.startsWith('3.')) throw new Error(en ? 'This analyzer currently supports OpenAPI 3.x JSON documents.' : 'Analyzer ini saat ini mendukung dokumen JSON OpenAPI 3.x.')
+      if (!document.paths || typeof document.paths !== 'object' || Array.isArray(document.paths)) throw new Error(en ? 'The document must contain a valid "paths" object.' : 'Dokumen harus memiliki objek "paths" yang valid.')
+      const paths = document.paths as Record<string, unknown>
+      const methods = ['get', 'post', 'put', 'patch', 'delete', 'options', 'head', 'trace']
+      const results: Array<{ method: string; path: string; summary: string; operationId: string; responses: string; parameters: string; requestBody: boolean; security: boolean }> = []
+      Object.entries(paths).forEach(([path, pathItem]) => {
+        if (!pathItem || typeof pathItem !== 'object' || Array.isArray(pathItem)) return
+        const pathObject = pathItem as Record<string, unknown>
+        methods.forEach(method => {
+          const operation = pathObject[method]
+          if (!operation || typeof operation !== 'object' || Array.isArray(operation)) return
+          const op = operation as Record<string, unknown>
+          const pathParameters = Array.isArray(pathObject.parameters) ? pathObject.parameters : []
+          const operationParameters = Array.isArray(op.parameters) ? op.parameters : []
+          const parameterNames = [...pathParameters, ...operationParameters].flatMap(parameter => {
+            if (!parameter || typeof parameter !== 'object' || Array.isArray(parameter)) return []
+            const item = parameter as Record<string, unknown>
+            return typeof item.name === 'string' ? [item.name + (item.required === true ? ' *' : '')] : []
+          })
+          const responseObject = op.responses && typeof op.responses === 'object' && !Array.isArray(op.responses) ? op.responses as Record<string, unknown> : {}
+          const responseCodes = Object.keys(responseObject).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+          const rootSecurity = Array.isArray(document.security) && document.security.length > 0
+          const operationSecurity = Array.isArray(op.security) ? op.security.length > 0 : rootSecurity
+          results.push({
+            method: method.toUpperCase(),
+            path,
+            summary: typeof op.summary === 'string' ? op.summary : typeof op.description === 'string' ? op.description : (en ? 'No summary provided' : 'Ringkasan belum tersedia'),
+            operationId: typeof op.operationId === 'string' ? op.operationId : '',
+            responses: responseCodes.join(', ') || (en ? 'Undocumented' : 'Belum didokumentasikan'),
+            parameters: parameterNames.join(', '),
+            requestBody: Boolean(op.requestBody),
+            security: operationSecurity,
+          })
+        })
+      })
+      if (!results.length) throw new Error(en ? 'No HTTP operations were found under "paths".' : 'Tidak ada operasi HTTP yang ditemukan di dalam "paths".')
+      setOpenApiResults(results)
+      setOpenApiError('')
+      setOpenApiAnalyzed(true)
+      setCopyStatus('')
+    } catch (error) {
+      setOpenApiResults([])
+      setOpenApiAnalyzed(false)
+      setOpenApiError(error instanceof Error ? error.message : (en ? 'Unable to analyze this document.' : 'Dokumen tidak dapat dianalisis.'))
+    }
+  }
+  const downloadOpenApiMatrix = () => {
+    const rows = [
+      ['Method', 'Path', 'Summary', 'Operation ID', 'Documented Responses', 'Parameters', 'Request Body', 'Security'],
+      ...openApiResults.map(item => [item.method, item.path, item.summary, item.operationId, item.responses, item.parameters, item.requestBody ? 'Yes' : 'No', item.security ? 'Required' : 'Not declared']),
+    ]
+    const csv = rows.map(row => row.map(cell => \`"\${String(cell).replaceAll('"', '""')}"\`).join(',')).join('\r\n')
+    const blob = new Blob([\`\uFEFF\${csv}\`], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = 'dreamex-openapi-contract-matrix.csv'
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(url)
+    setCopyStatus(en ? 'OpenAPI contract matrix CSV downloaded.' : 'CSV matriks kontrak OpenAPI berhasil diunduh.')
+  }
   return <main id="main-content" className="engineering-lab container">
     <header className="lab-header"><span className="section-kicker">{en ? 'PRACTICAL ENGINEERING TOOLKIT' : 'TOOLKIT ENGINEERING PRAKTIS'}</span><h1>{en ? 'Engineering' : 'Engineering'} <span>Lab.</span></h1><p>{en ? 'Small, useful tools for QA workflows, clearer bug reports, and safer data handling. Processing runs locally in your browser.' : 'Perangkat praktis untuk alur kerja QA, laporan bug yang jelas, dan pengolahan data yang aman. Pemrosesan berjalan lokal di browser Anda.'}</p><div className="lab-local-note"><ShieldCheck size={16} /> {en ? 'No account or backend required — your inputs stay in this browser session.' : 'Tanpa akun atau backend — input Anda tetap diproses di browser ini.'}</div></header>
     <div className="lab-tool-tabs" role="tablist" aria-label={en ? 'Engineering tools' : 'Tool engineering'}>
@@ -555,6 +638,7 @@ function EngineeringLabPage() {
       <button role="tab" aria-selected={activeTool === 'bug-report'} className={activeTool === 'bug-report' ? 'active' : ''} onClick={() => { setActiveTool('bug-report'); setCopyStatus('') }}><BookOpen size={16} /> {en ? 'Bug Report' : 'Laporan Bug'}</button>
       <button role="tab" aria-selected={activeTool === 'json'} className={activeTool === 'json' ? 'active' : ''} onClick={() => { setActiveTool('json'); setCopyStatus('') }}><Braces size={16} /> JSON {en ? 'Formatter' : 'Formatter'}</button>
       <button role="tab" aria-selected={activeTool === 'api-matrix'} className={activeTool === 'api-matrix' ? 'active' : ''} onClick={() => { setActiveTool('api-matrix'); setCopyStatus(''); setApiMatrixGenerated(false) }}><ShieldCheck size={16} /> {en ? 'API Test Matrix' : 'Matriks Tes API'}</button>
+      <button role="tab" aria-selected={activeTool === 'openapi'} className={activeTool === 'openapi' ? 'active' : ''} onClick={() => { setActiveTool('openapi'); setCopyStatus(''); setOpenApiError(''); setOpenApiAnalyzed(false) }}><Braces size={16} /> {en ? 'OpenAPI Analyzer' : 'Analyzer OpenAPI'}</button>
     </div>
     <section className="lab-tool-panel" role="tabpanel">
       {activeTool === 'test-cases' && <div className="lab-form">
@@ -590,6 +674,14 @@ function EngineeringLabPage() {
         <div className="api-matrix-note"><ShieldCheck size={15} /><span>{en ? 'Privacy-first: all inputs stay in your browser. No API endpoint is called.' : 'Mengutamakan privasi: semua input tetap di browser. Tidak ada endpoint API yang dipanggil.'}</span></div>
         <button className="button button-primary lab-action" onClick={() => { setApiMatrixGenerated(true); setCopyStatus('') }}>{en ? 'Generate API test matrix' : 'Buat matriks tes API'} <ArrowRight size={16} /></button>
         {apiMatrixGenerated && <div className="lab-generated"><div className="lab-output-heading"><div><h3>{en ? 'Generated API scenarios' : 'Skenario API yang dihasilkan'}</h3><p className="api-matrix-count">{apiScenarios.length} {en ? 'scenarios · review before execution' : 'skenario · tinjau sebelum dijalankan'}</p></div><div className="api-matrix-actions"><button className="copy-link-button" onClick={() => copyText(apiScenarios.map(item => `## ${item.id} — ${item.title}\n\n- Request: ${apiMethod} ${apiPath.trim() || '/api/v1/resource'}\n- Steps: ${item.steps}\n- Expected: ${item.expected}`).join('\n\n'))}><Copy size={14} /> {en ? 'Copy Markdown' : 'Salin Markdown'}</button><button className="copy-link-button" onClick={downloadApiMatrix}><ArrowDownRight size={14} /> {en ? 'Download CSV' : 'Unduh CSV'}</button></div></div><div className="lab-case-list">{apiScenarios.map(item => <article className="lab-case api-matrix-case" key={item.id}><span className="lab-case-id">{item.id}</span><div><h4>{item.title}</h4><p><strong>{en ? 'Request' : 'Request'}:</strong> {apiMethod} {apiPath.trim() || '/api/v1/resource'}</p><p><strong>{en ? 'Steps' : 'Langkah'}:</strong> {item.steps}</p><p><strong>{en ? 'Expected' : 'Hasil yang diharapkan'}:</strong> {item.expected}</p></div></article>)}</div></div>}
+      </div>}
+      {activeTool === 'openapi' && <div className="lab-form openapi-form">
+        <div className="lab-panel-heading"><span className="section-kicker">05 / CONTRACT QUALITY</span><h2>{en ? 'Inspect an OpenAPI contract' : 'Periksa kontrak OpenAPI'}</h2><p>{en ? 'Paste an OpenAPI 3.x JSON document to inventory endpoints, methods, response codes, parameters, request bodies, and declared security. Analysis runs locally; it never calls your API.' : 'Tempel dokumen JSON OpenAPI 3.x untuk memetakan endpoint, method, kode respons, parameter, request body, dan keamanan yang dideklarasikan. Analisis berjalan lokal dan tidak memanggil API Anda.'}</p></div>
+        <label className="lab-field"><span>{en ? 'OpenAPI JSON document' : 'Dokumen JSON OpenAPI'}</span><textarea className="openapi-input" rows={13} spellCheck={false} value={openApiSpec} onChange={event => { setOpenApiSpec(event.target.value); setOpenApiAnalyzed(false); setOpenApiError('') }} /></label>
+        <div className="api-matrix-note"><ShieldCheck size={15} /><span>{en ? 'Local-only parsing · OpenAPI 3.x JSON · no network requests · required path parameters are marked with *' : 'Parsing lokal · JSON OpenAPI 3.x · tanpa request jaringan · parameter path wajib ditandai *'}</span></div>
+        <button className="button button-primary lab-action" onClick={analyzeOpenApi}>{en ? 'Analyze contract' : 'Analisis kontrak'} <ArrowRight size={16} /></button>
+        {openApiError && <p className="lab-error" role="alert">{openApiError}</p>}
+        {openApiAnalyzed && <div className="lab-generated"><div className="lab-output-heading"><div><h3>{en ? 'Endpoint inventory' : 'Inventaris endpoint'}</h3><p className="api-matrix-count">{openApiResults.length} {en ? 'operations discovered' : 'operasi ditemukan'}</p></div><div className="api-matrix-actions"><button className="copy-link-button" onClick={() => copyText(openApiResults.map(item => \`## \${item.method} \${item.path}\n\n- Summary: \${item.summary}\n- Operation ID: \${item.operationId || '—'}\n- Responses: \${item.responses}\n- Parameters: \${item.parameters || '—'}\n- Request body: \${item.requestBody ? 'Yes' : 'No'}\n- Security declared: \${item.security ? 'Yes' : 'No'}\`).join('\n\n'))}><Copy size={14} /> {en ? 'Copy Markdown' : 'Salin Markdown'}</button><button className="copy-link-button" onClick={downloadOpenApiMatrix}><ArrowDownRight size={14} /> {en ? 'Export CSV' : 'Ekspor CSV'}</button></div></div><div className="openapi-summary-grid"><div><span>{en ? 'Operations' : 'Operasi'}</span><strong>{openApiResults.length}</strong></div><div><span>{en ? 'With request body' : 'Dengan request body'}</span><strong>{openApiResults.filter(item => item.requestBody).length}</strong></div><div><span>{en ? 'Security declared' : 'Keamanan dideklarasikan'}</span><strong>{openApiResults.filter(item => item.security).length}</strong></div><div><span>{en ? 'No documented responses' : 'Tanpa kode respons'}</span><strong>{openApiResults.filter(item => item.responses === 'Undocumented' || item.responses === 'Belum didokumentasikan').length}</strong></div></div><div className="openapi-endpoint-list">{openApiResults.map((item, index) => <article className="openapi-endpoint" key={item.method + item.path + index}><div className="openapi-endpoint-top"><span className={'openapi-method method-' + item.method.toLowerCase()}>{item.method}</span><code>{item.path}</code></div><h4>{item.summary}</h4>{item.operationId && <p className="openapi-operation">{en ? 'Operation ID' : 'ID Operasi'}: <code>{item.operationId}</code></p>}<div className="openapi-meta"><span>{en ? 'Responses' : 'Respons'}: <strong>{item.responses}</strong></span><span>{en ? 'Body' : 'Body'}: <strong>{item.requestBody ? (en ? 'Yes' : 'Ya') : (en ? 'No' : 'Tidak')}</strong></span><span>{en ? 'Security' : 'Keamanan'}: <strong>{item.security ? (en ? 'Declared' : 'Dideklarasikan') : (en ? 'Not declared' : 'Tidak dideklarasikan')}</strong></span></div>{item.parameters && <p className="openapi-parameters">{en ? 'Parameters' : 'Parameter'}: {item.parameters}</p>}</article>)}</div></div>}
       </div>}
       {copyStatus && <p className="lab-copy-status" role="status">{copyStatus}</p>}
     </section>
