@@ -403,7 +403,7 @@ function EngineeringLabPage() {
   const [apiAuth, setApiAuth] = useState('required')
   const [apiPayload, setApiPayload] = useState('json')
   const [apiMatrixGenerated, setApiMatrixGenerated] = useState(false)
-  const [openApiSpec, setOpenApiSpec] = useState('{
+  const [openApiSpec, setOpenApiSpec] = useState(`{
   "openapi": "3.0.3",
   "info": { "title": "Sample Users API", "version": "1.0.0" },
   "paths": {
@@ -415,7 +415,7 @@ function EngineeringLabPage() {
       "get": { "summary": "Get user by ID", "parameters": [{ "name": "userId", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "User returned" }, "404": { "description": "Not found" } } }
     }
   }
-}')
+}}`)
   const [openApiError, setOpenApiError] = useState('')
   const [openApiResults, setOpenApiResults] = useState<Array<{ method: string; path: string; summary: string; operationId: string; responses: string; parameters: string; requestBody: boolean; security: boolean }>>([])
   const [openApiAnalyzed, setOpenApiAnalyzed] = useState(false)
