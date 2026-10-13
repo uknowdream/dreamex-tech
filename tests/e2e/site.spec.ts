@@ -38,11 +38,11 @@ test('language switch updates interface language and document lang', async ({ pa
   await openMobileNavigation(page)
   await page.getByRole('button', { name: 'ID', exact: true }).click()
   await expect(page.locator('html')).toHaveAttribute('lang', 'id')
-  await expect(page.getByRole('heading', { name: /Berpikir lebih dalam/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Rekayasa dengan tujuan/i })).toBeVisible()
   await openMobileNavigation(page)
   await page.getByRole('button', { name: 'EN', exact: true }).click()
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
-  await expect(page.getByRole('heading', { name: /Think deeper/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Engineer with intent/i })).toBeVisible()
 })
 
 test('search filters articles and clear-search restores results', async ({ page }) => {
@@ -317,7 +317,9 @@ test('desktop navigation adapts to constrained widths without clipping', async (
   await toggle.click()
   await expect(page.locator('.nav-links')).toBeVisible()
   await expect(page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i })).toBeVisible()
-  await expect(page.getByRole('navigation').getByRole('link', { name: /engineering lab|lab engineering/i })).toBeVisible()
+  const platform = page.locator('details.nav-platform')
+  await platform.locator('summary').click()
+  await expect(platform.getByRole('link', { name: /Open workspace/i })).toBeVisible()
   const dimensions = await page.evaluate(() => ({
     documentWidth: document.documentElement.scrollWidth,
     viewportWidth: document.documentElement.clientWidth,
@@ -900,4 +902,21 @@ test('Supply Chain Intelligence rejects unsupported and malformed SBOM files', a
   })
   await expect(page.getByRole('alert')).toBeVisible()
   await expect(page.getByRole('heading', { name: /Start with an SBOM, not a guess/i })).toBeVisible()
+})
+
+
+test('platform mega menu is grouped, responsive, and closes after navigation', async ({ page }) => {
+  await page.goto('/')
+  const menuToggle = page.locator('.menu-toggle')
+  if (await menuToggle.isVisible()) await menuToggle.click()
+
+  const platform = page.locator('details.nav-platform')
+  await platform.locator('summary').click()
+  await expect(page.getByRole('link', { name: /Open workspace/i })).toBeVisible()
+  await expect(platform.getByRole('link', { name: /Quality Intelligence/i })).toBeVisible()
+  await expect(platform.getByRole('link', { name: /Security Center/i })).toBeVisible()
+
+  await page.getByRole('link', { name: /Open workspace/i }).click()
+  await expect(page).toHaveURL(/workspace$/)
+  await expect(page.locator('details.nav-platform')).not.toHaveAttribute('open', '')
 })
