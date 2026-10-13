@@ -762,7 +762,7 @@ test('Quality Intelligence loads a demo report and exports actionable evidence',
   await expect(page.getByRole('heading', { name: /Turn test results into clear signals/i })).toBeVisible()
   await page.getByRole('button', { name: /Explore demo report/i }).click()
   await expect(page.getByRole('region', { name: /Report summary/i })).toBeVisible()
-  await expect(page.getByText('80%', { exact: true })).toBeVisible()
+  await expect(page.locator('.quality-intelligence-metrics article:first-child strong').filter({ hasText: '80%' })).toBeVisible()
   await expect(page.getByRole('heading', { name: /Repeated failure signals/i })).toBeVisible()
   const downloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: /CSV/i }).click()
@@ -777,7 +777,7 @@ test('Quality Intelligence imports JUnit XML and exposes failed-test evidence', 
     buffer: Buffer.from('<?xml version="1.0"?><testsuite name="sample" tests="3"><testcase classname="Auth" name="valid login" time="0.1"/><testcase classname="Checkout" name="creates order" time="1.2"><failure message="Expected 201">received 500</failure></testcase><testcase classname="Payments" name="declined card" time="0"><skipped/></testcase></testsuite>'),
   })
   await expect(page.locator('.quality-intelligence-summary-heading p')).toContainText('JUnit XML')
-  await expect(page.getByText('50%', { exact: true })).toBeVisible()
+  await expect(page.locator('.quality-intelligence-metrics article:first-child strong').filter({ hasText: '50%' })).toBeVisible()
   await expect(page.getByText('Auth › valid login')).toBeVisible()
   await page.getByText('View failure details').click()
   await expect(page.locator('.quality-intelligence-table pre')).toContainText('received 500')
@@ -804,7 +804,7 @@ test('Quality Intelligence detects retry-based flaky tests in Playwright JSON', 
   await expect(page.locator('.quality-intelligence-summary-heading p')).toContainText('Playwright JSON')
   await expect(page.getByRole('heading', { name: /Test-level evidence/i })).toBeVisible()
   await expect(page.locator('.quality-intelligence-status.status-flaky')).toContainText('flaky')
-  await expect(page.getByText('100%', { exact: true })).toBeVisible()
+  await expect(page.locator('.quality-intelligence-metrics article:first-child strong').filter({ hasText: '100%' })).toBeVisible()
 })
 
 test('Quality Intelligence rejects invalid JSON reports without losing the page', async ({ page }) => {
