@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowDownRight, ArrowRight, BookOpen, Bookmark, BookmarkCheck, Braces, Check, ChevronUp, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap, Rss } from 'lucide-react'
+import { ArrowDownRight, ArrowRight, BookOpen, Bookmark, BookmarkCheck, Braces, Check, ChevronUp, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap, Rss, Gauge, Activity, Accessibility, SearchCheck, AlertTriangle, CheckCircle2, Download } from 'lucide-react'
 import { articles } from './articles'
 import { articleTranslations } from './articleTranslations'
 import { useLanguage } from './i18n'
@@ -379,6 +379,92 @@ function ReadingListPage() {
     {savedArticles.length > 0 && visibleSavedArticles.length > 0 && <div className="article-grid">{visibleSavedArticles.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} />)}</div>}
     {savedArticles.length > 0 && visibleSavedArticles.length === 0 && <div className="reading-list-no-results"><Search size={20} /><h2>{en ? 'No saved articles match.' : 'Tidak ada artikel tersimpan yang cocok.'}</h2><p>{en ? 'Try another title, topic, or tag.' : 'Coba judul, topik, atau tag lain.'}</p><button className="copy-link-button" onClick={() => setReadingQuery('')}>{en ? 'Clear search' : 'Hapus pencarian'}</button></div>}
     {savedArticles.length === 0 && <div className="reading-list-empty"><Bookmark size={24} /><h2>{en ? 'Your reading list is ready.' : 'Daftar bacaan Anda siap.'}</h2><p>{en ? 'Save an article with the bookmark icon to build your personal reading list.' : 'Tekan ikon bookmark pada artikel untuk membuat daftar bacaan pribadi.'}</p><Link className="button button-primary" to="/#latest">{en ? 'Explore articles' : 'Jelajahi artikel'} <ArrowRight size={16} /></Link></div>}
+  </main>
+}
+
+
+type ObservatoryCheck = { id: string; category: string; title: string; description: string; severity: 'high' | 'medium' | 'info'; run: () => Promise<{ status: 'pass' | 'warn' | 'fail'; detail: string }> }
+
+function WebQualityObservatoryPage() {
+  const { language } = useLanguage()
+  const en = language === 'en'
+  const [results, setResults] = useState<Record<string, { status: 'pass' | 'warn' | 'fail'; detail: string }>>({})
+  const [running, setRunning] = useState(false)
+  const [ranAt, setRanAt] = useState('')
+  const [copied, setCopied] = useState(false)
+  const checks: ObservatoryCheck[] = [
+    { id: 'https', category: en ? 'Security & transport' : 'Keamanan & transport', title: en ? 'HTTPS page context' : 'Konteks halaman HTTPS', description: en ? 'Confirms the current page uses a secure transport context.' : 'Memastikan halaman saat ini menggunakan konteks transport yang aman.', severity: 'high', run: async () => ({ status: window.location.protocol === 'https:' || window.location.hostname === 'localhost' ? 'pass' : 'fail', detail: window.location.protocol + '//' + window.location.host }) },
+    { id: 'viewport', category: en ? 'Responsive experience' : 'Pengalaman responsif', title: en ? 'Viewport configuration' : 'Konfigurasi viewport', description: en ? 'Checks whether a viewport meta tag is present.' : 'Memeriksa keberadaan meta tag viewport.', severity: 'high', run: async () => { const tag = document.querySelector<HTMLMetaElement>('meta[name="viewport"]'); return { status: tag?.content.includes('width=device-width') ? 'pass' : 'fail', detail: tag?.content || (en ? 'Viewport meta tag is missing.' : 'Meta tag viewport tidak ditemukan.') } } },
+    { id: 'title', category: en ? 'Search & metadata' : 'Pencarian & metadata', title: en ? 'Unique page title' : 'Judul halaman', description: en ? 'Checks for a non-empty document title.' : 'Memeriksa judul dokumen yang tidak kosong.', severity: 'high', run: async () => ({ status: document.title.trim() ? 'pass' : 'fail', detail: document.title.trim() || (en ? 'Document title is empty.' : 'Judul dokumen kosong.') }) },
+    { id: 'description', category: en ? 'Search & metadata' : 'Pencarian & metadata', title: en ? 'Meta description' : 'Meta description', description: en ? 'Checks for a non-empty description meta tag.' : 'Memeriksa meta description yang tidak kosong.', severity: 'medium', run: async () => { const value = document.querySelector<HTMLMetaElement>('meta[name="description"]')?.content.trim() || ''; return { status: value.length >= 50 && value.length <= 180 ? 'pass' : value ? 'warn' : 'fail', detail: value ? (en ? value.length + ' characters' : value.length + ' karakter') : (en ? 'Description is missing.' : 'Description tidak ditemukan.') } } },
+    { id: 'canonical', category: en ? 'Search & metadata' : 'Pencarian & metadata', title: en ? 'Canonical URL' : 'URL canonical', description: en ? 'Checks that a canonical link points to an absolute HTTPS URL.' : 'Memeriksa link canonical dengan URL HTTPS absolut.', severity: 'medium', run: async () => { const value = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href || ''; return { status: /^https:\/\//.test(value) ? 'pass' : 'warn', detail: value || (en ? 'Canonical URL is missing.' : 'URL canonical tidak ditemukan.') } } },
+    { id: 'h1', category: en ? 'Accessibility & structure' : 'Aksesibilitas & struktur', title: en ? 'Single primary heading' : 'Satu heading utama', description: en ? 'Checks the current document for exactly one H1.' : 'Memeriksa apakah dokumen memiliki tepat satu H1.', severity: 'medium', run: async () => { const count = document.querySelectorAll('h1').length; return { status: count === 1 ? 'pass' : 'warn', detail: en ? count + ' H1 elements found' : count + ' elemen H1 ditemukan' } } },
+    { id: 'landmarks', category: en ? 'Accessibility & structure' : 'Aksesibilitas & struktur', title: en ? 'Main landmark' : 'Landmark utama', description: en ? 'Checks for a main landmark or main-content target.' : 'Memeriksa landmark main atau target main-content.', severity: 'medium', run: async () => { const found = Boolean(document.querySelector('main, [role="main"], #main-content')); return { status: found ? 'pass' : 'fail', detail: found ? (en ? 'Main content landmark found.' : 'Landmark konten utama ditemukan.') : (en ? 'No main landmark found.' : 'Landmark utama tidak ditemukan.') } } },
+    { id: 'skip-link', category: en ? 'Accessibility & structure' : 'Aksesibilitas & struktur', title: en ? 'Skip navigation link' : 'Tautan lewati navigasi', description: en ? 'Checks for a keyboard-friendly skip link.' : 'Memeriksa tautan untuk melewati navigasi dengan keyboard.', severity: 'medium', run: async () => { const found = Boolean(document.querySelector('a.skip-link[href^="#"]')); return { status: found ? 'pass' : 'warn', detail: found ? (en ? 'Skip link found.' : 'Tautan skip ditemukan.') : (en ? 'No skip link detected.' : 'Tautan skip tidak ditemukan.') } } },
+    { id: 'images', category: en ? 'Accessibility & structure' : 'Aksesibilitas & struktur', title: en ? 'Image alternative text' : 'Teks alternatif gambar', description: en ? 'Flags images that have no alt attribute.' : 'Menandai gambar yang tidak memiliki atribut alt.', severity: 'medium', run: async () => { const images = [...document.images]; const missing = images.filter(image => !image.hasAttribute('alt')).length; return { status: missing === 0 ? 'pass' : 'warn', detail: en ? missing + ' of ' + images.length + ' images missing alt attributes' : missing + ' dari ' + images.length + ' gambar tidak memiliki atribut alt' } } },
+    { id: 'links', category: en ? 'Navigation integrity' : 'Integritas navigasi', title: en ? 'Empty link labels' : 'Label tautan kosong', description: en ? 'Finds links without readable text or an accessible name.' : 'Mencari tautan tanpa teks terbaca atau nama aksesibel.', severity: 'medium', run: async () => { const links = [...document.querySelectorAll<HTMLAnchorElement>('a[href]')]; const missing = links.filter(link => !(link.innerText || link.getAttribute('aria-label') || link.querySelector('img[alt]')?.getAttribute('alt') || '').trim()).length; return { status: missing === 0 ? 'pass' : 'warn', detail: en ? missing + ' of ' + links.length + ' links have no detectable label' : missing + ' dari ' + links.length + ' tautan tidak memiliki label terdeteksi' } } },
+    { id: 'motion', category: en ? 'Accessibility & structure' : 'Aksesibilitas & struktur', title: en ? 'Reduced-motion support' : 'Dukungan reduced-motion', description: en ? 'Checks whether the site defines a reduced-motion CSS preference.' : 'Memeriksa apakah situs mendefinisikan preferensi CSS reduced-motion.', severity: 'info', run: async () => { const rules = [...document.styleSheets].flatMap(sheet => { try { return [...(sheet.cssRules || [])] } catch { return [] } }); const found = rules.some(rule => rule instanceof CSSMediaRule && rule.conditionText.includes('prefers-reduced-motion')); return { status: found ? 'pass' : 'warn', detail: found ? (en ? 'Reduced-motion media rule found in accessible stylesheets.' : 'Aturan media reduced-motion ditemukan pada stylesheet yang dapat dibaca.') : (en ? 'No accessible reduced-motion media rule detected; cross-origin stylesheets may be unreadable.' : 'Aturan reduced-motion tidak terdeteksi; stylesheet lintas origin mungkin tidak dapat dibaca.') } } },
+    { id: 'storage', category: en ? 'Privacy & resilience' : 'Privasi & ketahanan', title: en ? 'Browser storage availability' : 'Ketersediaan penyimpanan browser', description: en ? 'Tests whether local storage can be accessed without writing user data.' : 'Menguji akses local storage tanpa menulis data pengguna.', severity: 'info', run: async () => { try { void window.localStorage.length; return { status: 'pass', detail: en ? 'Local storage is readable.' : 'Local storage dapat dibaca.' } } catch { return { status: 'warn', detail: en ? 'Storage is restricted in this context.' : 'Penyimpanan dibatasi pada konteks ini.' } } } },
+  ]
+  const score = useMemo(() => {
+    const values = checks.map(check => results[check.id]).filter(Boolean)
+    const weights = checks.reduce((sum, check) => sum + (check.severity === 'high' ? 2 : 1), 0)
+    const earned = checks.reduce((sum, check) => sum + (results[check.id]?.status === 'pass' ? (check.severity === 'high' ? 2 : 1) : 0), 0)
+    return { value: Math.round(earned / weights * 100), complete: values.length, pass: values.filter(value => value.status === 'pass').length, warn: values.filter(value => value.status === 'warn').length, fail: values.filter(value => value.status === 'fail').length }
+  }, [results, checks.length])
+  const runChecks = async () => {
+    setRunning(true)
+    setResults({})
+    const next: Record<string, { status: 'pass' | 'warn' | 'fail'; detail: string }> = {}
+    for (const check of checks) {
+      try { next[check.id] = await check.run() } catch { next[check.id] = { status: 'warn', detail: en ? 'The browser could not complete this check.' : 'Browser tidak dapat menyelesaikan pemeriksaan ini.' } }
+      setResults({ ...next })
+    }
+    setRanAt(new Date().toLocaleString(en ? 'en-US' : 'id-ID'))
+    setCopied(false)
+    setRunning(false)
+  }
+  const report = useMemo(() => [
+    '# DreamEx Tech — Web Quality Observatory',
+    '',
+    '- Page: ' + window.location.href,
+    '- Audited at: ' + (ranAt || (en ? 'Not run yet' : 'Belum dijalankan')),
+    '- Score: ' + score.value + '/100 (weighted heuristic, not a compliance certification)',
+    '- Checks: ' + score.complete + '/' + checks.length,
+    '',
+    ...checks.map(check => '- [' + (results[check.id]?.status === 'pass' ? 'x' : ' ') + '] ' + check.title + ' — ' + (results[check.id]?.status || 'not run').toUpperCase() + ': ' + (results[check.id]?.detail || (en ? 'Not run' : 'Belum dijalankan'))),
+    '',
+    'Note: This is a browser-side heuristic scan. It does not crawl the site, test server headers, run Lighthouse, or certify WCAG conformance.',
+  ].join('\n'), [checks, en, ranAt, results, score])
+  const exportReport = () => {
+    const blob = new Blob([report], { type: 'text/markdown;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = 'dreamex-web-quality-report.md'
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(url)
+  }
+  const copyReport = async () => {
+    try { await navigator.clipboard.writeText(report); setCopied(true) }
+    catch { setCopied(false) }
+  }
+  return <main id="main-content" className="container observatory-page">
+    <header className="observatory-header">
+      <span className="section-kicker"><Activity size={14} /> {en ? 'ENGINEERING QUALITY / BROWSER AUDIT' : 'KUALITAS ENGINEERING / AUDIT BROWSER'}</span>
+      <h1>{en ? <>Web Quality <span>Observatory.</span></> : <>Observatory <span>Kualitas Web.</span></>}</h1>
+      <p>{en ? 'A practical, transparent health check for the page you are viewing. Inspect metadata, accessibility signals, navigation, privacy basics, and responsive foundations — without uploading page data.' : 'Pemeriksaan praktis dan transparan untuk halaman yang sedang Anda buka. Periksa metadata, sinyal aksesibilitas, navigasi, privasi dasar, dan fondasi responsif — tanpa mengunggah data halaman.'}</p>
+      <div className="observatory-disclaimer"><ShieldCheck size={16} /><span>{en ? 'Local-only audit · no analytics upload · heuristic results, not a replacement for Lighthouse or a WCAG audit.' : 'Audit lokal · tidak mengunggah analitik · hasil heuristik, bukan pengganti Lighthouse atau audit WCAG.'}</span></div>
+    </header>
+    <section className="observatory-dashboard" aria-label={en ? 'Audit summary' : 'Ringkasan audit'}>
+      <div className="observatory-score" role="img" aria-label={(en ? 'Quality score ' : 'Skor kualitas ') + score.value + ' percent'} style={{ '--observatory-score': score.value } as React.CSSProperties}><div><strong>{score.value}</strong><span>/100</span></div></div>
+      <div className="observatory-summary"><span className="section-kicker">{en ? 'CURRENT PAGE' : 'HALAMAN SAAT INI'}</span><h2>{score.complete === 0 ? (en ? 'Ready for inspection' : 'Siap diperiksa') : score.fail > 0 ? (en ? 'Critical signals need attention' : 'Sinyal kritis perlu ditinjau') : score.warn > 0 ? (en ? 'Review recommended' : 'Disarankan untuk ditinjau') : (en ? 'Healthy signals detected' : 'Sinyal baik terdeteksi')}</h2><p>{en ? 'The score rewards passed checks and weights foundational security and viewport checks more heavily. A completed scan is required before interpreting the score.' : 'Skor menghargai pemeriksaan yang lulus dan memberi bobot lebih besar pada keamanan dasar dan viewport. Jalankan pemindaian sebelum menafsirkan skor.'}</p><div className="observatory-stats"><div><strong>{score.complete}/{checks.length}</strong><span>{en ? 'Checked' : 'Diperiksa'}</span></div><div><strong>{score.pass}</strong><span>{en ? 'Passed' : 'Lulus'}</span></div><div><strong>{score.warn}</strong><span>{en ? 'Warnings' : 'Peringatan'}</span></div><div><strong>{score.fail}</strong><span>{en ? 'Failed' : 'Gagal'}</span></div></div></div>
+    </section>
+    <div className="observatory-toolbar"><div><span className="section-kicker">{en ? 'QUALITY SIGNALS' : 'SINYA KUALITAS'}</span><h2>{en ? 'Audit checklist' : 'Checklist audit'}</h2><p>{ranAt ? (en ? 'Last run: ' : 'Terakhir dijalankan: ') + ranAt : (en ? 'Run the audit to inspect this page.' : 'Jalankan audit untuk memeriksa halaman ini.')}</p></div><div className="observatory-actions"><button className="button button-primary" type="button" onClick={runChecks} disabled={running}><Activity size={16} /> {running ? (en ? 'Scanning…' : 'Memindai…') : (en ? 'Run page audit' : 'Jalankan audit')}</button><button className="copy-link-button" type="button" onClick={copyReport} disabled={score.complete === 0}><Copy size={14} /> {copied ? (en ? 'Copied' : 'Disalin') : (en ? 'Copy report' : 'Salin laporan')}</button><button className="copy-link-button" type="button" onClick={exportReport} disabled={score.complete === 0}><Download size={14} /> {en ? 'Export .md' : 'Ekspor .md'}</button></div></div>
+    <div className="observatory-groups">{[...new Set(checks.map(check => check.category))].map(category => <section className="observatory-group" key={category}><h3>{category}<span>{checks.filter(check => check.category === category && results[check.id]).length}/{checks.filter(check => check.category === category).length}</span></h3>{checks.filter(check => check.category === category).map(check => { const result = results[check.id]; return <article className="observatory-check" key={check.id}><div className="observatory-check-icon"><span className={'observatory-status status-' + (result?.status || 'idle')}>{result?.status === 'pass' ? <CheckCircle2 size={17} /> : result?.status === 'fail' ? <AlertTriangle size={17} /> : result?.status === 'warn' ? <AlertTriangle size={17} /> : <Activity size={17} />}</span></div><div className="observatory-check-copy"><div><h4>{check.title}</h4><span className={'observatory-severity severity-' + check.severity}>{check.severity.toUpperCase()}</span></div><p>{check.description}</p><small>{result?.detail || (en ? 'Not run yet.' : 'Belum dijalankan.')}</small></div><span className={'observatory-result-badge result-' + (result?.status || 'idle')}>{result?.status ? (en ? result.status.toUpperCase() : result.status === 'pass' ? 'LULUS' : result.status === 'warn' ? 'PERINGATAN' : 'GAGAL') : (en ? 'PENDING' : 'MENUNGGU')}</span></article> })}</section>)}</div>
+    <aside className="observatory-note"><AlertTriangle size={17} /><p>{en ? 'Scope limits: this checks the current rendered page only. It does not crawl internal links, measure Core Web Vitals, validate HTTP security headers, test contrast ratios, or guarantee WCAG conformance. Use Lighthouse and a manual keyboard/screen-reader review for deeper validation.' : 'Batasan: pemeriksaan hanya mencakup halaman yang sedang dirender. Tool ini tidak merayapi tautan internal, mengukur Core Web Vitals, memvalidasi security headers HTTP, menguji rasio kontras, atau menjamin kepatuhan WCAG. Gunakan Lighthouse dan tinjauan keyboard/screen reader manual untuk validasi lanjutan.'}</p></aside>
   </main>
 }
 
@@ -1225,6 +1311,7 @@ function CommandPalette() {
     { id: 'articles', label: isEnglish ? 'Browse articles' : 'Jelajahi artikel', detail: isEnglish ? 'Search the knowledge base' : 'Cari di basis pengetahuan', icon: BookOpen, run: () => { if (location.pathname !== '/') navigate('/'); window.setTimeout(() => { document.getElementById('latest')?.scrollIntoView({ behavior: 'smooth' }); document.querySelector<HTMLInputElement>('.search-box input')?.focus() }, 60) } },
     { id: 'reading-list', label: isEnglish ? 'Open reading list' : 'Buka daftar bacaan', detail: isEnglish ? 'Your saved engineering notes' : 'Catatan engineering tersimpan', icon: Bookmark, run: () => navigate('/reading-list') },
     { id: 'lab', label: isEnglish ? 'Open Engineering Lab' : 'Buka Lab Engineering', detail: isEnglish ? 'QA tools, bug reports, and JSON utilities' : 'Tool QA, laporan bug, dan utilitas JSON', icon: Terminal, run: () => navigate('/lab') },
+    { id: 'observatory', label: isEnglish ? 'Web Quality Observatory' : 'Observatory Kualitas Web', detail: isEnglish ? 'Inspect metadata, accessibility signals, and responsive foundations' : 'Periksa metadata, aksesibilitas, dan fondasi responsif', icon: Activity, run: () => navigate('/observatory') },
     { id: 'learn', label: isEnglish ? 'Open Learning Hub' : 'Buka Pusat Belajar', detail: isEnglish ? 'Curated paths and engineering glossary' : 'Jalur belajar dan glosarium engineering', icon: BookOpen, run: () => navigate('/learn') },
   ]
   const term = query.trim().toLowerCase()
@@ -1404,5 +1491,5 @@ function BackToTop() {
 
 export default function App() {
   const { t } = useLanguage()
-  return <><a className="skip-link" href="#main-content">{t('skip')}</a><OfflineNotice /><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
+  return <><a className="skip-link" href="#main-content">{t('skip')}</a><OfflineNotice /><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/observatory" element={<WebQualityObservatoryPage />} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
 }

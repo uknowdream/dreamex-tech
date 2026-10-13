@@ -460,6 +460,20 @@ test('incident postmortem builder creates a blameless Markdown report and suppor
   expect(markdown).toContain('Checkout requests timed out for 12% of users.')
 })
 
+
+test('Web Quality Observatory audits the current page and exports a report', async ({ page }) => {
+  await page.goto('/observatory')
+  await expect(page.getByRole('heading', { name: /Web Quality Observatory|Observatory Kualitas Web/i })).toBeVisible()
+  await expect(page.getByRole('img', { name: /Quality score 0 percent|Skor kualitas 0 percent/i })).toBeVisible()
+  await page.getByRole('button', { name: /Run page audit|Jalankan audit/i }).click()
+  await expect(page.getByText(/12\/12/).first()).toBeVisible()
+  await expect(page.getByRole('img', { name: /Quality score \d+ percent|Skor kualitas \d+ percent/i })).toBeVisible()
+  await expect(page.getByText(/CURRENT PAGE|HALAMAN SAAT INI/i)).toBeVisible()
+  await expect(page.getByRole('button', { name: /Copy report|Salin laporan/i })).toBeEnabled()
+  await expect(page.getByRole('button', { name: /Export \.md|Ekspor \.md/i })).toBeEnabled()
+  await expect(page.getByText(/does not crawl the site|tidak merayapi tautan internal/i)).toBeVisible()
+})
+
 test('mobile viewport has no horizontal document overflow', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'This check targets the mobile browser project')
   await page.setViewportSize({ width: 390, height: 844 })
