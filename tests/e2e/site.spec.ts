@@ -584,3 +584,47 @@ test('roadmap ADR builder generates a preview and threat modeling exposes STRIDE
   await page.getByRole('checkbox', { name: /Spoofing/i }).check()
   await expect(page.locator('.roadmap-summary')).toContainText('1/6')
 })
+
+
+test('Engineering Command Center tracks tasks, incidents, architecture decisions, and release gates', async ({ page }) => {
+  await page.goto('/command-center')
+  await expect(page.getByRole('heading', { name: /Operate with clarity/i })).toBeVisible()
+  await expect(page.getByText('Validate production build and routes')).toBeVisible()
+  await page.getByRole('tab', { name: /Work items|Daftar tugas/i }).click()
+  await page.getByLabel(/Task title|Judul tugas/i).fill('Review keyboard navigation')
+  await page.getByLabel(/Owner \/ team|PIC \/ tim/i).fill('Quality Engineering')
+  await page.getByRole('button', { name: /Add work item|Tambah tugas/i }).click()
+  await expect(page.getByText('Review keyboard navigation')).toBeVisible()
+  await page.getByLabel('Status: Review keyboard navigation').selectOption('done')
+  await page.reload()
+  await page.getByRole('tab', { name: /Work items|Daftar tugas/i }).click()
+  await expect(page.getByLabel('Status: Review keyboard navigation')).toHaveValue('done')
+
+  await page.getByRole('tab', { name: /Incidents|Insiden/i }).click()
+  await page.getByLabel(/Incident summary|Ringkasan insiden/i).fill('API latency elevated')
+  await page.getByLabel(/Impact \/ notes|Dampak \/ catatan/i).fill('Elevated response time on public endpoints')
+  await page.getByRole('button', { name: /Record incident|Catat insiden/i }).click()
+  await expect(page.getByText('API latency elevated')).toBeVisible()
+  await page.getByLabel('Incident status: API latency elevated').selectOption('resolved')
+
+  await page.getByRole('tab', { name: 'ADRs' }).click()
+  await page.getByLabel(/Decision title|Judul keputusan/i).fill('Keep API calls client-side')
+  await page.getByLabel(/Decision and rationale|Keputusan dan alasan/i).fill('Avoid operating an unneeded proxy and disclose browser CORS constraints.')
+  await page.getByRole('button', { name: /Create ADR|Buat ADR/i }).click()
+  await expect(page.getByText('Keep API calls client-side')).toBeVisible()
+  await page.getByLabel('Decision status: Keep API calls client-side').selectOption('accepted')
+
+  await page.getByRole('tab', { name: /Release gate|Gerbang rilis/i }).click()
+  const firstCheck = page.getByLabel(/Automated and critical-path tests pass|Tes otomatis dan jalur kritis lulus/i)
+  await firstCheck.check()
+  await expect(firstCheck).toBeChecked()
+  await expect(page.getByText(/5 checks remain|5 pemeriksaan tersisa/i)).toBeVisible()
+})
+
+test('Engineering Command Center exports a local JSON backup', async ({ page }) => {
+  await page.goto('/command-center')
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: /Export backup|Ekspor cadangan/i }).click()
+  const download = await downloadPromise
+  expect(download.suggestedFilename()).toBe('dreamex-command-center-backup.json')
+})
