@@ -139,7 +139,7 @@ export function QualityIntelligencePage() {
     return [...groups.values()].sort((a, b) => b.count - a.count)
   }, [report])
 
-  const useReport = (nextReport: Report, persist = true) => {
+  const applyReport = (nextReport: Report, persist = true) => {
     setReport(nextReport)
     setStatusFilter('all')
     setQuery('')
@@ -165,14 +165,14 @@ export function QualityIntelligencePage() {
       if (!trimmed) throw new Error(en ? 'The selected file is empty.' : 'File yang dipilih kosong.')
       const isXml = trimmed.startsWith('<') || /\.xml$/i.test(file.name)
       const tests = isXml ? parseJUnitXml(raw) : parsePlaywrightJson(raw)
-      useReport({ source: file.name, format: isXml ? 'JUnit XML' : 'Playwright JSON', tests, importedAt: new Date().toISOString() })
+      applyReport({ source: file.name, format: isXml ? 'JUnit XML' : 'Playwright JSON', tests, importedAt: new Date().toISOString() })
       setNotice(en ? 'Report analyzed locally. No report content was uploaded.' : 'Laporan dianalisis secara lokal. Isi laporan tidak diunggah.')
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : (en ? 'Unable to analyze this report.' : 'Tidak dapat menganalisis laporan ini.'))
     } finally { setLoading(false) }
   }
 
-  const loadDemo = () => useReport({ source: 'Demo sample — not production data', format: 'Demo sample', tests: demoTests, importedAt: new Date().toISOString() }, false)
+  const loadDemo = () => applyReport({ source: 'Demo sample — not production data', format: 'Demo sample', tests: demoTests, importedAt: new Date().toISOString() }, false)
   const exportJson = () => { if (report) downloadFile('dreamex-quality-report.json', JSON.stringify({ format: 'dreamex-quality-report', version: 1, summary, tests: report.tests }, null, 2), 'application/json;charset=utf-8') }
   const exportCsv = () => {
     if (!report) return
