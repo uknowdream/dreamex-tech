@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, BookOpenCheck, ClipboardCheck, Download, FileText, Layers3, ShieldAlert, Sparkles } from 'lucide-react'
+import { ArrowRight, BookOpenCheck, CheckCircle2, ClipboardCheck, Download, FileText, Layers3, ShieldAlert, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useLanguage } from './i18n'
 
