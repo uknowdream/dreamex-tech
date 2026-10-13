@@ -109,7 +109,7 @@ if (errors.length === 0) {
 
 if (existsSync(join(dist, 'sitemap.xml'))) {
   const sitemapOutput = readFileSync(join(dist, 'sitemap.xml'), 'utf8')
-  for (const route of ['https://dreamex.tech/about', 'https://dreamex.tech/lab', 'https://dreamex.tech/observatory', 'https://dreamex.tech/devtools', 'https://dreamex.tech/workspace', 'https://dreamex.tech/api-playground', 'https://dreamex.tech/performance', 'https://dreamex.tech/knowledge-graph', 'https://dreamex.tech/learn', 'https://dreamex.tech/qa-studio', 'https://dreamex.tech/security-center', 'https://dreamex.tech/rss']) {
+  for (const route of ['https://dreamex.tech/about', 'https://dreamex.tech/lab', 'https://dreamex.tech/observatory', 'https://dreamex.tech/devtools', 'https://dreamex.tech/engineering-intelligence', 'https://dreamex.tech/workspace', 'https://dreamex.tech/api-playground', 'https://dreamex.tech/performance', 'https://dreamex.tech/knowledge-graph', 'https://dreamex.tech/learn', 'https://dreamex.tech/qa-studio', 'https://dreamex.tech/security-center', 'https://dreamex.tech/rss']) {
     if (!sitemapOutput.includes(`<loc>${route}</loc>`)) errors.push(`Sitemap is missing canonical route: ${route}`)
   }
   if (!sitemapOutput.includes('<lastmod>')) errors.push('Sitemap is missing article publication dates')
@@ -131,6 +131,9 @@ if (!appSource.includes('path="/knowledge-graph"') || !appSource.includes('Engin
 if (!appSource.includes('path="/roadmap"') || !appSource.includes('EngineeringRoadmapPage')) errors.push('Engineering Roadmap and Readiness Center route is required')
 if (!appSource.includes('path="/qa-studio"') || !appSource.includes('QAAutomationStudioPage')) errors.push('QA Automation Studio route is required')
 if (!appSource.includes('path="/security-center"') || !appSource.includes('SecurityCenterPage')) errors.push('Security Center route is required')
+if (!appSource.includes('path="/engineering-intelligence"') || !appSource.includes('EngineeringIntelligencePage')) errors.push('Engineering Intelligence route is required')
+const intelligenceSource = readFileSync(join(root, 'src', 'EngineeringIntelligence.tsx'), 'utf8')
+if (!intelligenceSource.includes('parseContract') || !intelligenceSource.includes('compareContracts') || !intelligenceSource.includes('dreamex-engineering-catalog-v1')) errors.push('Engineering Intelligence catalog and OpenAPI contract analysis are required')
 const suiteSource = readFileSync(join(root, 'src', 'EngineeringQualitySuite.tsx'), 'utf8')
 if (!suiteSource.includes('dreamex-qa-studio-history-v1') || !suiteSource.includes('dreamex-security-audit-v1') || !suiteSource.includes('Feature: ')) errors.push('QA artifact generation and local security audit persistence are required')
 if (!suiteSource.includes('readLocalInventory') || !suiteSource.includes('clearLocalData') || !suiteSource.includes('dreamex-local-data-backup.json')) errors.push('Local privacy inventory, scoped deletion, and data export are required')
