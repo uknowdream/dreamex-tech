@@ -915,6 +915,6 @@ test('platform mega menu is grouped, responsive, and closes after navigation', a
   await expect(page.getByRole('link', { name: /Security Center/i })).toBeVisible()
 
   await page.getByRole('link', { name: /Open workspace/i }).click()
-  await expect(page).toHaveURL(/\\/workspace$/)
+  await expect(page).toHaveURL(url => url.pathname === '/workspace')
   await expect(page.locator('details.nav-platform')).not.toHaveAttribute('open', '')
 })
