@@ -415,7 +415,7 @@ function EngineeringLabPage() {
       "get": { "summary": "Get user by ID", "parameters": [{ "name": "userId", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "User returned" }, "404": { "description": "Not found" } } }
     }
   }
-}}`)
+}`)
   const [openApiError, setOpenApiError] = useState('')
   const [openApiResults, setOpenApiResults] = useState<Array<{ method: string; path: string; summary: string; operationId: string; responses: string; parameters: string; requestBody: boolean; security: boolean }>>([])
   const [openApiAnalyzed, setOpenApiAnalyzed] = useState(false)
