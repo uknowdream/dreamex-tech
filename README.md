@@ -25,6 +25,7 @@ Import this repository into Vercel. Use Vite, `npm run build`, and `dist` as the
 DreamEx Tech combines editorial knowledge with practical, browser-first engineering tools:
 
 - `/workspace` — searchable engineering tool catalog.
+- `/engineering-intelligence` — local-first software catalog, JSON import/export, OpenAPI 3.x static analysis, and baseline comparison for likely breaking changes.
 - `/lab` — QA utilities, API test matrices, contract review, release scorecards, and incident postmortems.
 - `/api-playground` — browser-based HTTP request inspection with local collections and sensitive-header redaction.
 - `/observatory` and `/performance` — heuristic page-quality checks and browser timing snapshots.
@@ -33,6 +34,8 @@ DreamEx Tech combines editorial knowledge with practical, browser-first engineer
 - `/command-center` — local work queue, incident register, architecture decision records, and release checklist.
 - `/qa-studio` — editable test-case tables, BDD/Gherkin scenarios, bug reports, and test plans; supports local draft snapshots and Markdown export.
 - `/security-center` — same-origin security-header review, visible document-quality signals, local-storage inventory, JSON/Markdown audit exports, and scoped deletion of DreamEx browser data.
+
+Engineering Intelligence starts with clearly labelled example inventory records; replace them with real metadata before using catalog metrics. Catalog data stays in browser storage and can be exported as JSON. OpenAPI contract text is analyzed locally in the browser and is not automatically persisted or sent to a server. Contract comparison is heuristic and does not prove runtime compatibility.
 
 Most workspace state is stored in the user's browser. No account sync is implied. API Playground requests go directly from the browser to the target and are subject to CORS; do not enter production secrets. Performance snapshots are not a substitute for a full Lighthouse audit. The readiness and STRIDE worksheets are planning aids, not compliance certification or a complete security assessment.
 
