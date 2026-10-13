@@ -728,7 +728,7 @@ test('Engineering Control Plane unifies workflows and browser-session signals', 
   await page.goto('/control-plane')
   await expect(page.getByRole('heading', { name: /Engineering, in control/i })).toBeVisible()
   await expect(page.getByRole('region', { name: /Browser session signals/i })).toBeVisible()
-  await expect(page.getByRole('link', { name: /QA Automation Studio/i })).toHaveAttribute('href', '/qa-studio')
+  await expect(page.locator('a.control-plane-card[href="/qa-studio"]')).toBeVisible()
   await expect(page.getByRole('link', { name: /API Contract Studio/i })).toHaveAttribute('href', '/engineering-intelligence')
   await expect(page.getByText(/do not query Vercel, CI, APIs, or production services/i)).toBeVisible()
 })
