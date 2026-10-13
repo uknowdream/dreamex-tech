@@ -25,6 +25,7 @@ Import this repository into Vercel. Use Vite, `npm run build`, and `dist` as the
 DreamEx Tech combines editorial knowledge with practical, browser-first engineering tools:
 
 - `/workspace` — searchable engineering tool catalog.
+- `/control-plane` — unified engineering launchpad with searchable workflows, browser-session signals, a locally persisted release checklist, and portable JSON snapshots.
 - `/engineering-intelligence` — local-first software catalog, JSON import/export, OpenAPI 3.x static analysis, and baseline comparison for likely breaking changes.
 - `/lab` — QA utilities, API test matrices, contract review, release scorecards, and incident postmortems.
 - `/api-playground` — browser-based HTTP request inspection with local collections and sensitive-header redaction.
