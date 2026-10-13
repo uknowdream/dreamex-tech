@@ -989,6 +989,202 @@ function EngineeringLabPage() {
   </main>
 }
 
+
+function inferJsonSchema(value: unknown): Record<string, unknown> {
+  if (value === null) return { type: 'null' }
+  if (Array.isArray(value)) {
+    const variants = [...new Map(value.map(item => {
+      const schema = inferJsonSchema(item)
+      return [JSON.stringify(schema), schema] as const
+    })).values()]
+    return { type: 'array', items: variants.length === 0 ? {} : variants.length === 1 ? variants[0] : { anyOf: variants } }
+  }
+  if (typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>)
+    return {
+      type: 'object',
+      properties: Object.fromEntries(entries.map(([key, item]) => [key, inferJsonSchema(item)])),
+      ...(entries.length ? { required: entries.map(([key]) => key) } : {}),
+      additionalProperties: false,
+    }
+  }
+  if (typeof value === 'number') return { type: Number.isInteger(value) ? 'integer' : 'number' }
+  return { type: typeof value }
+}
+
+function decodeJwtPart(part: string): unknown {
+  const base64 = part.replace(/-/g, '+').replace(/_/g, '/')
+  const padded = base64 + '='.repeat((4 - base64.length % 4) % 4)
+  const bytes = Uint8Array.from(atob(padded), character => character.charCodeAt(0))
+  return JSON.parse(new TextDecoder().decode(bytes))
+}
+
+function DeveloperUtilitiesPage() {
+  const { language } = useLanguage()
+  const en = language === 'en'
+  const [activeTool, setActiveTool] = useState<'schema' | 'regex' | 'jwt'>('schema')
+  const [sampleJson, setSampleJson] = useState('{\n  "id": 42,\n  "name": "Ada Lovelace",\n  "active": true,\n  "roles": ["admin", "editor"],\n  "profile": { "city": "London", "verified": null }\n}')
+  const [schemaOutput, setSchemaOutput] = useState('')
+  const [schemaError, setSchemaError] = useState('')
+  const [regexPattern, setRegexPattern] = useState('(?<email>[\\\\w.+-]+@[\\\\w.-]+\\\\.[A-Za-z]{2,})')
+  const [regexFlags, setRegexFlags] = useState('g')
+  const [regexSample, setRegexSample] = useState('Contact support@example.com or hello@dreamex.tech for help.')
+  const [regexError, setRegexError] = useState('')
+  const [regexMatches, setRegexMatches] = useState<Array<{ match: string; index: number; groups: Record<string, string> }>>([])
+  const [jwtInput, setJwtInput] = useState('')
+  const [jwtOutput, setJwtOutput] = useState('')
+  const [jwtError, setJwtError] = useState('')
+  const [copyStatus, setCopyStatus] = useState('')
+
+  useEffect(() => {
+    const title = en ? 'Developer Utilities — DreamEx Tech' : 'Utilitas Developer — DreamEx Tech'
+    const description = en
+      ? 'Privacy-first browser tools for JSON Schema generation, regular-expression testing, and JWT inspection.'
+      : 'Tool browser yang mengutamakan privasi untuk membuat JSON Schema, menguji regular expression, dan memeriksa JWT.'
+    document.title = title
+    document.querySelector('meta[name="description"]')?.setAttribute('content', description)
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content', title)
+    document.querySelector('meta[property="og:description"]')?.setAttribute('content', description)
+    document.querySelector('meta[property="og:url"]')?.setAttribute('content', 'https://dreamex.tech/devtools')
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href', 'https://dreamex.tech/devtools')
+    return () => {
+      document.title = 'DreamEx Tech — Engineering, AI & QA'
+      document.querySelector('meta[name="description"]')?.setAttribute('content', 'DreamEx Tech — practical notes on software engineering, quality engineering, AI, and modern technology.')
+      document.querySelector('meta[property="og:title"]')?.setAttribute('content', 'DreamEx Tech — Think deeper. Build smarter.')
+      document.querySelector('meta[property="og:description"]')?.setAttribute('content', 'Ruang eksplorasi software engineering, quality engineering, AI, dan teknologi modern.')
+      document.querySelector('meta[property="og:url"]')?.setAttribute('content', 'https://dreamex.tech/')
+      document.querySelector('link[rel="canonical"]')?.setAttribute('href', 'https://dreamex.tech/')
+    }
+  }, [en])
+
+  const generateSchema = () => {
+    setSchemaError('')
+    setSchemaOutput('')
+    try {
+      const parsed: unknown = JSON.parse(sampleJson)
+      setSchemaOutput(JSON.stringify({
+        $schema: 'https://json-schema.org/draft/2020-12/schema',
+        title: 'Generated schema',
+        ...inferJsonSchema(parsed),
+      }, null, 2))
+    } catch (error) {
+      setSchemaError((en ? 'Invalid JSON: ' : 'JSON tidak valid: ') + (error instanceof Error ? error.message : 'Unknown error'))
+    }
+  }
+
+  const testRegex = () => {
+    setRegexError('')
+    setRegexMatches([])
+    if (regexPattern.length > 160 || regexSample.length > 4000) {
+      setRegexError(en ? 'Keep patterns under 160 characters and sample text under 4,000 characters.' : 'Batasi pola hingga 160 karakter dan teks sampel hingga 4.000 karakter.')
+      return
+    }
+    // Block common catastrophic-backtracking shapes before executing untrusted patterns.
+    if (/\([^)]*[+*][^)]*\)\s*(?:[+*]|\{\d*,?\d*\})/.test(regexPattern) || /\([^)]*\|[^)]*\)\s*(?:[+*]|\{\d*,?\d*\})/.test(regexPattern)) {
+      setRegexError(en ? 'This pattern uses a potentially expensive nested or ambiguous quantifier. Simplify it before testing.' : 'Pola ini memakai quantifier bertingkat atau ambigu yang berpotensi mahal. Sederhanakan sebelum diuji.')
+      return
+    }
+    try {
+      const flags = [...new Set(regexFlags.split('').filter(flag => 'dgimsuvy'.includes(flag)))].join('')
+      const expression = new RegExp(regexPattern, flags)
+      const matches: Array<{ match: string; index: number; groups: Record<string, string> }> = []
+      if (expression.global || expression.sticky) {
+        let match: RegExpExecArray | null
+        while ((match = expression.exec(regexSample)) !== null && matches.length < 100) {
+          matches.push({ match: match[0], index: match.index, groups: match.groups ? Object.fromEntries(Object.entries(match.groups).map(([key, value]) => [key, value ?? ''])) : {} })
+          if (match[0] === '') expression.lastIndex += 1
+        }
+      } else {
+        const match = expression.exec(regexSample)
+        if (match) matches.push({ match: match[0], index: match.index, groups: match.groups ? Object.fromEntries(Object.entries(match.groups).map(([key, value]) => [key, value ?? ''])) : {} })
+      }
+      setRegexMatches(matches)
+    } catch (error) {
+      setRegexError((en ? 'Regex error: ' : 'Kesalahan regex: ') + (error instanceof Error ? error.message : 'Unknown error'))
+    }
+  }
+
+  const decodeJwt = () => {
+    setJwtError('')
+    setJwtOutput('')
+    const parts = jwtInput.trim().split('.')
+    if (parts.length !== 3 || parts.some(part => !part)) {
+      setJwtError(en ? 'A JWT must contain three non-empty dot-separated segments.' : 'JWT harus memiliki tiga segmen tidak kosong yang dipisahkan titik.')
+      return
+    }
+    try {
+      const header = decodeJwtPart(parts[0])
+      const payload = decodeJwtPart(parts[1])
+      setJwtOutput(JSON.stringify({ header, payload, signature: en ? 'Not verified — signature bytes are not validated.' : 'Belum diverifikasi — byte tanda tangan tidak divalidasi.' }, null, 2))
+    } catch {
+      setJwtError(en ? 'The header or payload is not valid base64url-encoded JSON.' : 'Header atau payload bukan JSON base64url yang valid.')
+    }
+  }
+
+  const copyText = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopyStatus(en ? 'Copied to clipboard.' : 'Berhasil disalin.')
+    } catch {
+      setCopyStatus(en ? 'Clipboard access was blocked by the browser.' : 'Akses clipboard diblokir oleh browser.')
+    }
+  }
+
+  const downloadSchema = () => {
+    if (!schemaOutput) return
+    const url = URL.createObjectURL(new Blob([schemaOutput], { type: 'application/schema+json;charset=utf-8' }))
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = 'schema.generated.json'
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(url)
+  }
+
+  return <main id="main-content" className="container devtools-page">
+    <header className="devtools-header">
+      <span className="section-kicker"><Braces size={14} /> {en ? 'ENGINEERING TOOLKIT / PRIVACY-FIRST' : 'TOOLKIT ENGINEERING / UTAMAKAN PRIVASI'}</span>
+      <h1>{en ? <>Developer <span>Utilities.</span></> : <>Utilitas <span>Developer.</span></>}</h1>
+      <p>{en ? 'Small, focused tools for everyday engineering workflows. Validate, inspect, and generate locally in your browser — no account or upload required.' : 'Tool ringkas dan fokus untuk alur kerja engineering sehari-hari. Validasi, periksa, dan buat output langsung di browser — tanpa akun atau unggahan.'}</p>
+      <div className="devtools-trust"><ShieldCheck size={16} /><span>{en ? 'Local processing · no telemetry added · never paste production secrets into shared devices.' : 'Pemrosesan lokal · tanpa telemetri tambahan · jangan tempelkan secret produksi pada perangkat bersama.'}</span></div>
+    </header>
+    <nav className="devtools-tabs" aria-label={en ? 'Developer utilities' : 'Utilitas developer'}>
+      <button type="button" className={activeTool === 'schema' ? 'active' : ''} aria-pressed={activeTool === 'schema'} onClick={() => { setActiveTool('schema'); setCopyStatus('') }}><Braces size={16} /><span>JSON Schema</span></button>
+      <button type="button" className={activeTool === 'regex' ? 'active' : ''} aria-pressed={activeTool === 'regex'} onClick={() => { setActiveTool('regex'); setCopyStatus('') }}><Search size={16} /><span>{en ? 'Regex Tester' : 'Penguji Regex'}</span></button>
+      <button type="button" className={activeTool === 'jwt' ? 'active' : ''} aria-pressed={activeTool === 'jwt'} onClick={() => { setActiveTool('jwt'); setCopyStatus('') }}><ShieldCheck size={16} /><span>{en ? 'JWT Inspector' : 'Pemeriksa JWT'}</span></button>
+    </nav>
+
+    {activeTool === 'schema' && <section className="devtools-panel" aria-labelledby="schema-title">
+      <div className="devtools-panel-heading"><span className="devtools-index">01 / GENERATE</span><h2 id="schema-title">{en ? 'JSON Schema Generator' : 'Generator JSON Schema'}</h2><p>{en ? 'Infer a JSON Schema Draft 2020-12 from a sample payload, including nested objects, arrays, nulls, and mixed array types.' : 'Buat inferensi JSON Schema Draft 2020-12 dari payload sampel, termasuk objek bertingkat, array, null, dan tipe array campuran.'}</p></div>
+      <div className="devtools-workspace"><label className="lab-field">{en ? 'Sample JSON' : 'JSON sampel'}<textarea aria-label={en ? 'Sample JSON' : 'JSON sampel'} rows={10} spellCheck={false} value={sampleJson} onChange={event => setSampleJson(event.target.value)} /></label><div className="devtools-output-column"><div className="devtools-output-heading"><strong>{en ? 'Generated schema' : 'Schema hasil'}</strong><span className="devtools-format">DRAFT 2020-12</span></div>{schemaOutput ? <pre className="lab-output" aria-label={en ? 'Generated JSON Schema output' : 'Output JSON Schema'}>{schemaOutput}</pre> : <div className="devtools-empty"><Braces size={22} /><p>{en ? 'Your schema will appear here.' : 'Schema akan muncul di sini.'}</p></div>}{schemaError && <p className="lab-error" role="alert">{schemaError}</p>}</div></div>
+      <div className="devtools-actions"><button type="button" className="button button-primary" onClick={generateSchema}><Sparkles size={15} /> {en ? 'Generate schema' : 'Buat schema'}</button>{schemaOutput && <><button type="button" className="button button-secondary" onClick={() => void copyText(schemaOutput)}><Copy size={15} /> {en ? 'Copy schema' : 'Salin schema'}</button><button type="button" className="button button-secondary" onClick={downloadSchema}><Download size={15} /> {en ? 'Download JSON' : 'Unduh JSON'}</button></>}</div>
+    </section>}
+
+    {activeTool === 'regex' && <section className="devtools-panel" aria-labelledby="regex-title">
+      <div className="devtools-panel-heading"><span className="devtools-index">02 / INSPECT</span><h2 id="regex-title">{en ? 'Regular Expression Tester' : 'Penguji Regular Expression'}</h2><p>{en ? 'Test a pattern against sample text and inspect match offsets and named capture groups.' : 'Uji pola pada teks sampel dan periksa posisi kecocokan serta named capture group.'}</p></div>
+      <div className="devtools-regex-line"><label className="lab-field">{en ? 'Pattern' : 'Pola'}<input aria-label={en ? 'Regex pattern' : 'Pola regex'} value={regexPattern} onChange={event => setRegexPattern(event.target.value)} maxLength={160} /></label><label className="lab-field devtools-flags">{en ? 'Flags' : 'Flags'}<input aria-label={en ? 'Regex flags' : 'Flag regex'} value={regexFlags} onChange={event => setRegexFlags(event.target.value)} maxLength={8} /><small>g i m s u y</small></label></div>
+      <label className="lab-field devtools-sample">{en ? 'Sample text' : 'Teks sampel'}<textarea aria-label={en ? 'Regex sample text' : 'Teks sampel regex'} rows={5} value={regexSample} onChange={event => setRegexSample(event.target.value)} maxLength={4000} /></label>
+      <div className="devtools-actions"><button type="button" className="button button-primary" onClick={testRegex}><Search size={15} /> {en ? 'Test pattern' : 'Uji pola'}</button><span className="devtools-count">{regexMatches.length} {en ? 'matches' : 'kecocokan'} · {en ? 'maximum 100 shown' : 'maksimal 100 ditampilkan'}</span></div>
+      {regexError && <p className="lab-error" role="alert">{regexError}</p>}
+      <div className="devtools-match-list" aria-live="polite">{regexMatches.length ? regexMatches.map((item, index) => <article className="devtools-match" key={item.index + ':' + index}><span className="devtools-match-index">#{index + 1} · {en ? 'offset' : 'posisi'} {item.index}</span><code>{item.match || (en ? '(empty match)' : '(kecocokan kosong)')}</code>{Object.keys(item.groups).length > 0 && <pre className="lab-output">{JSON.stringify(item.groups, null, 2)}</pre>}</article>) : <div className="devtools-empty"><Search size={22} /><p>{en ? 'Run the test to see matches.' : 'Jalankan pengujian untuk melihat kecocokan.'}</p></div>}</div>
+      <p className="devtools-footnote">{en ? 'Safety guard: pattern and input length are capped, and common nested/ambiguous quantifiers are rejected. This is a convenience tool, not a complete ReDoS defense.' : 'Pengaman: panjang pola dan input dibatasi serta quantifier bertingkat/ambigu yang umum ditolak. Ini alat bantu, bukan pertahanan ReDoS lengkap.'}</p>
+    </section>}
+
+    {activeTool === 'jwt' && <section className="devtools-panel" aria-labelledby="jwt-title">
+      <div className="devtools-panel-heading"><span className="devtools-index">03 / DECODE</span><h2 id="jwt-title">{en ? 'JWT Inspector' : 'Pemeriksa JWT'}</h2><p>{en ? 'Decode the header and payload of a JSON Web Token for debugging. The token stays in this browser session.' : 'Dekode header dan payload JSON Web Token untuk debugging. Token tetap diproses di sesi browser ini.'}</p></div>
+      <label className="lab-field">{en ? 'JWT token' : 'Token JWT'}<textarea aria-label={en ? 'JWT token' : 'Token JWT'} rows={4} spellCheck={false} value={jwtInput} onChange={event => setJwtInput(event.target.value)} placeholder="eyJhbGciOi...eyJzdWIiOi..." /></label>
+      <div className="devtools-actions"><button type="button" className="button button-primary" onClick={decodeJwt}><ShieldCheck size={15} /> {en ? 'Decode token' : 'Dekode token'}</button>{jwtOutput && <button type="button" className="button button-secondary" onClick={() => void copyText(jwtOutput)}><Copy size={15} /> {en ? 'Copy decoded JSON' : 'Salin JSON hasil'}</button>}</div>
+      {jwtError && <p className="lab-error" role="alert">{jwtError}</p>}
+      {jwtOutput ? <pre className="lab-output devtools-jwt-output" aria-label={en ? 'Decoded JWT output' : 'Output JWT hasil dekode'}>{jwtOutput}</pre> : <div className="devtools-empty"><ShieldCheck size={22} /><p>{en ? 'Decoded header and payload will appear here.' : 'Header dan payload hasil dekode akan muncul di sini.'}</p></div>}
+      <aside className="devtools-warning"><AlertTriangle size={16} /><p>{en ? 'Decoding is not verification. This tool does not validate signatures, issuer, audience, expiry, or trust. Never use decoded claims alone to authorize a request.' : 'Dekode bukan verifikasi. Tool ini tidak memvalidasi tanda tangan, issuer, audience, kedaluwarsa, atau kepercayaan. Jangan gunakan klaim hasil dekode saja untuk mengotorisasi permintaan.'}</p></aside>
+    </section>}
+    {copyStatus && <p className="lab-copy-status" role="status">{copyStatus}</p>}
+    <p className="devtools-disclaimer">{en ? 'Everything runs client-side in this page. Outputs are generated from the input you provide and should be reviewed before production use.' : 'Semua proses berjalan di sisi klien pada halaman ini. Output dibuat dari input Anda dan harus ditinjau sebelum digunakan di produksi.'}</p>
+  </main>
+}
+
+
 type LearningPath = { id: string; title: string; description: string; level: string; duration: string; slugs: string[] }
 
 function LearningHubPage() {
@@ -1312,6 +1508,7 @@ function CommandPalette() {
     { id: 'reading-list', label: isEnglish ? 'Open reading list' : 'Buka daftar bacaan', detail: isEnglish ? 'Your saved engineering notes' : 'Catatan engineering tersimpan', icon: Bookmark, run: () => navigate('/reading-list') },
     { id: 'lab', label: isEnglish ? 'Open Engineering Lab' : 'Buka Lab Engineering', detail: isEnglish ? 'QA tools, bug reports, and JSON utilities' : 'Tool QA, laporan bug, dan utilitas JSON', icon: Terminal, run: () => navigate('/lab') },
     { id: 'observatory', label: isEnglish ? 'Web Quality Observatory' : 'Observatory Kualitas Web', detail: isEnglish ? 'Inspect metadata, accessibility signals, and responsive foundations' : 'Periksa metadata, aksesibilitas, dan fondasi responsif', icon: Activity, run: () => navigate('/observatory') },
+    { id: 'devtools', label: isEnglish ? 'Developer Utilities' : 'Utilitas Developer', detail: isEnglish ? 'JSON Schema, regex testing, and JWT inspection' : 'JSON Schema, pengujian regex, dan pemeriksaan JWT', icon: Braces, run: () => navigate('/devtools') },
     { id: 'learn', label: isEnglish ? 'Open Learning Hub' : 'Buka Pusat Belajar', detail: isEnglish ? 'Curated paths and engineering glossary' : 'Jalur belajar dan glosarium engineering', icon: BookOpen, run: () => navigate('/learn') },
   ]
   const term = query.trim().toLowerCase()
@@ -1491,5 +1688,5 @@ function BackToTop() {
 
 export default function App() {
   const { t } = useLanguage()
-  return <><a className="skip-link" href="#main-content">{t('skip')}</a><OfflineNotice /><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/observatory" element={<WebQualityObservatoryPage />} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
+  return <><a className="skip-link" href="#main-content">{t('skip')}</a><OfflineNotice /><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/observatory" element={<WebQualityObservatoryPage />} /> <Route path="/devtools" element={<DeveloperUtilitiesPage />} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><BackToTop /><Footer /></>
 }

@@ -87,6 +87,8 @@ const sitemapUrls = [
   { loc: `${siteUrl}/`, changefreq: 'weekly', priority: '1.0' },
   { loc: `${siteUrl}/about`, changefreq: 'monthly', priority: '0.6' },
   { loc: `${siteUrl}/lab`, changefreq: 'monthly', priority: '0.7' },
+  { loc: `${siteUrl}/observatory`, changefreq: 'monthly', priority: '0.6' },
+  { loc: `${siteUrl}/devtools`, changefreq: 'monthly', priority: '0.7' },
   { loc: `${siteUrl}/learn`, changefreq: 'weekly', priority: '0.8' },
   { loc: `${siteUrl}/rss`, changefreq: 'daily', priority: '0.7' },
   ...articles.map(article => ({

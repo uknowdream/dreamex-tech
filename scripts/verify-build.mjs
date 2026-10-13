@@ -104,7 +104,7 @@ if (errors.length === 0) {
 
 if (existsSync(join(dist, 'sitemap.xml'))) {
   const sitemapOutput = readFileSync(join(dist, 'sitemap.xml'), 'utf8')
-  for (const route of ['https://dreamex.tech/about', 'https://dreamex.tech/lab', 'https://dreamex.tech/learn', 'https://dreamex.tech/rss']) {
+  for (const route of ['https://dreamex.tech/about', 'https://dreamex.tech/lab', 'https://dreamex.tech/observatory', 'https://dreamex.tech/devtools', 'https://dreamex.tech/learn', 'https://dreamex.tech/rss']) {
     if (!sitemapOutput.includes(`<loc>${route}</loc>`)) errors.push(`Sitemap is missing canonical route: ${route}`)
   }
   if (!sitemapOutput.includes('<lastmod>')) errors.push('Sitemap is missing article publication dates')
@@ -116,6 +116,9 @@ if (!appSource.includes('path="/reading-list"') || !appSource.includes('function
   errors.push('Personal reading list route and persistence are required')
 }
 if (!appSource.includes('READING_PROGRESS_KEY') || !appSource.includes('function readReadingProgress') || !appSource.includes('resume-reading')) errors.push('Resume reading progress persistence and home card are required')
+
+if (!appSource.includes('path="/observatory"') || !appSource.includes('function WebQualityObservatoryPage')) errors.push('Web Quality Observatory route is required')
+if (!appSource.includes('path="/devtools"') || !appSource.includes('function DeveloperUtilitiesPage')) errors.push('Developer Utilities route is required')
 
 if (!appSource.includes('path="/lab"') || !appSource.includes('function EngineeringLabPage')) {
   errors.push('Engineering Lab route and toolkit are required')

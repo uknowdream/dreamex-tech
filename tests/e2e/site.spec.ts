@@ -468,10 +468,25 @@ test('Web Quality Observatory audits the current page and exports a report', asy
   await page.getByRole('button', { name: /Run page audit|Jalankan audit/i }).click()
   await expect(page.getByText(/12\/12/).first()).toBeVisible()
   await expect(page.getByRole('img', { name: /Quality score \d+ percent|Skor kualitas \d+ percent/i })).toBeVisible()
-  await expect(page.getByText(/CURRENT PAGE|HALAMAN SAAT INI/i)).toBeVisible()
+  await expect(page.getByText('CURRENT PAGE', { exact: true }).or(page.getByText('HALAMAN SAAT INI', { exact: true })).first()).toBeVisible()
   await expect(page.getByRole('button', { name: /Copy report|Salin laporan/i })).toBeEnabled()
   await expect(page.getByRole('button', { name: /Export \.md|Ekspor \.md/i })).toBeEnabled()
   await expect(page.getByText(/does not crawl the site|tidak merayapi tautan internal/i)).toBeVisible()
+})
+
+
+test('Developer Utilities generates JSON Schema and safely reports regex matches', async ({ page }) => {
+  await page.goto('/devtools')
+  await expect(page.getByRole('heading', { name: /Developer Utilities|Utilitas Developer/i })).toBeVisible()
+  await page.getByRole('button', { name: /Generate schema|Buat schema/i }).click()
+  const schemaOutput = page.getByLabel(/Generated JSON Schema output|Output JSON Schema/i)
+  await expect(schemaOutput).toContainText('"$schema": "https://json-schema.org/draft/2020-12/schema"')
+  await expect(schemaOutput).toContainText('"type": "object"')
+  await page.getByRole('button', { name: /Regex Tester|Penguji Regex/i }).click()
+  await page.getByRole('button', { name: /Test pattern|Uji pola/i }).click()
+  await expect(page.getByText('support@example.com')).toBeVisible()
+  await page.getByRole('button', { name: /JWT Inspector|Pemeriksa JWT/i }).click()
+  await expect(page.getByText(/Decoding is not verification|Dekode bukan verifikasi/i)).toBeVisible()
 })
 
 test('mobile viewport has no horizontal document overflow', async ({ page, isMobile }) => {
