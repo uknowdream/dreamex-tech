@@ -4,6 +4,11 @@ import { join } from 'node:path'
 const root = process.cwd()
 const dist = join(root, 'dist')
 const errors = []
+const vercelConfig = JSON.parse(readFileSync(join(root, 'vercel.json'), 'utf8'))
+const globalHeaders = vercelConfig.headers?.find(entry => entry.source === '/(.*)')?.headers ?? []
+for (const [key, expected] of [['X-Content-Type-Options', 'nosniff'], ['Referrer-Policy', 'strict-origin-when-cross-origin'], ['X-Frame-Options', 'DENY'], ['Permissions-Policy', 'camera=(), microphone=(), geolocation=()'], ['Strict-Transport-Security', 'max-age=31536000']]) {
+  if (!globalHeaders.some(header => header.key.toLowerCase() === key.toLowerCase() && header.value === expected)) errors.push('Missing or incorrect production security header: ' + key)
+}
 
 function requireFile(path, label = path) {
   if (!existsSync(path)) errors.push(`Missing required build output: ${label}`)
