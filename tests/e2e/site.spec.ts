@@ -853,7 +853,7 @@ test('Supply Chain Intelligence imports CycloneDX components and included vulner
   await expect(page.locator('.supply-chain-metrics article:nth-child(3) strong')).toHaveText('1')
   await expect(page.getByRole('heading', { name: 'CVE-2026-12345' })).toBeVisible()
   await expect(page.getByText('MIT', { exact: true })).toBeVisible()
-  await expect(page.getByText('CVE-2026-12345', { exact: true })).toBeVisible()
+  await expect(page.locator('.supply-chain-vuln-list').getByText('CVE-2026-12345', { exact: true })).toBeVisible()
   await expect(page.getByRole('status')).toContainText(/Vulnerability findings reflect only records present/i)
 })
 
