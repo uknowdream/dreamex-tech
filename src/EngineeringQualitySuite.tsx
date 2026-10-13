@@ -56,7 +56,7 @@ export function SecurityCenterPage() {
     } catch(e) { error=e instanceof Error?e.message:'Response headers could not be read in this browser context.' }
     const result:Audit={checkedAt:new Date().toISOString(),url,headers,findings:headerFindings(url,headers,error),...(error?{error}:{})}
     setAudit(result)
-    try { localStorage.setItem(AUDIT_KEY,JSON.stringify(result)); setMessage(en?'Audit saved in this browser.':'Audit disimpan di browser ini.') }
+    try { localStorage.setItem(AUDIT_KEY,JSON.stringify(result)); setLocalEntries(readLocalInventory()); setMessage(en?'Audit saved in this browser.':'Audit disimpan di browser ini.') }
     catch { setMessage(en?'Audit completed, but browser storage is unavailable.':'Audit selesai, tetapi penyimpanan browser tidak tersedia.') }
     setBusy(false)
   }
