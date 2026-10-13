@@ -2350,3 +2350,87 @@ main, header, footer, section, .container {
 @media(prefers-reduced-motion:reduce){.quality-intelligence-page *{scroll-behavior:auto!important;transition:none!important}}
 
 .route-loading{min-height:45vh;display:grid;place-items:center;color:#91a0b8;font:12px var(--mono);letter-spacing:.4px}
+
+
+/* Software Supply Chain Intelligence — local-first SBOM inventory */
+.supply-chain-page{padding-top:50px;padding-bottom:80px}
+.supply-chain-hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(250px,.65fr);gap:30px;align-items:center;padding:clamp(24px,4vw,42px);border:1px solid #2b3953;border-radius:18px;background:radial-gradient(ellipse at 12% 0%,#91cfff12,transparent 42%),linear-gradient(140deg,#131e32,#0b1322)}
+.supply-chain-hero h1{font:600 clamp(34px,4.8vw,56px)/1.08 var(--display);letter-spacing:-2.5px;margin:22px 0 14px}
+.supply-chain-hero h1 span{color:transparent;background:linear-gradient(95deg,#91cfff,#8ce4c3 52%,#c5ff70);background-clip:text;-webkit-background-clip:text}
+.supply-chain-hero>div:first-child>p{max-width:690px;color:#a1b0c8;font-size:13px;line-height:1.85;margin:0}
+.supply-chain-trust{display:flex;align-items:flex-start;gap:8px;color:#8c9db7;font-size:11px;line-height:1.7;margin-top:19px}
+.supply-chain-trust svg{flex:0 0 auto;color:#91cfff}
+.supply-chain-import{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:23px;border:1px dashed #52627c;border-radius:14px;background:#080f1dcc}
+.supply-chain-import-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:11px;color:#91cfff;background:#91cfff12;border:1px solid #91cfff20}
+.supply-chain-import>strong{font:600 16px var(--display);color:#e6edf8}
+.supply-chain-import>p{margin:0 0 6px;color:#8292ad;font-size:11px}
+.supply-chain-file{position:relative;overflow:hidden;width:100%;cursor:pointer}
+.supply-chain-file input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.supply-chain-import>.button{width:100%}
+.supply-chain-alert,.supply-chain-notice{display:flex;align-items:flex-start;gap:9px;margin:15px 0 0;padding:13px 15px;border-radius:9px;font-size:12px;line-height:1.7}
+.supply-chain-alert{border:1px solid #77463f;background:#ff8d7d0c;color:#ffb5a9}
+.supply-chain-notice{border:1px solid #3d5945;background:#c5ff7008;color:#c5ff70}
+.supply-chain-summary,.supply-chain-components,.supply-chain-vulnerabilities,.supply-chain-history{margin-top:25px;padding:25px;border:1px solid #27344c;border-radius:15px;background:linear-gradient(145deg,#111b2c,#0b1321)}
+.supply-chain-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:22px}
+.supply-chain-heading h2{font:600 20px/1.35 var(--display);margin:9px 0;overflow-wrap:anywhere}
+.supply-chain-heading p{font-size:11px;color:#8d9db6;line-height:1.7;margin:0}
+.supply-chain-exports{display:flex;gap:7px;flex-wrap:wrap}
+.supply-chain-exports .button{min-height:36px;padding:0 11px;font-size:10px}
+.supply-chain-metrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.supply-chain-metrics article{display:flex;flex-direction:column;gap:8px;min-width:0;padding:16px;border:1px solid #2a3750;border-radius:10px;background:#0b1321}
+.supply-chain-metrics article>span{display:flex;align-items:center;gap:7px;color:#93a4be;font-size:10px}
+.supply-chain-metrics article>span svg{color:#91cfff;flex:0 0 auto}
+.supply-chain-metrics article>strong{font:600 clamp(23px,2.5vw,32px)/1 var(--display);letter-spacing:-1px;color:#e6edf8;overflow-wrap:anywhere}
+.supply-chain-metrics article:nth-child(3)>strong,.supply-chain-metrics article:nth-child(4)>strong{color:#ffb19f}
+.supply-chain-metrics article>small{color:#788aa6;font-size:9px;line-height:1.6}
+.supply-chain-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:20px}
+.supply-chain-section-head h2{font:600 clamp(23px,3vw,30px)/1.15 var(--display);letter-spacing:-.7px;margin:9px 0}
+.supply-chain-section-head p{font-size:11px;line-height:1.7;color:#8b9cb5;margin:0;max-width:600px}
+.supply-chain-section-head>span{font:11px var(--mono);color:#91cfff;white-space:nowrap}
+.supply-chain-filters{display:flex;gap:10px;margin-bottom:14px}
+.supply-chain-filters label{display:flex;align-items:center;gap:8px;padding:0 11px;border:1px solid #34415a;border-radius:8px;background:#0b1321;color:#90a0b9}
+.supply-chain-filters select,.supply-chain-search input{min-height:42px;border:1px solid #34415a;border-radius:8px;background:#0b1321;color:#e6edf8;font:12px 'DM Sans',sans-serif;padding:0 12px;min-width:0}
+.supply-chain-filters select{border:0;padding:0;background:transparent;outline:0}
+.supply-chain-search{flex:1}
+.supply-chain-search input{width:100%;border:0;background:transparent;outline:0}
+.supply-chain-search:focus-within{border-color:#91cfff;box-shadow:0 0 0 3px #91cfff10}
+.supply-chain-table-wrap{overflow-x:auto;border:1px solid #27344c;border-radius:10px}
+.supply-chain-table{width:100%;border-collapse:collapse;text-align:left;min-width:600px}
+.supply-chain-table th{padding:12px 14px;background:#141f32;color:#8d9db6;font:9px var(--mono);letter-spacing:1px;text-transform:uppercase}
+.supply-chain-table td{padding:14px;border-top:1px solid #26334a;vertical-align:top;color:#dce5f3;font-size:11px}
+.supply-chain-table td:first-child{width:52%}
+.supply-chain-table td strong{display:block;line-height:1.6;overflow-wrap:anywhere}
+.supply-chain-table td small{display:block;color:#71839f;font-size:10px;margin-top:5px;overflow-wrap:anywhere}
+.supply-chain-table td code{display:block;margin-top:6px;color:#91cfff;font:10px/1.6 var(--mono);overflow-wrap:anywhere}
+.supply-chain-badges{display:flex;flex-wrap:wrap;gap:6px}
+.supply-chain-risk{display:inline-flex;padding:5px 7px;border:1px solid;border-radius:6px;font:9px var(--mono);text-transform:uppercase;letter-spacing:.4px;overflow-wrap:anywhere}
+.supply-chain-risk.risk-critical,.supply-chain-risk.risk-high{color:#ff9c91;border-color:#784942;background:#ff8d7d0a}
+.supply-chain-risk.risk-medium{color:#ffd28a;border-color:#7b623b;background:#ffd28a0a}
+.supply-chain-risk.risk-low{color:#c5ff70;border-color:#5b794b;background:#c5ff700a}
+.supply-chain-risk.risk-review{color:#91cfff;border-color:#3d5c78;background:#91cfff0a}
+.supply-chain-clean{display:inline-flex;align-items:center;gap:5px;color:#c5ff70;font-size:10px}
+.supply-chain-empty{padding:24px;text-align:center;color:#91a0b8;font-size:12px}
+.supply-chain-vuln-list{display:grid;gap:10px}
+.supply-chain-vuln-list article{padding:16px;border:1px solid #4a3a43;border-radius:10px;background:#ff8d7d06}
+.supply-chain-vuln-list article>div{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.supply-chain-vuln-list h3{font:600 13px var(--mono);margin:0;color:#e6edf8}
+.supply-chain-vuln-list p{font-size:11px;line-height:1.75;color:#a8b5c9;overflow-wrap:anywhere}
+.supply-chain-vuln-list small{display:block;margin-top:7px;color:#8797b1;font-size:10px;line-height:1.7;overflow-wrap:anywhere}
+.supply-chain-empty-state{display:grid;grid-template-columns:1.2fr 1fr;gap:22px;align-items:center;margin-top:26px;padding:30px;border:1px solid #27344c;border-radius:14px;background:#10192a}
+.supply-chain-empty-state>div:first-child>svg{color:#91cfff}
+.supply-chain-empty-state h2{font:600 22px var(--display);margin:13px 0}
+.supply-chain-empty-state p{font-size:12px;line-height:1.8;color:#8e9eb8;margin:0}
+.supply-chain-empty-state>div:last-child{display:grid;gap:12px}
+.supply-chain-empty-state>div:last-child span{display:flex;align-items:flex-start;gap:9px;color:#b4c2d8;font-size:11px;line-height:1.6}
+.supply-chain-empty-state>div:last-child svg{flex:0 0 auto;color:#91cfff}
+.supply-chain-history-list{display:grid;gap:8px}
+.supply-chain-history-list article{display:grid;grid-template-columns:minmax(0,1.5fr) auto minmax(0,1fr);gap:12px;align-items:center;padding:13px;border:1px solid #2a3750;border-radius:8px;background:#0b1321}
+.supply-chain-history-list article>div{display:grid;gap:5px;min-width:0}
+.supply-chain-history-list article strong{font-size:11px;overflow-wrap:anywhere}
+.supply-chain-history-list article small,.supply-chain-history-list article>span{font-size:10px;line-height:1.6;color:#8292ad;overflow-wrap:anywhere}
+.supply-chain-history-list article>strong{color:#91cfff;font:600 16px var(--display)}
+.supply-chain-disclaimer{display:flex;align-items:flex-start;gap:9px;margin:20px 0 0;color:#7f90aa;font-size:11px;line-height:1.7}
+.supply-chain-disclaimer svg{flex:0 0 auto;color:#91cfff}
+@media(max-width:980px){.supply-chain-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.supply-chain-hero{grid-template-columns:minmax(0,1fr) minmax(240px,.8fr)}}
+@media(max-width:700px){.supply-chain-page{padding-top:28px;padding-bottom:55px}.supply-chain-hero{grid-template-columns:1fr;padding:22px;border-radius:14px}.supply-chain-hero h1{font-size:clamp(33px,9.5vw,46px);letter-spacing:-1.7px}.supply-chain-summary,.supply-chain-components,.supply-chain-vulnerabilities,.supply-chain-history{padding:17px;margin-top:17px}.supply-chain-heading{flex-direction:column}.supply-chain-exports{width:100%}.supply-chain-exports .button{flex:1}.supply-chain-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.supply-chain-section-head{align-items:stretch;flex-direction:column;gap:10px}.supply-chain-filters{flex-direction:column}.supply-chain-filters label select{width:100%}.supply-chain-empty-state{grid-template-columns:1fr;padding:22px}.supply-chain-history-list article{grid-template-columns:minmax(0,1fr) auto}.supply-chain-history-list article>span{grid-column:1/-1}}
+@media(prefers-reduced-motion:reduce){.supply-chain-page *{scroll-behavior:auto!important;transition:none!important}}

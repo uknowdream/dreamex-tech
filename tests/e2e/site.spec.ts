@@ -817,3 +817,87 @@ test('Quality Intelligence rejects invalid JSON reports without losing the page'
   await expect(page.getByRole('alert')).toBeVisible()
   await expect(page.getByRole('heading', { name: /Your test report, made actionable/i })).toBeVisible()
 })
+
+
+test('Supply Chain Intelligence loads a labeled demo and exports inventory evidence', async ({ page }) => {
+  await page.goto('/supply-chain-intelligence')
+  await expect(page.getByRole('heading', { name: /Know what ships\. Prove the inventory/i })).toBeVisible()
+  await page.getByRole('button', { name: /Explore demo inventory/i }).click()
+  await expect(page.getByRole('heading', { name: /Component-level evidence/i })).toBeVisible()
+  await expect(page.locator('.supply-chain-metrics article:first-child strong')).toHaveText('4')
+  await expect(page.getByText(/Demo data only — not a real project inventory/i)).toBeVisible()
+  await page.getByRole('searchbox', { name: /Search SBOM components/i }).fill('example-legacy')
+  await expect(page.locator('.supply-chain-table tbody tr')).toHaveCount(1)
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: /CSV/i }).click()
+  expect((await downloadPromise).suggestedFilename()).toBe('dreamex-sbom-inventory.csv')
+})
+
+test('Supply Chain Intelligence imports CycloneDX components and included vulnerability records', async ({ page }) => {
+  await page.goto('/supply-chain-intelligence')
+  await page.getByLabel(/Choose CycloneDX or SPDX JSON SBOM/i).setInputFiles({
+    name: 'cyclonedx-sbom.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({
+      bomFormat: 'CycloneDX',
+      specVersion: '1.5',
+      components: [
+        { 'bom-ref': 'pkg:npm/lodash@4.17.21', name: 'lodash', version: '4.17.21', type: 'library', purl: 'pkg:npm/lodash@4.17.21', licenses: [{ license: { id: 'MIT' } }] },
+        { 'bom-ref': 'pkg:npm/unknown', name: 'unknown-lib', type: 'library', licenses: [{ license: { name: 'NOASSERTION' } }] },
+      ],
+      vulnerabilities: [{ id: 'CVE-2026-12345', ratings: [{ severity: 'high' }], description: 'Example imported finding', affects: [{ ref: 'pkg:npm/lodash@4.17.21' }] }],
+    })),
+  })
+  await expect(page.locator('.supply-chain-heading p')).toContainText('CycloneDX')
+  await expect(page.locator('.supply-chain-metrics article:first-child strong')).toHaveText('2')
+  await expect(page.locator('.supply-chain-metrics article:nth-child(3) strong')).toHaveText('1')
+  await expect(page.getByRole('heading', { name: 'CVE-2026-12345' })).toBeVisible()
+  await expect(page.getByText('MIT', { exact: true })).toBeVisible()
+  await expect(page.locator('.supply-chain-vuln-list').getByText('CVE-2026-12345', { exact: true })).toBeVisible()
+  await expect(page.getByRole('status')).toContainText(/Vulnerability findings reflect only records present/i)
+})
+
+test('Supply Chain Intelligence imports SPDX JSON package metadata', async ({ page }) => {
+  await page.goto('/supply-chain-intelligence')
+  await page.getByLabel(/Choose CycloneDX or SPDX JSON SBOM/i).setInputFiles({
+    name: 'spdx-sbom.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({
+      spdxVersion: 'SPDX-2.3',
+      dataLicense: 'CC0-1.0',
+      SPDXID: 'SPDXRef-DOCUMENT',
+      name: 'Sample project',
+      packages: [{
+        SPDXID: 'SPDXRef-Package-Lodash',
+        name: 'lodash',
+        versionInfo: '4.17.21',
+        licenseDeclared: 'MIT',
+        licenseConcluded: 'MIT',
+        externalRefs: [{ referenceCategory: 'PACKAGE-MANAGER', referenceType: 'purl', referenceLocator: 'pkg:npm/lodash@4.17.21' }],
+        checksums: [{ algorithm: 'SHA256', checksumValue: 'abcdef012345' }],
+      }],
+    })),
+  })
+  await expect(page.locator('.supply-chain-heading p')).toContainText('SPDX')
+  await expect(page.getByRole('heading', { name: /Component-level evidence/i })).toBeVisible()
+  await expect(page.getByText('pkg:npm/lodash@4.17.21')).toBeVisible()
+  await expect(page.getByText('SHA256:abcdef012345')).toBeVisible()
+  await expect(page.getByRole('status')).toContainText(/does not mean the dependencies are vulnerability-free/i)
+})
+
+test('Supply Chain Intelligence rejects unsupported and malformed SBOM files', async ({ page }) => {
+  await page.goto('/supply-chain-intelligence')
+  await page.getByLabel(/Choose CycloneDX or SPDX JSON SBOM/i).setInputFiles({
+    name: 'invalid-sbom.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{"notAnSbom":true}'),
+  })
+  await expect(page.getByRole('alert')).toContainText(/Unsupported SBOM/i)
+  await page.getByLabel(/Choose CycloneDX or SPDX JSON SBOM/i).setInputFiles({
+    name: 'broken.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{'),
+  })
+  await expect(page.getByRole('alert')).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Start with an SBOM, not a guess/i })).toBeVisible()
+})
