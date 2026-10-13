@@ -830,7 +830,7 @@ test('Reliability Center captures and persists incident timeline records', async
   await expect(page.getByText('Latency alert fired from the service dashboard.')).toBeVisible()
   await page.getByRole('button', { name: /Save incident/i }).click()
   await expect(page.getByRole('status')).toContainText(/Incident saved in this browser/i)
-  await expect(page.getByRole('button', { name: /Database latency spike/i })).toBeVisible()
+  await expect(page.locator('.reliability-history-open').filter({ hasText: 'Database latency spike' })).toBeVisible()
   await page.reload()
   await page.getByRole('button', { name: /Database latency spike/i }).click()
   await expect(page.getByRole('textbox', { name: /Incident title/i })).toHaveValue('Database latency spike')
