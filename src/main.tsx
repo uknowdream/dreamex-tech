@@ -6,6 +6,7 @@ import { LanguageProvider } from './i18n'
 import './styles.css'
 import './navigation-motion.css'
 import './design-refinement.css'
+import './engineering-launchpad.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
