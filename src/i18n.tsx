@@ -8,7 +8,7 @@ type Messages = Record<string, string>
 const messages: Record<Language, Messages> = {
   id: {
     home: 'Beranda', blog: 'Blog', topics: 'Topik', articles: 'Artikel', github: 'GitHub',
-    heroEyebrow: 'PLATFORM PENGETAHUAN TEKNOLOGI INDEPENDEN', heroLine1: 'Berpikir lebih dalam.', heroLine2: 'Membangun lebih cerdas.', heroLine3: 'Rilis dengan kualitas.',
+    heroEyebrow: 'RUANG KERJA ENGINEERING MODERN', heroLine1: 'Rekayasa dengan tujuan.', heroLine2: 'Bangun untuk masa depan.', heroLine3: 'Rilis dengan percaya diri.',
     topicsEyebrow: '01 — JELAJAHI BIDANG', topicsHeading: 'Ide yang layak', topicsHeadingAccent: 'dikembangkan.', featuredHeading: 'PILIHAN EDITOR', articlesEyebrow: '02 — CATATAN PENGETAHUAN', articlesHeading: 'Pemikiran', articlesHeadingAccent: 'terbaru.',
     trustKnowledge: 'PENGETAHUAN PRAKTIS', trustQuality: 'KUALITAS UTAMA', trustEngineering: 'BERBASIS ENGINEERING', trustAI: 'AI DENGAN KESADARAN',
     softwareTopic: 'Software Engineering', qaTopic: 'Quality Engineering', aiTopic: 'AI & Teknologi Baru',
@@ -18,7 +18,7 @@ const messages: Record<Language, Messages> = {
     footerTagline: 'Curiosity into engineering. Ideas into impact.', footerTopics: 'Topik',
     latestArticles: 'Artikel terbaru', openSource: 'Open source', footerCopyright: 'Dibangun untuk terus belajar.',
     readArticle: 'Baca artikel', readFeatured: 'Baca insight pilihan',
-    heroDescription: 'Ruang eksplorasi software engineering, quality engineering, AI, dan teknologi modern—dari konsep yang kuat hingga praktik yang bisa diterapkan.',
+    heroDescription: 'Jelajahi software engineering, quality engineering, AI, dan teknologi modern. Dari pemahaman yang mendalam hingga tools praktis untuk membangun, menguji, dan merilis perangkat lunak dengan lebih percaya diri.',
     exploreKnowledge: 'Jelajahi knowledge base', sourceCode: 'Source code',
     engineeringNotes: 'Catatan engineering', coreDisciplines: 'Disiplin utama', ideasExplore: 'Ide untuk dieksplorasi',
     topicsDescription: 'Teknologi bergerak cepat. Prinsip engineering yang baik membantu kita bergerak dengan arah.',
@@ -46,7 +46,7 @@ const messages: Record<Language, Messages> = {
   },
   en: {
     home: 'Home', blog: 'Blog', topics: 'Topics', articles: 'Articles', github: 'GitHub',
-    heroEyebrow: 'INDEPENDENT TECH KNOWLEDGE PLATFORM', heroLine1: 'Think deeper.', heroLine2: 'Build smarter.', heroLine3: 'Ship with quality.',
+    heroEyebrow: 'THE MODERN ENGINEERING WORKSPACE', heroLine1: 'Engineer with intent.', heroLine2: 'Build for what’s next.', heroLine3: 'Ship with confidence.',
     topicsEyebrow: '01 — EXPLORE THE FIELD', topicsHeading: 'Ideas worth', topicsHeadingAccent: 'building on.', featuredHeading: "EDITOR'S PICK", articlesEyebrow: '02 — THE KNOWLEDGE LOG', articlesHeading: 'Latest', articlesHeadingAccent: 'thinking.',
     trustKnowledge: 'PRACTICAL KNOWLEDGE', trustQuality: 'QUALITY FIRST', trustEngineering: 'ENGINEERING LED', trustAI: 'AI CONSCIOUS',
     softwareTopic: 'Software Engineering', qaTopic: 'Quality Engineering', aiTopic: 'AI & Emerging Tech',
@@ -56,7 +56,7 @@ const messages: Record<Language, Messages> = {
     footerTagline: 'Curiosity into engineering. Ideas into impact.', footerTopics: 'Topics',
     latestArticles: 'Latest articles', openSource: 'Open source', footerCopyright: 'Built to keep learning.',
     readArticle: 'Read article', readFeatured: 'Read featured insight',
-    heroDescription: 'Explore software engineering, quality engineering, AI, and modern technology—from strong fundamentals to practical implementation.',
+    heroDescription: 'Explore software engineering, quality engineering, AI, and emerging technology. Go from deep understanding to practical tools that help you build, test, and ship software with confidence.',
     exploreKnowledge: 'Explore the knowledge base', sourceCode: 'Source code',
     engineeringNotes: 'Engineering notes', coreDisciplines: 'Core disciplines', ideasExplore: 'Ideas to explore',
     topicsDescription: 'Technology moves fast. Strong engineering principles help us move with purpose.',
