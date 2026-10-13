@@ -20,3 +20,28 @@ npm run build
 ## Deployment
 
 Import this repository into Vercel. Use Vite, `npm run build`, and `dist` as the output directory. Add `dreamex.tech` in Project Settings → Domains and follow the exact DNS records shown by Vercel.
+## Engineering platform
+
+DreamEx Tech combines editorial knowledge with practical, browser-first engineering tools:
+
+- `/workspace` — searchable engineering tool catalog.
+- `/lab` — QA utilities, API test matrices, contract review, release scorecards, and incident postmortems.
+- `/api-playground` — browser-based HTTP request inspection with local collections and sensitive-header redaction.
+- `/observatory` and `/performance` — heuristic page-quality checks and browser timing snapshots.
+- `/learn` and `/knowledge-graph` — learning paths, glossary, and curated relationships between concepts and tools.
+- `/roadmap` — product roadmap, persistent local progress, release-readiness scorecard, ADR builder, and STRIDE threat-model worksheet.
+
+Most workspace state is stored in the user's browser. No account sync is implied. API Playground requests go directly from the browser to the target and are subject to CORS; do not enter production secrets. Performance snapshots are not a substitute for a full Lighthouse audit. The readiness and STRIDE worksheets are planning aids, not compliance certification or a complete security assessment.
+
+## Validation
+
+```bash
+npm run typecheck
+npm run lint
+npm run build
+npm run verify:build
+npm run verify:i18n
+npm run test:e2e
+```
+
+Release discipline: validate CI and desktop/mobile browser regression before treating a change as production-ready, then smoke-test critical routes, sitemap, and the human-readable RSS feed after deployment.
