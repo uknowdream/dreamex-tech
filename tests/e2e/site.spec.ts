@@ -406,6 +406,31 @@ test('OpenAPI CSV export safely quotes commas, quotes, and newlines', async ({ p
   await expect(page.getByRole('status')).toContainText(/CSV downloaded|CSV matriks kontrak OpenAPI berhasil diunduh/i)
 })
 
+
+test('release readiness scorecard updates risk and weighted score as critical checks pass', async ({ page }) => {
+  await page.goto('/lab')
+  await page.getByRole('tab', { name: /Release Readiness|Kesiapan Rilis/i }).click()
+  await expect(page.getByRole('heading', { name: /Release readiness scorecard|Scorecard kesiapan rilis/i })).toBeVisible()
+  await expect(page.getByRole('img', { name: /Readiness score 0 percent|Skor kesiapan 0 percent/i })).toBeVisible()
+  await expect(page.getByText(/Release blocked|Rilis tertahan/i).first()).toBeVisible()
+  const firstCritical = page.getByRole('checkbox', { name: /Acceptance criteria are reviewed|Acceptance criteria telah ditinjau/i })
+  await firstCritical.check()
+  await expect(page.getByRole('img', { name: /Readiness score 11 percent|Skor kesiapan 11 percent/i })).toBeVisible()
+  await expect(page.getByText(/Release blocked|Rilis tertahan/i).first()).toBeVisible()
+  await expect(page.getByRole('progressbar', { name: /Release checklist completion|Penyelesaian checklist rilis/i })).toHaveAttribute('aria-valuenow', '8')
+})
+
+test('release readiness scorecard marks release ready only after every check is complete', async ({ page }) => {
+  await page.goto('/lab')
+  await page.getByRole('tab', { name: /Release Readiness|Kesiapan Rilis/i }).click()
+  const checks = page.locator('.release-check-item input[type="checkbox"]')
+  await expect(checks).toHaveCount(12)
+  await checks.check()
+  await expect(page.getByRole('img', { name: /Readiness score 100 percent|Skor kesiapan 100 percent/i })).toBeVisible()
+  await expect(page.getByText(/Ready for release|Siap dirilis/i).first()).toBeVisible()
+  await expect(page.getByRole('progressbar', { name: /Release checklist completion|Penyelesaian checklist rilis/i })).toHaveAttribute('aria-valuenow', '100')
+})
+
 test('mobile viewport has no horizontal document overflow', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'This check targets the mobile browser project')
   await page.setViewportSize({ width: 390, height: 844 })

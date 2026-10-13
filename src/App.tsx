@@ -385,7 +385,8 @@ function ReadingListPage() {
 function EngineeringLabPage() {
   const { language } = useLanguage()
   const en = language === 'en'
-  const [activeTool, setActiveTool] = useState<'test-cases' | 'bug-report' | 'json' | 'api-matrix' | 'openapi'>('test-cases')
+  const [activeTool, setActiveTool] = useState<'test-cases' | 'bug-report' | 'json' | 'api-matrix' | 'openapi' | 'release-scorecard'>('test-cases')
+  const [releaseChecked, setReleaseChecked] = useState<Record<string, boolean>>({})
   const [feature, setFeature] = useState(en ? 'Login form' : 'Form login')
   const [generated, setGenerated] = useState(false)
   const [bugTitle, setBugTitle] = useState('')
@@ -421,6 +422,27 @@ function EngineeringLabPage() {
   const [openApiAnalyzed, setOpenApiAnalyzed] = useState(false)
   const [openApiIssues, setOpenApiIssues] = useState<Array<{ method: string; path: string; severity: 'error' | 'warning' | 'info'; code: string; message: string }>>([])
   const [copyStatus, setCopyStatus] = useState('')
+
+  const releaseChecks = [
+    { id: 'requirements', category: en ? 'Product & scope' : 'Produk & ruang lingkup', title: en ? 'Acceptance criteria are reviewed and traceable' : 'Acceptance criteria telah ditinjau dan dapat ditelusuri', critical: true },
+    { id: 'coverage', category: en ? 'Product & scope' : 'Produk & ruang lingkup', title: en ? 'Critical user journeys and regression coverage are tested' : 'Alur pengguna kritis dan cakupan regresi telah diuji', critical: true },
+    { id: 'accessibility', category: en ? 'Product & scope' : 'Produk & ruang lingkup', title: en ? 'Keyboard navigation and accessible names are verified' : 'Navigasi keyboard dan nama aksesibel telah diverifikasi', critical: false },
+    { id: 'contract', category: en ? 'API & data contracts' : 'Kontrak API & data', title: en ? 'API contract and response schemas are validated' : 'Kontrak API dan schema respons telah divalidasi', critical: true },
+    { id: 'errors', category: en ? 'API & data contracts' : 'Kontrak API & data', title: en ? 'Negative paths, validation, and error responses are covered' : 'Skenario negatif, validasi, dan respons error telah dicakup', critical: true },
+    { id: 'migration', category: en ? 'API & data contracts' : 'Kontrak API & data', title: en ? 'Data migration and backward compatibility are checked' : 'Migrasi data dan kompatibilitas ke belakang telah diperiksa', critical: false },
+    { id: 'security', category: en ? 'Security & privacy' : 'Keamanan & privasi', title: en ? 'Authentication, authorization, and access boundaries are tested' : 'Autentikasi, otorisasi, dan batas akses telah diuji', critical: true },
+    { id: 'privacy', category: en ? 'Security & privacy' : 'Keamanan & privasi', title: en ? 'Sensitive data, secrets, and logs are reviewed for exposure' : 'Data sensitif, secret, dan log telah diperiksa dari risiko kebocoran', critical: true },
+    { id: 'performance', category: en ? 'Reliability & operations' : 'Keandalan & operasional', title: en ? 'Performance and timeout behavior meet agreed thresholds' : 'Performa dan perilaku timeout memenuhi ambang yang disepakati', critical: false },
+    { id: 'monitoring', category: en ? 'Reliability & operations' : 'Keandalan & operasional', title: en ? 'Health checks, alerts, and actionable logs are verified' : 'Health check, alert, dan log yang dapat ditindaklanjuti telah diverifikasi', critical: false },
+    { id: 'rollback', category: en ? 'Release & recovery' : 'Rilis & pemulihan', title: en ? 'Rollback or recovery procedure is documented and viable' : 'Prosedur rollback atau pemulihan terdokumentasi dan layak dijalankan', critical: true },
+    { id: 'signoff', category: en ? 'Release & recovery' : 'Rilis & pemulihan', title: en ? 'Known defects, release notes, and stakeholder sign-off are complete' : 'Defect yang diketahui, catatan rilis, dan persetujuan stakeholder telah lengkap', critical: false },
+  ]
+  const releaseCompleted = releaseChecks.filter(item => releaseChecked[item.id]).length
+  const releaseWeightTotal = releaseChecks.reduce((total, item) => total + (item.critical ? 2 : 1), 0)
+  const releaseScore = Math.round(releaseChecks.reduce((total, item) => total + (releaseChecked[item.id] ? (item.critical ? 2 : 1) : 0), 0) / releaseWeightTotal * 100)
+  const releaseCriticalMissing = releaseChecks.filter(item => item.critical && !releaseChecked[item.id]).length
+  const releaseStatus = releaseScore === 100 ? (en ? 'Ready for release' : 'Siap dirilis') : releaseCriticalMissing > 0 ? (en ? 'Release blocked' : 'Rilis tertahan') : releaseScore >= 80 ? (en ? 'Ready with follow-ups' : 'Siap dengan tindak lanjut') : (en ? 'Needs more evidence' : 'Perlu bukti tambahan')
+
   const generatedCases = useMemo(() => {
     const subject = feature.trim() || (en ? 'the feature' : 'fitur ini')
     return en ? [
@@ -548,6 +570,38 @@ function EngineeringLabPage() {
     ]
     return scenarios
   }, [apiMethod, apiPath, apiAuth, apiPayload, en])
+
+  const downloadReleaseScorecard = () => {
+    const rows = [
+      ['Category', 'Check', 'Critical', 'Status'],
+      ...releaseChecks.map(item => [item.category, item.title, item.critical ? 'Yes' : 'No', releaseChecked[item.id] ? 'Complete' : 'Open']),
+      ['Summary', 'Weighted readiness score', '', String(releaseScore) + '%'],
+      ['Summary', 'Release decision', '', releaseStatus],
+    ]
+    const csv = rows.map(row => row.map(cell => '"' + String(cell).replaceAll('"', '""') + '"').join(',')).join('\r\n')
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = 'dreamex-release-readiness.csv'
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(url)
+    setCopyStatus(en ? 'Release readiness scorecard CSV downloaded.' : 'CSV kesiapan rilis berhasil diunduh.')
+  }
+  const copyReleaseScorecard = () => {
+    const report = [
+      '# ' + (en ? 'Release readiness scorecard' : 'Scorecard kesiapan rilis'),
+      '',
+      '- ' + (en ? 'Weighted readiness score' : 'Skor kesiapan berbobot') + ': ' + releaseScore + '%',
+      '- ' + (en ? 'Decision' : 'Keputusan') + ': ' + releaseStatus,
+      '- ' + (en ? 'Critical checks still open' : 'Pemeriksaan kritis yang belum selesai') + ': ' + releaseCriticalMissing,
+      '',
+      ...releaseChecks.map(item => '- [' + (releaseChecked[item.id] ? 'x' : ' ') + '] ' + item.category + ' — ' + item.title + (item.critical ? ' (CRITICAL)' : '')),
+    ].join('\n')
+    copyText(report)
+  }
   const downloadApiMatrix = () => {
     const rows = [
       ['Case ID', 'HTTP Method', 'Endpoint', 'Scenario', 'Steps', 'Expected Result'],
@@ -689,6 +743,7 @@ function EngineeringLabPage() {
       <button role="tab" aria-selected={activeTool === 'json'} className={activeTool === 'json' ? 'active' : ''} onClick={() => { setActiveTool('json'); setCopyStatus('') }}><Braces size={16} /> JSON {en ? 'Formatter' : 'Formatter'}</button>
       <button role="tab" aria-selected={activeTool === 'api-matrix'} className={activeTool === 'api-matrix' ? 'active' : ''} onClick={() => { setActiveTool('api-matrix'); setCopyStatus(''); setApiMatrixGenerated(false) }}><ShieldCheck size={16} /> {en ? 'API Test Matrix' : 'Matriks Tes API'}</button>
       <button role="tab" aria-selected={activeTool === 'openapi'} className={activeTool === 'openapi' ? 'active' : ''} onClick={() => { setActiveTool('openapi'); setCopyStatus(''); setOpenApiError(''); setOpenApiAnalyzed(false) }}><Braces size={16} /> {en ? 'OpenAPI Analyzer' : 'Analyzer OpenAPI'}</button>
+      <button role="tab" aria-selected={activeTool === 'release-scorecard'} className={activeTool === 'release-scorecard' ? 'active' : ''} onClick={() => { setActiveTool('release-scorecard'); setCopyStatus('') }}><ShieldCheck size={16} /> {en ? 'Release Readiness' : 'Kesiapan Rilis'}</button>
     </div>
     <section className="lab-tool-panel" role="tabpanel">
       {activeTool === 'test-cases' && <div className="lab-form">
@@ -724,6 +779,17 @@ function EngineeringLabPage() {
         <div className="api-matrix-note"><ShieldCheck size={15} /><span>{en ? 'Privacy-first: all inputs stay in your browser. No API endpoint is called.' : 'Mengutamakan privasi: semua input tetap di browser. Tidak ada endpoint API yang dipanggil.'}</span></div>
         <button className="button button-primary lab-action" onClick={() => { setApiMatrixGenerated(true); setCopyStatus('') }}>{en ? 'Generate API test matrix' : 'Buat matriks tes API'} <ArrowRight size={16} /></button>
         {apiMatrixGenerated && <div className="lab-generated"><div className="lab-output-heading"><div><h3>{en ? 'Generated API scenarios' : 'Skenario API yang dihasilkan'}</h3><p className="api-matrix-count">{apiScenarios.length} {en ? 'scenarios · review before execution' : 'skenario · tinjau sebelum dijalankan'}</p></div><div className="api-matrix-actions"><button className="copy-link-button" onClick={() => copyText(apiScenarios.map(item => `## ${item.id} — ${item.title}\n\n- Request: ${apiMethod} ${apiPath.trim() || '/api/v1/resource'}\n- Steps: ${item.steps}\n- Expected: ${item.expected}`).join('\n\n'))}><Copy size={14} /> {en ? 'Copy Markdown' : 'Salin Markdown'}</button><button className="copy-link-button" onClick={downloadApiMatrix}><ArrowDownRight size={14} /> {en ? 'Download CSV' : 'Unduh CSV'}</button></div></div><div className="lab-case-list">{apiScenarios.map(item => <article className="lab-case api-matrix-case" key={item.id}><span className="lab-case-id">{item.id}</span><div><h4>{item.title}</h4><p><strong>{en ? 'Request' : 'Request'}:</strong> {apiMethod} {apiPath.trim() || '/api/v1/resource'}</p><p><strong>{en ? 'Steps' : 'Langkah'}:</strong> {item.steps}</p><p><strong>{en ? 'Expected' : 'Hasil yang diharapkan'}:</strong> {item.expected}</p></div></article>)}</div></div>}
+      </div>}
+
+      {activeTool === 'release-scorecard' && <div className="lab-form release-scorecard">
+        <div className="lab-panel-heading"><span className="section-kicker">06 / RELEASE GOVERNANCE</span><h2>{en ? 'Release readiness scorecard' : 'Scorecard kesiapan rilis'}</h2><p>{en ? 'Turn release confidence into an evidence-based checklist across product quality, API contracts, security, reliability, and recovery. This score is a planning aid, not an automatic production approval.' : 'Ubah keyakinan rilis menjadi checklist berbasis bukti untuk kualitas produk, kontrak API, keamanan, keandalan, dan pemulihan. Skor ini membantu perencanaan, bukan persetujuan produksi otomatis.'}</p></div>
+        <div className="release-score-overview">
+          <div className="release-score-ring" style={{ '--release-score': releaseScore } as React.CSSProperties} role="img" aria-label={(en ? 'Readiness score ' : 'Skor kesiapan ') + releaseScore + ' percent'}><div><strong>{releaseScore}%</strong><span>{en ? 'Readiness' : 'Kesiapan'}</span></div></div>
+          <div className="release-score-summary"><span className={'release-status-pill ' + (releaseScore === 100 ? 'status-ready' : releaseCriticalMissing > 0 ? 'status-blocked' : 'status-follow-up')}>{releaseStatus}</span><h3>{releaseCompleted} / {releaseChecks.length} {en ? 'checks complete' : 'pemeriksaan selesai'}</h3><p>{releaseCriticalMissing ? (en ? releaseCriticalMissing + ' critical checks remain open. Treat this as a release blocker until the evidence is reviewed.' : releaseCriticalMissing + ' pemeriksaan kritis masih terbuka. Perlakukan sebagai penghambat rilis sampai buktinya ditinjau.') : (en ? 'All critical checks are complete. Review remaining evidence and obtain the required sign-off.' : 'Semua pemeriksaan kritis selesai. Tinjau bukti yang tersisa dan dapatkan persetujuan yang diperlukan.')}</p><div className="release-progress-track" role="progressbar" aria-label={en ? 'Release checklist completion' : 'Penyelesaian checklist rilis'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(releaseCompleted / releaseChecks.length * 100)}><span style={{ width: Math.round(releaseCompleted / releaseChecks.length * 100) + '%' }} /></div><small>{Math.round(releaseCompleted / releaseChecks.length * 100)}% {en ? 'checklist completion' : 'checklist selesai'} · {en ? 'weighted score' : 'skor berbobot'}</small></div>
+        </div>
+        <div className="release-checklist-heading"><div><h3>{en ? 'Evidence checklist' : 'Checklist bukti'}</h3><p>{en ? 'Mark a check complete only when supporting evidence has been reviewed.' : 'Tandai selesai hanya jika bukti pendukung sudah ditinjau.'}</p></div><div className="release-score-actions"><button className="copy-link-button" onClick={copyReleaseScorecard}><Copy size={14} /> {en ? 'Copy report' : 'Salin laporan'}</button><button className="copy-link-button" onClick={downloadReleaseScorecard}><ArrowDownRight size={14} /> {en ? 'Export CSV' : 'Ekspor CSV'}</button></div></div>
+        <div className="release-check-groups">{[...new Set(releaseChecks.map(item => item.category))].map(category => <section className="release-check-group" key={category}><h4>{category}<span>{releaseChecks.filter(item => item.category === category && releaseChecked[item.id]).length}/{releaseChecks.filter(item => item.category === category).length}</span></h4>{releaseChecks.filter(item => item.category === category).map(item => <label className={'release-check-item ' + (releaseChecked[item.id] ? 'is-complete' : '')} key={item.id}><input type="checkbox" checked={Boolean(releaseChecked[item.id])} onChange={event => setReleaseChecked(current => ({ ...current, [item.id]: event.target.checked }))} /><span className="release-check-copy"><strong>{item.title}</strong><small>{item.critical ? (en ? 'Critical gate' : 'Gerbang kritis') : (en ? 'Quality check' : 'Pemeriksaan kualitas')}</small></span>{item.critical && <span className="release-critical-tag">{en ? 'CRITICAL' : 'KRITIS'}</span>}</label>)}</section>)}</div>
+        <p className="release-score-footnote"><ShieldCheck size={15} /> {en ? 'Local-only checklist: selections stay in this browser session. Export the report before leaving if you need a record.' : 'Checklist lokal: pilihan tersimpan selama sesi browser ini. Ekspor laporan sebelum keluar jika Anda memerlukan catatan.'}</p>
       </div>}
       {activeTool === 'openapi' && <div className="lab-form openapi-form">
         <div className="lab-panel-heading"><span className="section-kicker">05 / CONTRACT QUALITY</span><h2>{en ? 'Inspect an OpenAPI contract' : 'Periksa kontrak OpenAPI'}</h2><p>{en ? 'Paste an OpenAPI 3.x JSON document to inventory endpoints, methods, response codes, parameters, request bodies, and declared security. Analysis runs locally; it never calls your API.' : 'Tempel dokumen JSON OpenAPI 3.x untuk memetakan endpoint, method, kode respons, parameter, request body, dan keamanan yang dideklarasikan. Analisis berjalan lokal dan tidak memanggil API Anda.'}</p></div>
