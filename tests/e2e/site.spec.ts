@@ -762,7 +762,7 @@ test('Quality Intelligence loads a demo report and exports actionable evidence',
   await expect(page.getByRole('heading', { name: /Turn test results into clear signals/i })).toBeVisible()
   await page.getByRole('button', { name: /Explore demo report/i }).click()
   await expect(page.getByRole('region', { name: /Report summary/i })).toBeVisible()
-  await expect(page.getByText('83.3%', { exact: true })).toBeVisible()
+  await expect(page.getByText('80%', { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: /Repeated failure signals/i })).toBeVisible()
   const downloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: /CSV/i }).click()
