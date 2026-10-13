@@ -18,6 +18,20 @@ test('homepage renders primary content and skip navigation', async ({ page }) =>
   await expect(page.getByRole('navigation').first()).toBeVisible()
 })
 
+test('homepage engineering launchpad links to six core tools without mobile overflow', async ({ page }) => {
+  await expect(page.getByRole('heading', { name: /Your next move starts here|Mulai langkah engineering berikutnya/i })).toBeVisible()
+  const cards = page.locator('.launchpad-card')
+  await expect(cards).toHaveCount(6)
+  await expect(page.locator('.launchpad-card[href="/workspace"]')).toBeVisible()
+  await expect(page.locator('.launchpad-card[href="/quality-intelligence"]')).toBeVisible()
+  await expect(page.locator('.launchpad-card[href="/api-playground"]')).toBeVisible()
+  await page.setViewportSize({ width: 390, height: 844 })
+  await expect(page.locator('html')).toHaveJSProperty('scrollWidth', 390)
+  await expect(cards.first()).toBeVisible()
+  await cards.nth(2).click()
+  await expect(page).toHaveURL(/\/api-playground$/)
+})
+
 test('homepage and article expose valid JSON-LD and page-specific canonical metadata', async ({ page }) => {
   const homepageSchemas = await page.locator('script[type="application/ld+json"]').evaluateAll(nodes =>
     nodes.map(node => JSON.parse(node.textContent ?? '{}'))
