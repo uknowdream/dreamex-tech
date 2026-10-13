@@ -945,3 +945,13 @@ test('platform mega menu is grouped, responsive, and closes after navigation', a
   await expect(page).toHaveURL(/workspace$/)
   await expect(page.locator('details.nav-platform')).not.toHaveAttribute('open', '')
 })
+
+
+test('keeps back-to-top navigation in the footer instead of a floating overlay', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+
+  await expect(page.locator('.back-to-top')).toHaveCount(0)
+  await expect(page.locator('.footer-top-link')).toBeVisible()
+})
