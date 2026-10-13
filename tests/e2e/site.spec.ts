@@ -755,3 +755,65 @@ test('Engineering Control Plane checklist persists and exports a snapshot', asyn
   const download = await downloadPromise
   expect(download.suggestedFilename()).toBe('dreamex-control-plane-snapshot.json')
 })
+
+
+test('Quality Intelligence loads a demo report and exports actionable evidence', async ({ page }) => {
+  await page.goto('/quality-intelligence')
+  await expect(page.getByRole('heading', { name: /Turn test results into clear signals/i })).toBeVisible()
+  await page.getByRole('button', { name: /Explore demo report/i }).click()
+  await expect(page.getByRole('region', { name: /Report summary/i })).toBeVisible()
+  await expect(page.locator('.quality-intelligence-metrics article:first-child strong').filter({ hasText: '80%' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Repeated failure signals/i })).toBeVisible()
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: /CSV/i }).click()
+  expect((await downloadPromise).suggestedFilename()).toBe('dreamex-quality-report.csv')
+})
+
+test('Quality Intelligence imports JUnit XML and exposes failed-test evidence', async ({ page }) => {
+  await page.goto('/quality-intelligence')
+  await page.getByLabel(/Choose Playwright JSON or JUnit XML report/i).setInputFiles({
+    name: 'junit-results.xml',
+    mimeType: 'application/xml',
+    buffer: Buffer.from('<?xml version="1.0"?><testsuite name="sample" tests="3"><testcase classname="Auth" name="valid login" time="0.1"/><testcase classname="Checkout" name="creates order" time="1.2"><failure message="Expected 201">received 500</failure></testcase><testcase classname="Payments" name="declined card" time="0"><skipped/></testcase></testsuite>'),
+  })
+  await expect(page.locator('.quality-intelligence-summary-heading p')).toContainText('JUnit XML')
+  await expect(page.locator('.quality-intelligence-metrics article:first-child strong').filter({ hasText: '50%' })).toBeVisible()
+  await expect(page.getByText('Auth › valid login')).toBeVisible()
+  await page.getByText('View failure details').click()
+  await expect(page.locator('.quality-intelligence-table pre')).toContainText('received 500')
+  await expect(page.getByRole('status')).toContainText(/Report analyzed locally/i)
+})
+
+test('Quality Intelligence detects retry-based flaky tests in Playwright JSON', async ({ page }) => {
+  await page.goto('/quality-intelligence')
+  await page.getByLabel(/Choose Playwright JSON or JUnit XML report/i).setInputFiles({
+    name: 'playwright-report.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({
+      suites: [{
+        title: 'authentication',
+        file: 'tests/auth.spec.ts',
+        specs: [{
+          title: 'login recovers after retry',
+          file: 'tests/auth.spec.ts',
+          tests: [{ results: [{ status: 'failed', duration: 120, errors: [{ message: 'temporary timeout' }] }, { status: 'passed', duration: 90, errors: [] }] }],
+        }],
+      }],
+    })),
+  })
+  await expect(page.locator('.quality-intelligence-summary-heading p')).toContainText('Playwright JSON')
+  await expect(page.getByRole('heading', { name: /Test-level evidence/i })).toBeVisible()
+  await expect(page.locator('.quality-intelligence-status.status-flaky')).toContainText('flaky')
+  await expect(page.locator('.quality-intelligence-metrics article:first-child strong').filter({ hasText: '100%' })).toBeVisible()
+})
+
+test('Quality Intelligence rejects invalid JSON reports without losing the page', async ({ page }) => {
+  await page.goto('/quality-intelligence')
+  await page.getByLabel(/Choose Playwright JSON or JUnit XML report/i).setInputFiles({
+    name: 'invalid.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{"suites":'),
+  })
+  await expect(page.getByRole('alert')).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Your test report, made actionable/i })).toBeVisible()
+})
