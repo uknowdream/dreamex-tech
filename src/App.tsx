@@ -619,8 +619,8 @@ function EngineeringLabPage() {
       ['Method', 'Path', 'Summary', 'Operation ID', 'Documented Responses', 'Parameters', 'Request Body', 'Security'],
       ...openApiResults.map(item => [item.method, item.path, item.summary, item.operationId, item.responses, item.parameters, item.requestBody ? 'Yes' : 'No', item.security ? 'Required' : 'Not declared']),
     ]
-    const csv = rows.map(row => row.map(cell => \`"\${String(cell).replaceAll('"', '""')}"\`).join(',')).join('\r\n')
-    const blob = new Blob([\`\uFEFF\${csv}\`], { type: 'text/csv;charset=utf-8;' })
+    const csv = rows.map(row => row.map(cell => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\r\n')
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement('a')
     anchor.href = url
