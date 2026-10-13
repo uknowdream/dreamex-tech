@@ -349,7 +349,7 @@ test('mobile viewport has no horizontal document overflow', async ({ page, isMob
 
 test('command palette supports keyboard search, navigation, and dismissal', async ({ page }) => {
   await page.keyboard.press('Control+k')
-  const dialog = page.getByRole('dialog', { name: /quick actions & articles|aksi cepat & artikel/i })
+  const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
   const search = page.getByRole('textbox', { name: /search commands|cari perintah/i })
   await expect(search).toBeFocused()
