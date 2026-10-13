@@ -91,6 +91,8 @@ const sitemapUrls = [
   { loc: `${siteUrl}/devtools`, changefreq: 'monthly', priority: '0.7' },
   { loc: `${siteUrl}/workspace`, changefreq: 'monthly', priority: '0.8' },
   { loc: `${siteUrl}/roadmap`, changefreq: 'weekly', priority: '0.8' },
+  { loc: `${siteUrl}/qa-studio`, changefreq: 'monthly', priority: '0.8' },
+  { loc: `${siteUrl}/security-center`, changefreq: 'monthly', priority: '0.7' },
   { loc: `${siteUrl}/api-playground`, changefreq: 'monthly', priority: '0.7' },
   { loc: `${siteUrl}/performance`, changefreq: 'monthly', priority: '0.7' },
   { loc: `${siteUrl}/knowledge-graph`, changefreq: 'weekly', priority: '0.7' },
