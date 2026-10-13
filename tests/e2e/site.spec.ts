@@ -376,10 +376,9 @@ test('OpenAPI analyzer reports missing responses and invalid path parameter cont
   }))
   await page.getByRole('button', { name: /Analyze contract|Analisis kontrak/i }).click()
   await expect(page.getByRole('heading', { name: /Contract quality checks|Pemeriksaan kualitas kontrak/i })).toBeVisible()
-  await expect(page.locator('.openapi-issue')).toContainText('RESPONSES_MISSING')
-  await expect(page.locator('.openapi-issue')).toContainText('PATH_PARAM_NOT_REQUIRED')
-  await expect(page.locator('.openapi-issue')).toContainText('RESPONSE_DESCRIPTION_MISSING')
-  await expect(page.locator('.openapi-issue')).toContainText('REQUEST_SCHEMA_MISSING')
+  for (const code of ['RESPONSES_MISSING', 'PATH_PARAM_NOT_REQUIRED', 'RESPONSE_DESCRIPTION_MISSING', 'REQUEST_SCHEMA_MISSING']) {
+    await expect(page.locator('.openapi-issue').filter({ hasText: code })).toHaveCount(1)
+  }
 })
 
 test('OpenAPI CSV export safely quotes commas, quotes, and newlines', async ({ page }) => {
@@ -390,7 +389,7 @@ test('OpenAPI CSV export safely quotes commas, quotes, and newlines', async ({ p
     info: { title: 'CSV export', version: '1.0.0' },
     paths: { '/api/items': { get: {
       summary: 'List, "all" items\\nwith details',
-      responses: { 200: { description: 'OK', content: { 'application/json': { schema: { type: 'array', items: { type: 'object' } } } } },
+      responses: { 200: { description: 'OK', content: { 'application/json': { schema: { type: 'array', items: { type: 'object' } } } } } },
     } } },
   }))
   await page.getByRole('button', { name: /Analyze contract|Analisis kontrak/i }).click()
