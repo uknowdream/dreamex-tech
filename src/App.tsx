@@ -4,6 +4,7 @@ import { ArrowDownRight, ArrowRight, BookOpen, Bookmark, BookmarkCheck, Braces, 
 import { articles } from './articles'
 import { articleTranslations } from './articleTranslations'
 import { useLanguage } from './i18n'
+import { EngineeringLaunchpad } from './EngineeringLaunchpad'
 import { EngineeringWorkspacePage, ApiPlaygroundPage, PerformanceObservatoryPage, EngineeringKnowledgeGraphPage } from './EngineeringPlatform'
 import { EngineeringRoadmapPage } from './EngineeringRoadmap'
 import { EngineeringCommandCenterPage } from './EngineeringCommandCenter'
@@ -285,6 +286,7 @@ function Home() {
       <a className="topic-card" href="#latest" onClick={() => setCategory('QA Automation')}><span className="topic-number">02</span><span className="topic-icon green"><ShieldCheck /></span><h3>{t('qaTopic')}</h3><p>{t('qaDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
       <a className="topic-card" href="#latest" onClick={() => setCategory('AI & Technology')}><span className="topic-number">03</span><span className="topic-icon blue"><Sparkles /></span><h3>{t('aiTopic')}</h3><p>{t('aiDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
     </div></div></section>
+    <EngineeringLaunchpad />
     <section className="featured-section"><div className="container featured-wrap"><div className="featured-label"><span className="section-kicker">{t('featuredHeading')}</span><span className="featured-line" /></div><div className="featured-card"><div className="featured-art"><div className="art-grid" /><div className="art-symbol"><Braces size={72} strokeWidth={1.1} /></div><span className="art-index">DX / 001</span><span className="art-caption">ENGINEERING<br />FOR WHAT'S NEXT</span></div><div className="featured-copy"><span className="category-pill">{categoryLabel(featured.category, language)}</span><p className="featured-overline">{t('featuredInsight')} · {featured.readTime.toUpperCase()}</p><h2>{featuredTranslation?.title ?? featured.title}</h2><p>{featuredTranslation?.excerpt ?? featured.excerpt}</p><Link className="read-link" to={`/blog/${featured.slug}`}>{t('readFeatured')} <ArrowRight size={16} /></Link></div></div></div></section>
     <section className="articles-section" id="latest"><div className="container">
       {resumeRecord && (() => {
