@@ -109,7 +109,7 @@ if (errors.length === 0) {
 
 if (existsSync(join(dist, 'sitemap.xml'))) {
   const sitemapOutput = readFileSync(join(dist, 'sitemap.xml'), 'utf8')
-  for (const route of ['https://dreamex.tech/about', 'https://dreamex.tech/lab', 'https://dreamex.tech/observatory', 'https://dreamex.tech/devtools', 'https://dreamex.tech/engineering-intelligence', 'https://dreamex.tech/control-plane', 'https://dreamex.tech/quality-intelligence', 'https://dreamex.tech/workspace', 'https://dreamex.tech/api-playground', 'https://dreamex.tech/performance', 'https://dreamex.tech/knowledge-graph', 'https://dreamex.tech/learn', 'https://dreamex.tech/qa-studio', 'https://dreamex.tech/security-center', 'https://dreamex.tech/rss']) {
+  for (const route of ['https://dreamex.tech/about', 'https://dreamex.tech/lab', 'https://dreamex.tech/observatory', 'https://dreamex.tech/devtools', 'https://dreamex.tech/engineering-intelligence', 'https://dreamex.tech/control-plane', 'https://dreamex.tech/quality-intelligence', 'https://dreamex.tech/reliability-center', 'https://dreamex.tech/workspace', 'https://dreamex.tech/api-playground', 'https://dreamex.tech/performance', 'https://dreamex.tech/knowledge-graph', 'https://dreamex.tech/learn', 'https://dreamex.tech/qa-studio', 'https://dreamex.tech/security-center', 'https://dreamex.tech/rss']) {
     if (!sitemapOutput.includes(`<loc>${route}</loc>`)) errors.push(`Sitemap is missing canonical route: ${route}`)
   }
   if (!sitemapOutput.includes('<lastmod>')) errors.push('Sitemap is missing article publication dates')
@@ -134,6 +134,9 @@ if (!appSource.includes('path="/security-center"') || !appSource.includes('Secur
 if (!appSource.includes('path="/engineering-intelligence"') || !appSource.includes('EngineeringIntelligencePage')) errors.push('Engineering Intelligence route is required')
 if (!appSource.includes('path="/control-plane"') || !appSource.includes('EngineeringControlPlanePage')) errors.push('Engineering Control Plane route is required')
 if (!appSource.includes('path="/quality-intelligence"') || !appSource.includes('QualityIntelligencePage')) errors.push('Quality Intelligence route is required')
+if (!appSource.includes('path="/reliability-center"') || !appSource.includes('ReliabilityCenterPage')) errors.push('Reliability Center route is required')
+const reliabilitySource = readFileSync(join(root, 'src', 'ReliabilityCenter.tsx'), 'utf8')
+if (!reliabilitySource.includes('dreamex-reliability-incidents-v1') || !reliabilitySource.includes('dreamex-reliability-metrics-v1') || !reliabilitySource.includes('incidentMarkdown') || !reliabilitySource.includes('not an official DORA assessment')) errors.push('Reliability Center local persistence, postmortem export, and metrics disclosure are required')
 const qualitySource = readFileSync(join(root, 'src', 'QualityIntelligence.tsx'), 'utf8')
 if (!qualitySource.includes('parseJUnitXml') || !qualitySource.includes('parsePlaywrightJson') || !qualitySource.includes('MAX_REPORT_BYTES') || !qualitySource.includes('dreamex-quality-intelligence-history-v1')) errors.push('Quality Intelligence report parsing, file size guard, and local summary history are required')
 const controlPlaneSource = readFileSync(join(root, 'src', 'EngineeringControlPlane.tsx'), 'utf8')
