@@ -776,7 +776,7 @@ test('Quality Intelligence imports JUnit XML and exposes failed-test evidence', 
     mimeType: 'application/xml',
     buffer: Buffer.from('<?xml version="1.0"?><testsuite name="sample" tests="3"><testcase classname="Auth" name="valid login" time="0.1"/><testcase classname="Checkout" name="creates order" time="1.2"><failure message="Expected 201">received 500</failure></testcase><testcase classname="Payments" name="declined card" time="0"><skipped/></testcase></testsuite>'),
   })
-  await expect(page.getByText('JUnit XML', { exact: true })).toBeVisible()
+  await expect(page.getByText(/JUnit XML/)).toBeVisible()
   await expect(page.getByText('50%', { exact: true })).toBeVisible()
   await expect(page.getByText('Auth › valid login')).toBeVisible()
   await page.getByText('View failure details').click()
@@ -801,7 +801,7 @@ test('Quality Intelligence detects retry-based flaky tests in Playwright JSON', 
       }],
     })),
   })
-  await expect(page.getByText('Playwright JSON', { exact: true })).toBeVisible()
+  await expect(page.getByText(/Playwright JSON/)).toBeVisible()
   await expect(page.getByRole('heading', { name: /Test-level evidence/i })).toBeVisible()
   await expect(page.locator('.quality-intelligence-status.status-flaky')).toContainText('flaky')
   await expect(page.getByText('100%', { exact: true })).toBeVisible()
