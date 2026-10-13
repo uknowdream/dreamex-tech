@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { Activity, AlertTriangle, ArrowDownToLine, ArrowRight, Boxes, CheckCircle2, Copy, FileCode2, GitCompare, Network, Plus, Search, ShieldCheck, Trash2, Upload } from 'lucide-react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Activity, AlertTriangle, ArrowDownToLine, Boxes, CheckCircle2, Copy, FileCode2, GitCompare, Network, Plus, Search, ShieldCheck, Trash2, Upload } from 'lucide-react'
 import { useLanguage } from './i18n'
 
 type Service = {
@@ -145,6 +145,10 @@ function compareContracts(baseline: ContractAnalysis, current: ContractAnalysis)
 export function EngineeringIntelligencePage() {
   const { language } = useLanguage()
   const en = language === 'en'
+  useEffect(() => {
+    document.title = en ? 'Engineering Intelligence — DreamEx Tech' : 'Engineering Intelligence — DreamEx Tech'
+    return () => { document.title = 'DreamEx Tech — Engineering, AI & QA' }
+  }, [en])
   const [tab, setTab] = useState<'catalog' | 'contracts'>('catalog')
   const [catalog, setCatalog] = useState<Service[]>(readCatalog)
   const [query, setQuery] = useState('')
@@ -177,7 +181,7 @@ export function EngineeringIntelligencePage() {
     setNotice(saveCatalog(next) ? message : (en ? 'Updated for this session, but browser storage is unavailable.' : 'Diperbarui untuk sesi ini, tetapi penyimpanan browser tidak tersedia.'))
     setError('')
   }
-  const addService = (event: React.FormEvent<HTMLFormElement>) => {
+  const addService = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!serviceName.trim()) { setError(en ? 'A service name is required.' : 'Nama service wajib diisi.'); return }
     const item: Service = { id: 'svc-' + Date.now().toString(36), name: serviceName.trim(), kind: serviceKind, owner: serviceOwner.trim() || (en ? 'Unassigned' : 'Belum ditentukan'), repo: serviceRepo.trim(), environment: serviceEnvironment, criticality: serviceCriticality, description: serviceDescription.trim(), tags: [], source: 'custom', updatedAt: new Date().toISOString() }
