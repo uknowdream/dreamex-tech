@@ -471,7 +471,7 @@ test('Web Quality Observatory audits the current page and exports a report', asy
   await expect(page.getByText('CURRENT PAGE', { exact: true }).or(page.getByText('HALAMAN SAAT INI', { exact: true })).first()).toBeVisible()
   await expect(page.getByRole('button', { name: /Copy report|Salin laporan/i })).toBeEnabled()
   await expect(page.getByRole('button', { name: /Export \.md|Ekspor \.md/i })).toBeEnabled()
-  await expect(page.getByText(/does not crawl the site|tidak merayapi tautan internal/i)).toBeVisible()
+  await expect(page.getByText(/does not crawl internal links|tidak merayapi tautan internal/i)).toBeVisible()
 })
 
 
@@ -484,9 +484,46 @@ test('Developer Utilities generates JSON Schema and safely reports regex matches
   await expect(schemaOutput).toContainText('"type": "object"')
   await page.getByRole('button', { name: /Regex Tester|Penguji Regex/i }).click()
   await page.getByRole('button', { name: /Test pattern|Uji pola/i }).click()
-  await expect(page.getByText('support@example.com')).toBeVisible()
+  await expect(page.getByText('support@example.com', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: /JWT Inspector|Pemeriksa JWT/i }).click()
   await expect(page.getByText(/Decoding is not verification|Dekode bukan verifikasi/i)).toBeVisible()
+})
+
+
+test('Engineering Workspace searches the unified tool catalog', async ({ page }) => {
+ await page.goto('/workspace')
+ await expect(page.getByRole('heading',{name:/Better engineering|Engineering lebih baik/i})).toBeVisible()
+ await page.getByRole('textbox',{name:/Search workspace tools|Cari tools workspace/i}).fill('jwt')
+ await expect(page.getByRole('link',{name:/Developer Utilities/i})).toBeVisible()
+ await expect(page.getByRole('link',{name:/Engineering Lab/i})).toHaveCount(0)
+})
+test('API Playground validates URL schemes and sanitizes local collections', async ({page})=>{
+ await page.goto('/api-playground')
+ await expect(page.getByRole('heading',{name:/Understand responses|Pahami response/i})).toBeVisible()
+ await page.getByRole('textbox',{name:/Request URL|URL request/i}).fill('file:///etc/passwd')
+ await page.getByRole('button',{name:/Send request|Kirim request/i}).click()
+ await expect(page.getByRole('alert')).toContainText(/HTTP\\(S\\)/i)
+ await page.getByRole('textbox',{name:/Request URL|URL request/i}).fill('https://example.com/api')
+ await page.getByRole('textbox',{name:/Request headers JSON|JSON header request/i}).fill('{"X-API-Key":"secret-test","Accept":"application/json"}')
+ await page.getByRole('button',{name:/Save to collection|Simpan ke koleksi/i}).click()
+ await expect(page.getByText(/Sensitive headers were omitted|Header sensitif dihilangkan/i)).toBeVisible()
+ await expect(page.getByText('secret-test')).toHaveCount(0)
+})
+test('Performance Observatory displays browser timing and limitations',async({page})=>{
+ await page.goto('/performance')
+ await expect(page.getByRole('heading',{name:/Measure what|Ukur yang/i})).toBeVisible()
+ await expect(page.getByText(/Measurement scope|Cakupan pengukuran/i)).toBeVisible()
+ await expect(page.getByRole('heading',{name:/Page lifecycle|Siklus halaman/i})).toBeVisible()
+})
+test('Learning progress persists and knowledge graph search finds tools',async({page})=>{
+ await page.goto('/learn')
+ await page.getByRole('checkbox').first().check()
+ await page.reload()
+ await expect(page.getByRole('checkbox').first()).toBeChecked()
+ await page.goto('/knowledge-graph')
+ await expect(page.getByRole('heading',{name:/Follow the|Ikuti/i})).toBeVisible()
+ await page.getByRole('textbox',{name:/Search knowledge graph|Cari knowledge graph/i}).fill('jwt')
+ await expect(page.getByRole('button',{name:/JWT Inspector/i})).toBeVisible()
 })
 
 test('mobile viewport has no horizontal document overflow', async ({ page, isMobile }) => {

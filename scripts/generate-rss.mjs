@@ -89,6 +89,10 @@ const sitemapUrls = [
   { loc: `${siteUrl}/lab`, changefreq: 'monthly', priority: '0.7' },
   { loc: `${siteUrl}/observatory`, changefreq: 'monthly', priority: '0.6' },
   { loc: `${siteUrl}/devtools`, changefreq: 'monthly', priority: '0.7' },
+  { loc: `${siteUrl}/workspace`, changefreq: 'monthly', priority: '0.8' },
+  { loc: `${siteUrl}/api-playground`, changefreq: 'monthly', priority: '0.7' },
+  { loc: `${siteUrl}/performance`, changefreq: 'monthly', priority: '0.7' },
+  { loc: `${siteUrl}/knowledge-graph`, changefreq: 'weekly', priority: '0.7' },
   { loc: `${siteUrl}/learn`, changefreq: 'weekly', priority: '0.8' },
   { loc: `${siteUrl}/rss`, changefreq: 'daily', priority: '0.7' },
   ...articles.map(article => ({
