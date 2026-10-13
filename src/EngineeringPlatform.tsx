@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Activity, AlertTriangle, ArrowRight, Bookmark, BookOpen, Braces, Command, Copy, Download, Search, Share2, ShieldCheck, Terminal, X, Zap } from 'lucide-react'
+import { Activity, AlertTriangle, ArrowRight, Bookmark, BookOpen, Braces, ClipboardCheck, Command, Copy, Download, Search, Share2, ShieldCheck, Terminal, X, Zap } from 'lucide-react'
 import { useLanguage } from './i18n'
 
 const items=[
