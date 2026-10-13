@@ -1026,7 +1026,7 @@ function DeveloperUtilitiesPage() {
   const [sampleJson, setSampleJson] = useState('{\n  "id": 42,\n  "name": "Ada Lovelace",\n  "active": true,\n  "roles": ["admin", "editor"],\n  "profile": { "city": "London", "verified": null }\n}')
   const [schemaOutput, setSchemaOutput] = useState('')
   const [schemaError, setSchemaError] = useState('')
-  const [regexPattern, setRegexPattern] = useState('(?<email>[\\\\w.+-]+@[\\\\w.-]+\\\\.[A-Za-z]{2,})')
+  const [regexPattern, setRegexPattern] = useState('(?<email>[\\w.+-]+@[\\w.-]+\\.[A-Za-z]{2,})')
   const [regexFlags, setRegexFlags] = useState('g')
   const [regexSample, setRegexSample] = useState('Contact support@example.com or hello@dreamex.tech for help.')
   const [regexError, setRegexError] = useState('')
