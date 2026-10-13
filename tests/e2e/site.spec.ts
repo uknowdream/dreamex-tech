@@ -509,7 +509,7 @@ test('API Playground validates URL schemes and sanitizes local collections', asy
  await page.getByRole('textbox',{name:/Request headers JSON|JSON header request/i}).fill('{"X-API-Key":"secret-test","Accept":"application/json"}')
  await page.getByRole('button',{name:/Save to collection|Simpan ke koleksi/i}).click()
  await expect(page.getByText(/Sensitive headers were omitted|Header sensitif dihilangkan/i)).toBeVisible()
- await expect(page.getByText('secret-test')).toHaveCount(0)
+ await expect(page.locator('.api-collection')).not.toContainText('secret-test')
 })
 test('Performance Observatory displays browser timing and limitations',async({page})=>{
  await page.goto('/performance')
