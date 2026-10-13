@@ -817,3 +817,47 @@ test('Quality Intelligence rejects invalid JSON reports without losing the page'
   await expect(page.getByRole('alert')).toBeVisible()
   await expect(page.getByRole('heading', { name: /Your test report, made actionable/i })).toBeVisible()
 })
+
+
+test('Reliability Center captures and persists incident timeline records', async ({ page }) => {
+  await page.goto('/reliability-center')
+  await expect(page.getByRole('heading', { name: /Operate with clarity/i })).toBeVisible()
+  await page.getByRole('textbox', { name: /Incident title/i }).fill('Database latency spike')
+  await page.getByRole('textbox', { name: /Affected service/i }).fill('orders-api')
+  await page.getByRole('textbox', { name: /Customer \/ system impact/i }).fill('Checkout requests exceeded the latency SLO.')
+  await page.getByRole('textbox', { name: /Event note/i }).fill('Latency alert fired from the service dashboard.')
+  await page.getByRole('button', { name: /Add event/i }).click()
+  await expect(page.getByText('Latency alert fired from the service dashboard.')).toBeVisible()
+  await page.getByRole('button', { name: /Save incident/i }).click()
+  await expect(page.getByRole('status')).toContainText(/Incident saved in this browser/i)
+  await expect(page.getByRole('button', { name: /Database latency spike/i })).toBeVisible()
+  await page.reload()
+  await page.getByRole('button', { name: /Database latency spike/i }).click()
+  await expect(page.getByRole('textbox', { name: /Incident title/i })).toHaveValue('Database latency spike')
+  await expect(page.getByText('Latency alert fired from the service dashboard.')).toBeVisible()
+})
+
+test('Reliability Center persists manual metrics and exports a postmortem', async ({ page }) => {
+  await page.goto('/reliability-center')
+  await page.getByRole('spinbutton', { name: /Deployments \/ week/i }).fill('12')
+  await page.getByRole('spinbutton', { name: /Change failure rate/i }).fill('4.5')
+  await page.getByRole('textbox', { name: /Incident title/i }).fill('Cache invalidation issue')
+  await page.getByRole('textbox', { name: /Lessons learned/i }).fill('Add a targeted cache invalidation regression test.')
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: /Export postmortem/i }).click()
+  const download = await downloadPromise
+  expect(download.suggestedFilename()).toBe('dreamex-incident-review.md')
+  await page.reload()
+  await expect(page.getByRole('spinbutton', { name: /Deployments \/ week/i })).toHaveValue('12')
+  await expect(page.getByRole('spinbutton', { name: /Change failure rate/i })).toHaveValue('4.5')
+})
+
+test('Reliability Center validates incident titles and can delete saved incidents', async ({ page }) => {
+  await page.goto('/reliability-center')
+  await page.getByRole('button', { name: /Save incident/i }).click()
+  await expect(page.getByRole('alert')).toContainText(/Add an incident title before saving/i)
+  await page.getByRole('textbox', { name: /Incident title/i }).fill('Temporary incident')
+  await page.getByRole('button', { name: /Save incident/i }).click()
+  await page.getByRole('button', { name: /Delete incident Temporary incident/i }).click()
+  await expect(page.getByRole('button', { name: /Delete incident Temporary incident/i })).toHaveCount(0)
+})
