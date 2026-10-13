@@ -855,7 +855,7 @@ test('Reliability Center persists manual metrics and exports a postmortem', asyn
 test('Reliability Center validates incident titles and can delete saved incidents', async ({ page }) => {
   await page.goto('/reliability-center')
   await page.getByRole('button', { name: /Save incident/i }).click()
-  await expect(page.getByRole('alert')).toContainText(/Add an incident title before saving/i)
+  await expect(page.getByRole('textbox', { name: /Incident title/i })).toBeFocused()
   await page.getByRole('textbox', { name: /Incident title/i }).fill('Temporary incident')
   await page.getByRole('button', { name: /Save incident/i }).click()
   await page.getByRole('button', { name: /Delete incident Temporary incident/i }).click()
