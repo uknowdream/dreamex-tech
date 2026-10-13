@@ -589,8 +589,8 @@ test('roadmap ADR builder generates a preview and threat modeling exposes STRIDE
 test('Engineering Command Center tracks tasks, incidents, architecture decisions, and release gates', async ({ page }) => {
   await page.goto('/command-center')
   await expect(page.getByRole('heading', { name: /Operate with clarity/i })).toBeVisible()
-  await expect(page.getByText('Validate production build and routes')).toBeVisible()
   await page.getByRole('tab', { name: /Work items|Daftar tugas/i }).click()
+  await expect(page.getByText('Validate production build and routes')).toBeVisible()
   await page.getByLabel(/Task title|Judul tugas/i).fill('Review keyboard navigation')
   await page.getByLabel(/Owner \/ team|PIC \/ tim/i).fill('Quality Engineering')
   await page.getByRole('button', { name: /Add work item|Tambah tugas/i }).click()
@@ -627,4 +627,31 @@ test('Engineering Command Center exports a local JSON backup', async ({ page }) 
   await page.getByRole('button', { name: /Export backup|Ekspor cadangan/i }).click()
   const download = await downloadPromise
   expect(download.suggestedFilename()).toBe('dreamex-command-center-backup.json')
+})
+
+
+test('QA Automation Studio generates and exports editable QA artifacts', async ({ page }) => {
+  await page.goto('/qa-studio')
+  await expect(page.getByRole('heading', { name: /Turn requirements into/i })).toBeVisible()
+  await expect(page.getByRole('textbox', { name: /Generated QA artifact/i })).toContainText('TC-001')
+  await page.getByRole('tab', { name: /BDD \/ Gherkin/i }).click()
+  await expect(page.getByRole('textbox', { name: /Generated QA artifact/i })).toContainText('Feature: User authentication')
+  await page.getByRole('tab', { name: /Bug report/i }).click()
+  await expect(page.getByRole('textbox', { name: /Generated QA artifact/i })).toContainText('# Bug Report')
+  await page.getByRole('button', { name: /Save draft/i }).click()
+  await expect(page.getByRole('status')).toContainText('Draft saved locally')
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: /Download/i }).click()
+  expect((await downloadPromise).suggestedFilename()).toBe('dreamex-bug.md')
+})
+
+test('Security Center runs a browser-side baseline and exports a report', async ({ page }) => {
+  await page.goto('/security-center')
+  await page.getByRole('button', { name: /Run security baseline/i }).click()
+  await expect(page.getByRole('heading', { name: /Security baseline findings/i })).toBeVisible()
+  await expect(page.getByText('HTTPS transport')).toBeVisible()
+  await expect(page.getByText(/Browser-visible checks can miss/i)).toBeVisible()
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: /Export JSON/i }).click()
+  expect((await downloadPromise).suggestedFilename()).toBe('dreamex-security-audit.json')
 })
