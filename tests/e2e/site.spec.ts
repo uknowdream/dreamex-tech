@@ -425,7 +425,7 @@ test('release readiness scorecard marks release ready only after every check is 
   await page.getByRole('tab', { name: /Release Readiness|Kesiapan Rilis/i }).click()
   const checks = page.locator('.release-check-item input[type="checkbox"]')
   await expect(checks).toHaveCount(12)
-  await checks.check()
+  for (const checkbox of await checks.all()) await checkbox.check()
   await expect(page.getByRole('img', { name: /Readiness score 100 percent|Skor kesiapan 100 percent/i })).toBeVisible()
   await expect(page.getByText(/Ready for release|Siap dirilis/i).first()).toBeVisible()
   await expect(page.getByRole('progressbar', { name: /Release checklist completion|Penyelesaian checklist rilis/i })).toHaveAttribute('aria-valuenow', '100')
