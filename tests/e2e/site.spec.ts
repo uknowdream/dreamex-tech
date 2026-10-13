@@ -354,7 +354,7 @@ test('command palette supports keyboard search, navigation, and dismissal', asyn
   const search = page.getByRole('textbox', { name: /search commands|cari perintah/i })
   await expect(search).toBeFocused()
   await search.fill('qa automation foundations')
-  const result = page.getByRole('button', { name: /qa automation foundation/i })
+  const result = dialog.getByRole('button', { name: /qa automation foundation/i })
   await expect(result).toBeVisible()
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/\/blog\/qa-automation-foundations$/)
