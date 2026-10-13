@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowDownRight, ArrowRight, BookOpen, Bookmark, BookmarkCheck, Braces, Check, ChevronUp, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap, Rss, Activity, AlertTriangle, CheckCircle2, Download, ClipboardList } from 'lucide-react'
+import { ArrowDownRight, ArrowRight, BookOpen, Bookmark, BookmarkCheck, Braces, Check, ChevronUp, ChevronDown, Layers3, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap, Rss, Activity, AlertTriangle, CheckCircle2, Download, ClipboardList } from 'lucide-react'
 import { articles } from './articles'
 import { articleTranslations } from './articleTranslations'
 import { useLanguage } from './i18n'
@@ -118,11 +118,48 @@ function Header() {
   const { language, setLanguage, t } = useLanguage()
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
-  useEffect(() => setMenuOpen(false), [location.pathname])
+  useEffect(() => { setMenuOpen(false); document.querySelector('.nav-platform')?.removeAttribute('open') }, [location.pathname])
   return <header className="site-header"><div className="container nav-wrap">
     <Link className="brand" to="/" aria-label="DreamEx Tech beranda"><span className="brand-mark"><Braces size={21} /></span><span>DreamEx<span className="brand-muted"> Tech</span></span><span className="brand-beta">ENGINEERING NOTES</span></Link>
     <button className="menu-toggle" aria-label={menuOpen ? t('closeMenu') : t('openMenu')} aria-expanded={menuOpen} onClick={() => setMenuOpen(value => !value)}><span /><span /></button>
-    <nav className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={t('blog')}><NavLink to="/">{t('blog')}</NavLink><a href="/#topics">{t('topics')}</a><a href="/#latest">{t('articles')}</a><NavLink to="/reading-list">{language === 'en' ? 'Reading list' : 'Daftar bacaan'}</NavLink><NavLink to="/lab">{language === 'en' ? 'Engineering Lab' : 'Lab Engineering'}</NavLink><NavLink to="/workspace">Workspace</NavLink><NavLink to="/command-center">{language === 'en' ? 'Command Center' : 'Pusat Kendali'}</NavLink><NavLink to="/roadmap">{language === 'en' ? 'Roadmap' : 'Roadmap'}</NavLink><NavLink to="/learn">{language === 'en' ? 'Learning Hub' : 'Pusat Belajar'}</NavLink><NavLink to="/api-playground">API Playground</NavLink><NavLink to="/about">{language === 'en' ? 'About' : 'Tentang'}</NavLink><a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">GitHub <Github size={15} /></a><InstallAppButton /><div className="language-switch" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div></nav>
+    <nav className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={language === 'en' ? 'Main navigation' : 'Navigasi utama'}>
+      <NavLink to="/" end>{language === 'en' ? 'Journal' : 'Jurnal'}</NavLink>
+      <details className="nav-platform">
+        <summary><Layers3 size={15} /> {language === 'en' ? 'Platform' : 'Platform'} <ChevronDown size={14} className="nav-chevron" /></summary>
+        <div className="nav-mega-panel">
+          <div className="nav-mega-intro">
+            <span className="nav-mega-kicker">{language === 'en' ? 'DREAMEX ENGINEERING SUITE' : 'SUITE ENGINEERING DREAMEX'}</span>
+            <strong>{language === 'en' ? 'From first idea to reliable release.' : 'Dari ide pertama hingga rilis yang andal.'}</strong>
+            <p>{language === 'en' ? 'A focused workspace for building, testing, and improving software.' : 'Ruang kerja terpadu untuk membangun, menguji, dan meningkatkan perangkat lunak.'}</p>
+            <Link to="/workspace">{language === 'en' ? 'Open workspace' : 'Buka workspace'} <ArrowRight size={14} /></Link>
+            <div className="nav-mega-orbit" aria-hidden="true"><span /><span /><span /></div>
+          </div>
+          <div className="nav-mega-group">
+            <span className="nav-group-label">{language === 'en' ? 'PLAN & OPERATE' : 'RENCANAKAN & KELOLA'}</span>
+            <Link to="/control-plane"><span className="nav-link-icon"><Activity size={15} /></span><span><b>{language === 'en' ? 'Control Plane' : 'Pusat Kendali'}</b><small>{language === 'en' ? 'Release readiness & operations' : 'Kesiapan rilis dan operasi'}</small></span></Link>
+            <Link to="/command-center"><span className="nav-link-icon"><ClipboardList size={15} /></span><span><b>{language === 'en' ? 'Command Center' : 'Command Center'}</b><small>{language === 'en' ? 'Tasks, incidents & decisions' : 'Tugas, insiden, dan keputusan'}</small></span></Link>
+            <Link to="/roadmap"><span className="nav-link-icon"><ArrowDownRight size={15} /></span><span><b>{language === 'en' ? 'Product Roadmap' : 'Roadmap Produk'}</b><small>{language === 'en' ? 'Priorities and milestones' : 'Prioritas dan pencapaian'}</small></span></Link>
+          </div>
+          <div className="nav-mega-group">
+            <span className="nav-group-label">{language === 'en' ? 'BUILD & VERIFY' : 'BANGUN & VALIDASI'}</span>
+            <Link to="/lab"><span className="nav-link-icon"><Terminal size={15} /></span><span><b>Engineering Lab</b><small>{language === 'en' ? 'Practical QA tools' : 'Perangkat QA praktis'}</small></span></Link>
+            <Link to="/quality-intelligence"><span className="nav-link-icon"><ShieldCheck size={15} /></span><span><b>{language === 'en' ? 'Quality Intelligence' : 'Quality Intelligence'}</b><small>{language === 'en' ? 'Test reports & failure signals' : 'Laporan tes dan sinyal kegagalan'}</small></span></Link>
+            <Link to="/api-playground"><span className="nav-link-icon"><Braces size={15} /></span><span><b>API Playground</b><small>{language === 'en' ? 'Inspect API contracts' : 'Periksa kontrak API'}</small></span></Link>
+          </div>
+          <div className="nav-mega-group nav-mega-group-last">
+            <span className="nav-group-label">{language === 'en' ? 'SECURE & LEARN' : 'AMANKAN & PELAJARI'}</span>
+            <Link to="/security-center"><span className="nav-link-icon"><ShieldCheck size={15} /></span><span><b>{language === 'en' ? 'Security Center' : 'Pusat Keamanan'}</b><small>{language === 'en' ? 'Privacy and secure practices' : 'Privasi dan praktik aman'}</small></span></Link>
+            <Link to="/supply-chain-intelligence"><span className="nav-link-icon"><Network size={15} /></span><span><b>{language === 'en' ? 'Supply Chain' : 'Supply Chain'}</b><small>{language === 'en' ? 'SBOM inventory insights' : 'Insight inventaris SBOM'}</small></span></Link>
+            <Link to="/learn"><span className="nav-link-icon"><BookOpen size={15} /></span><span><b>{language === 'en' ? 'Learning Hub' : 'Pusat Belajar'}</b><small>{language === 'en' ? 'Structured learning paths' : 'Jalur belajar terstruktur'}</small></span></Link>
+          </div>
+        </div>
+      </details>
+      <NavLink to="/reading-list">{language === 'en' ? 'Reading list' : 'Daftar bacaan'}</NavLink>
+      <NavLink to="/about">{language === 'en' ? 'About' : 'Tentang'}</NavLink>
+      <a className="nav-github" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">GitHub <Github size={14} /></a>
+      <InstallAppButton />
+      <div className="language-switch" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div>
+    </nav>
   </div></header>
 }
 
