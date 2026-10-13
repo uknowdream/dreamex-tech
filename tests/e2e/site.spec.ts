@@ -901,3 +901,20 @@ test('Supply Chain Intelligence rejects unsupported and malformed SBOM files', a
   await expect(page.getByRole('alert')).toBeVisible()
   await expect(page.getByRole('heading', { name: /Start with an SBOM, not a guess/i })).toBeVisible()
 })
+
+
+test('platform mega menu is grouped, responsive, and closes after navigation', async ({ page }) => {
+  await page.goto('/')
+  const menuToggle = page.locator('.menu-toggle')
+  if (await menuToggle.isVisible()) await menuToggle.click()
+
+  const platform = page.locator('details.nav-platform')
+  await platform.locator('summary').click()
+  await expect(page.getByRole('link', { name: /Open workspace/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Quality Intelligence/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Security Center/i })).toBeVisible()
+
+  await page.getByRole('link', { name: /Open workspace/i }).click()
+  await expect(page).toHaveURL(/\\/workspace$/)
+  await expect(page.locator('details.nav-platform')).not.toHaveAttribute('open', '')
+})
