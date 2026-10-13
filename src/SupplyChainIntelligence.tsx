@@ -70,7 +70,7 @@ function parseSpdx(root: Record<string, unknown>): Inventory {
     if (!item) return []
     const name = str(item.name, 'Unnamed package')
     const version = str(item.versionInfo)
-    const license = str(item.licenseConcluded) || str(item.licenseDeclared) || 'UNKNOWN'
+    const concluded = str(item.licenseConcluded)\n    const declared = str(item.licenseDeclared)\n    const license = concluded && !/^(noassertion|none)$/i.test(concluded) ? concluded : declared || concluded || 'UNKNOWN'
     const refs = arr(item.externalRefs).map(asObject).filter((value): value is Record<string, unknown> => value !== null)
     const purl = str(refs.find(value => /purl/i.test(str(value.referenceType) + ' ' + str(value.referenceCategory)))?.referenceLocator)
     const hashes = arr(item.checksums).map(value => str(asObject(value)?.algorithm) + ':' + str(asObject(value)?.checksumValue)).filter(value => value !== ':')
