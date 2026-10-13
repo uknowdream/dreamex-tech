@@ -722,3 +722,36 @@ test('API Contract Studio analyzes OpenAPI and flags removed operations against 
   await page.getByRole('button', { name: /Export review/i }).click()
   expect((await downloadPromise).suggestedFilename()).toBe('dreamex-api-contract-review.md')
 })
+
+
+test('Engineering Control Plane unifies workflows and browser-session signals', async ({ page }) => {
+  await page.goto('/control-plane')
+  await expect(page.getByRole('heading', { name: /Engineering, in control/i })).toBeVisible()
+  await expect(page.getByRole('region', { name: /Browser session signals/i })).toBeVisible()
+  await expect(page.locator('a.control-plane-card[href="/qa-studio"]')).toBeVisible()
+  await expect(page.getByRole('link', { name: /API Contract Studio/i })).toHaveAttribute('href', '/engineering-intelligence')
+  await expect(page.getByText(/do not query Vercel, CI, APIs, or production services/i)).toBeVisible()
+})
+
+test('Engineering Control Plane search filters workflow cards', async ({ page }) => {
+  await page.goto('/control-plane')
+  const search = page.getByRole('searchbox', { name: /Search engineering workflows/i })
+  await search.fill('OpenAPI')
+  await expect(page.getByRole('link', { name: /API Contract Studio/i })).toBeVisible()
+  await expect(page.locator('a.control-plane-card[href="/qa-studio"]')).toHaveCount(0)
+  await search.fill('no-such-workflow-dreamex')
+  await expect(page.getByText(/No workflows match that search/i)).toBeVisible()
+})
+
+test('Engineering Control Plane checklist persists and exports a snapshot', async ({ page }) => {
+  await page.goto('/control-plane')
+  const firstCheck = page.getByRole('checkbox', { name: /Define change scope and acceptance criteria/i })
+  await firstCheck.check()
+  await expect(page.getByRole('progressbar', { name: /Release checklist completion/i })).toHaveAttribute('aria-valuenow', '17')
+  await page.reload()
+  await expect(page.getByRole('checkbox', { name: /Define change scope and acceptance criteria/i })).toBeChecked()
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: /Export snapshot/i }).click()
+  const download = await downloadPromise
+  expect(download.suggestedFilename()).toBe('dreamex-control-plane-snapshot.json')
+})
