@@ -30,6 +30,9 @@ DreamEx Tech combines editorial knowledge with practical, browser-first engineer
 - `/observatory` and `/performance` — heuristic page-quality checks and browser timing snapshots.
 - `/learn` and `/knowledge-graph` — learning paths, glossary, and curated relationships between concepts and tools.
 - `/roadmap` — product roadmap, persistent local progress, release-readiness scorecard, ADR builder, and STRIDE threat-model worksheet.
+- `/command-center` — local work queue, incident register, architecture decision records, and release checklist.
+- `/qa-studio` — editable test-case tables, BDD/Gherkin scenarios, bug reports, and test plans; supports local draft snapshots and Markdown export.
+- `/security-center` — same-origin security-header review, visible document-quality signals, and JSON/Markdown audit exports.
 
 Most workspace state is stored in the user's browser. No account sync is implied. API Playground requests go directly from the browser to the target and are subject to CORS; do not enter production secrets. Performance snapshots are not a substitute for a full Lighthouse audit. The readiness and STRIDE worksheets are planning aids, not compliance certification or a complete security assessment.
 
