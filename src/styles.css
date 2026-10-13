@@ -2083,3 +2083,14 @@ main, header, footer, section, .container {
 .quality-suite-saved-list strong{font-size:.82rem;overflow-wrap:anywhere}
 .quality-suite-saved-list small{font-size:.68rem;color:var(--muted)}
 .quality-suite-saved-list button>span:last-child{flex-shrink:0;color:var(--green);font-size:.74rem}
+
+.quality-privacy-panel{padding:20px;border:1px solid var(--line);border-radius:12px;background:#ffffff03}
+.quality-privacy-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0}
+.quality-privacy-summary>div{display:grid;gap:8px;padding:14px;border:1px solid var(--line);border-radius:9px;min-width:0}
+.quality-privacy-summary span{color:var(--muted);font-size:.72rem}
+.quality-privacy-summary strong{font-size:1rem;overflow-wrap:anywhere}
+.quality-privacy-list{display:grid;gap:6px;margin-top:16px}
+.quality-privacy-list>div{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;min-width:0}
+.quality-privacy-list code{font-family:var(--mono);font-size:.7rem;overflow-wrap:anywhere}
+.quality-privacy-list span{flex-shrink:0;color:var(--muted);font-size:.68rem}
+@media(max-width:560px){.quality-privacy-panel{padding:13px}.quality-privacy-summary{gap:6px}.quality-privacy-summary>div{padding:10px 8px}.quality-privacy-summary span{font-size:.63rem}.quality-privacy-summary strong{font-size:.83rem}.quality-privacy-list>div{align-items:flex-start;flex-direction:column;gap:5px}}
