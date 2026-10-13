@@ -128,10 +128,7 @@ if (!appSource.includes('path="/qa-studio"') || !appSource.includes('QAAutomatio
 if (!appSource.includes('path="/security-center"') || !appSource.includes('SecurityCenterPage')) errors.push('Security Center route is required')
 const suiteSource = readFileSync(join(root, 'src', 'EngineeringQualitySuite.tsx'), 'utf8')
 if (!suiteSource.includes('dreamex-qa-studio-history-v1') || !suiteSource.includes('dreamex-security-audit-v1') || !suiteSource.includes('Feature: ')) errors.push('QA artifact generation and local security audit persistence are required')
-if (!appSource.includes('path="/qa-studio"') || !appSource.includes('QAAutomationStudioPage')) errors.push('QA Automation Studio route is required')
-if (!appSource.includes('path="/security-center"') || !appSource.includes('SecurityCenterPage')) errors.push('Security Center route is required')
-const suiteSource = readFileSync(join(root, 'src', 'EngineeringQualitySuite.tsx'), 'utf8')
-if (!suiteSource.includes('dreamex-qa-studio-history-v1') || !suiteSource.includes('dreamex-security-audit-v1') || !suiteSource.includes('Feature: ')) errors.push('QA artifact generation and local security audit persistence are required')
+
 const roadmapSource = readFileSync(join(root, 'src', 'EngineeringRoadmap.tsx'), 'utf8')
 if (!roadmapSource.includes('dreamex-readiness-scorecard-v1') || !roadmapSource.includes('STRIDE') || !roadmapSource.includes('Architecture Decision Record')) errors.push('Roadmap, readiness scorecard, ADR, and threat-model tools are required')
 if (!appSource.includes('dreamex-learning-progress-v1')) errors.push('Persistent learning progress is required')
