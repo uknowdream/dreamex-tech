@@ -561,9 +561,9 @@ test('command palette supports keyboard search, navigation, and dismissal', asyn
 test('engineering roadmap offers persistent progress and readiness scorecard', async ({ page }) => {
   await page.goto('/roadmap')
   await expect(page.getByRole('heading', { name: /Build with intent/i })).toBeVisible()
-  const task = page.getByRole('checkbox').first()
+  const task = page.getByRole('checkbox').nth(1)
   await task.check()
-  await expect(page.getByRole('progressbar', { name: /Roadmap completion/i })).toHaveAttribute('aria-valuenow', '1')
+  await expect(page.getByRole('progressbar', { name: /Roadmap completion/i })).toHaveAttribute('aria-valuenow', '6')
   await page.getByRole('tab', { name: /Release scorecard/i }).click()
   await expect(page.getByRole('heading', { name: /Project readiness scorecard/i })).toBeVisible()
   await page.getByRole('checkbox', { name: /Acceptance criteria are explicit/i }).check()

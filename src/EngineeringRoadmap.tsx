@@ -6,6 +6,7 @@ import { useLanguage } from './i18n'
 const ROADMAP_KEY = 'dreamex-roadmap-v1'
 const SCORECARD_KEY = 'dreamex-readiness-scorecard-v1'
 const THREAT_KEY = 'dreamex-threat-model-v1'
+const DEFAULT_ROADMAP_PROGRESS: Record<string, boolean> = { 'quality-gates': true, 'quality-scorecards': true, adr: true, 'threat-models': true, 'api-contracts': true }
 type RoadmapTask = { id: string; title: string; detail: string; priority: 'P0' | 'P1' | 'P2' }
 type RoadmapPhase = { id: string; name: string; horizon: string; outcome: string; tasks: RoadmapTask[] }
 const phases: RoadmapPhase[] = [
@@ -59,7 +60,7 @@ function downloadFile(name:string,content:string){const url=URL.createObjectURL(
 
 export function EngineeringRoadmapPage(){
  const {language}=useLanguage();const en=language==='en'
- const [done,setDone]=useState<Record<string,boolean>>(()=>readRecord(ROADMAP_KEY,{}))
+ const [done,setDone]=useState<Record<string,boolean>>(()=>readRecord(ROADMAP_KEY,DEFAULT_ROADMAP_PROGRESS))
  const [checked,setChecked]=useState<Record<string,boolean>>(()=>readRecord(SCORECARD_KEY,{}))
  const [threats,setThreats]=useState<Record<string,boolean>>(()=>readRecord(THREAT_KEY,{}))
  const [project,setProject]=useState('DreamEx Tech')
