@@ -1708,3 +1708,40 @@ main, header, footer, section, .container {
     box-shadow: none;
   }
 }
+
+
+/* API Test Matrix — responsive, readable QA tooling */
+.api-matrix-fields {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.75fr) minmax(180px, 1.5fr) repeat(2, minmax(140px, 1fr));
+  gap: 16px;
+  margin: 20px 0 14px;
+}
+.api-matrix-fields .lab-field { min-width: 0; }
+.api-matrix-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 4px 0 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--border, rgba(148, 163, 184, 0.18));
+  border-radius: 12px;
+  color: var(--muted, #94a3b8);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+.api-matrix-note svg { flex: 0 0 auto; margin-top: 2px; color: var(--accent, #7dd3fc); }
+.api-matrix-count { margin: 5px 0 0; color: var(--muted, #94a3b8); font-size: 0.82rem; }
+.api-matrix-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.api-matrix-case .lab-case-id { min-width: 88px; }
+.api-matrix-case p { overflow-wrap: anywhere; }
+@media (max-width: 900px) {
+  .api-matrix-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .api-matrix-fields { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .api-matrix-actions { width: 100%; }
+  .api-matrix-actions .copy-link-button { flex: 1 1 auto; justify-content: center; }
+  .api-matrix-case { grid-template-columns: 1fr; gap: 8px; }
+  .api-matrix-case .lab-case-id { min-width: 0; }
+}

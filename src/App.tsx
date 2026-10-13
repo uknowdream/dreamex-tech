@@ -385,7 +385,7 @@ function ReadingListPage() {
 function EngineeringLabPage() {
   const { language } = useLanguage()
   const en = language === 'en'
-  const [activeTool, setActiveTool] = useState<'test-cases' | 'bug-report' | 'json'>('test-cases')
+  const [activeTool, setActiveTool] = useState<'test-cases' | 'bug-report' | 'json' | 'api-matrix'>('test-cases')
   const [feature, setFeature] = useState(en ? 'Login form' : 'Form login')
   const [generated, setGenerated] = useState(false)
   const [bugTitle, setBugTitle] = useState('')
@@ -398,6 +398,11 @@ function EngineeringLabPage() {
   const [jsonInput, setJsonInput] = useState('{"status":"ok","data":[1,2,3]}')
   const [jsonOutput, setJsonOutput] = useState('')
   const [jsonError, setJsonError] = useState('')
+  const [apiMethod, setApiMethod] = useState('POST')
+  const [apiPath, setApiPath] = useState('/api/v1/users')
+  const [apiAuth, setApiAuth] = useState('required')
+  const [apiPayload, setApiPayload] = useState('json')
+  const [apiMatrixGenerated, setApiMatrixGenerated] = useState(false)
   const [copyStatus, setCopyStatus] = useState('')
   const generatedCases = useMemo(() => {
     const subject = feature.trim() || (en ? 'the feature' : 'fitur ini')
@@ -457,12 +462,99 @@ function EngineeringLabPage() {
       setJsonError(error instanceof Error ? error.message : (en ? 'Invalid JSON.' : 'JSON tidak valid.'))
     }
   }
+  const apiScenarios = useMemo(() => {
+    const endpoint = apiPath.trim() || '/api/v1/resource'
+    const method = apiMethod.toUpperCase()
+    const scenarios: { id: string; title: string; steps: string; expected: string }[] = [
+      {
+        id: 'TC-API-01',
+        title: en ? 'Successful request with valid input' : 'Request berhasil dengan input valid',
+        steps: en ? `Send a valid ${method} request to ${endpoint} with valid credentials and a valid payload where applicable.` : `Kirim request ${method} yang valid ke ${endpoint} dengan kredensial dan payload valid jika diperlukan.`,
+        expected: en ? 'The API returns the documented success status and a response matching its schema.' : 'API mengembalikan status sukses yang didokumentasikan dan respons sesuai schema.',
+      },
+      ...(apiAuth === 'required' ? [{
+        id: 'TC-API-02',
+        title: en ? 'Reject missing or invalid credentials' : 'Tolak kredensial yang hilang atau tidak valid',
+        steps: en ? `Send ${method} ${endpoint} without a valid access token.` : `Kirim ${method} ${endpoint} tanpa access token yang valid.`,
+        expected: en ? 'The API returns 401 Unauthorized without exposing protected data.' : 'API mengembalikan 401 Unauthorized tanpa membocorkan data terlindungi.',
+      }] : []),
+      {
+        id: 'TC-API-03',
+        title: en ? 'Enforce resource permissions' : 'Terapkan izin akses resource',
+        steps: en ? 'Authenticate as a user without the required permission and request the resource.' : 'Login sebagai pengguna tanpa izin yang diperlukan lalu akses resource.',
+        expected: en ? 'The API returns 403 Forbidden and does not disclose restricted data.' : 'API mengembalikan 403 Forbidden dan tidak mengungkap data terbatas.',
+      },
+      {
+        id: 'TC-API-04',
+        title: en ? 'Handle an unknown resource' : 'Tangani resource yang tidak ditemukan',
+        steps: en ? 'Request a non-existent identifier or an unknown route.' : 'Minta identifier yang tidak ada atau route yang tidak dikenal.',
+        expected: en ? 'The API returns 404 Not Found with a consistent error structure.' : 'API mengembalikan 404 Not Found dengan struktur error yang konsisten.',
+      },
+      {
+        id: 'TC-API-05',
+        title: en ? 'Reject an unsupported HTTP method' : 'Tolak HTTP method yang tidak didukung',
+        steps: en ? 'Send a method that is not supported by the endpoint contract.' : 'Kirim method yang tidak didukung oleh kontrak endpoint.',
+        expected: en ? 'The API returns 405 Method Not Allowed and documents allowed methods where applicable.' : 'API mengembalikan 405 Method Not Allowed dan mendokumentasikan method yang diizinkan bila relevan.',
+      },
+      ...(apiPayload === 'json' && ['POST', 'PUT', 'PATCH'].includes(method) ? [
+        {
+          id: 'TC-API-06',
+          title: en ? 'Reject malformed JSON' : 'Tolak JSON dengan format salah',
+          steps: en ? 'Send a request body containing malformed JSON.' : 'Kirim request body dengan JSON yang tidak valid.',
+          expected: en ? 'The API returns 400 Bad Request and does not partially persist the request.' : 'API mengembalikan 400 Bad Request dan tidak menyimpan sebagian data.',
+        },
+        {
+          id: 'TC-API-07',
+          title: en ? 'Validate the request content type' : 'Validasi content type request',
+          steps: en ? 'Send a body with a missing or unsupported Content-Type header.' : 'Kirim body tanpa header Content-Type atau dengan nilai yang tidak didukung.',
+          expected: en ? 'The API returns 415 Unsupported Media Type or a clearly documented validation response.' : 'API mengembalikan 415 Unsupported Media Type atau respons validasi yang terdokumentasi.',
+        },
+        {
+          id: 'TC-API-08',
+          title: en ? 'Validate required fields and data types' : 'Validasi field wajib dan tipe data',
+          steps: en ? 'Omit a required field and then submit a value with an incorrect data type.' : 'Hilangkan field wajib lalu kirim nilai dengan tipe data yang salah.',
+          expected: en ? 'The API returns a documented validation response, commonly 422, without persisting invalid data.' : 'API mengembalikan respons validasi yang terdokumentasi, umumnya 422, tanpa menyimpan data invalid.',
+        },
+      ] : []),
+      {
+        id: 'TC-API-09',
+        title: en ? 'Respect rate limits' : 'Patuhi batas rate limit',
+        steps: en ? 'Send requests above the documented rate threshold in a controlled test environment.' : 'Kirim request melebihi ambang rate limit yang didokumentasikan di lingkungan pengujian terkontrol.',
+        expected: en ? 'The API returns 429 Too Many Requests and provides retry guidance where supported.' : 'API mengembalikan 429 Too Many Requests dan memberikan panduan retry bila didukung.',
+      },
+      {
+        id: 'TC-API-10',
+        title: en ? 'Fail safely during a server error' : 'Gagal dengan aman saat server error',
+        steps: en ? 'Simulate a controlled upstream failure or timeout.' : 'Simulasikan kegagalan upstream atau timeout secara terkontrol.',
+        expected: en ? 'The API returns a documented 5xx response, avoids leaking internals, and records diagnostic details securely.' : 'API mengembalikan respons 5xx yang terdokumentasi, tidak membocorkan detail internal, dan mencatat diagnostik secara aman.',
+      },
+    ]
+    return scenarios
+  }, [apiMethod, apiPath, apiAuth, apiPayload, en])
+  const downloadApiMatrix = () => {
+    const rows = [
+      ['Case ID', 'HTTP Method', 'Endpoint', 'Scenario', 'Steps', 'Expected Result'],
+      ...apiScenarios.map(item => [item.id, apiMethod, apiPath.trim() || '/api/v1/resource', item.title, item.steps, item.expected]),
+    ]
+    const csv = rows.map(row => row.map(cell => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\\r\\n')
+    const blob = new Blob([`\\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = 'dreamex-api-test-matrix.csv'
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(url)
+    setCopyStatus(en ? 'API test matrix CSV downloaded.' : 'CSV matriks pengujian API berhasil diunduh.')
+  }
   return <main id="main-content" className="engineering-lab container">
     <header className="lab-header"><span className="section-kicker">{en ? 'PRACTICAL ENGINEERING TOOLKIT' : 'TOOLKIT ENGINEERING PRAKTIS'}</span><h1>{en ? 'Engineering' : 'Engineering'} <span>Lab.</span></h1><p>{en ? 'Small, useful tools for QA workflows, clearer bug reports, and safer data handling. Processing runs locally in your browser.' : 'Perangkat praktis untuk alur kerja QA, laporan bug yang jelas, dan pengolahan data yang aman. Pemrosesan berjalan lokal di browser Anda.'}</p><div className="lab-local-note"><ShieldCheck size={16} /> {en ? 'No account or backend required — your inputs stay in this browser session.' : 'Tanpa akun atau backend — input Anda tetap diproses di browser ini.'}</div></header>
     <div className="lab-tool-tabs" role="tablist" aria-label={en ? 'Engineering tools' : 'Tool engineering'}>
       <button role="tab" aria-selected={activeTool === 'test-cases'} className={activeTool === 'test-cases' ? 'active' : ''} onClick={() => { setActiveTool('test-cases'); setCopyStatus('') }}><ShieldCheck size={16} /> {en ? 'Test Case Builder' : 'Pembuat Test Case'}</button>
       <button role="tab" aria-selected={activeTool === 'bug-report'} className={activeTool === 'bug-report' ? 'active' : ''} onClick={() => { setActiveTool('bug-report'); setCopyStatus('') }}><BookOpen size={16} /> {en ? 'Bug Report' : 'Laporan Bug'}</button>
       <button role="tab" aria-selected={activeTool === 'json'} className={activeTool === 'json' ? 'active' : ''} onClick={() => { setActiveTool('json'); setCopyStatus('') }}><Braces size={16} /> JSON {en ? 'Formatter' : 'Formatter'}</button>
+      <button role="tab" aria-selected={activeTool === 'api-matrix'} className={activeTool === 'api-matrix' ? 'active' : ''} onClick={() => { setActiveTool('api-matrix'); setCopyStatus(''); setApiMatrixGenerated(false) }}><ShieldCheck size={16} /> {en ? 'API Test Matrix' : 'Matriks Tes API'}</button>
     </div>
     <section className="lab-tool-panel" role="tabpanel">
       {activeTool === 'test-cases' && <div className="lab-form">
@@ -486,6 +578,18 @@ function EngineeringLabPage() {
         <button className="button button-primary lab-action" onClick={formatJson}>{en ? 'Format JSON' : 'Rapikan JSON'} <Braces size={16} /></button>
         {jsonError && <p className="lab-error" role="alert">{en ? 'Invalid JSON:' : 'JSON tidak valid:'} {jsonError}</p>}
         {jsonOutput && <div className="lab-generated"><div className="lab-output-heading"><h3>{en ? 'Formatted output' : 'Hasil format'}</h3><button className="copy-link-button" onClick={() => copyText(jsonOutput)}><Copy size={14} /> {en ? 'Copy JSON' : 'Salin JSON'}</button></div><pre className="lab-output" aria-label={en ? 'Formatted JSON output' : 'Hasil JSON terformat'}>{jsonOutput}</pre></div>}
+      </div>}
+      {activeTool === 'api-matrix' && <div className="lab-form api-matrix-form">
+        <div className="lab-panel-heading"><span className="section-kicker">04 / API QUALITY ENGINEERING</span><h2>{en ? 'Design an API test matrix' : 'Rancang matriks pengujian API'}</h2><p>{en ? 'Generate a practical contract-testing checklist for an endpoint, then refine it against your API specification. This tool creates test ideas only; it does not send requests.' : 'Buat checklist contract testing praktis untuk sebuah endpoint, lalu sesuaikan dengan spesifikasi API Anda. Tool ini hanya membuat ide pengujian dan tidak mengirim request.'}</p></div>
+        <div className="api-matrix-fields">
+          <label className="lab-field"><span>{en ? 'HTTP method' : 'HTTP method'}</span><select value={apiMethod} onChange={event => { setApiMethod(event.target.value); setApiMatrixGenerated(false) }}><option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option><option>OPTIONS</option></select></label>
+          <label className="lab-field"><span>{en ? 'Endpoint path' : 'Path endpoint'}</span><input value={apiPath} onChange={event => { setApiPath(event.target.value); setApiMatrixGenerated(false) }} placeholder="/api/v1/users" /></label>
+          <label className="lab-field"><span>{en ? 'Authentication' : 'Autentikasi'}</span><select value={apiAuth} onChange={event => { setApiAuth(event.target.value); setApiMatrixGenerated(false) }}><option value="required">{en ? 'Required' : 'Wajib'}</option><option value="optional">{en ? 'Optional / public' : 'Opsional / publik'}</option></select></label>
+          <label className="lab-field"><span>{en ? 'Request payload' : 'Payload request'}</span><select value={apiPayload} onChange={event => { setApiPayload(event.target.value); setApiMatrixGenerated(false) }}><option value="json">JSON</option><option value="none">{en ? 'No body' : 'Tanpa body'}</option></select></label>
+        </div>
+        <div className="api-matrix-note"><ShieldCheck size={15} /><span>{en ? 'Privacy-first: all inputs stay in your browser. No API endpoint is called.' : 'Mengutamakan privasi: semua input tetap di browser. Tidak ada endpoint API yang dipanggil.'}</span></div>
+        <button className="button button-primary lab-action" onClick={() => { setApiMatrixGenerated(true); setCopyStatus('') }}>{en ? 'Generate API test matrix' : 'Buat matriks tes API'} <ArrowRight size={16} /></button>
+        {apiMatrixGenerated && <div className="lab-generated"><div className="lab-output-heading"><div><h3>{en ? 'Generated API scenarios' : 'Skenario API yang dihasilkan'}</h3><p className="api-matrix-count">{apiScenarios.length} {en ? 'scenarios · review before execution' : 'skenario · tinjau sebelum dijalankan'}</p></div><div className="api-matrix-actions"><button className="copy-link-button" onClick={() => copyText(apiScenarios.map(item => `## ${item.id} — ${item.title}\\n\\n- Request: ${apiMethod} ${apiPath.trim() || '/api/v1/resource'}\\n- Steps: ${item.steps}\\n- Expected: ${item.expected}`).join('\\n\\n'))}><Copy size={14} /> {en ? 'Copy Markdown' : 'Salin Markdown'}</button><button className="copy-link-button" onClick={downloadApiMatrix}><ArrowDownRight size={14} /> {en ? 'Download CSV' : 'Unduh CSV'}</button></div></div><div className="lab-case-list">{apiScenarios.map(item => <article className="lab-case api-matrix-case" key={item.id}><span className="lab-case-id">{item.id}</span><div><h4>{item.title}</h4><p><strong>{en ? 'Request' : 'Request'}:</strong> {apiMethod} {apiPath.trim() || '/api/v1/resource'}</p><p><strong>{en ? 'Steps' : 'Langkah'}:</strong> {item.steps}</p><p><strong>{en ? 'Expected' : 'Hasil yang diharapkan'}:</strong> {item.expected}</p></div></article>)}</div></div>}
       </div>}
       {copyStatus && <p className="lab-copy-status" role="status">{copyStatus}</p>}
     </section>
@@ -823,7 +927,7 @@ function CommandPalette() {
     const searchableText = [
       article.title, article.excerpt, article.body.join(' '),
       translated?.title, translated?.excerpt, translated?.body.join(' '),
-      article.category, ...article.tags,
+      article.category, ...article.tags, article.slug.replaceAll('-', ' '),
     ].filter(Boolean).join(' ').toLowerCase()
     return searchableText.includes(term)
   }).slice(0, 6)

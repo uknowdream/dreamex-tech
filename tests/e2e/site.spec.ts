@@ -327,6 +327,16 @@ test('desktop navigation adapts to constrained widths without clipping', async (
   expect(dimensions.nav?.right).toBeLessThanOrEqual(dimensions.viewportWidth)
 })
 
+test('Engineering Lab generates an API test matrix for the selected endpoint', async ({ page }) => {
+  await page.goto('/lab')
+  await page.getByRole('tab', { name: /API Test Matrix|Matriks Tes API/i }).click()
+  await expect(page.getByLabel(/Endpoint path|Path endpoint/i)).toBeVisible()
+  await page.getByRole('button', { name: /Generate API test matrix|Buat matriks tes API/i }).click()
+  await expect(page.getByRole('heading', { name: /Generated API scenarios|Skenario API yang dihasilkan/i })).toBeVisible()
+  await expect(page.locator('.api-matrix-case')).toHaveCount(10)
+  await expect(page.locator('.api-matrix-case').first()).toContainText('POST /api/v1/users')
+})
+
 test('mobile viewport has no horizontal document overflow', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'This check targets the mobile browser project')
   await page.setViewportSize({ width: 390, height: 844 })
@@ -344,7 +354,7 @@ test('command palette supports keyboard search, navigation, and dismissal', asyn
   const search = page.getByRole('textbox', { name: /search commands|cari perintah/i })
   await expect(search).toBeFocused()
   await search.fill('qa automation foundations')
-  const result = page.getByRole('button', { name: /qa automation foundations/i })
+  const result = page.getByRole('button', { name: /qa automation foundation/i })
   await expect(result).toBeVisible()
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/\/blog\/qa-automation-foundations$/)
