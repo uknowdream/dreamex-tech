@@ -1,0 +1,99 @@
+/* Unified engineering page system: consistent hierarchy across tools without flattening their unique workflows. */
+:root{
+  --eng-panel:linear-gradient(145deg,rgba(17,27,44,.92),rgba(10,17,29,.96));
+  --eng-panel-line:rgba(132,159,196,.19);
+  --eng-panel-hover:rgba(118,207,218,.4);
+  --eng-accent:#8ce4dc;
+  --eng-muted:#9cacc1;
+}
+.workspace-page,.api-page,.performance-page,.knowledge-page,.command-center-page,.quality-suite-page,.quality-intelligence-page,.supply-chain-page,.security-center-page,.control-plane-page{
+  isolation:isolate;
+}
+.workspace-hero,.api-hero,.command-center-hero,.quality-suite-hero,.quality-intelligence-hero,.supply-chain-hero,.control-plane-hero{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  border:1px solid rgba(132,159,196,.16);
+  border-radius:clamp(18px,2.6vw,28px);
+  background:radial-gradient(ellipse at 86% 0%,rgba(76,139,183,.13),transparent 46%),linear-gradient(135deg,rgba(16,28,46,.88),rgba(8,15,26,.76));
+  box-shadow:0 18px 55px rgba(0,0,0,.13),inset 0 1px rgba(255,255,255,.025);
+}
+.workspace-hero:after,.api-hero:after,.command-center-hero:after,.quality-suite-hero:after,.quality-intelligence-hero:after,.supply-chain-hero:after,.control-plane-hero:after{
+  content:"";position:absolute;z-index:-1;right:-80px;top:-120px;width:280px;height:280px;border-radius:50%;border:1px solid rgba(123,203,219,.09);box-shadow:0 0 0 28px rgba(123,203,219,.018),0 0 0 58px rgba(123,203,219,.012);pointer-events:none;
+}
+.workspace-hero h1,.api-hero h1,.command-center-hero h1,.quality-suite-hero h1,.quality-intelligence-hero h1,.supply-chain-hero h1,.control-plane-hero h1{
+  text-wrap:balance;
+}
+.workspace-hero>p,.api-hero>p,.command-center-hero>p,.quality-suite-hero>p,.quality-intelligence-hero>p,.supply-chain-hero>p,.control-plane-hero>p{
+  text-wrap:pretty;
+}
+.workspace-section,.api-workbench,.api-response,.api-collection,.performance-metrics,.knowledge-network,.knowledge-detail,.command-center-panel,.quality-suite-content,.quality-intelligence-import,.quality-intelligence-summary,.quality-intelligence-tests,.quality-intelligence-history,.supply-chain-import,.supply-chain-table-wrap,.supply-chain-vuln-list{
+  border-color:var(--eng-panel-line);
+  box-shadow:0 10px 32px rgba(0,0,0,.12),inset 0 1px rgba(255,255,255,.018);
+}
+.workspace-card,.command-center-record,.quality-suite-finding,.quality-intelligence-failure-grid article,.supply-chain-card{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.workspace-card,.command-center-panel,.quality-suite-content,.quality-intelligence-summary,.quality-intelligence-history,.performance-vital,.knowledge-detail{
+  background-image:linear-gradient(145deg,rgba(22,35,55,.66),rgba(10,17,29,.36));
+}
+.workspace-card:focus-visible,.command-center-tabs button:focus-visible,.quality-suite-page button:focus-visible,.quality-intelligence-page button:focus-visible,.supply-chain-page button:focus-visible,.api-page button:focus-visible,.performance-page button:focus-visible,.knowledge-page button:focus-visible{
+  outline:2px solid var(--focus-ring,#c5ff70);
+  outline-offset:3px;
+}
+.workspace-section-heading,.command-center-section-head,.quality-intelligence-section-heading,.supply-chain-section-head{
+  gap:12px;
+  align-items:center;
+}
+.workspace-result-count,.quality-intelligence-count{
+  font-variant-numeric:tabular-nums;
+}
+.api-workbench,.api-response,.api-collection,.performance-metrics,.knowledge-network,.knowledge-detail,.command-center-panel,.quality-suite-content,.quality-intelligence-import,.quality-intelligence-summary,.quality-intelligence-tests,.quality-intelligence-history,.supply-chain-import,.supply-chain-table-wrap{
+  border-radius:16px;
+}
+.api-url-row,.api-editors,.api-actions,.performance-actions,.quality-intelligence-filters,.supply-chain-filters{
+  min-width:0;
+}
+.api-url-row>* ,.api-editors>*{min-width:0}
+.api-response-body,.api-response pre,.quality-intelligence-table-wrap,.supply-chain-table-wrap{
+  max-width:100%;
+  overflow-x:auto;
+  overscroll-behavior-inline:contain;
+}
+.performance-vital strong,.performance-vital .metric-value,.quality-intelligence-metrics strong,.supply-chain-metrics strong{
+  font-variant-numeric:tabular-nums;
+}
+.workspace-open,.command-center-actions .button,.quality-suite-actions .button,.quality-intelligence-export .button,.supply-chain-actions .button{
+  transition:transform .2s ease,border-color .2s ease,background .2s ease,box-shadow .2s ease;
+}
+.workspace-open:hover,.command-center-actions .button:hover,.quality-suite-actions .button:hover,.quality-intelligence-export .button:hover,.supply-chain-actions .button:hover{
+  transform:translateY(-1px);
+}
+.workspace-note,.devtools-footnote,.knowledge-graph-footnote,.quality-suite-disclaimer,.quality-intelligence-disclaimer{
+  color:var(--eng-muted);
+  line-height:1.75;
+  text-wrap:pretty;
+}
+@media(max-width:900px){
+  .knowledge-layout{grid-template-columns:minmax(0,1fr)}
+  .knowledge-detail{min-width:0}
+  .performance-vitals{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .command-center-overview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .workspace-hero,.api-hero,.command-center-hero,.quality-suite-hero,.quality-intelligence-hero,.supply-chain-hero,.control-plane-hero{border-radius:20px}
+}
+@media(max-width:600px){
+  .workspace-page,.api-page,.performance-page,.knowledge-page,.command-center-page,.quality-suite-page,.quality-intelligence-page,.supply-chain-page,.security-center-page,.control-plane-page{padding-bottom:56px}
+  .workspace-hero,.api-hero,.command-center-hero,.quality-suite-hero,.quality-intelligence-hero,.supply-chain-hero,.control-plane-hero{border-radius:17px}
+  .performance-vitals,.command-center-overview-grid{grid-template-columns:minmax(0,1fr)}
+  .workspace-section-heading,.command-center-section-head,.quality-intelligence-section-heading,.supply-chain-section-head{align-items:flex-start;flex-wrap:wrap}
+  .api-url-row{grid-template-columns:minmax(0,1fr)}
+  .api-actions,.performance-actions{flex-wrap:wrap}
+  .api-actions>* ,.performance-actions>*{min-width:0;max-width:100%}
+  .workspace-filters,.quality-intelligence-filters,.supply-chain-filters{max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain}
+  .workspace-card:hover,.command-center-record:hover,.quality-suite-finding:hover,.quality-intelligence-failure-grid article:hover,.supply-chain-card:hover{transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .workspace-open,.command-center-actions .button,.quality-suite-actions .button,.quality-intelligence-export .button,.supply-chain-actions .button{transition:none}
+  .workspace-open:hover,.command-center-actions .button:hover,.quality-suite-actions .button:hover,.quality-intelligence-export .button:hover,.supply-chain-actions .button:hover{transform:none}
+}
