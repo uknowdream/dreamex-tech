@@ -662,6 +662,9 @@ test('Security Center runs a browser-side baseline and exports a report', async 
   const privacyBackup = page.waitForEvent('download')
   await page.getByRole('button', { name: /Export local data/i }).click()
   expect((await privacyBackup).suggestedFilename()).toBe('dreamex-local-data-backup.json')
+  page.once('dialog', dialog => dialog.accept())
+  await page.getByRole('button', { name: /Clear DreamEx data/i }).click()
+  await expect(page.getByText(/No DreamEx-prefixed local storage entries/i)).toBeVisible()
 })
 
 
