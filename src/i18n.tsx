@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- this module intentionally exports a provider and its hook. */
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 export type Language = 'id' | 'en'
