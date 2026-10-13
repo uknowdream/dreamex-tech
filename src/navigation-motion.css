@@ -6,6 +6,9 @@
   --dx-mint:#c5ff70;
 }
 .site-header{
+  position:sticky;
+  z-index:1000;
+  isolation:isolate;
   background:rgba(7,11,20,.82);
   border-bottom:1px solid rgba(151,174,213,.14);
   box-shadow:0 8px 30px rgba(0,0,0,.08);
@@ -40,7 +43,7 @@
   border:1px solid rgba(130,155,197,.25);border-radius:18px;
   background:linear-gradient(145deg,rgba(16,27,46,.99),rgba(7,13,24,.99));
   box-shadow:0 28px 90px rgba(0,0,0,.52),inset 0 1px rgba(255,255,255,.035);
-  backdrop-filter:blur(24px);z-index:40;
+  backdrop-filter:blur(24px);z-index:1001;pointer-events:auto;
   animation:dx-panel-in .24s var(--dx-ease) both;transform-origin:top center;
 }
 .nav-mega-intro{
