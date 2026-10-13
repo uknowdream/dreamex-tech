@@ -496,6 +496,7 @@ test('Engineering Workspace searches the unified tool catalog', async ({ page })
  await page.getByRole('textbox',{name:/Search workspace tools|Cari tools workspace/i}).fill('jwt')
  await expect(page.getByRole('link',{name:/Developer Utilities/i})).toBeVisible()
  await expect(page.locator('.workspace-grid .workspace-card')).toHaveCount(1)
+ await expect(page.locator('.workspace-grid .workspace-card')).toHaveCount(1)
  await expect(page.locator('.workspace-grid').getByRole('link',{name:/Engineering Lab/i})).toHaveCount(0)
 })
 test('API Playground validates URL schemes and sanitizes local collections', async ({page})=>{
