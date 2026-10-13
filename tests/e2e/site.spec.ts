@@ -18,6 +18,17 @@ test('homepage renders primary content and skip navigation', async ({ page }) =>
   await expect(page.getByRole('navigation').first()).toBeVisible()
 })
 
+test('engineering tools share a responsive page system across core routes', async ({ page }) => {
+  const routes = ['/workspace', '/api-playground', '/performance', '/knowledge-graph', '/command-center', '/quality-intelligence', '/supply-chain-intelligence', '/security-center', '/qa-studio', '/control-plane']
+  await page.setViewportSize({ width: 390, height: 844 })
+  for (const route of routes) {
+    await page.goto(route)
+    await expect(page.locator('main h1').first(), `heading should render on ${route}`).toBeVisible()
+    const dimensions = await page.evaluate(() => ({ width: document.documentElement.clientWidth, scrollWidth: document.documentElement.scrollWidth }))
+    expect(dimensions.scrollWidth, `horizontal overflow on ${route}`).toBeLessThanOrEqual(dimensions.width + 1)
+  }
+})
+
 test('homepage engineering launchpad links to six core tools without mobile overflow', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /Your next move starts here|Mulai langkah engineering berikutnya/i })).toBeVisible()
   const cards = page.locator('.launchpad-card')
