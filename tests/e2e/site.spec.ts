@@ -311,6 +311,10 @@ test('unknown routes render a not-found page', async ({ page }) => {
 test('desktop navigation adapts to constrained widths without clipping', async ({ page, isMobile }) => {
   test.skip(isMobile, 'This check targets desktop and tablet navigation')
   await page.setViewportSize({ width: 1024, height: 900 })
+  const toggle = page.getByRole('button', { name: /open menu|buka menu/i })
+  await expect(toggle).toBeVisible()
+  await expect(page.locator('.nav-links')).toBeHidden()
+  await toggle.click()
   await expect(page.locator('.nav-links')).toBeVisible()
   await expect(page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i })).toBeVisible()
   const platform = page.locator('details.nav-platform')
