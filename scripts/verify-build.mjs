@@ -108,7 +108,7 @@ if (existsSync(join(dist, 'sitemap.xml'))) {
     if (!sitemapOutput.includes(`<loc>${route}</loc>`)) errors.push(`Sitemap is missing canonical route: ${route}`)
   }
   if (!sitemapOutput.includes('<lastmod>')) errors.push('Sitemap is missing article publication dates')
-  if (!sitemapOutput.includes('<loc>https://dreamex.tech/learn</loc>') || !sitemapOutput.includes('<loc>https://dreamex.tech/lab</loc>')) errors.push('Sitemap is missing public learning and engineering-tool routes')
+  if (!sitemapOutput.includes('<loc>https://dreamex.tech/learn</loc>') || !sitemapOutput.includes('<loc>https://dreamex.tech/lab</loc>') || !sitemapOutput.includes('<loc>https://dreamex.tech/roadmap</loc>')) errors.push('Sitemap is missing public learning, engineering-tool, or roadmap routes')
 }
 
 const appSource = readFileSync(join(root, 'src', 'App.tsx'), 'utf8')
@@ -123,6 +123,9 @@ if (!appSource.includes('path="/workspace"') || !appSource.includes('Engineering
 if (!appSource.includes('path="/api-playground"') || !appSource.includes('ApiPlaygroundPage')) errors.push('API Playground route is required')
 if (!appSource.includes('path="/performance"') || !appSource.includes('PerformanceObservatoryPage')) errors.push('Performance Observatory route is required')
 if (!appSource.includes('path="/knowledge-graph"') || !appSource.includes('EngineeringKnowledgeGraphPage')) errors.push('Engineering Knowledge Graph route is required')
+if (!appSource.includes('path="/roadmap"') || !appSource.includes('EngineeringRoadmapPage')) errors.push('Engineering Roadmap and Readiness Center route is required')
+const roadmapSource = readFileSync(join(root, 'src', 'EngineeringRoadmap.tsx'), 'utf8')
+if (!roadmapSource.includes('dreamex-readiness-scorecard-v1') || !roadmapSource.includes('STRIDE') || !roadmapSource.includes('Architecture Decision Record')) errors.push('Roadmap, readiness scorecard, ADR, and threat-model tools are required')
 if (!appSource.includes('dreamex-learning-progress-v1')) errors.push('Persistent learning progress is required')
 
 if (!appSource.includes('path="/lab"') || !appSource.includes('function EngineeringLabPage')) {

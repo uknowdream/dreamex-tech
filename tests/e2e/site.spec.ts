@@ -554,3 +554,31 @@ test('command palette supports keyboard search, navigation, and dismissal', asyn
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog')).toHaveCount(0)
 })
+
+
+test('engineering roadmap offers persistent progress and readiness scorecard', async ({ page }) => {
+  await page.goto('/roadmap')
+  await expect(page.getByRole('heading', { name: /Build with intent/i })).toBeVisible()
+  const task = page.getByRole('checkbox').first()
+  await task.check()
+  await expect(page.getByRole('progressbar', { name: /Roadmap completion/i })).toHaveAttribute('aria-valuenow', '1')
+  await page.getByRole('tab', { name: /Release scorecard/i }).click()
+  await expect(page.getByRole('heading', { name: /Project readiness scorecard/i })).toBeVisible()
+  await page.getByRole('checkbox', { name: /Acceptance criteria are explicit/i }).check()
+  await expect(page.locator('.readiness-score strong')).toHaveText('10')
+  await page.reload()
+  await page.getByRole('tab', { name: /Release scorecard/i }).click()
+  await expect(page.locator('.readiness-score strong')).toHaveText('10')
+})
+
+test('roadmap ADR builder generates a preview and threat modeling exposes STRIDE categories', async ({ page }) => {
+  await page.goto('/roadmap')
+  await page.getByRole('tab', { name: /ADR builder/i }).click()
+  await page.getByLabel(/Decision title/i).fill('Use explicit release gates')
+  await expect(page.locator('.roadmap-preview')).toContainText('ADR: Use explicit release gates')
+  await page.getByRole('tab', { name: /Threat modeling/i }).click()
+  await expect(page.getByRole('heading', { name: /Threat-model workspace/i })).toBeVisible()
+  await expect(page.locator('.stride-card')).toHaveCount(6)
+  await page.getByRole('checkbox', { name: /Spoofing/i }).check()
+  await expect(page.locator('.roadmap-summary')).toContainText('1/6')
+})

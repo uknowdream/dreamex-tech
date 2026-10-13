@@ -11,6 +11,7 @@ const items=[
  {id:'performance',title:'Performance Observatory',description:'Inspect navigation timing, resource costs, and available Web Vitals.',category:'Performance',route:'/performance',keywords:'lcp cls inp lighthouse',icon:Activity},
  {id:'learn',title:'Interactive Learning Paths',description:'Track QA Automation, Software Engineering, AI, and Cybersecurity.',category:'Learning',route:'/learn',keywords:'course roadmap cybersecurity',icon:BookOpen},
  {id:'graph',title:'Engineering Knowledge Graph',description:'Explore connections between concepts, articles, and tools.',category:'Knowledge',route:'/knowledge-graph',keywords:'graph concept related knowledge',icon:Share2},
+ {id:'roadmap',title:'Product Roadmap & Readiness',description:'Track platform priorities, assess release readiness, write ADRs, and model STRIDE threats.',category:'Engineering Governance',route:'/roadmap',keywords:'roadmap project scorecard release readiness adr architecture threat model stride',icon:ClipboardCheck},
  {id:'reading-list',title:'Reading List',description:'Return to saved engineering articles.',category:'Knowledge',route:'/reading-list',keywords:'bookmark saved reading',icon:Bookmark},
 ]
 export function EngineeringWorkspacePage(){
