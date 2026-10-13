@@ -682,3 +682,43 @@ test('workspace search and command palette discover the new QA and security tool
   await page.keyboard.press('Enter')
   await expect(page).toHaveURL(/\/qa-studio$/)
 })
+
+
+test('Engineering Intelligence catalog supports search, local registration, and persistence', async ({ page }) => {
+  await page.goto('/engineering-intelligence')
+  await expect(page.getByRole('heading', { name: /Engineering Intelligence/i })).toBeVisible()
+  await expect(page.locator('.intelligence-service-card')).toHaveCount(3)
+  await expect(page.getByText(/example record\(s\)|data contoh/i)).toBeVisible()
+  const search = page.getByRole('textbox', { name: /Search catalog/i })
+  await search.fill('Commerce API')
+  await expect(page.locator('.intelligence-service-card')).toHaveCount(1)
+  await search.fill('')
+  await page.getByLabel(/Service name/i).fill('Payments API')
+  await page.getByLabel(/Owner \/ team/i).fill('Platform Engineering')
+  await page.getByLabel(/Repository URL or slug/i).fill('uknowdream/payments-api')
+  await page.getByRole('button', { name: /Add service/i }).click()
+  await expect(page.getByRole('heading', { name: 'Payments API' })).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Payments API' })).toBeVisible()
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: /Export JSON/i }).click()
+  expect((await downloadPromise).suggestedFilename()).toBe('dreamex-service-catalog.json')
+})
+
+test('API Contract Studio analyzes OpenAPI and flags removed operations against a baseline', async ({ page }) => {
+  await page.goto('/engineering-intelligence')
+  await page.getByRole('tab', { name: /API contract studio/i }).click()
+  await page.getByRole('button', { name: /Load example/i }).click()
+  const currentEditor = page.getByRole('textbox', { name: /Current OpenAPI JSON/i })
+  const baselineEditor = page.getByRole('textbox', { name: /Baseline contract/i })
+  const baseline = JSON.parse(await currentEditor.inputValue()) as { paths: Record<string, unknown> }
+  await baselineEditor.fill(JSON.stringify(baseline, null, 2))
+  delete baseline.paths['/orders/{orderId}']
+  await currentEditor.fill(JSON.stringify(baseline, null, 2))
+  await expect(page.getByRole('heading', { name: /Operations/i })).toBeVisible()
+  await expect(page.getByText(/Potential breaking change: removed operation GET \/orders\/\{orderId\}/i)).toBeVisible()
+  await expect(page.getByText(/Static local analysis only/i)).toBeVisible()
+  const downloadPromise = page.waitForEvent('download')
+  await page.getByRole('button', { name: /Export review/i }).click()
+  expect((await downloadPromise).suggestedFilename()).toBe('dreamex-api-contract-review.md')
+})
