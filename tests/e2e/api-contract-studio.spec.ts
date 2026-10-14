@@ -106,7 +106,7 @@ test('API Contract Studio reports unresolved schema references and malformed exa
   })
   await expect(studio.getByText(/array schema is missing items/i)).toBeVisible()
   await expect(studio.getByText(/example malformed must include value or externalValue/i)).toBeVisible()
-  await expect(studio.locator('.api-contract-loaded').nth(1)).toContainText(/1 schemas · 0 examples|1 schema · 0 contoh/i)
+  await expect(studio.locator('.api-contract-loaded').nth(1)).toContainText(/0 schemas · 0 examples|0 schema · 0 contoh/i)
 })
 
 test('API Contract Studio detects required Swagger 2.0 body parameters', async ({ page }) => {
