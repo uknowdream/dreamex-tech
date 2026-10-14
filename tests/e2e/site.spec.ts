@@ -986,15 +986,21 @@ test('navigation drawer is keyboard-visible, scrollable, and responsive on compa
 
   const toggle = page.locator('.menu-toggle')
   await expect(toggle).toBeVisible()
-  await toggle.click()
+  await toggle.focus()
+  await expect(toggle).toBeFocused()
+  await page.keyboard.press('Enter')
   const nav = page.locator('.nav-links')
   await expect(nav).toHaveClass(/nav-open/)
   await expect(nav.getByRole('link', { name: /Journal/i })).toBeVisible()
   await expect(nav.locator('.language-switch')).toBeVisible()
 
   await nav.locator('.nav-platform > summary').click()
-  await expect(nav.locator('.nav-mega-panel')).toBeVisible()
+  const panel = nav.locator('.nav-mega-panel')
+  await expect(panel).toBeVisible()
   await expect(nav.getByRole('link', { name: /Open workspace/i })).toBeVisible()
+  await expect.poll(() => panel.evaluate(element => element.scrollHeight > element.clientHeight)).toBe(true)
+  await panel.evaluate(element => { element.scrollTop = 1 })
+  await expect.poll(() => panel.evaluate(element => element.scrollTop)).toBeGreaterThan(0)
 
   await page.getByRole('link', { name: /Open workspace/i }).click()
   await expect(page).toHaveURL(/workspace$/)
