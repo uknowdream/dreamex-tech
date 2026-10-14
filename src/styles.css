@@ -2745,3 +2745,7 @@ main, header, footer, section, .container {
 @media (max-width: 640px) {
   .site-header .command-trigger { width: 38px; min-width: 38px; height: 38px; margin: 0 10px 0 auto; }
 }
+
+
+/* Keep the keyboard focus visible on the shared command search field. */
+.command-search-row:focus-within { outline: 2px solid #c5ff70; outline-offset: -2px; border-radius: 8px; }
