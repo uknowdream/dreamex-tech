@@ -1029,6 +1029,10 @@ test('unified command palette opens by keyboard, searches destinations, and navi
 
   await expect(page).toHaveURL(/api-playground$/)
   await expect(page.getByRole('dialog')).toHaveCount(0)
+  await page.locator('details.nav-platform > summary').click()
+  const activePlatformLink = page.locator('.nav-mega-group a[aria-current="page"]')
+  await expect(activePlatformLink).toHaveCount(1)
+  await expect(activePlatformLink).toContainText(/API Playground/i)
 })
 
 test('unified command palette is reachable on mobile and searches articles', async ({ page }) => {
