@@ -1,9 +1,8 @@
 import { expect, test } from '@playwright/test'
 
 test('core tool routes expose an accessible breadcrumb and avoid mobile overflow', async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 800 })
-  await page.goto('/api-playground')
   await page.setViewportSize({ width: 360, height: 800 })
+  await page.goto('/security-center')
 
   const breadcrumb = page.getByRole('navigation', { name: /Breadcrumb|Navigasi lokasi/i })
   await expect(breadcrumb).toBeVisible()
