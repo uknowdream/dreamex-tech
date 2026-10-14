@@ -149,16 +149,6 @@ function Header() {
 
   useEffect(() => {
     if (!menuOpen) return
-    const focusTimer = window.setTimeout(() => {
-      const drawer = navRef.current
-      const target = drawer?.querySelector<HTMLElement>('.nav-drawer-close')
-      if (drawer?.classList.contains('nav-open')) target?.focus({ preventScroll: true })
-    }, 0)
-    return () => window.clearTimeout(focusTimer)
-  }, [menuOpen])
-
-  useEffect(() => {
-    if (!menuOpen) return
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -209,17 +199,14 @@ function Header() {
         <button className="command-trigger" type="button" aria-keyshortcuts="Control+K Meta+K" aria-label={language === 'en' ? 'Search tools and articles' : 'Cari tools dan artikel'} onClick={() => { setMenuOpen(false); document.querySelector('.nav-platform')?.removeAttribute('open'); window.dispatchEvent(new Event('dreamex-open-command-palette')) }}>
           <Search size={16} /><span>{language === 'en' ? 'Search tools' : 'Cari tools'}</span><kbd>{typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl'} K</kbd>
         </button>
-        <button ref={menuButtonRef} className="menu-toggle" type="button" aria-label={menuOpen ? (language === 'en' ? 'Close navigation' : 'Tutup navigasi') : t('openMenu')} aria-expanded={menuOpen} aria-controls="primary-navigation" onClick={() => {
-          const opening = !menuOpen
-          setMenuOpen(opening)
-          if (opening) window.setTimeout(() => {
-            const drawer = navRef.current
-            if (drawer?.classList.contains('nav-open')) drawer.querySelector<HTMLElement>('.nav-drawer-close')?.focus({ preventScroll: true })
-          }, 75)
-        }}>
+        <button ref={menuButtonRef} className="menu-toggle" type="button" aria-label={menuOpen ? (language === 'en' ? 'Close navigation' : 'Tutup navigasi') : t('openMenu')} aria-expanded={menuOpen} aria-controls="primary-navigation" onClick={() => setMenuOpen(value => !value)}>
           <span /><span /><span className="menu-toggle-label">{language === 'en' ? 'MENU' : 'MENU'}</span>
         </button>
-        <nav ref={navRef} id="primary-navigation" className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={language === 'en' ? 'Main navigation' : 'Navigasi utama'} role={menuOpen ? 'dialog' : undefined} aria-modal={menuOpen ? true : undefined} aria-labelledby={menuOpen ? 'mobile-navigation-title' : undefined}>
+        <nav ref={navRef} id="primary-navigation" className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={language === 'en' ? 'Main navigation' : 'Navigasi utama'} role={menuOpen ? 'dialog' : undefined} aria-modal={menuOpen ? true : undefined} aria-labelledby={menuOpen ? 'mobile-navigation-title' : undefined} onTransitionEnd={event => {
+          if (event.target === event.currentTarget && event.propertyName === 'transform' && menuOpen) {
+            navRef.current?.querySelector<HTMLElement>('.nav-drawer-close')?.focus({ preventScroll: true })
+          }
+        }}>
           <div className="nav-drawer-head">
             <div><span className="nav-drawer-eyebrow">{language === 'en' ? 'DREAMEX ENGINEERING SUITE' : 'DREAMEX ENGINEERING SUITE'}</span><strong id="mobile-navigation-title">{language === 'en' ? 'Navigation' : 'Navigasi'}</strong></div>
             <button className="nav-drawer-close" type="button" data-drawer-close onClick={closeDrawer} aria-label={language === 'en' ? 'Close navigation' : 'Tutup navigasi'}><X size={18}/></button>
