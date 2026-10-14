@@ -2813,3 +2813,22 @@ main, header, footer, section, .container {
 @media (prefers-reduced-motion: reduce) {
   .command-category-filters button, .command-recent-items button { transition: none !important; }
 }
+
+/* Quality Intelligence report baseline comparison */
+.quality-intelligence-comparison { margin-top: 20px; padding: clamp(14px, 2.5vw, 20px); border: 1px solid var(--border, #2c3d55); border-radius: 12px; background: var(--surface, #0d1624); }
+.quality-intelligence-comparison .quality-intelligence-section-heading { margin-bottom: 12px; }
+.quality-intelligence-comparison .quality-intelligence-section-heading h2 { margin: 7px 0 5px; font-size: clamp(16px, 2vw, 20px); }
+.quality-intelligence-comparison .quality-intelligence-section-heading p { margin: 0; color: var(--muted, #94a3b8); font-size: 11px; line-height: 1.7; }
+.quality-intelligence-comparison-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-bottom: 12px; color: var(--muted, #94a3b8); font-size: 10px; }
+.quality-intelligence-comparison-meta strong { color: var(--text, #e8edf7); overflow-wrap: anywhere; }
+.quality-intelligence-comparison-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+.quality-intelligence-comparison-grid article { display: flex; min-width: 0; flex-direction: column; gap: 7px; padding: 12px; border: 1px solid var(--border, #26354a); border-radius: 9px; background: var(--panel, #101a2a); }
+.quality-intelligence-comparison-grid article > span { color: var(--muted, #94a3b8); font-size: 10px; line-height: 1.5; }
+.quality-intelligence-comparison-grid article > strong { color: var(--text, #e8edf7); font-size: clamp(17px, 2.4vw, 23px); letter-spacing: -.03em; overflow-wrap: anywhere; }
+.quality-intelligence-comparison-grid article > strong.improved { color: #9fe870; }
+.quality-intelligence-comparison-grid article > strong.regressed { color: #ffaaa8; }
+.quality-intelligence-comparison-grid article > small { color: var(--muted, #8192aa); font-size: 9px; line-height: 1.6; overflow-wrap: anywhere; }
+.quality-intelligence-comparison-note { display: flex; align-items: flex-start; gap: 8px; margin: 12px 0 0; color: var(--muted, #94a3b8); font-size: 10px; line-height: 1.7; }
+.quality-intelligence-comparison-note svg { flex-shrink: 0; margin-top: 2px; }
+@media (max-width: 760px) { .quality-intelligence-comparison-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .quality-intelligence-comparison-grid { grid-template-columns: minmax(0, 1fr); } }
