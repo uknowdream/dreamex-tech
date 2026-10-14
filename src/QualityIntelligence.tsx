@@ -4,7 +4,7 @@ import { useLanguage } from './i18n'
 
 type TestStatus = 'passed' | 'failed' | 'flaky' | 'skipped'
 type TestRecord = { id: string; title: string; file: string; status: TestStatus; durationMs: number; error: string }
-type ReportSummary = { id: string; importedAt: string; source: string; total: number; passed: number; failed: number; flaky: number; skipped: number; passRate: number }
+type ReportSummary = { id: string; importedAt: string; source: string; total: number; passed: number; failed: number; flaky: number; skipped: number; passRate: number; avgDurationMs: number | null }
 type Report = { source: string; format: 'JUnit XML' | 'Playwright JSON' | 'Demo sample'; tests: TestRecord[]; importedAt: string }
 const HISTORY_KEY = 'dreamex-quality-intelligence-history-v1'
 const MAX_REPORT_BYTES = 10 * 1024 * 1024
@@ -83,7 +83,8 @@ function summarize(report: Report): ReportSummary {
   const flaky = report.tests.filter(test => test.status === 'flaky').length
   const skipped = report.tests.filter(test => test.status === 'skipped').length
   const executed = total - skipped
-  return { id: report.importedAt + ':' + report.source, importedAt: report.importedAt, source: report.source, total, passed, failed, flaky, skipped, passRate: executed ? Math.round((passed + flaky) / executed * 1000) / 10 : 0 }
+  const avgDurationMs = executed ? Math.round(report.tests.filter(test => test.status !== 'skipped').reduce((sum, test) => sum + test.durationMs, 0) / executed) : 0
+  return { id: report.importedAt + ':' + report.source, importedAt: report.importedAt, source: report.source, total, passed, failed, flaky, skipped, passRate: executed ? Math.round((passed + flaky) / executed * 1000) / 10 : 0, avgDurationMs }
 }
 function readHistory(): ReportSummary[] {
   try {
@@ -92,7 +93,7 @@ function readHistory(): ReportSummary[] {
     return value.filter((item): item is ReportSummary => {
       const record = asRecord(item)
       return Boolean(record && typeof record.id === 'string' && typeof record.source === 'string' && typeof record.total === 'number' && typeof record.passRate === 'number')
-    }).slice(0, 8)
+    }).map(item => ({ ...item, avgDurationMs: typeof item.avgDurationMs === 'number' && Number.isFinite(item.avgDurationMs) ? item.avgDurationMs : null })).slice(0, 8)
   } catch { return [] }
 }
 function downloadFile(filename: string, content: string, type: string) {
@@ -124,7 +125,12 @@ export function QualityIntelligencePage() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [loading, setLoading] = useState(false)
+  const [comparisonId, setComparisonId] = useState('')
   const summary = report ? summarize(report) : null
+  const comparisonHistory = useMemo(() => history.filter(item => item.id !== summary?.id), [history, summary?.id])
+  const comparison = comparisonHistory.find(item => item.id === comparisonId) ?? comparisonHistory[0] ?? null
+  const passRateDelta = comparison && summary ? Math.round((summary.passRate - comparison.passRate) * 10) / 10 : null
+  const durationDelta = comparison && summary && comparison.avgDurationMs !== null ? summary.avgDurationMs - comparison.avgDurationMs : null
   const visibleTests = useMemo(() => (report?.tests ?? []).filter(test => (statusFilter === 'all' || test.status === statusFilter) && [test.title, test.file, test.error].join(' ').toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())), [report, statusFilter, query])
   const failures = useMemo(() => {
     const groups = new Map<string, { fingerprint: string; count: number; examples: string[] }>()
@@ -141,6 +147,7 @@ export function QualityIntelligencePage() {
 
   const applyReport = (nextReport: Report, persist = true) => {
     setReport(nextReport)
+    setComparisonId('')
     setStatusFilter('all')
     setQuery('')
     setError('')
