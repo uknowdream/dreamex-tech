@@ -120,8 +120,9 @@ function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
   useEffect(() => { setMenuOpen(false); document.querySelector('.nav-platform')?.removeAttribute('open') }, [location.pathname])
-  return <header className="site-header"><div className="container nav-wrap">
+  return <><header className="site-header"><div className="container nav-wrap">
     <Link className="brand" to="/" aria-label="DreamEx Tech beranda"><span className="brand-mark"><Braces size={21} /></span><span>DreamEx<span className="brand-muted"> Tech</span></span><span className="brand-beta">ENGINEERING NOTES</span></Link>
+    <button className="command-trigger" type="button" aria-keyshortcuts="Control+K Meta+K" aria-label={language === 'en' ? 'Search tools and articles' : 'Cari tools dan artikel'} onClick={() => { setMenuOpen(false); document.querySelector('.nav-platform')?.removeAttribute('open'); window.dispatchEvent(new Event('dreamex-open-command-palette')) }}><Search size={16} /><span>{language === 'en' ? 'Search tools' : 'Cari tools'}</span><kbd>{typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl'} K</kbd></button>
     <button className="menu-toggle" aria-label={menuOpen ? t('closeMenu') : t('openMenu')} aria-expanded={menuOpen} onClick={() => setMenuOpen(value => !value)}><span /><span /></button>
     <nav className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={language === 'en' ? 'Main navigation' : 'Navigasi utama'}>
       <NavLink to="/" end>{language === 'en' ? 'Journal' : 'Jurnal'}</NavLink>
@@ -162,6 +163,8 @@ function Header() {
       <div className="language-switch" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div>
     </nav>
   </div></header>
+
+</>
 }
 
 function Footer() {
@@ -1565,6 +1568,7 @@ function CommandPalette() {
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const previousPath = useRef(location.pathname)
   const isEnglish = language === 'en'
   const actions = [
     { id: 'home', label: isEnglish ? 'Go to home' : 'Ke beranda', detail: isEnglish ? 'Main page' : 'Halaman utama', icon: HomeIcon, run: () => { navigate('/'); window.scrollTo({ top: 0, behavior: 'smooth' }) } },
@@ -1618,11 +1622,16 @@ function CommandPalette() {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
-        setOpen(value => !value)
+        setOpen(true)
       } else if (event.key === 'Escape') setOpen(false)
     }
+    const onOpenPalette = () => setOpen(true)
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    window.addEventListener('dreamex-open-command-palette', onOpenPalette)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('dreamex-open-command-palette', onOpenPalette)
+    }
   }, [])
   useEffect(() => {
     if (!open) return
@@ -1638,15 +1647,25 @@ function CommandPalette() {
     }
   }, [open])
   useEffect(() => setActiveIndex(0), [query])
-  useEffect(() => { setOpen(false) }, [location.pathname])
+  useEffect(() => {
+    if (previousPath.current === location.pathname) return
+    previousPath.current = location.pathname
+    setOpen(false)
+    const frame = window.requestAnimationFrame(() => {
+      const heading = document.querySelector<HTMLElement>('#main-content h1')
+      if (!heading) return
+      if (!heading.hasAttribute('tabindex')) heading.tabIndex = -1
+      heading.focus({ preventScroll: true })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [location.pathname])
   const runItem = (item: typeof items[number]) => {
     setOpen(false)
     item.run()
   }
   return <>
-    <button className="command-trigger" onClick={() => setOpen(true)} aria-label={isEnglish ? 'Open command palette' : 'Buka command palette'}><Search size={15} /><span>{isEnglish ? 'Quick search' : 'Pencarian cepat'}</span><kbd>{typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl'} K</kbd></button>
     {open && <div className="command-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setOpen(false) }}>
-      <section className="command-dialog" role="dialog" aria-modal="true" aria-labelledby="command-title">
+      <section className="command-dialog" role="dialog" aria-modal="true" aria-label={isEnglish ? 'Jump to anything' : 'Cari dan buka apa saja'}>
         <div className="command-search-row"><Search size={19} /><input ref={inputRef} value={query} onChange={event => setQuery(event.target.value)} onKeyDown={event => {
           if (event.key === 'Tab') {
             const dialog = event.currentTarget.closest('[role="dialog"]')
@@ -1660,13 +1679,13 @@ function CommandPalette() {
           }
           if (event.key === 'ArrowDown') { event.preventDefault(); setActiveIndex(index => Math.min(index + 1, items.length - 1)) }
           if (event.key === 'ArrowUp') { event.preventDefault(); setActiveIndex(index => Math.max(0, index - 1)) }
-          if (event.key === 'Enter' && items[activeIndex]) { event.preventDefault(); runItem(items[activeIndex]) }
+          if (event.key === 'Enter' && items.length) { event.preventDefault(); runItem(items[Math.min(activeIndex, items.length - 1)]) }
         }} placeholder={isEnglish ? 'Search articles, topics, and pages…' : 'Cari artikel, topik, dan halaman…'} aria-label={isEnglish ? 'Search commands' : 'Cari perintah'} /><button onClick={() => setOpen(false)} aria-label={isEnglish ? 'Close command palette' : 'Tutup command palette'}><X size={18} /></button></div>
         <div className="command-results" id="command-results">
           <p className="command-section-label" id="command-title">{term ? (isEnglish ? 'SEARCH RESULTS' : 'HASIL PENCARIAN') : (isEnglish ? 'QUICK ACTIONS & ARTICLES' : 'AKSI CEPAT & ARTIKEL')}</p>
           {items.length ? items.map((item, index) => {
             const Icon = item.icon
-            return <button key={item.id} aria-label={String('accessibleLabel' in item ? item.accessibleLabel : item.label)} className={index === activeIndex ? 'command-item active' : 'command-item'} onMouseEnter={() => setActiveIndex(index)} onClick={() => runItem(item)}><span className="command-item-icon"><Icon size={16} /></span><span className="command-item-copy"><strong>{item.label}</strong><small>{item.detail}</small></span><ArrowRight size={14} className="command-item-arrow" /></button>
+            return <button key={item.id} type="button" aria-label={String('accessibleLabel' in item ? item.accessibleLabel : item.label)} className={index === activeIndex ? 'command-item active' : 'command-item'} onMouseEnter={() => setActiveIndex(index)} onClick={() => runItem(item)}><span className="command-item-icon"><Icon size={16} /></span><span className="command-item-copy"><strong>{item.label}</strong><small>{item.detail}</small></span><ArrowRight size={14} className="command-item-arrow" /></button>
           }) : <div className="command-empty">{isEnglish ? 'No matches. Try another keyword.' : 'Tidak ada hasil. Coba kata kunci lain.'}</div>}
         </div>
         <footer className="command-footer"><span><kbd>↑</kbd><kbd>↓</kbd> {isEnglish ? 'Navigate' : 'Navigasi'}</span><span><kbd>↵</kbd> {isEnglish ? 'Open' : 'Buka'}</span><span><kbd>Esc</kbd> {isEnglish ? 'Close' : 'Tutup'}</span></footer>
