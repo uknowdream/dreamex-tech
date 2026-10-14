@@ -179,7 +179,7 @@ function Footer() {
           <p>{t('footerTagline')}</p>
           <span className="footer-status"><i /> {en ? 'Built with curiosity. Refined through iteration.' : 'Dibangun dengan rasa ingin tahu. Disempurnakan lewat iterasi.'}</span>
         </div>
-        <nav className="footer-column" aria-label={en ? 'Explore DreamEx' : 'Jelajahi DreamEx'}>
+        <div className="footer-column">
           <span className="footer-heading">{en ? 'EXPLORE' : 'JELAJAHI'}</span>
           <Link to="/#topics">{t('footerTopics')} {arrow}</Link>
           <Link to="/#latest">{t('latestArticles')} {arrow}</Link>
@@ -187,8 +187,8 @@ function Footer() {
           <Link to="/learn">{en ? 'Learning hub' : 'Pusat belajar'} {arrow}</Link>
           <Link to="/about">{en ? 'About DreamEx' : 'Tentang DreamEx'} {arrow}</Link>
           <Link to="/roadmap">{en ? 'Product roadmap' : 'Roadmap produk'} {arrow}</Link>
-        </nav>
-        <nav className="footer-column" aria-label={en ? 'Engineering tools' : 'Tools engineering'}>
+        </div>
+        <div className="footer-column">
           <span className="footer-heading">{en ? 'BUILD & VERIFY' : 'BANGUN & UJI'}</span>
           <Link to="/lab">Engineering Lab {arrow}</Link>
           <Link to="/workspace">Engineering Workspace {arrow}</Link>
@@ -196,8 +196,8 @@ function Footer() {
           <Link to="/qa-studio">{en ? 'QA Automation Studio' : 'Studio Otomasi QA'} {arrow}</Link>
           <Link to="/quality-intelligence">{en ? 'Quality Intelligence' : 'Quality Intelligence'} {arrow}</Link>
           <Link to="/performance">{en ? 'Performance Observatory' : 'Observatory Performa'} {arrow}</Link>
-        </nav>
-        <nav className="footer-column" aria-label={en ? 'Platform and resources' : 'Platform dan sumber daya'}>
+        </div>
+        <div className="footer-column">
           <span className="footer-heading">{en ? 'PLATFORM & RESOURCES' : 'PLATFORM & SUMBER DAYA'}</span>
           <Link to="/engineering-intelligence">{en ? 'Engineering Intelligence' : 'Engineering Intelligence'} {arrow}</Link>
           <Link to="/control-plane">{en ? 'Engineering Control Plane' : 'Pusat Kendali Engineering'} {arrow}</Link>
@@ -208,7 +208,7 @@ function Footer() {
           <a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">{en ? 'GitHub repository' : 'Repositori GitHub'} {arrow}</a>
           <a href="https://github.com/uknowdream" target="_blank" rel="noreferrer">{en ? 'GitHub profile' : 'Profil GitHub'} {arrow}</a>
           <Link to="/rss">{en ? 'RSS feed' : 'Feed RSS'} {arrow}</Link>
-        </nav>
+        </div>
       </div>
       <div className="footer-bottom">
         <span className="copyright">© {new Date().getFullYear()} DreamEx Tech. {t('footerCopyright')}</span>
