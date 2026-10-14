@@ -261,3 +261,34 @@
 @media (prefers-reduced-motion: reduce) {
   .nav-links { transition: none !important; }
 }
+
+
+/* Tablet drawer refinements: align to the real header and keep expanded content in flow. */
+@media (min-width: 641px) and (max-width: 760px) {
+  .nav-links {
+    inset: 76px 0 0 auto;
+    height: calc(100dvh - 76px);
+    max-height: calc(100dvh - 76px);
+    align-items: stretch;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .nav-links > a,
+  .nav-platform,
+  .nav-platform > summary {
+    width: 100%;
+    align-self: stretch;
+    justify-content: flex-start;
+  }
+  .nav-mega-panel {
+    position: static;
+    inset: auto;
+    transform: none;
+    width: 100%;
+    max-height: min(56dvh, 520px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .nav-mega-intro { grid-column: auto; }
+}
