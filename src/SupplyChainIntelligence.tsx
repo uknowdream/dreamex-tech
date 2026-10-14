@@ -1,11 +1,14 @@
 import { useMemo, useState, type ChangeEvent } from 'react'
 import { AlertTriangle, Boxes, CheckCircle2, Download, FileJson2, FileText, Filter, Fingerprint, PackageCheck, Search, ShieldAlert, ShieldCheck, Upload, XCircle } from 'lucide-react'
 import { useLanguage } from './i18n'
+import './SbomIntegrity.css'
 
 type Risk = 'critical' | 'high' | 'medium' | 'low' | 'review'
 type ComponentRecord = { id: string; name: string; version: string; type: string; purl: string; license: string; supplier: string; hashes: string[]; vulnerabilities: string[]; risks: Risk[] }
 type VulnerabilityRecord = { id: string; source: string; severity: Risk; description: string; affected: string[]; recommendation: string }
-type Inventory = { source: string; format: 'CycloneDX' | 'SPDX'; importedAt: string; components: ComponentRecord[]; vulnerabilities: VulnerabilityRecord[] }
+type SbomProvenance = { documentId: string; specVersion: string; creators: string[]; createdAt: string; declaredComponents: number }
+type DuplicateIdentity = { identity: string; count: number }
+type Inventory = { source: string; format: 'CycloneDX' | 'SPDX'; importedAt: string; provenance: SbomProvenance; duplicateIdentities: DuplicateIdentity[]; components: ComponentRecord[]; vulnerabilities: VulnerabilityRecord[] }
 const MAX_BYTES = 10 * 1024 * 1024
 const HISTORY_KEY = 'dreamex-supply-chain-history-v1'
 const asObject = (value: unknown): Record<string, unknown> | null => value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null
@@ -28,6 +31,26 @@ function riskFromSeverity(value: unknown): Risk {
   if (severity === 'medium' || severity === 'moderate' || severity === 'normal') return 'medium'
   if (severity === 'low' || severity === 'negligible') return 'low'
   return 'review'
+}
+function componentIdentity(component: ComponentRecord): string {
+  if (component.purl.trim()) return 'purl:' + component.purl.trim().toLowerCase()
+  if (component.name.trim() && component.version.trim()) return 'name:' + component.name.trim().toLowerCase() + '@' + component.version.trim().toLowerCase()
+  return component.id.trim() ? 'id:' + component.id.trim().toLowerCase() : ''
+}
+function findDuplicateIdentities(components: ComponentRecord[]): DuplicateIdentity[] {
+  const groups = new Map<string, number>()
+  components.forEach(component => {
+    const identity = componentIdentity(component)
+    if (identity) groups.set(identity, (groups.get(identity) ?? 0) + 1)
+  })
+  return [...groups.entries()].filter(([, count]) => count > 1).map(([identity, count]) => ({ identity, count }))
+}
+function knownLicense(value: string): boolean {
+  return Boolean(value.trim()) && !/^(unknown|noassertion|none|n\/a)$/i.test(value.trim())
+}
+function csvCell(value: string): string {
+  const safe = /^[=+@\-\t\r]/.test(value) ? "'" + value : value
+  return '"' + safe.replaceAll('"', '""') + '"'
 }
 function cyclonedxVulnerabilities(raw: unknown): VulnerabilityRecord[] {
   return arr(raw).flatMap((item, index) => {
@@ -62,7 +85,9 @@ function parseCycloneDX(root: Record<string, unknown>): Inventory {
     arr(component.components).forEach((child, index) => visit(child, path + '.' + index))
   }
   arr(root.components).forEach((component, index) => visit(component, String(index)))
-  return { source: '', format: 'CycloneDX', importedAt: new Date().toISOString(), components, vulnerabilities: cyclonedxVulnerabilities(root.vulnerabilities) }
+  const metadata = asObject(root.metadata)
+  const authors = arr(metadata?.authors).map(value => str(asObject(value)?.name)).filter(Boolean)
+  return { source: '', format: 'CycloneDX', importedAt: new Date().toISOString(), components, vulnerabilities: cyclonedxVulnerabilities(root.vulnerabilities), duplicateIdentities: [], provenance: { documentId: str(root.serialNumber) || str(root['bom-ref']) || 'Not supplied', specVersion: str(root.specVersion) || 'Not supplied', creators: authors, createdAt: str(metadata?.timestamp) || 'Not supplied', declaredComponents: components.length } }
 }
 function parseSpdx(root: Record<string, unknown>): Inventory {
   const components: ComponentRecord[] = arr(root.packages).flatMap((raw, index) => {
@@ -80,7 +105,9 @@ function parseSpdx(root: Record<string, unknown>): Inventory {
     if (!version || !purl || /^(unknown|noassertion|none|n\/a)$/i.test(license)) risks.push('review')
     return [{ id: str(item.SPDXID, name + ':' + index), name, version, type: 'package', purl, license, supplier: str(item.supplier) || str(item.originator), hashes, vulnerabilities: [], risks }]
   })
-  return { source: '', format: 'SPDX', importedAt: new Date().toISOString(), components, vulnerabilities: [] }
+  const creationInfo = asObject(root.creationInfo)
+  const creators = arr(creationInfo?.creators).map(value => str(value)).filter(Boolean)
+  return { source: '', format: 'SPDX', importedAt: new Date().toISOString(), components, vulnerabilities: [], duplicateIdentities: [], provenance: { documentId: str(root.documentNamespace) || str(root.SPDXID) || 'Not supplied', specVersion: str(root.spdxVersion) || 'Not supplied', creators, createdAt: str(creationInfo?.created) || 'Not supplied', declaredComponents: components.length } }
 }
 function parseSbom(raw: string, source: string): Inventory {
   const value: unknown = JSON.parse(raw)
@@ -92,6 +119,9 @@ function parseSbom(raw: string, source: string): Inventory {
   else throw new Error('Unsupported SBOM. Import a CycloneDX JSON BOM or SPDX JSON document.')
   if (!inventory.components.length) throw new Error('No software components were found in this SBOM.')
   inventory.source = source
+  inventory.duplicateIdentities = findDuplicateIdentities(inventory.components)
+  const duplicateKeys = new Set(inventory.duplicateIdentities.map(item => item.identity))
+  inventory.components = inventory.components.map(component => duplicateKeys.has(componentIdentity(component)) ? { ...component, risks: unique([...component.risks, 'review']) as Risk[] } : component)
   return inventory
 }
 function summarize(inventory: Inventory) {
@@ -107,6 +137,9 @@ function summarize(inventory: Inventory) {
     vulnerableComponents: components.filter(component => component.vulnerabilities.length).length,
     findings: inventory.vulnerabilities.length,
     highCritical: inventory.vulnerabilities.filter(item => item.severity === 'high' || item.severity === 'critical').length,
+    duplicateComponents: inventory.duplicateIdentities.reduce((total, item) => total + item.count - 1, 0),
+    licenseCoveragePercent: Math.round(components.filter(component => knownLicense(component.license)).length / Math.max(components.length, 1) * 100),
+    missingHashes: components.filter(component => component.hashes.length === 0).length,
   }
 }
 function downloadFile(name: string, content: string, type: string) {
@@ -121,6 +154,8 @@ function downloadFile(name: string, content: string, type: string) {
 }
 const demo: Inventory = {
   source: 'Demo sample — not a real project SBOM', format: 'CycloneDX', importedAt: new Date().toISOString(),
+  provenance: { documentId: 'urn:example:dreamex:demo-bom', specVersion: '1.6', creators: ['DreamEx illustrative demo'], createdAt: 'Not supplied', declaredComponents: 4 },
+  duplicateIdentities: [],
   components: [
     { id: 'pkg:npm/react@19.1.0', name: 'react', version: '19.1.0', type: 'library', purl: 'pkg:npm/react@19.1.0', license: 'MIT', supplier: 'Meta', hashes: [], vulnerabilities: [], risks: [] },
     { id: 'pkg:npm/example-legacy@1.2.0', name: 'example-legacy', version: '1.2.0', type: 'library', purl: 'pkg:npm/example-legacy@1.2.0', license: 'UNKNOWN', supplier: '', hashes: [], vulnerabilities: ['DEMO-2026-0001'], risks: ['high', 'review'] },
@@ -167,16 +202,36 @@ export function SupplyChainIntelligencePage() {
   const exportJson = () => { if (inventory) downloadFile('dreamex-sbom-inventory.json', JSON.stringify({ format: 'dreamex-sbom-analysis', version: 1, summary: metrics, inventory }, null, 2), 'application/json;charset=utf-8') }
   const exportCsv = () => {
     if (!inventory) return
-    const rows = [['Name', 'Version', 'Type', 'Package URL', 'License', 'Supplier', 'Vulnerabilities', 'Review flags'], ...inventory.components.map(item => [item.name, item.version, item.type, item.purl, item.license, item.supplier, item.vulnerabilities.join('; '), item.risks.join('; ')])]
-    downloadFile('dreamex-sbom-inventory.csv', '\uFEFF' + rows.map(row => row.map(value => '"' + value.replaceAll('"', '""') + '"').join(',')).join('\r\n'), 'text/csv;charset=utf-8')
+    const duplicateKeys = new Set(inventory.duplicateIdentities.map(item => item.identity))
+    const rows = [['Name', 'Version', 'Type', 'Package URL', 'License', 'Supplier', 'Vulnerabilities', 'Review flags', 'Duplicate identity', 'Hash count'], ...inventory.components.map(item => [item.name, item.version, item.type, item.purl, item.license, item.supplier, item.vulnerabilities.join('; '), item.risks.join('; '), duplicateKeys.has(componentIdentity(item)) ? 'yes' : 'no', String(item.hashes.length)])]
+    downloadFile('dreamex-sbom-inventory.csv', '\uFEFF' + rows.map(row => row.map(csvCell).join(',')).join('\r\n'), 'text/csv;charset=utf-8')
   }
-  const exportMarkdown = () => { if (!inventory || !metrics) return; downloadFile('dreamex-sbom-review.md', ['# Software Supply Chain Review', '', '- Source: ' + inventory.source, '- Format: ' + inventory.format, '- Imported: ' + inventory.importedAt, '- Components: ' + metrics.total, '- Distinct license labels: ' + metrics.licenses, '- Vulnerability records included: ' + metrics.findings, '- High/critical records: ' + metrics.highCritical, '- Missing version: ' + metrics.missingVersion, '- Missing package URL: ' + metrics.missingPurl, '', '## Components for review', ...inventory.components.filter(item => item.risks.length || item.vulnerabilities.length).map(item => '- **' + item.name + (item.version ? '@' + item.version : '') + '** — ' + [...item.risks, ...item.vulnerabilities].join(', ')), '', '_Local SBOM analysis only. This is not a vulnerability scan, license opinion, or proof of software safety._'].join('\n'), 'text/markdown;charset=utf-8') }
+  const exportMarkdown = () => { if (!inventory || !metrics) return; downloadFile('dreamex-sbom-review.md', ['# Software Supply Chain Review', '', '- Source: ' + inventory.source, '- Format: ' + inventory.format, '- Imported: ' + inventory.importedAt, '- Components: ' + metrics.total, '- Distinct license labels: ' + metrics.licenses, '- License coverage: ' + metrics.licenseCoveragePercent + '%', '- Duplicate components: ' + metrics.duplicateComponents, '- Document ID: ' + inventory.provenance.documentId, '- Spec version: ' + inventory.provenance.specVersion, '- Creators: ' + (inventory.provenance.creators.join(', ') || 'Not supplied'), '- Metadata hashes missing: ' + metrics.missingHashes, '- Vulnerability records included: ' + metrics.findings, '- High/critical records: ' + metrics.highCritical, '- Missing version: ' + metrics.missingVersion, '- Missing package URL: ' + metrics.missingPurl, '', '## Duplicate identities', ...inventory.duplicateIdentities.map(item => '- ' + item.identity + ' — ' + item.count + ' entries'), '', '## Components for review', ...inventory.components.filter(item => item.risks.length || item.vulnerabilities.length).map(item => '- **' + item.name + (item.version ? '@' + item.version : '') + '** — ' + [...item.risks, ...item.vulnerabilities].join(', ')), '', '_Local SBOM analysis only. This is not a vulnerability scan, license opinion, or proof of software safety._'].join('\n'), 'text/markdown;charset=utf-8') }
   const clearHistory = () => { try { window.localStorage.removeItem(HISTORY_KEY); setHistory([]); setNotice(en ? 'Local history cleared.' : 'Riwayat lokal dihapus.') } catch { setNotice(en ? 'Unable to clear local history.' : 'Tidak dapat menghapus riwayat lokal.') } }
 
   return <main id="main-content" className="container supply-chain-page">
     <header className="supply-chain-hero"><div><span className="section-kicker"><Boxes size={14}/> SOFTWARE SUPPLY CHAIN / SBOM INTELLIGENCE</span><h1>{en ? <>Know what ships. <span>Prove the inventory.</span></> : <>Ketahui yang dirilis. <span>Buktikan inventarisnya.</span></>}</h1><p>{en ? 'Import CycloneDX or SPDX software bills of materials to inspect dependency inventory, license metadata, package identifiers, hashes, and vulnerability records supplied by the SBOM.' : 'Impor software bill of materials CycloneDX atau SPDX untuk meninjau inventaris dependensi, metadata lisensi, identitas paket, hash, dan data kerentanan yang disertakan dalam SBOM.'}</p><div className="supply-chain-trust"><ShieldCheck size={15}/>{en ? 'Browser-local analysis · no upload · 10 MB file limit' : 'Analisis lokal browser · tanpa unggah · batas file 10 MB'}</div></div><div className="supply-chain-import"><span className="supply-chain-import-icon"><Upload size={20}/></span><strong>{en ? 'Import an SBOM' : 'Impor SBOM'}</strong><p>CycloneDX JSON · SPDX JSON</p><label className="button button-primary supply-chain-file"><Upload size={15}/>{loading ? (en ? 'Analyzing…' : 'Menganalisis…') : (en ? 'Choose SBOM file' : 'Pilih file SBOM')}<input type="file" accept=".json,application/json" aria-label={en ? 'Choose CycloneDX or SPDX JSON SBOM' : 'Pilih SBOM JSON CycloneDX atau SPDX'} disabled={loading} onChange={event => void importFile(event)}/></label><button className="button button-secondary" type="button" onClick={loadDemo}><PackageCheck size={15}/>{en ? 'Explore demo inventory' : 'Lihat inventaris demo'}</button></div></header>
     {error && <p className="supply-chain-alert" role="alert"><AlertTriangle size={16}/>{error}</p>}{notice && <p className="supply-chain-notice" role="status">{notice}</p>}
     {inventory && metrics ? <><section className="supply-chain-summary"><div className="supply-chain-heading"><div><span className="section-kicker">{en ? 'IMPORTED INVENTORY' : 'INVENTARIS IMPOR'}</span><h2>{inventory.source}</h2><p>{inventory.format} · {metrics.total} {en ? 'components' : 'komponen'} · {new Date(inventory.importedAt).toLocaleString(en ? 'en-US' : 'id-ID')}</p></div><div className="supply-chain-exports"><button className="button button-secondary" onClick={exportJson}><FileJson2 size={15}/> JSON</button><button className="button button-secondary" onClick={exportCsv}><Download size={15}/> CSV</button><button className="button button-secondary" onClick={exportMarkdown}><FileText size={15}/> Markdown</button></div></div><div className="supply-chain-metrics"><article><span><Boxes size={16}/>{en ? 'Components' : 'Komponen'}</span><strong>{metrics.total}</strong><small>{en ? 'Inventory entries' : 'Entri inventaris'}</small></article><article><span><Fingerprint size={16}/>{en ? 'License labels' : 'Label lisensi'}</span><strong>{metrics.licenses}</strong><small>{en ? 'Distinct labels, not legal advice' : 'Label berbeda, bukan nasihat hukum'}</small></article><article><span><ShieldAlert size={16}/>{en ? 'Vulnerability records' : 'Data kerentanan'}</span><strong>{metrics.findings}</strong><small>{en ? 'Included in this SBOM' : 'Termasuk dalam SBOM ini'}</small></article><article><span><AlertTriangle size={16}/>{en ? 'High / critical' : 'Tinggi / kritis'}</span><strong>{metrics.highCritical}</strong><small>{en ? 'Based on imported ratings' : 'Berdasarkan rating impor'}</small></article><article><span><CheckCircle2 size={16}/>{en ? 'Needs metadata review' : 'Perlu tinjau metadata'}</span><strong>{inventory.components.filter(item => item.risks.includes('review')).length}</strong><small>{en ? 'Missing or unknown fields' : 'Field hilang atau tidak diketahui'}</small></article></div></section>
+    <section className="supply-chain-integrity" aria-labelledby="supply-chain-integrity-title">
+      <div className="supply-chain-integrity-head">
+        <div><span className="section-kicker">SBOM INTEGRITY / PROVENANCE</span><h2 id="supply-chain-integrity-title">{en ? 'Provenance and integrity review' : 'Tinjauan provenance dan integritas'}</h2><p>{en ? 'Review metadata, license coverage, hashes, and repeated package identities.' : 'Tinjau metadata, cakupan lisensi, hash, dan identitas paket berulang.'}</p></div>
+        <strong className={metrics.duplicateComponents ? 'supply-chain-duplicate-count has-duplicates' : 'supply-chain-duplicate-count'}>{metrics.duplicateComponents} {en ? 'duplicate entries' : 'entri duplikat'}</strong>
+      </div>
+      <div className="supply-chain-provenance-grid">
+        <article><span>{en ? 'Document ID' : 'ID dokumen'}</span><strong>{inventory.provenance.documentId}</strong></article>
+        <article><span>{en ? 'Specification' : 'Spesifikasi'}</span><strong>{inventory.provenance.specVersion}</strong></article>
+        <article><span>{en ? 'Creators' : 'Pembuat'}</span><strong>{inventory.provenance.creators.join(', ') || (en ? 'Not supplied' : 'Tidak disertakan')}</strong></article>
+        <article><span>{en ? 'Created at' : 'Dibuat pada'}</span><strong>{inventory.provenance.createdAt}</strong></article>
+        <article><span>{en ? 'License coverage' : 'Cakupan lisensi'}</span><strong>{metrics.licenseCoveragePercent}%</strong></article>
+        <article><span>{en ? 'Missing hashes' : 'Hash tidak tersedia'}</span><strong>{metrics.missingHashes}</strong></article>
+      </div>
+      {inventory.duplicateIdentities.length > 0 && <div className="supply-chain-duplicate-alert" role="status">
+        <AlertTriangle size={17}/><div><strong>{en ? 'Repeated package identities need review' : 'Identitas paket berulang perlu ditinjau'}</strong>
+        <ul>{inventory.duplicateIdentities.map(item => <li key={item.identity}><code>{item.identity}</code> — {item.count} {en ? 'entries' : 'entri'}</li>)}</ul></div>
+      </div>}
+      <p className="supply-chain-provenance-note"><ShieldCheck size={14}/>{en ? 'Metadata and hashes are read from the SBOM, not cryptographically verified here. License coverage is a metadata indicator, not legal advice.' : 'Metadata dan hash dibaca dari SBOM, bukan diverifikasi secara kriptografis di sini. Cakupan lisensi adalah indikator metadata, bukan nasihat hukum.'}</p>
+    </section>
     <section className="supply-chain-components"><div className="supply-chain-section-head"><div><span className="section-kicker">{en ? 'DEPENDENCY INVENTORY' : 'INVENTARIS DEPENDENSI'}</span><h2>{en ? 'Component-level evidence' : 'Bukti per komponen'}</h2><p>{en ? 'Filter by review signal and search names, package URLs, licenses, or vulnerability IDs.' : 'Filter sinyal review dan cari nama, URL paket, lisensi, atau ID kerentanan.'}</p></div><span>{filtered.length} / {inventory.components.length}</span></div><div className="supply-chain-filters"><label><Filter size={15}/><select aria-label={en ? 'Filter components by risk' : 'Filter komponen berdasarkan risiko'} value={riskFilter} onChange={event => setRiskFilter(event.target.value as typeof riskFilter)}><option value="all">{en ? 'All components' : 'Semua komponen'}</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option><option value="review">{en ? 'Needs review' : 'Perlu tinjau'}</option></select></label><label className="supply-chain-search"><Search size={15}/><input type="search" aria-label={en ? 'Search SBOM components' : 'Cari komponen SBOM'} placeholder={en ? 'Search name, version, license, purl…' : 'Cari nama, versi, lisensi, purl…'} value={query} onChange={event => setQuery(event.target.value)}/></label></div><div className="supply-chain-table-wrap"><table className="supply-chain-table"><thead><tr><th>{en ? 'Component' : 'Komponen'}</th><th>{en ? 'License' : 'Lisensi'}</th><th>{en ? 'Review signals' : 'Sinyal review'}</th></tr></thead><tbody>{filtered.map(component => <tr key={component.id}><td><strong>{component.name}</strong><small>{component.version || (en ? 'Version missing' : 'Versi tidak tersedia')} · {component.type}</small>{component.purl && <code>{component.purl}</code>}{component.supplier && <small>{en ? 'Supplier: ' : 'Pemasok: '}{component.supplier}</small>}{component.hashes.map(hash => <small key={hash}>{hash}</small>)}</td><td>{component.license}</td><td><div className="supply-chain-badges">{component.vulnerabilities.map(id => <span key={id} className="supply-chain-risk risk-high">{id}</span>)}{component.risks.map((risk,index) => <span key={risk+index} className={'supply-chain-risk risk-'+risk}>{risk==='review' ? (en ? 'Review metadata' : 'Tinjau metadata') : risk}</span>)}{!component.risks.length && !component.vulnerabilities.length && <span className="supply-chain-clean"><CheckCircle2 size={13}/>{en ? 'No imported flags' : 'Tidak ada flag impor'}</span>}</div></td></tr>)}</tbody></table>{filtered.length===0&&<p className="supply-chain-empty">{en ? 'No components match this filter.' : 'Tidak ada komponen yang cocok dengan filter.'}</p>}</div></section>
     {inventory.vulnerabilities.length>0&&<section className="supply-chain-vulnerabilities"><div className="supply-chain-section-head"><div><span className="section-kicker">{en ? 'IMPORTED FINDINGS' : 'TEMUAN IMPOR'}</span><h2>{en ? 'Vulnerability records' : 'Data kerentanan'}</h2><p>{en ? 'Only vulnerabilities present in the imported CycloneDX file are displayed.' : 'Hanya data kerentanan yang ada dalam file CycloneDX impor yang ditampilkan.'}</p></div></div><div className="supply-chain-vuln-list">{inventory.vulnerabilities.map(vulnerability=><article key={vulnerability.id}><div><span className={'supply-chain-risk risk-'+vulnerability.severity}>{vulnerability.severity}</span><h3>{vulnerability.id}</h3></div><p>{vulnerability.description}</p>{vulnerability.affected.length>0&&<small>{en ? 'Affected refs: ' : 'Referensi terdampak: '}{vulnerability.affected.join(', ')}</small>}{vulnerability.recommendation&&<small>{en ? 'Advisory / recommendation: ' : 'Advisori / rekomendasi: '}{vulnerability.recommendation}</small>}</article>)}</div></section>}</> : <section className="supply-chain-empty-state"><div><Boxes size={26}/><h2>{en ? 'Start with an SBOM, not a guess' : 'Mulai dari SBOM, bukan tebakan'}</h2><p>{en ? 'Import a real CycloneDX or SPDX JSON file, or open the clearly labeled demo inventory.' : 'Impor file JSON CycloneDX atau SPDX nyata, atau buka inventaris demo yang diberi label jelas.'}</p></div><div><span><CheckCircle2 size={15}/>{en ? 'Component and license inventory' : 'Inventaris komponen dan lisensi'}</span><span><Fingerprint size={15}/>{en ? 'Package URLs and available hashes' : 'Package URL dan hash yang tersedia'}</span><span><ShieldAlert size={15}/>{en ? 'Vulnerability records included in the SBOM' : 'Data kerentanan yang disertakan dalam SBOM'}</span><span><Download size={15}/>{en ? 'Portable JSON, CSV, and Markdown evidence' : 'Bukti portabel JSON, CSV, dan Markdown'}</span></div></section>}
     {history.length>0&&<section className="supply-chain-history"><div className="supply-chain-section-head"><div><span className="section-kicker">{en ? 'LOCAL HISTORY' : 'RIWAYAT LOKAL'}</span><h2>{en ? 'Recent SBOM snapshots' : 'Snapshot SBOM terbaru'}</h2><p>{en ? 'Summary only. Raw component inventories are not stored in browser history.' : 'Hanya ringkasan. Inventaris komponen mentah tidak disimpan dalam riwayat browser.'}</p></div><button className="button button-secondary" onClick={clearHistory}><XCircle size={15}/>{en ? 'Clear history' : 'Hapus riwayat'}</button></div><div className="supply-chain-history-list">{history.map((item,index)=><article key={item.source+item.importedAt+index}><div><strong>{item.source}</strong><small>{item.format} · {new Date(item.importedAt).toLocaleString(en ? 'en-US' : 'id-ID')}</small></div><strong>{item.components}</strong><span>{item.vulnerabilities} {en ? 'vulnerability records' : 'data kerentanan'}</span></article>)}</div></section>}
