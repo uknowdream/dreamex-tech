@@ -4,12 +4,12 @@ test('Command Center SLO worksheet calculates budget and exports manual evidence
   await page.goto('/command-center')
   const worksheet = page.getByRole('region', { name: /SLO and error-budget calculator/i })
   await expect(worksheet).toBeVisible()
-  await expect(worksheet.getByText('43.2 min')).toBeVisible()
-  await expect(worksheet.getByText('99.955%')).toBeVisible()
+  await expect(worksheet.getByText(/43[.,]2 min/)).toBeVisible()
+  await expect(worksheet.getByText(/99[.,]955%/)).toBeVisible()
 
   await worksheet.getByLabel(/Observed downtime minutes/i).fill('60')
   await expect(worksheet.getByText(/exceed the target budget/i)).toBeVisible()
-  await expect(worksheet.getByText('43.2 min')).toBeVisible()
+  await expect(worksheet.getByText(/43[.,]2 min/)).toBeVisible()
 
   const downloadPromise = page.waitForEvent('download')
   await worksheet.getByRole('button', { name: /Export calculation/i }).click()
