@@ -2786,3 +2786,16 @@ main, header, footer, section, .container {
   .tool-route-breadcrumbs { width: calc(100% - 32px); padding-top: 10px; font-size: 10px; }
   .tool-route-breadcrumbs ol { gap: 6px; }
 }
+
+
+/* Command palette discovery filters and browser-local recent tools */
+.command-category-filters { display: flex; gap: 7px; padding: 10px 16px 12px; overflow-x: auto; border-bottom: 1px solid var(--line, #26364b); scrollbar-width: thin; }
+.command-category-filters button { flex: 0 0 auto; min-height: 32px; padding: 6px 10px; border: 1px solid #314158; border-radius: 999px; background: transparent; color: #9cacc1; font: inherit; font-size: 10px; white-space: nowrap; cursor: pointer; }
+.command-category-filters button:hover { border-color: #60748e; color: #e8edf7; }
+.command-category-filters button.is-active { border-color: #c5ff70; background: rgba(197, 255, 112, .09); color: #c5ff70; }
+.command-category-filters button:focus-visible,.command-results-heading button:focus-visible { outline: 2px solid #c5ff70; outline-offset: 2px; }
+.command-results-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-right: 16px; }
+.command-results-heading .command-section-label { margin-right: auto; }
+.command-results-heading button { border: 0; background: transparent; color: #93a2ba; font: inherit; font-size: 10px; text-decoration: underline; cursor: pointer; }
+@media (max-width: 480px) { .command-category-filters { gap: 6px; padding: 9px 12px 11px; } .command-category-filters button { min-height: 34px; padding: 6px 9px; } .command-results-heading { padding-right: 12px; } }
+@media (prefers-reduced-motion: reduce) { .command-category-filters button { transition-duration: 0s !important; } }
