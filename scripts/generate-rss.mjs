@@ -93,6 +93,7 @@ const sitemapUrls = [
   { loc: `${siteUrl}/engineering-intelligence`, changefreq: 'monthly', priority: '0.8' },
   { loc: `${siteUrl}/control-plane`, changefreq: 'weekly', priority: '0.8' },
   { loc: `${siteUrl}/quality-intelligence`, changefreq: 'weekly', priority: '0.8' },
+  { loc: `${siteUrl}/reliability-center`, changefreq: 'weekly', priority: '0.8' },
   { loc: `${siteUrl}/supply-chain-intelligence`, changefreq: 'weekly', priority: '0.8' },
   { loc: `${siteUrl}/roadmap`, changefreq: 'weekly', priority: '0.8' },
   { loc: `${siteUrl}/qa-studio`, changefreq: 'monthly', priority: '0.8' },
