@@ -4,7 +4,7 @@ import { useLanguage } from './i18n'
 
 type TestStatus = 'passed' | 'failed' | 'flaky' | 'skipped'
 type TestRecord = { id: string; title: string; file: string; status: TestStatus; durationMs: number; error: string }
-type ReportSummary = { id: string; importedAt: string; source: string; total: number; passed: number; failed: number; flaky: number; skipped: number; passRate: number }
+type ReportSummary = { id: string; importedAt: string; source: string; total: number; passed: number; failed: number; flaky: number; skipped: number; passRate: number; durationMs: number }
 type Report = { source: string; format: 'JUnit XML' | 'Playwright JSON' | 'Demo sample'; tests: TestRecord[]; importedAt: string }
 const HISTORY_KEY = 'dreamex-quality-intelligence-history-v1'
 const MAX_REPORT_BYTES = 10 * 1024 * 1024
@@ -83,15 +83,28 @@ function summarize(report: Report): ReportSummary {
   const flaky = report.tests.filter(test => test.status === 'flaky').length
   const skipped = report.tests.filter(test => test.status === 'skipped').length
   const executed = total - skipped
-  return { id: report.importedAt + ':' + report.source, importedAt: report.importedAt, source: report.source, total, passed, failed, flaky, skipped, passRate: executed ? Math.round((passed + flaky) / executed * 1000) / 10 : 0 }
+  const durationMs = report.tests.reduce((sum, test) => sum + Math.max(0, test.durationMs), 0)
+  return { id: report.importedAt + ':' + report.source, importedAt: report.importedAt, source: report.source, total, passed, failed, flaky, skipped, passRate: executed ? Math.round((passed + flaky) / executed * 1000) / 10 : 0, durationMs }
 }
 function readHistory(): ReportSummary[] {
   try {
     const value: unknown = JSON.parse(window.localStorage.getItem(HISTORY_KEY) ?? '[]')
     if (!Array.isArray(value)) return []
-    return value.filter((item): item is ReportSummary => {
+    return value.flatMap(item => {
       const record = asRecord(item)
-      return Boolean(record && typeof record.id === 'string' && typeof record.source === 'string' && typeof record.total === 'number' && typeof record.passRate === 'number')
+      if (!record || typeof record.id !== 'string' || typeof record.source !== 'string' || typeof record.total !== 'number' || typeof record.passRate !== 'number') return []
+      return [{
+        id: record.id,
+        importedAt: asString(record.importedAt),
+        source: record.source,
+        total: asNumber(record.total),
+        passed: asNumber(record.passed),
+        failed: asNumber(record.failed),
+        flaky: asNumber(record.flaky),
+        skipped: asNumber(record.skipped),
+        passRate: asNumber(record.passRate),
+        durationMs: asNumber(record.durationMs),
+      }]
     }).slice(0, 8)
   } catch { return [] }
 }
@@ -119,12 +132,24 @@ export function QualityIntelligencePage() {
   const en = language === 'en'
   const [report, setReport] = useState<Report | null>(null)
   const [history, setHistory] = useState<ReportSummary[]>(readHistory)
+  const [comparisonBaseline, setComparisonBaseline] = useState<ReportSummary | null>(null)
   const [statusFilter, setStatusFilter] = useState<'all' | TestStatus>('all')
   const [query, setQuery] = useState('')
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [loading, setLoading] = useState(false)
   const summary = report ? summarize(report) : null
+  const comparison = useMemo(() => {
+    if (!summary || !comparisonBaseline) return null
+    return {
+      baseline: comparisonBaseline,
+      passRateDelta: Math.round((summary.passRate - comparisonBaseline.passRate) * 10) / 10,
+      failedDelta: summary.failed - comparisonBaseline.failed,
+      flakyDelta: summary.flaky - comparisonBaseline.flaky,
+      totalDelta: summary.total - comparisonBaseline.total,
+      durationDelta: summary.durationMs - comparisonBaseline.durationMs,
+    }
+  }, [summary, comparisonBaseline])
   const visibleTests = useMemo(() => (report?.tests ?? []).filter(test => (statusFilter === 'all' || test.status === statusFilter) && [test.title, test.file, test.error].join(' ').toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())), [report, statusFilter, query])
   const failures = useMemo(() => {
     const groups = new Map<string, { fingerprint: string; count: number; examples: string[] }>()
@@ -145,9 +170,11 @@ export function QualityIntelligencePage() {
     setQuery('')
     setError('')
     setNotice('')
-    if (!persist) return
     const nextSummary = summarize(nextReport)
-    const nextHistory = [nextSummary, ...readHistory()].filter((item, index, items) => items.findIndex(candidate => candidate.id === item.id) === index).slice(0, 8)
+    const previousHistory = readHistory()
+    setComparisonBaseline(persist ? previousHistory.find(item => item.id !== nextSummary.id) ?? null : null)
+    if (!persist) return
+    const nextHistory = [nextSummary, ...previousHistory].filter((item, index, items) => items.findIndex(candidate => candidate.id === item.id) === index).slice(0, 8)
     try { window.localStorage.setItem(HISTORY_KEY, JSON.stringify(nextHistory)); setHistory(nextHistory) } catch { setHistory(readHistory()); setNotice(en ? 'Report analyzed, but browser storage is unavailable; history was not saved.' : 'Laporan dianalisis, tetapi penyimpanan browser tidak tersedia; riwayat tidak disimpan.') }
   }
 
@@ -203,6 +230,17 @@ export function QualityIntelligencePage() {
           <article><span><RotateCcw size={16} />{en ? 'Flaky' : 'Flaky'}</span><strong>{summary.flaky}</strong><small>{en ? 'Passed after a failed retry' : 'Lulus setelah retry gagal'}</small></article>
           <article><span><Clock3 size={16} />{en ? 'Slowest test' : 'Tes terlama'}</span><strong>{(Math.max(0, ...report.tests.map(test => test.durationMs)) / 1000).toFixed(2)}s</strong><small>{en ? 'Longest recorded test' : 'Durasi tes terpanjang'}</small></article>
         </div>
+        {comparison && <section className="quality-intelligence-comparison" aria-label={en ? 'Report baseline comparison' : 'Perbandingan baseline laporan'}>
+          <div className="quality-intelligence-section-heading"><div><span className="section-kicker">{en ? 'BASELINE COMPARISON' : 'PERBANDINGAN BASELINE'}</span><h2>{en ? 'Change since previous import' : 'Perubahan sejak impor sebelumnya'}</h2><p>{en ? 'Current report compared with the most recent earlier snapshot saved in this browser.' : 'Laporan saat ini dibandingkan dengan snapshot terdahulu terbaru yang tersimpan di browser ini.'}</p></div></div>
+          <div className="quality-intelligence-comparison-meta"><span>{en ? 'Baseline' : 'Baseline'}: <strong>{comparison.baseline.source}</strong></span><span>{new Date(comparison.baseline.importedAt).toLocaleString(en ? 'en-US' : 'id-ID')}</span><span>{comparison.baseline.total} {en ? 'tests' : 'tes'}</span></div>
+          <div className="quality-intelligence-comparison-grid">
+            <article><span>{en ? 'Pass rate delta' : 'Perubahan pass rate'}</span><strong className={comparison.passRateDelta > 0 ? 'improved' : comparison.passRateDelta < 0 ? 'regressed' : ''}>{comparison.passRateDelta > 0 ? '+' : ''}{comparison.passRateDelta} pp</strong><small>{en ? 'Current' : 'Saat ini'} {summary.passRate}% · {en ? 'baseline' : 'baseline'} {comparison.baseline.passRate}%</small></article>
+            <article><span>{en ? 'Failed tests delta' : 'Perubahan test gagal'}</span><strong className={comparison.failedDelta < 0 ? 'improved' : comparison.failedDelta > 0 ? 'regressed' : ''}>{comparison.failedDelta > 0 ? '+' : ''}{comparison.failedDelta}</strong><small>{en ? 'Current' : 'Saat ini'} {summary.failed} · {en ? 'baseline' : 'baseline'} {comparison.baseline.failed}</small></article>
+            <article><span>{en ? 'Flaky tests delta' : 'Perubahan flaky test'}</span><strong className={comparison.flakyDelta < 0 ? 'improved' : comparison.flakyDelta > 0 ? 'regressed' : ''}>{comparison.flakyDelta > 0 ? '+' : ''}{comparison.flakyDelta}</strong><small>{en ? 'Current' : 'Saat ini'} {summary.flaky} · {en ? 'baseline' : 'baseline'} {comparison.baseline.flaky}</small></article>
+            <article><span>{en ? 'Total duration delta' : 'Perubahan durasi total'}</span><strong className={comparison.durationDelta < 0 ? 'improved' : comparison.durationDelta > 0 ? 'regressed' : ''}>{comparison.durationDelta > 0 ? '+' : ''}{(comparison.durationDelta / 1000).toFixed(2)}s</strong><small>{en ? 'Current' : 'Saat ini'} {(summary.durationMs / 1000).toFixed(2)}s · {en ? 'baseline' : 'baseline'} {(comparison.baseline.durationMs / 1000).toFixed(2)}s</small></article>
+          </div>
+          <p className="quality-intelligence-comparison-note"><ShieldCheck size={14}/>{en ? 'This is a summary-level comparison. Test suites, environments, and sample sizes may differ; it does not prove a regression cause or compare individual tests across renamed files.' : 'Ini perbandingan tingkat ringkasan. Suite, lingkungan, dan ukuran sampel dapat berbeda; hasil tidak membuktikan penyebab regresi atau membandingkan test individual yang berganti nama.'}</p>
+        </section>}
       </section>
       <section className="quality-intelligence-tests">
         <div className="quality-intelligence-section-heading"><div><span className="section-kicker">{en ? 'TEST INVENTORY' : 'INVENTARIS TES'}</span><h2>{en ? 'Test-level evidence' : 'Bukti per test'}</h2><p>{en ? 'Filter the imported results and inspect individual failure messages.' : 'Filter hasil impor dan periksa pesan kegagalan setiap test.'}</p></div><span className="quality-intelligence-count">{visibleTests.length} / {report.tests.length}</span></div>
