@@ -5,7 +5,7 @@ The production smoke workflow checks the deployed public site independently of t
 ## What it checks
 
 - Homepage and core route shells: `/`, `/api-playground`, `/qa-studio`, `/supply-chain-intelligence`, `/security-center`, `/control-plane`, `/command-center`, and `/roadmap`.
-- Public feeds and discovery endpoints: `/rss.xml` and `/sitemap.xml`.
+- Public feeds and discovery endpoints: `/rss.xml`, the `/rss` page, and `/sitemap.xml`.
 - HTTP success, expected HTML/XML content type, essential shell/feed markers, and HTTPS after redirects.
 - A bounded request timeout and one retry for transient network or server errors.
 
