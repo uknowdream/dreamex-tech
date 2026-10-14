@@ -1773,7 +1773,40 @@ function ScrollProgress() {
 }
 
 
+const TOOL_BREADCRUMB_LABELS: Record<string, { id: string; en: string }> = {
+  '/workspace': { id: 'Engineering Workspace', en: 'Engineering Workspace' },
+  '/control-plane': { id: 'Pusat Kendali Engineering', en: 'Engineering Control Plane' },
+  '/engineering-intelligence': { id: 'Engineering Intelligence', en: 'Engineering Intelligence' },
+  '/command-center': { id: 'Command Center', en: 'Command Center' },
+  '/qa-studio': { id: 'QA Automation Studio', en: 'QA Automation Studio' },
+  '/quality-intelligence': { id: 'Quality Intelligence', en: 'Quality Intelligence' },
+  '/supply-chain-intelligence': { id: 'Supply Chain Intelligence', en: 'Supply Chain Intelligence' },
+  '/security-center': { id: 'Pusat Keamanan', en: 'Security Center' },
+  '/api-playground': { id: 'API Playground', en: 'API Playground' },
+  '/performance': { id: 'Performance Observatory', en: 'Performance Observatory' },
+  '/knowledge-graph': { id: 'Engineering Knowledge Graph', en: 'Engineering Knowledge Graph' },
+  '/roadmap': { id: 'Roadmap Produk', en: 'Product Roadmap' },
+  '/lab': { id: 'Engineering Lab', en: 'Engineering Lab' },
+  '/devtools': { id: 'Developer Utilities', en: 'Developer Utilities' },
+}
+
+function ToolRouteBreadcrumbs() {
+  const { pathname } = useLocation()
+  const { language } = useLanguage()
+  const label = TOOL_BREADCRUMB_LABELS[pathname.replace(/\\/+$/, '') || '/']
+  if (!label) return null
+  const homeLabel = language === 'en' ? 'Home' : 'Beranda'
+  const currentLabel = language === 'en' ? label.en : label.id
+  return <nav className="tool-route-breadcrumbs" aria-label={language === 'en' ? 'Breadcrumb' : 'Navigasi lokasi'}>
+    <ol>
+      <li><Link to="/">{homeLabel}</Link></li>
+      <li aria-hidden="true" className="tool-route-breadcrumb-separator">/</li>
+      <li aria-current="page"><span>{currentLabel}</span></li>
+    </ol>
+  </nav>
+}
+
 export default function App() {
   const { t } = useLanguage()
-  return <><a className="skip-link" href="#main-content">{t('skip')}</a><OfflineNotice /><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><Routes><Route path="/" element={<Home />} /><Route path="/observatory" element={<WebQualityObservatoryPage />} /> <Route path="/devtools" element={<DeveloperUtilitiesPage />} /> <Route path="/workspace" element={<EngineeringWorkspacePage />} /><Route path="/control-plane" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Control Plane…</div>}><EngineeringControlPlanePage /></Suspense>} /><Route path="/engineering-intelligence" element={<EngineeringIntelligencePage />} /><Route path="/command-center" element={<EngineeringCommandCenterPage />} /><Route path="/qa-studio" element={<QAAutomationStudioPage />} /><Route path="/quality-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Quality Intelligence…</div>}><QualityIntelligencePage /></Suspense>} /><Route path="/supply-chain-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Supply Chain Intelligence…</div>}><SupplyChainIntelligencePage /></Suspense>} /><Route path="/security-center" element={<SecurityCenterPage />} /><Route path="/api-playground" element={<ApiPlaygroundPage />} /><Route path="/performance" element={<PerformanceObservatoryPage />} /><Route path="/knowledge-graph" element={<EngineeringKnowledgeGraphPage />} /><Route path="/roadmap" element={<EngineeringRoadmapPage />} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><Footer /></>
+  return <><a className="skip-link" href="#main-content">{t('skip')}</a><OfflineNotice /><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><ToolRouteBreadcrumbs /><Routes><Route path="/" element={<Home />} /><Route path="/observatory" element={<WebQualityObservatoryPage />} /> <Route path="/devtools" element={<DeveloperUtilitiesPage />} /> <Route path="/workspace" element={<EngineeringWorkspacePage />} /><Route path="/control-plane" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Control Plane…</div>}><EngineeringControlPlanePage /></Suspense>} /><Route path="/engineering-intelligence" element={<EngineeringIntelligencePage />} /><Route path="/command-center" element={<EngineeringCommandCenterPage />} /><Route path="/qa-studio" element={<QAAutomationStudioPage />} /><Route path="/quality-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Quality Intelligence…</div>}><QualityIntelligencePage /></Suspense>} /><Route path="/supply-chain-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Supply Chain Intelligence…</div>}><SupplyChainIntelligencePage /></Suspense>} /><Route path="/security-center" element={<SecurityCenterPage />} /><Route path="/api-playground" element={<ApiPlaygroundPage />} /><Route path="/performance" element={<PerformanceObservatoryPage />} /><Route path="/knowledge-graph" element={<EngineeringKnowledgeGraphPage />} /><Route path="/roadmap" element={<EngineeringRoadmapPage />} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><Footer /></>
 }
