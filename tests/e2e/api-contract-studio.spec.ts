@@ -73,3 +73,54 @@ test('API Contract Studio rejects invalid and oversized formats without crashing
   })
   await expect(studio.getByRole('alert')).toContainText(/OpenAPI JSON/i)
 })
+
+
+test('API Contract Studio validates schemas and examples and recognizes Swagger 2 body parameters', async ({ page }) => {
+  await page.goto('/api-playground')
+  const studio = page.locator('.api-contract-studio')
+  const swagger2 = {
+    swagger: '2.0',
+    info: { title: 'Orders API', version: '1.0.0' },
+    paths: {
+      '/orders': {
+        post: {
+          parameters: [{ name: 'body', in: 'body', required: false, schema: { type: 'object', properties: { id: { type: 'string' } } } }],
+          responses: { '200': { description: 'OK', schema: { type: 'object', properties: { ok: { type: 'boolean' } } }, examples: { 'application/json': { ok: 'yes' } } },
+        },
+      },
+    },
+  }
+  const openapi3 = {
+    openapi: '3.0.3',
+    info: { title: 'Orders API', version: '2.0.0' },
+    paths: {
+      '/orders': {
+        post: {
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: { type: 'object', required: ['id', 'missing'], properties: { id: { type: 'string', enum: ['a', 'b'], default: 'c' } } },
+                example: { id: 5 },
+              },
+            },
+          },
+          responses: { '200': { description: 'OK', content: { 'application/json': { schema: { type: 'array', items: { type: 'string' } }, example: { unexpected: true } } } },
+        },
+      },
+    },
+  }
+
+  await studio.getByLabel(/Baseline OpenAPI JSON/i).setInputFiles({
+    name: 'swagger2.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(swagger2)),
+  })
+  await studio.getByLabel(/Current OpenAPI JSON/i).setInputFiles({
+    name: 'openapi3.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(openapi3)),
+  })
+
+  await expect(studio.getByText(/required property "missing" is not declared/i)).toBeVisible()
+  await expect(studio.getByText(/default value is not included in enum/i)).toBeVisible()
+  await expect(studio.getByText(/example value does not match schema type "string"/i)).toBeVisible()
+  await expect(studio.getByText(/example value does not match schema type "array"/i)).toBeVisible()
+  await expect(studio.getByText(/Request body is now required: POST \/orders/i)).toBeVisible()
+})
