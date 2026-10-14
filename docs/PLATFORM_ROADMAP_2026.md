@@ -210,7 +210,7 @@ The repository currently contains a technology publication and browser-first eng
 
 ## 7. Execution status and immediate action list
 
-**Status snapshot:** 14 October 2026. Implementation, CI validation, and production deployment are separate gates. A feature is not production-complete merely because its PR is merged.
+**Status snapshot:** 14 October 2026. Implementation, CI validation, and production deployment are separate gates. A merged PR is not production-complete merely because it is merged.
 
 ### Implemented and merged into the repository
 
@@ -239,8 +239,8 @@ The repository currently contains a technology publication and browser-first eng
 
 ### Production verification still required
 
-- [ ] **Exact-commit deployment.** Current `main` SHA at this snapshot is `80f3fb39fca154ca1de22dbff310d52820ee828c`; the production alias is still on `9ba208f9621c2342b9f1386b659e89f575615911`. The Vercel status for newer main commits reported a build-rate-limit failure. Do not claim the current main code is deployed until Vercel reports READY for the exact SHA.
-- [x] **Live smoke sample for the currently deployed version.** The homepage, `/api-playground`, `/rss.xml`, `/rss`, and `/sitemap.xml` returned HTTP 200. `/rss.xml` returned RSS XML; `/rss` returned the SPA HTML shell. Use `/rss.xml` as the subscription feed. These checks do not verify newer, undeployed commits.
+- [ ] **Exact-commit deployment.** Current `main` SHA at this snapshot is `2a8e7799336f2cd756dc6c91c430ec40459bc981`; the production alias is still on `9ba208f9621c2342b9f1386b659e89f575615911`. The Vercel status for newer main commits reported a build-rate-limit failure. Do not claim the current main code is deployed until Vercel reports READY for the exact SHA.
+- [x] **Live smoke sample for the currently deployed version.** The homepage, `/api-playground`, `/rss.xml`, `/rss`, and `/sitemap.xml` returned HTTP 200. `/rss.xml` returned RSS XML; `/rss` returned the SPA HTML shell. Use `/rss.xml` as the subscription feed. This does not verify newer, undeployed commits. A separate recorded smoke snapshot covered the configured route/feed set; it likewise does not replace the exact-commit deployment gate.
 - [ ] **Fresh CI on exact main SHA.** Confirm typecheck, lint, build, output/i18n verification, and desktop/mobile Playwright for the exact merged commit. Passing PR checks alone is not proof of a fresh main run.
 
 ### Next implementation queue
@@ -256,7 +256,7 @@ The repository currently contains a technology publication and browser-first eng
 
 - [ ] Review implementation risk and automated reviewer findings.
 - [ ] Run typecheck, lint, production build, output verification, and bilingual verification.
-- [ ] Run relevant desktop and mobile Playwright coverage; investigate failures rather than bypassing them.
+- [ ] Run relevant desktop and mobile Playwright coverage; investigate failures instead of bypassing them.
 - [ ] Inspect the exact preview and verify responsive, keyboard, focus, and reduced-motion behavior.
 - [ ] Merge only when required checks pass and stated limitations are accurate.
 - [ ] Verify production corresponds to the merged commit; smoke-test the homepage, critical tool routes, `/rss.xml`, `/rss`, and `/sitemap.xml`.
