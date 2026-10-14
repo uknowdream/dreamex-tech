@@ -672,7 +672,7 @@ test('QA Automation Studio generates and exports editable QA artifacts', async (
   await page.getByRole('button', { name: /Payment refund.*Restore/i }).click()
   await expect(page.getByLabel(/Feature \/ component/i)).toHaveValue('Payment refund')
   const downloadPromise = page.waitForEvent('download')
-  await page.getByRole('button', { name: /Download/i }).click()
+  await page.getByRole('button', { name: 'Download', exact: true }).click()
   expect((await downloadPromise).suggestedFilename()).toBe('dreamex-bug.md')
 })
 
@@ -1030,11 +1030,11 @@ test('unified command palette opens by keyboard, searches destinations, and navi
   await search.fill('API Playground')
   const result = dialog.getByRole('button', { name: /API Playground/i })
   await expect(result).toBeVisible()
+  await expect(dialog.locator('.command-item.active')).toContainText(/API Playground/i)
   await page.keyboard.press('Enter')
 
   await expect(page).toHaveURL(/api-playground$/)
   await expect(page.getByRole('dialog')).toHaveCount(0)
-  await page.locator('details.nav-platform > summary').click()
   const activePlatformLink = page.locator('.nav-mega-group a[aria-current="page"]')
   await expect(activePlatformLink).toHaveCount(1)
   await expect(activePlatformLink).toContainText(/API Playground/i)
