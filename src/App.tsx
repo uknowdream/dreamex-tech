@@ -151,6 +151,7 @@ function Header() {
             <span className="nav-group-label">{language === 'en' ? 'BUILD & VERIFY' : 'BANGUN & VALIDASI'}</span>
             <NavLink to="/lab"><span className="nav-link-icon"><Terminal size={15} /></span><span><b>Engineering Lab</b><small>{language === 'en' ? 'Practical QA tools' : 'Perangkat QA praktis'}</small></span></NavLink>
             <NavLink to="/quality-intelligence"><span className="nav-link-icon"><ShieldCheck size={15} /></span><span><b>{language === 'en' ? 'Quality Intelligence' : 'Quality Intelligence'}</b><small>{language === 'en' ? 'Test reports & failure signals' : 'Laporan tes dan sinyal kegagalan'}</small></span></NavLink>
+            <NavLink to="/reliability-center"><span className="nav-link-icon"><Gauge size={15} /></span><span><b>{language === 'en' ? 'Reliability & Incident Center' : 'Pusat Reliability & Insiden'}</b><small>{language === 'en' ? 'Incident timelines & delivery metrics' : 'Timeline insiden dan metrik delivery'}</small></span></NavLink>
             <NavLink to="/api-playground"><span className="nav-link-icon"><Braces size={15} /></span><span><b>API Playground</b><small>{language === 'en' ? 'Inspect API contracts' : 'Periksa kontrak API'}</small></span></NavLink>
           </div>
           <div className="nav-mega-group nav-mega-group-last">
