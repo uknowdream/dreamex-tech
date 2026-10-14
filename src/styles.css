@@ -2749,3 +2749,28 @@ main, header, footer, section, .container {
 
 /* Keep the keyboard focus visible on the shared command search field. */
 .command-search-row:focus-within { outline: 2px solid #c5ff70; outline-offset: -2px; border-radius: 8px; }
+
+
+.workspace-clear-recent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #ffffff04;
+  color: var(--muted);
+  font: inherit;
+  font-size: .72rem;
+  cursor: pointer;
+}
+.workspace-clear-recent:hover { border-color: #fca5a555; color: #fca5a5; }
+.workspace-clear-recent:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+.workspace-recent-card { border-color: #c5ff7030; }
+.workspace-recent-card .workspace-card-index { color: var(--green); }
+@media (prefers-reduced-motion: reduce) {
+  .workspace-recent-card { transition: none; }
+  .workspace-recent-card:hover { transform: none; }
+}
