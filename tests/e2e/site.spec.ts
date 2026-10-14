@@ -1056,3 +1056,33 @@ test('unified command palette is reachable on mobile and searches articles', asy
   await expect(page).toHaveURL(/blog\/playwright-test-architecture$/)
   await expect(page.getByRole('dialog')).toHaveCount(0)
 })
+
+
+test('engineering tool routes expose accessible localized breadcrumbs without mobile overflow', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/api-playground')
+  const breadcrumb = page.getByRole('navigation', { name: /Breadcrumb|Navigasi lokasi/i })
+  await expect(breadcrumb).toBeVisible()
+  const home = breadcrumb.getByRole('link', { name: /Home|Beranda/i })
+  await expect(home).toHaveAttribute('href', '/')
+  await expect(breadcrumb.locator('[aria-current="page"]')).toContainText(/API Playground/i)
+  await home.focus()
+  await expect(home).toBeFocused()
+
+  await page.setViewportSize({ width: 360, height: 800 })
+  const widths = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    document: document.documentElement.scrollWidth,
+  }))
+  expect(widths.document).toBeLessThanOrEqual(widths.viewport)
+})
+
+test('engineering breadcrumbs use Indonesian labels after switching language', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/security-center')
+  await page.getByRole('button', { name: 'ID', exact: true }).click()
+  const breadcrumb = page.getByRole('navigation', { name: /Navigasi lokasi/i })
+  await expect(breadcrumb).toBeVisible()
+  await expect(breadcrumb.getByRole('link', { name: 'Beranda' })).toHaveAttribute('href', '/')
+  await expect(breadcrumb.locator('[aria-current="page"]')).toContainText('Pusat Keamanan')
+})
