@@ -1,11 +1,14 @@
 import { useMemo, useState, type ChangeEvent } from 'react'
 import { AlertTriangle, Boxes, CheckCircle2, Download, FileJson2, FileText, Filter, Fingerprint, PackageCheck, Search, ShieldAlert, ShieldCheck, Upload, XCircle } from 'lucide-react'
 import { useLanguage } from './i18n'
+import './SbomIntegrity.css'
 
 type Risk = 'critical' | 'high' | 'medium' | 'low' | 'review'
 type ComponentRecord = { id: string; name: string; version: string; type: string; purl: string; license: string; supplier: string; hashes: string[]; vulnerabilities: string[]; risks: Risk[] }
 type VulnerabilityRecord = { id: string; source: string; severity: Risk; description: string; affected: string[]; recommendation: string }
-type Inventory = { source: string; format: 'CycloneDX' | 'SPDX'; importedAt: string; components: ComponentRecord[]; vulnerabilities: VulnerabilityRecord[] }
+type SbomProvenance = { documentId: string; specVersion: string; creators: string[]; createdAt: string; declaredComponents: number }
+type DuplicateIdentity = { identity: string; count: number }
+type Inventory = { source: string; format: 'CycloneDX' | 'SPDX'; importedAt: string; provenance: SbomProvenance; duplicateIdentities: DuplicateIdentity[]; components: ComponentRecord[]; vulnerabilities: VulnerabilityRecord[] }
 const MAX_BYTES = 10 * 1024 * 1024
 const HISTORY_KEY = 'dreamex-supply-chain-history-v1'
 const asObject = (value: unknown): Record<string, unknown> | null => value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null
@@ -28,6 +31,26 @@ function riskFromSeverity(value: unknown): Risk {
   if (severity === 'medium' || severity === 'moderate' || severity === 'normal') return 'medium'
   if (severity === 'low' || severity === 'negligible') return 'low'
   return 'review'
+}
+function componentIdentity(component: ComponentRecord): string {
+  if (component.purl.trim()) return 'purl:' + component.purl.trim().toLowerCase()
+  if (component.name.trim() && component.version.trim()) return 'name:' + component.name.trim().toLowerCase() + '@' + component.version.trim().toLowerCase()
+  return component.id.trim() ? 'id:' + component.id.trim().toLowerCase() : ''
+}
+function findDuplicateIdentities(components: ComponentRecord[]): DuplicateIdentity[] {
+  const groups = new Map<string, number>()
+  components.forEach(component => {
+    const identity = componentIdentity(component)
+    if (identity) groups.set(identity, (groups.get(identity) ?? 0) + 1)
+  })
+  return [...groups.entries()].filter(([, count]) => count > 1).map(([identity, count]) => ({ identity, count }))
+}
+function knownLicense(value: string): boolean {
+  return Boolean(value.trim()) && !/^(unknown|noassertion|none|n\/a)$/i.test(value.trim())
+}
+function csvCell(value: string): string {
+  const safe = /^[=+@\-\t\r]/.test(value) ? "'" + value : value
+  return '"' + safe.replaceAll('"', '""') + '"'
 }
 function cyclonedxVulnerabilities(raw: unknown): VulnerabilityRecord[] {
   return arr(raw).flatMap((item, index) => {
@@ -62,7 +85,9 @@ function parseCycloneDX(root: Record<string, unknown>): Inventory {
     arr(component.components).forEach((child, index) => visit(child, path + '.' + index))
   }
   arr(root.components).forEach((component, index) => visit(component, String(index)))
-  return { source: '', format: 'CycloneDX', importedAt: new Date().toISOString(), components, vulnerabilities: cyclonedxVulnerabilities(root.vulnerabilities) }
+  const metadata = asObject(root.metadata)
+  const authors = arr(metadata?.authors).map(value => str(asObject(value)?.name)).filter(Boolean)
+  return { source: '', format: 'CycloneDX', importedAt: new Date().toISOString(), components, vulnerabilities: cyclonedxVulnerabilities(root.vulnerabilities), duplicateIdentities: [], provenance: { documentId: str(root.serialNumber) || str(root['bom-ref']) || 'Not supplied', specVersion: str(root.specVersion) || 'Not supplied', creators: authors, createdAt: str(metadata?.timestamp) || 'Not supplied', declaredComponents: components.length } }
 }
 function parseSpdx(root: Record<string, unknown>): Inventory {
   const components: ComponentRecord[] = arr(root.packages).flatMap((raw, index) => {
@@ -80,7 +105,9 @@ function parseSpdx(root: Record<string, unknown>): Inventory {
     if (!version || !purl || /^(unknown|noassertion|none|n\/a)$/i.test(license)) risks.push('review')
     return [{ id: str(item.SPDXID, name + ':' + index), name, version, type: 'package', purl, license, supplier: str(item.supplier) || str(item.originator), hashes, vulnerabilities: [], risks }]
   })
-  return { source: '', format: 'SPDX', importedAt: new Date().toISOString(), components, vulnerabilities: [] }
+  const creationInfo = asObject(root.creationInfo)
+  const creators = arr(creationInfo?.creators).map(value => str(value)).filter(Boolean)
+  return { source: '', format: 'SPDX', importedAt: new Date().toISOString(), components, vulnerabilities: [], duplicateIdentities: [], provenance: { documentId: str(root.documentNamespace) || str(root.SPDXID) || 'Not supplied', specVersion: str(root.spdxVersion) || 'Not supplied', creators, createdAt: str(creationInfo?.created) || 'Not supplied', declaredComponents: components.length } }
 }
 function parseSbom(raw: string, source: string): Inventory {
   const value: unknown = JSON.parse(raw)
@@ -92,6 +119,9 @@ function parseSbom(raw: string, source: string): Inventory {
   else throw new Error('Unsupported SBOM. Import a CycloneDX JSON BOM or SPDX JSON document.')
   if (!inventory.components.length) throw new Error('No software components were found in this SBOM.')
   inventory.source = source
+  inventory.duplicateIdentities = findDuplicateIdentities(inventory.components)
+  const duplicateKeys = new Set(inventory.duplicateIdentities.map(item => item.identity))
+  inventory.components = inventory.components.map(component => duplicateKeys.has(componentIdentity(component)) ? { ...component, risks: unique([...component.risks, 'review']) as Risk[] } : component)
   return inventory
 }
 function summarize(inventory: Inventory) {
@@ -107,6 +137,9 @@ function summarize(inventory: Inventory) {
     vulnerableComponents: components.filter(component => component.vulnerabilities.length).length,
     findings: inventory.vulnerabilities.length,
     highCritical: inventory.vulnerabilities.filter(item => item.severity === 'high' || item.severity === 'critical').length,
+    duplicateComponents: inventory.duplicateIdentities.reduce((total, item) => total + item.count - 1, 0),
+    licenseCoveragePercent: Math.round(components.filter(component => knownLicense(component.license)).length / Math.max(components.length, 1) * 100),
+    missingHashes: components.filter(component => component.hashes.length === 0).length,
   }
 }
 function downloadFile(name: string, content: string, type: string) {
@@ -121,8 +154,11 @@ function downloadFile(name: string, content: string, type: string) {
 }
 const demo: Inventory = {
   source: 'Demo sample — not a real project SBOM', format: 'CycloneDX', importedAt: new Date().toISOString(),
+  provenance: { documentId: 'urn:example:dreamex:demo-bom', specVersion: '1.6', creators: ['DreamEx illustrative demo'], createdAt: 'Not supplied', declaredComponents: 5 },
+  duplicateIdentities: [{ identity: 'purl:pkg:npm/react@19.1.0', count: 2 }],
   components: [
-    { id: 'pkg:npm/react@19.1.0', name: 'react', version: '19.1.0', type: 'library', purl: 'pkg:npm/react@19.1.0', license: 'MIT', supplier: 'Meta', hashes: [], vulnerabilities: [], risks: [] },
+    { id: 'pkg:npm/react@19.1.0', name: 'react', version: '19.1.0', type: 'library', purl: 'pkg:npm/react@19.1.0', license: 'MIT', supplier: 'Meta', hashes: [], vulnerabilities: [], risks: ['review'] },
+    { id: 'demo-duplicate-react-entry', name: 'react', version: '19.1.0', type: 'library', purl: 'pkg:npm/react@19.1.0', license: 'MIT', supplier: 'Meta', hashes: [], vulnerabilities: [], risks: ['review'] },
     { id: 'pkg:npm/example-legacy@1.2.0', name: 'example-legacy', version: '1.2.0', type: 'library', purl: 'pkg:npm/example-legacy@1.2.0', license: 'UNKNOWN', supplier: '', hashes: [], vulnerabilities: ['DEMO-2026-0001'], risks: ['high', 'review'] },
     { id: 'pkg:npm/utility-kit', name: 'utility-kit', version: '', type: 'library', purl: '', license: 'NOASSERTION', supplier: '', hashes: [], vulnerabilities: [], risks: ['review'] },
     { id: 'pkg:npm/typescript@5.8.3', name: 'typescript', version: '5.8.3', type: 'library', purl: 'pkg:npm/typescript@5.8.3', license: 'Apache-2.0', supplier: 'Microsoft', hashes: [], vulnerabilities: [], risks: [] },
@@ -167,10 +203,11 @@ export function SupplyChainIntelligencePage() {
   const exportJson = () => { if (inventory) downloadFile('dreamex-sbom-inventory.json', JSON.stringify({ format: 'dreamex-sbom-analysis', version: 1, summary: metrics, inventory }, null, 2), 'application/json;charset=utf-8') }
   const exportCsv = () => {
     if (!inventory) return
-    const rows = [['Name', 'Version', 'Type', 'Package URL', 'License', 'Supplier', 'Vulnerabilities', 'Review flags'], ...inventory.components.map(item => [item.name, item.version, item.type, item.purl, item.license, item.supplier, item.vulnerabilities.join('; '), item.risks.join('; ')])]
-    downloadFile('dreamex-sbom-inventory.csv', '\uFEFF' + rows.map(row => row.map(value => '"' + value.replaceAll('"', '""') + '"').join(',')).join('\r\n'), 'text/csv;charset=utf-8')
+    const duplicateKeys = new Set(inventory.duplicateIdentities.map(item => item.identity))
+    const rows = [['Name', 'Version', 'Type', 'Package URL', 'License', 'Supplier', 'Vulnerabilities', 'Review flags', 'Duplicate identity', 'Hash count'], ...inventory.components.map(item => [item.name, item.version, item.type, item.purl, item.license, item.supplier, item.vulnerabilities.join('; '), item.risks.join('; '), duplicateKeys.has(componentIdentity(item)) ? 'yes' : 'no', String(item.hashes.length)])]
+    downloadFile('dreamex-sbom-inventory.csv', '\uFEFF' + rows.map(row => row.map(csvCell).join(',')).join('\r\n'), 'text/csv;charset=utf-8')
   }
-  const exportMarkdown = () => { if (!inventory || !metrics) return; downloadFile('dreamex-sbom-review.md', ['# Software Supply Chain Review', '', '- Source: ' + inventory.source, '- Format: ' + inventory.format, '- Imported: ' + inventory.importedAt, '- Components: ' + metrics.total, '- Distinct license labels: ' + metrics.licenses, '- Vulnerability records included: ' + metrics.findings, '- High/critical records: ' + metrics.highCritical, '- Missing version: ' + metrics.missingVersion, '- Missing package URL: ' + metrics.missingPurl, '', '## Components for review', ...inventory.components.filter(item => item.risks.length || item.vulnerabilities.length).map(item => '- **' + item.name + (item.version ? '@' + item.version : '') + '** — ' + [...item.risks, ...item.vulnerabilities].join(', ')), '', '_Local SBOM analysis only. This is not a vulnerability scan, license opinion, or proof of software safety._'].join('\n'), 'text/markdown;charset=utf-8') }
+  const exportMarkdown = () => { if (!inventory || !metrics) return; downloadFile('dreamex-sbom-review.md', ['# Software Supply Chain Review', '', '- Source: ' + inventory.source, '- Format: ' + inventory.format, '- Imported: ' + inventory.importedAt, '- Components: ' + metrics.total, '- Distinct license labels: ' + metrics.licenses, '- License coverage: ' + metrics.licenseCoveragePercent + '%', '- Duplicate components: ' + metrics.duplicateComponents, '- Document ID: ' + inventory.provenance.documentId, '- Spec version: ' + inventory.provenance.specVersion, '- Creators: ' + (inventory.provenance.creators.join(', ') || 'Not supplied'), '- Metadata hashes missing: ' + metrics.missingHashes, '- Vulnerability records included: ' + metrics.findings, '- High/critical records: ' + metrics.highCritical, '- Missing version: ' + metrics.missingVersion, '- Missing package URL: ' + metrics.missingPurl, '', '## Components for review', ...inventory.components.filter(item => item.risks.length || item.vulnerabilities.length).map(item => '- **' + item.name + (item.version ? '@' + item.version : '') + '** — ' + [...item.risks, ...item.vulnerabilities].join(', ')), '', '_Local SBOM analysis only. This is not a vulnerability scan, license opinion, or proof of software safety._'].join('\n'), 'text/markdown;charset=utf-8') }
   const clearHistory = () => { try { window.localStorage.removeItem(HISTORY_KEY); setHistory([]); setNotice(en ? 'Local history cleared.' : 'Riwayat lokal dihapus.') } catch { setNotice(en ? 'Unable to clear local history.' : 'Tidak dapat menghapus riwayat lokal.') } }
 
   return <main id="main-content" className="container supply-chain-page">
