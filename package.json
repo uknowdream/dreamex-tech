@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/generate-rss.mjs && tsc -b && vite build",
-    "verify:build": "node scripts/verify-build.mjs && node scripts/verify-routes.mjs && node scripts/verify-performance-budget.mjs && node --check scripts/smoke-production.mjs",
+    "verify:build": "node scripts/verify-build.mjs && node scripts/verify-routes.mjs && node scripts/verify-performance-budget.mjs && node scripts/verify-seo.mjs && node --check scripts/smoke-production.mjs",
     "verify:i18n": "node scripts/verify-i18n.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
