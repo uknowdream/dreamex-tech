@@ -14,7 +14,7 @@ type TraceRow = {
   releaseCriterion: boolean
   updatedAt: string
 }
-type TraceSnapshot = { schemaVersion: '1.0'; exportedAt: string; note: string; items: TraceRow[] }
+type TraceSnapshot = { schemaVersion: '1.0' | '1.1'; exportedAt: string; note: string; items: TraceRow[]; manifest?: { tool: string; toolVersion: string; recordCount: number; statusCounts: Record<ExecutionStatus, number>; releaseCriteriaCount: number; contentSha256?: string } }
 const STORAGE_KEY = 'dreamex-qa-traceability-v1'
 const statuses: ExecutionStatus[] = ['not-run', 'passed', 'failed', 'blocked']
 
@@ -92,14 +92,25 @@ export function QATraceability() {
     setNotice(en ? 'Traceability row added. Execution status is user-reported, not independently verified.' : 'Baris traceability ditambahkan. Status eksekusi berasal dari input pengguna, bukan verifikasi otomatis.')
   }
   const updateRow = (id: string, patch: Partial<TraceRow>) => setRows(current => current.map(row => row.id === id ? { ...row, ...patch, updatedAt: new Date().toISOString() } : row))
-  const exportSnapshot = () => {
+  const exportSnapshot = async () => {
+    const exportedAt = new Date().toISOString()
+    const statusCounts: Record<ExecutionStatus, number> = { 'not-run': 0, passed: 0, failed: 0, blocked: 0 }
+    rows.forEach(row => { statusCounts[row.status] += 1 })
+    let contentSha256: string | undefined
+    try {
+      const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(rows)))
+      contentSha256 = [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('')
+    } catch {
+      // The export remains usable if SubtleCrypto is unavailable in a restricted context.
+    }
     const snapshot: TraceSnapshot = {
-      schemaVersion: '1.0', exportedAt: new Date().toISOString(),
-      note: 'User-maintained traceability records. Execution results and evidence references have not been independently verified by DreamEx Tech.',
+      schemaVersion: '1.1', exportedAt,
+      manifest: { tool: 'DreamEx QA Traceability', toolVersion: '1.1', recordCount: rows.length, statusCounts, releaseCriteriaCount: rows.filter(row => row.releaseCriterion).length, ...(contentSha256 ? { contentSha256 } : {}) },
+      note: 'User-maintained traceability records. Execution results and evidence references have not been independently verified by DreamEx Tech. The SHA-256 digest covers the ordered items array only; it proves file consistency, not authenticity or execution validity.',
       items: rows,
     }
     saveDownload('dreamex-qa-traceability.json', JSON.stringify(snapshot, null, 2))
-    setNotice(en ? 'Portable traceability snapshot exported.' : 'Snapshot traceability portabel diekspor.')
+    setNotice(en ? (contentSha256 ? 'Snapshot exported with manifest and SHA-256 integrity digest.' : 'Snapshot exported with manifest; SHA-256 is unavailable in this browser context.') : (contentSha256 ? 'Snapshot diekspor dengan manifest dan digest integritas SHA-256.' : 'Snapshot diekspor dengan manifest; SHA-256 tidak tersedia di konteks browser ini.'))
   }
   const importSnapshot = async (file?: File) => {
     if (!file) return
