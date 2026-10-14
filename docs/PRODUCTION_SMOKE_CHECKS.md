@@ -15,7 +15,7 @@ The production smoke workflow checks the deployed public site independently of t
 npm run smoke:production
 ```
 
-To test a preview or local HTTPS endpoint, set `SMOKE_BASE_URL`. Plain HTTP is intentionally rejected unless `ALLOW_INSECURE_SMOKE=1` is set for a controlled local test.
+To test a preview or local HTTPS endpoint, set `SMOKE_BASE_URL` to its clean origin (scheme and host only; no path, credentials, query, or fragment). Plain HTTP is intentionally rejected unless `ALLOW_INSECURE_SMOKE=1` is set for a controlled local test.
 
 ## Interpretation and limits
 
