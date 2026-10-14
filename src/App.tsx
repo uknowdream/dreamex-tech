@@ -144,6 +144,8 @@ function Header() {
   useEffect(() => {
     if (!commandOpen) return
     commandInput.current?.focus()
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
     const onTab = (event: KeyboardEvent) => {
       if (event.key !== 'Tab') return
       const dialog = document.querySelector('.command-dialog')
@@ -156,9 +158,15 @@ function Header() {
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
     }
     document.addEventListener('keydown', onTab)
-    return () => document.removeEventListener('keydown', onTab)
+    return () => {
+      document.removeEventListener('keydown', onTab)
+      document.body.style.overflow = previousOverflow
+    }
   }, [commandOpen])
   const commandItems = [
+    { path: '/', label: language === 'en' ? 'Journal Home' : 'Beranda Jurnal', description: language === 'en' ? 'Latest engineering articles and topics' : 'Artikel engineering dan topik terbaru', category: language === 'en' ? 'DISCOVER' : 'JELAJAHI' },
+    { path: '/observatory', label: language === 'en' ? 'Web Quality Observatory' : 'Observatory Kualitas Web', description: language === 'en' ? 'Web quality checks and diagnostics' : 'Pemeriksaan dan diagnostik kualitas web', category: 'QA' },
+    { path: '/devtools', label: language === 'en' ? 'Developer Utilities' : 'Utilitas Developer', description: language === 'en' ? 'Browser-based developer utilities' : 'Utilitas developer berbasis browser', category: 'DEVELOPER' },
     { path: '/workspace', label: language === 'en' ? 'Engineering Workspace' : 'Engineering Workspace', description: language === 'en' ? 'Unified engineering tools and workflows' : 'Tools engineering dan alur kerja terpadu', category: language === 'en' ? 'BUILD' : 'BANGUN' },
     { path: '/control-plane', label: 'Engineering Control Plane', description: language === 'en' ? 'Release readiness and operations' : 'Kesiapan rilis dan operasi', category: language === 'en' ? 'OPERATE' : 'OPERASIONAL' },
     { path: '/command-center', label: 'Engineering Command Center', description: language === 'en' ? 'Tasks, incidents, decisions and release gates' : 'Tugas, insiden, keputusan, dan gerbang rilis', category: language === 'en' ? 'OPERATE' : 'OPERASIONAL' },
@@ -243,7 +251,7 @@ function Header() {
         if (event.key === 'ArrowDown') { event.preventDefault(); setCommandIndex(index => filteredCommandItems.length ? (index + 1) % filteredCommandItems.length : 0) }
         else if (event.key === 'ArrowUp') { event.preventDefault(); setCommandIndex(index => filteredCommandItems.length ? (index - 1 + filteredCommandItems.length) % filteredCommandItems.length : 0) }
         else if (event.key === 'Enter' && filteredCommandItems[commandIndex]) { event.preventDefault(); openCommandItem(filteredCommandItems[commandIndex].path) }
-      }} placeholder={language === 'en' ? 'Search a tool, route, or article…' : 'Cari tools, halaman, atau artikel…'} aria-label={language === 'en' ? 'Search tools and articles' : 'Cari tools dan artikel'} aria-controls="command-results" aria-expanded={filteredCommandItems.length > 0} autoComplete="off" /><kbd>ESC</kbd></label>
+      }} placeholder={language === 'en' ? 'Search a tool, route, or article…' : 'Cari tools, halaman, atau artikel…'} aria-label={language === 'en' ? 'Search tools and articles' : 'Cari tools dan artikel'} aria-controls="command-results" aria-expanded={filteredCommandItems.length > 0} aria-activedescendant={filteredCommandItems.length ? `command-option-${commandIndex}` : undefined} autoComplete="off" /><kbd>ESC</kbd></label>
       <div className="command-results" id="command-results" role="listbox" aria-label={language === 'en' ? 'Search results' : 'Hasil pencarian'}>
         {filteredCommandItems.length ? filteredCommandItems.map((item, index) => <button key={item.path} id={`command-option-${index}`} type="button" role="option" aria-selected={commandIndex === index} className={commandIndex === index ? 'command-result active' : 'command-result'} onMouseEnter={() => setCommandIndex(index)} onClick={() => openCommandItem(item.path)}><span className="command-result-icon">{item.category === 'ARTICLE' || item.category === 'ARTIKEL' ? <BookOpen size={15} /> : <Command size={15} />}</span><span className="command-result-copy"><strong>{item.label}</strong><small>{item.description}</small></span><span className="command-result-meta"><small>{item.category}</small><kbd>↵</kbd></span></button>) : <div className="command-empty"><Search size={20} /><strong>{language === 'en' ? 'No matching destinations' : 'Tidak ada halaman yang cocok'}</strong><span>{language === 'en' ? 'Try a shorter term or a different keyword.' : 'Coba kata kunci yang lebih singkat atau berbeda.'}</span></div>}
       </div>
