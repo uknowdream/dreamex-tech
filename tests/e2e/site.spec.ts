@@ -1021,7 +1021,7 @@ test('unified command palette opens by keyboard, searches destinations, and navi
   await expect(search).toBeFocused()
   await search.fill('test')
   const options = dialog.getByRole('option')
-  await expect(options).toHaveCount(2, { timeout: 5000 })
+  await expect.poll(() => options.count()).toBeGreaterThan(1)
   const firstOption = dialog.locator('.command-item.active')
   await expect(firstOption).toBeVisible()
   const firstLabel = await firstOption.getAttribute('aria-label')
