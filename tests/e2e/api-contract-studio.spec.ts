@@ -63,7 +63,7 @@ test('API Contract Studio inventories OpenAPI and detects likely breaking change
 
 test('API Contract Studio rejects invalid and oversized formats without crashing', async ({ page }) => {
   await page.goto('/api-playground')
-  const studio = page.getByRole('region', { name: /API Contract Studio/i })
+  const studio = page.locator('.api-contract-studio')
   await studio.getByLabel(/Baseline OpenAPI JSON/i).setInputFiles({
     name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('{invalid'),
   })
