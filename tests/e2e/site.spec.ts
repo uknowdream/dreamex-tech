@@ -683,7 +683,7 @@ test('Security Center runs a browser-side baseline and exports a report', async 
   await expect(page.getByText('HTTPS transport')).toBeVisible()
   await expect(page.getByText(/Browser-visible checks can miss/i)).toBeVisible()
   const downloadPromise = page.waitForEvent('download')
-  await page.getByRole('button', { name: /Export JSON/i }).click()
+  await page.locator('.quality-suite-content').first().getByRole('button', { name: /Export JSON/i }).click()
   expect((await downloadPromise).suggestedFilename()).toBe('dreamex-security-audit.json')
   await expect(page.getByText('dreamex-security-audit-v1')).toBeVisible()
   const privacyBackup = page.waitForEvent('download')
