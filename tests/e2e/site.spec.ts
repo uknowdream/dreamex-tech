@@ -672,7 +672,7 @@ test('QA Automation Studio generates and exports editable QA artifacts', async (
   await page.getByRole('button', { name: /Payment refund.*Restore/i }).click()
   await expect(page.getByLabel(/Feature \/ component/i)).toHaveValue('Payment refund')
   const downloadPromise = page.waitForEvent('download')
-  await page.getByRole('button', { name: /Download/i }).click()
+  await page.getByRole('button', { name: 'Download', exact: true }).click()
   expect((await downloadPromise).suggestedFilename()).toBe('dreamex-bug.md')
 })
 
