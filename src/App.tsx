@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowDownRight, ArrowRight, BookOpen, Bookmark, BookmarkCheck, Braces, Check, ChevronUp, ChevronDown, Layers3, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap, Rss, Activity, AlertTriangle, CheckCircle2, Download, ClipboardList, Network, Gauge } from 'lucide-react'
 import { articles } from './articles'
@@ -147,14 +147,15 @@ function Header() {
     return () => document.removeEventListener('keydown', handlePlatformEscape)
   }, [menuOpen])
 
+  useLayoutEffect(() => {
+    if (!menuOpen) return
+    navRef.current?.querySelector<HTMLElement>('.nav-drawer-close')?.focus({ preventScroll: true })
+  }, [menuOpen])
+
   useEffect(() => {
     if (!menuOpen) return
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    const focusFrame = window.requestAnimationFrame(() => {
-      const first = navRef.current?.querySelector<HTMLElement>('[data-drawer-close], a[href], button:not([disabled]), summary')
-      first?.focus()
-    })
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault()
@@ -181,7 +182,6 @@ function Header() {
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => {
-      window.cancelAnimationFrame(focusFrame)
       document.removeEventListener('keydown', handleKeyDown)
       document.body.style.overflow = previousOverflow
     }
@@ -245,7 +245,7 @@ function Header() {
             </div>
           </details>
           <NavLink to="/reading-list" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Bookmark size={16}/></span><span><b>{language === 'en' ? 'Reading list' : 'Daftar bacaan'}</b><small>{language === 'en' ? 'Your saved articles' : 'Artikel yang disimpan'}</small></span></NavLink>
-          <NavLink to="/about" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Sparkles size={16}/></span><span><b>{language === 'en' ? 'About DreamEx' : 'Tentang DreamEx'}</b><small>{language === 'en' ? 'Purpose and project details' : 'Tujuan dan detail proyek'}</small></span></NavLink>
+          <NavLink to="/about" aria-label={language === 'en' ? 'About' : 'Tentang'} onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Sparkles size={16}/></span><span><b>{language === 'en' ? 'About DreamEx' : 'Tentang DreamEx'}</b><small>{language === 'en' ? 'Purpose and project details' : 'Tujuan dan detail proyek'}</small></span></NavLink>
           <a className="nav-github" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Github size={16}/></span><span><b>GitHub</b><small>{language === 'en' ? 'Source code & releases' : 'Kode sumber dan rilis'}</small></span></a>
           <InstallAppButton />
           <div className="language-switch nav-desktop-language" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div>
