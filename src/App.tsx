@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowDownRight, ArrowRight, BookOpen, Bookmark, BookmarkCheck, Braces, Check, ChevronUp, ChevronDown, Layers3, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap, Rss, Activity, AlertTriangle, CheckCircle2, Download, ClipboardList, Network, Gauge } from 'lucide-react'
 import { articles } from './articles'
@@ -147,9 +147,14 @@ function Header() {
     return () => document.removeEventListener('keydown', handlePlatformEscape)
   }, [menuOpen])
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (!menuOpen) return
-    navRef.current?.querySelector<HTMLElement>('.nav-drawer-close')?.focus({ preventScroll: true })
+    const focusTimer = window.setTimeout(() => {
+      const drawer = navRef.current
+      const target = drawer?.querySelector<HTMLElement>('.nav-drawer-close')
+      if (drawer?.classList.contains('nav-open')) target?.focus({ preventScroll: true })
+    }, 0)
+    return () => window.clearTimeout(focusTimer)
   }, [menuOpen])
 
   useEffect(() => {
