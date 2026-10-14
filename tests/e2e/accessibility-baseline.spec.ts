@@ -7,6 +7,7 @@ const routes = [
   { path: '/command-center', heading: /Operate with clarity|Kelola dengan jelas/i },
   { path: '/security-center', heading: /Security|Keamanan/i },
   { path: '/quality-intelligence', heading: /Turn test results|Ubah hasil pengujian/i },
+  { path: '/reliability-center', heading: /Operate with clarity|Kelola dengan jelas/i },
   { path: '/workspace', heading: /One workspace|Satu workspace/i },
   { path: '/supply-chain-intelligence', heading: /Know what ships|Ketahui yang dirilis/i },
   { path: '/control-plane', heading: /Engineering, in control|Engineering, lebih terkendali/i },
