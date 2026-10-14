@@ -2,8 +2,8 @@ const baseUrl = new URL(process.env.SMOKE_BASE_URL || 'https://www.dreamex.tech'
 if (baseUrl.protocol !== 'https:' && process.env.ALLOW_INSECURE_SMOKE !== '1') {
   throw new Error('Production smoke checks require HTTPS. Set ALLOW_INSECURE_SMOKE=1 only for local test environments.')
 }
-if (baseUrl.username || baseUrl.password || baseUrl.search || baseUrl.hash) {
-  throw new Error('SMOKE_BASE_URL must be a clean origin or path prefix without credentials, query, or fragment.')
+if (baseUrl.username || baseUrl.password || baseUrl.search || baseUrl.hash || baseUrl.pathname !== '/') {
+  throw new Error('SMOKE_BASE_URL must be a clean origin without credentials, path, query, or fragment.')
 }
 
 const checks = [
@@ -60,6 +60,8 @@ const results = await Promise.all(checks.map(async check => {
   }
   const finalUrl = new URL(response.url)
   if (finalUrl.protocol !== 'https:' && process.env.ALLOW_INSECURE_SMOKE !== '1') issues.push(`redirected to non-HTTPS URL ${response.url}`)
+  const expectedHosts = new Set([baseUrl.hostname, baseUrl.hostname.startsWith('www.') ? baseUrl.hostname.slice(4) : `www.${baseUrl.hostname}`])
+  if (!expectedHosts.has(finalUrl.hostname)) issues.push(`redirected outside the configured host family to ${finalUrl.hostname}`)
 
   const message = issues.length ? issues.join('; ') : `HTTP ${response.status}; ${contentType}; ${body.length} bytes`
   if (issues.length) failures.push(`${check.path}: ${message}`)
