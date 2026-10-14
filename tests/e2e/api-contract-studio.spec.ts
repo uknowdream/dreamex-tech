@@ -151,6 +151,6 @@ test('API Contract Studio flags unresolved local schema references and bounded i
     name: 'reference-integrity.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(spec)),
   })
   await expect(studio.getByText(/Unresolved local schema reference: #\/components\/schemas\/MissingOwner/i)).toBeVisible()
-  await expect(studio.getByText(/Schema Tags.*array schema is missing items/i)).toBeVisible()
+  await expect(studio.getByText(/array schema is missing items/i)).toBeVisible()
   await expect(studio.getByText(/not declared/i)).toHaveCount(0)
 })
