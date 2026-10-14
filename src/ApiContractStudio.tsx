@@ -13,6 +13,75 @@ const object = (value: unknown): Record<string, unknown> | null => value !== nul
 const text = (value: unknown): string => typeof value === 'string' ? value : ''
 const keys = (value: unknown): string[] => object(value) ? Object.keys(value as object) : []
 
+function inspectSchema(schema: Record<string, unknown>, label: string, warnings: string[], depth = 0) {
+  if (depth > 12 || warnings.length >= 100) return
+  const type = text(schema.type)
+  const properties = object(schema.properties) ?? {}
+  if (type === 'object' && Array.isArray(schema.required)) {
+    for (const required of schema.required) if (typeof required === 'string' && !(required in properties)) warnings.push(`${label}: required property "${required}" is not declared in properties.`)
+  }
+  if (Array.isArray(schema.enum) && schema.default !== undefined && !schema.enum.some(value => JSON.stringify(value) === JSON.stringify(schema.default))) warnings.push(`${label}: default value is not included in enum.`)
+  if (type === 'array' && !object(schema.items)) warnings.push(`${label}: array schema does not define items.`)
+  if (typeof schema.minimum === 'number' && typeof schema.maximum === 'number' && schema.minimum > schema.maximum) warnings.push(`${label}: minimum exceeds maximum.`)
+  if (typeof schema.minLength === 'number' && typeof schema.maxLength === 'number' && schema.minLength > schema.maxLength) warnings.push(`${label}: minLength exceeds maxLength.`)
+  for (const [name, child] of Object.entries(properties)) {
+    const childSchema = object(child)
+    if (childSchema) inspectSchema(childSchema, label + '.' + name, warnings, depth + 1)
+  }
+  const items = object(schema.items)
+  if (items) inspectSchema(items, label + '[]', warnings, depth + 1)
+}
+function validateExample(value: unknown, schema: Record<string, unknown>, label: string, depth = 0): string[] {
+  if (depth > 8) return [`${label}: example nesting exceeds the supported validation depth.`]
+  const expected = text(schema.type)
+  if (expected) {
+    const matches = expected === 'object' ? object(value) !== null
+      : expected === 'array' ? Array.isArray(value)
+        : expected === 'integer' ? typeof value === 'number' && Number.isInteger(value)
+          : expected === 'number' ? typeof value === 'number' && Number.isFinite(value)
+            : expected === 'string' ? typeof value === 'string'
+              : expected === 'boolean' ? typeof value === 'boolean'
+                : expected === 'null' ? value === null : true
+    if (!matches) return [`${label}: example value does not match schema type "${expected}".`]
+  }
+  if (Array.isArray(schema.enum) && !schema.enum.some(item => JSON.stringify(item) === JSON.stringify(value))) return [`${label}: example value is not included in enum.`]
+  const findings: string[] = []
+  if (typeof value === 'string') {
+    if (typeof schema.minLength === 'number' && value.length < schema.minLength) findings.push(`${label}: example is shorter than minLength.`)
+    if (typeof schema.maxLength === 'number' && value.length > schema.maxLength) findings.push(`${label}: example exceeds maxLength.`)
+  }
+  if (typeof value === 'number') {
+    if (typeof schema.minimum === 'number' && value < schema.minimum) findings.push(`${label}: example is below minimum.`)
+    if (typeof schema.maximum === 'number' && value > schema.maximum) findings.push(`${label}: example exceeds maximum.`)
+  }
+  if (Array.isArray(value)) {
+    if (typeof schema.minItems === 'number' && value.length < schema.minItems) findings.push(`${label}: example has fewer items than minItems.`)
+    if (typeof schema.maxItems === 'number' && value.length > schema.maxItems) findings.push(`${label}: example exceeds maxItems.`)
+    const itemSchema = object(schema.items)
+    if (itemSchema) value.slice(0, 20).forEach((item, index) => findings.push(...validateExample(item, itemSchema, `${label}[${index}]`, depth + 1)))
+  }
+  const record = object(value)
+  if (record) {
+    const properties = object(schema.properties) ?? {}
+    if (Array.isArray(schema.required)) for (const required of schema.required) if (typeof required === 'string' && !(required in record)) findings.push(`${label}: example is missing required property "${required}".`)
+    for (const [name, item] of Object.entries(record)) {
+      const childSchema = object(properties[name])
+      if (childSchema) findings.push(...validateExample(item, childSchema, label + '.' + name, depth + 1))
+    }
+  }
+  return findings.slice(0, 12)
+}
+function inspectMediaExamples(media: Record<string, unknown>, schema: Record<string, unknown> | null, label: string, warnings: string[]) {
+  if (!schema) { warnings.push(`${label}: media type has examples but no schema to validate them against.`); return }
+  if (media.example !== undefined) warnings.push(...validateExample(media.example, schema, label + ' example'))
+  const examples = object(media.examples)
+  if (examples) for (const [name, raw] of Object.entries(examples)) {
+    const example = object(raw)
+    if (example && 'value' in example) warnings.push(...validateExample(example.value, schema, label + ' example "' + name + '"'))
+    else if (example && typeof example.externalValue === 'string') warnings.push(`${label} example "${name}" uses externalValue; its content was not fetched or validated.`)
+  }
+}
+
 function parseContract(raw: unknown, name: string): Contract {
   const root = object(raw)
   if (!root || (!text(root.openapi).startsWith('3.') && !text(root.swagger).startsWith('2.'))) throw new Error('Expected a valid OpenAPI 3.x or Swagger 2.0 JSON document.')
@@ -21,6 +90,14 @@ function parseContract(raw: unknown, name: string): Contract {
   if (!info || !paths) throw new Error('The specification must include info and paths objects.')
   const operations: Operation[] = []
   const warnings: string[] = []
+  const isSwagger2 = text(root.swagger).startsWith('2.')
+  const components = object(root.components)
+  const schemas = object(isSwagger2 ? root.definitions : components?.schemas) ?? {}
+  for (const [name, rawSchema] of Object.entries(schemas)) {
+    const schema = object(rawSchema)
+    if (schema) inspectSchema(schema, 'Schema ' + name, warnings)
+    else warnings.push('Schema ' + name + ' is not an object.')
+  }
   for (const [path, pathValue] of Object.entries(paths)) {
     const pathItem = object(pathValue)
     if (!pathItem) { warnings.push(`Path ${path} is not an object.`); continue }
@@ -36,7 +113,52 @@ function parseContract(raw: unknown, name: string): Contract {
       ].map(object).filter((item): item is Record<string, unknown> => item !== null)
       const requiredParams = parameters.filter(item => item.required === true && item.in !== 'body').map(item => (text(item.in) ? text(item.in) + ':' : '') + (text(item.name) || '(unnamed parameter)')).sort()
       const requestBody = object(operation.requestBody)
-      const bodyRequired = requestBody?.required === true || parameters.some(item => item.in === 'body' && item.required === true)
+      const bodyParameters = parameters.filter(item => item.in === 'body')
+      const bodyRequired = requestBody?.required === true || bodyParameters.some(item => item.required === true)
+      const pathParameters = new Set(parameters.filter(item => item.in === 'path').map(item => text(item.name)).filter(Boolean))
+      for (const [, parameterName] of path.matchAll(/\\{([^}]+)\\}/g)) if (!pathParameters.has(parameterName)) warnings.push(`${key}: path template parameter "${parameterName}" is not declared.`)
+      for (const parameter of parameters.filter(item => item.in === 'path')) if (parameter.required !== true) warnings.push(`${key}: path parameter "${text(parameter.name) || '(unnamed)'}" should be required.`)
+      if (requestBody) {
+        const content = object(requestBody.content) ?? {}
+        for (const [mediaType, rawMedia] of Object.entries(content)) {
+          const media = object(rawMedia)
+          if (!media) continue
+          const schema = object(media.schema)
+          if (!schema) warnings.push(`${key}: request ${mediaType} has no schema.`)
+          else inspectSchema(schema, `${key} request ${mediaType} schema`, warnings)
+          if (media.example !== undefined || media.examples) inspectMediaExamples(media, schema, `${key} request ${mediaType}`, warnings)
+        }
+      }
+      for (const parameter of bodyParameters) {
+        const schema = object(parameter.schema)
+        if (schema) {
+          inspectSchema(schema, `${key} request body schema`, warnings)
+          if (parameter.example !== undefined || parameter['x-example'] !== undefined) inspectMediaExamples({ example: parameter.example ?? parameter['x-example'] }, schema, `${key} request body`, warnings)
+        } else warnings.push(`${key}: Swagger 2.0 body parameter has no schema.`)
+      }
+      const responseMap = object(operation.responses) ?? {}
+      for (const [status, rawResponse] of Object.entries(responseMap)) {
+        const response = object(rawResponse)
+        if (!response) { warnings.push(`${key}: response ${status} is not an object.`); continue }
+        if (isSwagger2) {
+          const schema = object(response.schema)
+          if (schema) inspectSchema(schema, `${key} response ${status} schema`, warnings)
+          const examples = object(response.examples)
+          if (examples) for (const [mediaType, value] of Object.entries(examples)) {
+            if (schema) warnings.push(...validateExample(value, schema, `${key} response ${status} ${mediaType} example`))
+            else warnings.push(`${key} response ${status}: example for ${mediaType} cannot be validated without a schema.`)
+          }
+        } else {
+          const content = object(response.content) ?? {}
+          for (const [mediaType, rawMedia] of Object.entries(content)) {
+            const media = object(rawMedia)
+            if (!media) continue
+            const schema = object(media.schema)
+            if (schema) inspectSchema(schema, `${key} response ${status} ${mediaType} schema`, warnings)
+            if (media.example !== undefined || media.examples) inspectMediaExamples(media, schema, `${key} response ${status} ${mediaType}`, warnings)
+          }
+        }
+      }
       operations.push({
         key, method: method.toUpperCase(), path,
         operationId: text(operation.operationId),
@@ -54,7 +176,7 @@ function parseContract(raw: unknown, name: string): Contract {
     version: text(info.version) || 'Not specified',
     title: text(info.title) || name,
     operations,
-    warnings,
+    warnings: warnings.slice(0, 100),
   }
 }
 
