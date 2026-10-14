@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { ArrowDownToLine, Plus, ShieldCheck, Trash2 } from 'lucide-react'
 import { useLanguage } from './i18n'
 import './ThreatModelWorksheet.css'
@@ -36,7 +36,7 @@ export function ThreatModelWorksheet() {
   const [status, setStatus] = useState<Threat['status']>('open')
   const [notice, setNotice] = useState('')
   useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify(rows)) } catch { setNotice(en ? 'Browser storage is unavailable. Export a backup before leaving.' : 'Penyimpanan browser tidak tersedia. Ekspor cadangan sebelum keluar.') } }, [rows, en])
-  const add = (event: React.FormEvent<HTMLFormElement>) => {
+  const add = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (rows.length >= MAX_ROWS) { setNotice(en ? 'The worksheet is limited to 100 threats. Export a backup before removing rows.' : 'Worksheet dibatasi 100 ancaman. Ekspor cadangan sebelum menghapus baris.'); return }
     const row: Threat = { id: typeof crypto.randomUUID === 'function' ? crypto.randomUUID() : 'threat-' + Date.now(), asset: asset.trim().slice(0, 160), boundary: boundary.trim().slice(0, 240), threat: threat.trim().slice(0, 800), mitigation: mitigation.trim().slice(0, 1200), severity, status }
