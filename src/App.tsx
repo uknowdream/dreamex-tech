@@ -1793,7 +1793,7 @@ const TOOL_BREADCRUMB_LABELS: Record<string, { id: string; en: string }> = {
 function ToolRouteBreadcrumbs() {
   const { pathname } = useLocation()
   const { language } = useLanguage()
-  const label = TOOL_BREADCRUMB_LABELS[pathname.replace(/\\/+$/, '') || '/']
+  const label = TOOL_BREADCRUMB_LABELS[pathname.replace(/\/+$/, '') || '/']
   if (!label) return null
   const homeLabel = language === 'en' ? 'Home' : 'Beranda'
   const currentLabel = language === 'en' ? label.en : label.id
