@@ -30,6 +30,6 @@ test('Quality Intelligence compares the current JUnit report with the previous l
 
 test('Quality Intelligence does not compare a demo report with unrelated saved history', async ({ page }) => {
   await page.goto('/quality-intelligence')
-  await page.getByRole('button', { name: /Open demo report|Buka laporan demo/i }).click()
+  await page.getByRole('button', { name: /Open demo report|Explore demo report|Lihat laporan demo/i }).click()
   await expect(page.locator('.quality-intelligence-comparison')).toHaveCount(0)
 })
