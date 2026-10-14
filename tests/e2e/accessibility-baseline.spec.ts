@@ -1,3 +1,4 @@
+import { ensurePrimaryNavigationVisible, openCommandPalette } from './helpers/navigation'
 import { expect, test } from '@playwright/test'
 
 const routes = [
@@ -37,16 +38,8 @@ for (const route of routes) {
 test('primary navigation and command search expose accessible names', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/')
-  const navigation = page.getByRole('navigation', { name: /Main navigation|Navigasi utama/i })
-  if (!(await navigation.isVisible())) {
-    const menuToggle = page.getByRole('button', { name: /Open menu|Buka menu/i })
-    if (await menuToggle.isVisible()) await menuToggle.click()
-  }
-  await expect(navigation).toBeVisible()
-  await expect(page.getByRole('button', { name: /Search tools and articles|Cari tools dan artikel/i })).toBeVisible()
-  await page.getByRole('button', { name: /Search tools and articles|Cari tools dan artikel/i }).click()
-  const dialog = page.getByRole('dialog', { name: /Jump to anything|Cari dan buka apa saja/i })
-  await expect(dialog).toBeVisible()
+  await ensurePrimaryNavigationVisible(page)
+  const dialog = await openCommandPalette(page)
   await expect(dialog.getByRole('textbox', { name: /Search commands|Cari perintah/i })).toBeFocused()
   await page.keyboard.press('Escape')
   await expect(dialog).toHaveCount(0)
