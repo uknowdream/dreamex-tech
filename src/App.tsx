@@ -1560,6 +1560,30 @@ function ArticlePage() {
 }
 
 
+const COMMAND_RECENTS_KEY = 'dreamex-command-palette-recent-v1'
+const RECENT_TOOL_IDS = new Set(['lab', 'observatory', 'devtools', 'workspace', 'engineering-intelligence', 'control-plane', 'command-center', 'qa-studio', 'quality-intelligence', 'supply-chain-intelligence', 'security-center', 'api-playground', 'performance', 'knowledge-graph', 'learn'])
+type PaletteCategory = 'all' | 'discover' | 'build' | 'security' | 'learn'
+function readRecentToolIds(): string[] {
+  try {
+    const value: unknown = JSON.parse(window.localStorage.getItem(COMMAND_RECENTS_KEY) ?? '[]')
+    return Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string' && RECENT_TOOL_IDS.has(id)).slice(0, 5) : []
+  } catch { return [] }
+}
+const PALETTE_ACTION_CATEGORIES: Record<string, Exclude<PaletteCategory, 'all'>> = {
+  home: 'discover', about: 'discover', topics: 'discover', articles: 'discover', 'reading-list': 'learn',
+  lab: 'build', observatory: 'build', devtools: 'build', workspace: 'build', 'engineering-intelligence': 'build',
+  'control-plane': 'build', 'command-center': 'build', 'qa-studio': 'build', 'quality-intelligence': 'build',
+  'supply-chain-intelligence': 'security', 'security-center': 'security', 'api-playground': 'build',
+  performance: 'build', 'knowledge-graph': 'learn', learn: 'learn',
+}
+function paletteArticleCategory(article: Article): Exclude<PaletteCategory, 'all'> {
+  const text = [article.category, ...article.tags].join(' ').toLowerCase()
+  if (/security|privacy|supply.chain|threat|csp|vulnerability/.test(text)) return 'security'
+  if (/qa|test|api|engineering|software|web|performance|automation|developer|code/.test(text)) return 'build'
+  if (/learn|career|guide|tutorial|fundamental|course/.test(text)) return 'learn'
+  return 'discover'
+}
+
 function CommandPalette() {
   const { language } = useLanguage()
   const navigate = useNavigate()
@@ -1567,6 +1591,8 @@ function CommandPalette() {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
+  const [categoryFilter, setCategoryFilter] = useState<PaletteCategory>('all')
+  const [recentToolIds, setRecentToolIds] = useState<string[]>(readRecentToolIds)
   const inputRef = useRef<HTMLInputElement>(null)
   const previousPath = useRef(location.pathname)
   const isEnglish = language === 'en'
@@ -1600,10 +1626,17 @@ function CommandPalette() {
       translated?.title, translated?.excerpt, translated?.body.join(' '),
       article.category, ...article.tags, article.slug.replaceAll('-', ' '),
     ].filter(Boolean).join(' ').toLowerCase()
-    return searchableText.includes(term)
+    return searchableText.includes(term) && (categoryFilter === 'all' || paletteArticleCategory(article) === categoryFilter)
   }).slice(0, 6)
+  const matchingActions = actions.filter(action =>
+    (!term || `${action.label} ${action.detail}`.toLowerCase().includes(term)) &&
+    (categoryFilter === 'all' || PALETTE_ACTION_CATEGORIES[action.id] === categoryFilter)
+  )
+  const recentActions = !term ? recentToolIds.map(id => matchingActions.find(action => action.id === id)).filter((action): action is typeof actions[number] => Boolean(action)) : []
+  const regularActions = matchingActions.filter(action => !recentActions.some(recent => recent.id === action.id))
   const items = [
-    ...actions.filter(action => !term || `${action.label} ${action.detail}`.toLowerCase().includes(term)).map(action => ({ id: action.id, label: action.label, detail: action.detail, icon: action.icon, run: action.run })),
+    ...recentActions.map(action => ({ id: action.id, label: action.label, detail: action.detail, icon: action.icon, run: action.run })),
+    ...regularActions.map(action => ({ id: action.id, label: action.label, detail: action.detail, icon: action.icon, run: action.run })),
     ...filteredArticles.map(article => {
       const translated = articleTranslations[article.slug]
       const label = isEnglish ? (translated?.title ?? article.title) : article.title
@@ -1646,7 +1679,7 @@ function CommandPalette() {
       previousFocus?.focus()
     }
   }, [open])
-  useEffect(() => setActiveIndex(0), [query])
+  useEffect(() => setActiveIndex(0), [query, categoryFilter])
   useEffect(() => {
     if (previousPath.current === location.pathname) return
     previousPath.current = location.pathname
@@ -1660,6 +1693,11 @@ function CommandPalette() {
     return () => window.cancelAnimationFrame(frame)
   }, [location.pathname])
   const runItem = (item: typeof items[number]) => {
+    if (RECENT_TOOL_IDS.has(item.id)) {
+      const next = [item.id, ...recentToolIds.filter(id => id !== item.id)].slice(0, 5)
+      setRecentToolIds(next)
+      try { window.localStorage.setItem(COMMAND_RECENTS_KEY, JSON.stringify(next)) } catch { /* Recent history is optional; navigation must still work. */ }
+    }
     setOpen(false)
     item.run()
   }
@@ -1681,7 +1719,9 @@ function CommandPalette() {
           if (event.key === 'ArrowUp') { event.preventDefault(); setActiveIndex(index => Math.max(0, index - 1)) }
           if (event.key === 'Enter' && items.length) { event.preventDefault(); runItem(items[Math.min(activeIndex, items.length - 1)]) }
         }} placeholder={isEnglish ? 'Search articles, topics, and pages…' : 'Cari artikel, topik, dan halaman…'} aria-label={isEnglish ? 'Search commands' : 'Cari perintah'} /><button onClick={() => setOpen(false)} aria-label={isEnglish ? 'Close command palette' : 'Tutup command palette'}><X size={18} /></button></div>
+        <div className="command-category-filters" role="group" aria-label={isEnglish ? 'Filter command categories' : 'Filter kategori perintah'}>{([{ id: 'all', en: 'All', idText: 'Semua' }, { id: 'discover', en: 'Discover', idText: 'Jelajahi' }, { id: 'build', en: 'Build & Test', idText: 'Bangun & Tes' }, { id: 'security', en: 'Security & Reliability', idText: 'Keamanan & Keandalan' }, { id: 'learn', en: 'Learn', idText: 'Belajar' }] as const).map(category => <button key={category.id} type="button" aria-pressed={categoryFilter === category.id} className={categoryFilter === category.id ? 'is-active' : ''} onClick={() => setCategoryFilter(category.id)}>{isEnglish ? category.en : category.idText}</button>)}</div>
         <div className="command-results" id="command-results">
+          {!term && recentActions.length > 0 && <div className="command-results-heading"><p className="command-section-label">{isEnglish ? 'RECENTLY USED TOOLS' : 'TOOLS TERAKHIR DIGUNAKAN'}</p><button type="button" onClick={() => { setRecentToolIds([]); try { window.localStorage.removeItem(COMMAND_RECENTS_KEY) } catch { /* Optional browser storage. */ } }}>{isEnglish ? 'Clear' : 'Hapus'}</button></div>}
           <p className="command-section-label" id="command-title">{term ? (isEnglish ? 'SEARCH RESULTS' : 'HASIL PENCARIAN') : (isEnglish ? 'QUICK ACTIONS & ARTICLES' : 'AKSI CEPAT & ARTIKEL')}</p>
           {items.length ? items.map((item, index) => {
             const Icon = item.icon
