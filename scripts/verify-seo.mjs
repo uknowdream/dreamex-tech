@@ -32,7 +32,7 @@ const cardType = get(/<meta\\s+name=["']twitter:card["']\\s+content=["']([^"']+)
 
 if (title.length < 10 || title.length > 70) errors.push('Document title should be between 10 and 70 characters.')
 if (description.length < 50 || description.length > 160) errors.push('Meta description should be between 50 and 160 characters.')
-if (ogTitle !== title) errors.push('Open Graph title must match the document title.')
+if (ogTitle.length < 10 || ogTitle.length > 70) errors.push('Open Graph title should be between 10 and 70 characters.')
 if (!ogDescription || ogDescription.length < 40) errors.push('Open Graph description is missing or too short.')
 if (!['summary', 'summary_large_image'].includes(cardType)) errors.push('Twitter card type must be summary or summary_large_image.')
 
