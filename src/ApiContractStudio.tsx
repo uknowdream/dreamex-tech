@@ -4,7 +4,7 @@ import { useLanguage } from './i18n'
 import './ApiContractStudio.css'
 
 type Operation = { key: string; method: string; path: string; operationId: string; summary: string; responses: string[]; requiredParams: string[]; requestRequired: boolean }
-type Contract = { name: string; version: string; title: string; operations: Operation[]; warnings: string[] }
+type Contract = { name: string; version: string; title: string; operations: Operation[]; warnings: string[]; schemaCount: number; exampleCount: number }
 type Change = { kind: 'breaking' | 'info' | 'warning'; title: string; detail: string }
 
 const METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace']
@@ -12,6 +12,57 @@ const MAX_SPEC_BYTES = 2 * 1024 * 1024
 const object = (value: unknown): Record<string, unknown> | null => value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null
 const text = (value: unknown): string => typeof value === 'string' ? value : ''
 const keys = (value: unknown): string[] => object(value) ? Object.keys(value as object) : []
+
+function inspectSchemasAndReferences(root: Record<string, unknown>, warnings: string[]) {
+  const openapi3 = text(root.openapi).startsWith('3.')
+  const components = object(root.components)
+  const schemaContainer = object(openapi3 ? components?.schemas : root.definitions)
+  const schemaNames = new Set(Object.keys(schemaContainer ?? {}))
+  for (const [name, schema] of Object.entries(schemaContainer ?? {})) {
+    if (!object(schema)) warnings.push(`Schema ${name} is not an object.`)
+  }
+  const knownTypes = new Set(['array', 'boolean', 'integer', 'number', 'object', 'string', 'null', 'file'])
+  const visited = new WeakSet<object>()
+  const stack: Array<{ value: unknown; path: string; depth: number; inSchema: boolean }> = [{ value: root, path: 'root', depth: 0, inSchema: false }]
+  const unresolved = new Set<string>()
+  let examined = 0
+  while (stack.length && examined < 12000) {
+    const current = stack.pop()!
+    examined += 1
+    if (current.depth > 80) {
+      warnings.push('Document nesting exceeds the 80-level static inspection limit.')
+      continue
+    }
+    if (Array.isArray(current.value)) {
+      current.value.forEach((value, index) => stack.push({ value, path: current.path + '[' + index + ']', depth: current.depth + 1, inSchema: current.inSchema }))
+      continue
+    }
+    const record = object(current.value)
+    if (!record) continue
+    if (visited.has(record)) continue
+    visited.add(record)
+    const ref = text(record.$ref)
+    if (ref.startsWith('#/components/schemas/') || ref.startsWith('#/definitions/')) {
+      const target = ref.split('/').pop()?.replace(/~1/g, '/').replace(/~0/g, '~') ?? ''
+      if (!schemaNames.has(target)) unresolved.add(ref)
+    }
+    if (current.inSchema && typeof record.type === 'string' && !knownTypes.has(record.type)) {
+      warnings.push(`${current.path}: unsupported or unknown schema type "${record.type}".`)
+    }
+    if (current.inSchema && record.type === 'array' && !('$ref' in record) && !('items' in record)) {
+      warnings.push(`${current.path}: array schema is missing items.`)
+    }
+    if (current.inSchema && record.type === 'object' && 'properties' in record && !object(record.properties)) {
+      warnings.push(`${current.path}: object schema properties must be an object.`)
+    }
+    for (const [key, value] of Object.entries(record)) {
+      stack.push({ value, path: current.path + '.' + key, depth: current.depth + 1, inSchema: current.inSchema || key === 'schemas' || key === 'definitions' || key === 'schema' })
+    }
+  }
+  for (const ref of unresolved) warnings.push(`Unresolved local schema reference: ${ref}.`)
+  if (stack.length) warnings.push('Static inspection stopped at its 12,000-node safety limit.')
+  return schemaNames.size
+}
 
 function parseContract(raw: unknown, name: string): Contract {
   const root = object(raw)
@@ -21,6 +72,28 @@ function parseContract(raw: unknown, name: string): Contract {
   if (!info || !paths) throw new Error('The specification must include info and paths objects.')
   const operations: Operation[] = []
   const warnings: string[] = []
+  const schemaCount = inspectSchemasAndReferences(root, warnings)
+  let exampleCount = 0
+  const inspectContent = (value: unknown, where: string) => {
+    if (value === undefined) return
+    const content = object(value)
+    if (!content) { warnings.push(`${where}: content must be an object.`); return }
+    for (const [mediaType, mediaValue] of Object.entries(content)) {
+      const media = object(mediaValue)
+      if (!media) { warnings.push(`${where} ${mediaType}: media-type entry must be an object.`); continue }
+      if ('schema' in media && !object(media.schema)) warnings.push(`${where} ${mediaType}: schema must be an object or local reference object.`)
+      if (Object.prototype.hasOwnProperty.call(media, 'example')) exampleCount += 1
+      if ('examples' in media) {
+        const examples = object(media.examples)
+        if (!examples || !Object.keys(examples).length) warnings.push(`${where} ${mediaType}: examples must be a non-empty object.`)
+        else for (const [exampleName, exampleValue] of Object.entries(examples)) {
+          const example = object(exampleValue)
+          if (!example || (!Object.prototype.hasOwnProperty.call(example, 'value') && typeof example.externalValue !== 'string')) warnings.push(`${where} ${mediaType}: example ${exampleName} must include value or externalValue.`)
+          else exampleCount += 1
+        }
+      }
+    }
+  }
   for (const [path, pathValue] of Object.entries(paths)) {
     const pathItem = object(pathValue)
     if (!pathItem) { warnings.push(`Path ${path} is not an object.`); continue }
@@ -28,14 +101,21 @@ function parseContract(raw: unknown, name: string): Contract {
       const operation = object(pathItem[method])
       if (!operation) continue
       const key = method.toUpperCase() + ' ' + path
-      const responses = keys(operation.responses)
+      const responsesObject = object(operation.responses)
+      const responses = keys(responsesObject)
       if (!responses.length) warnings.push(`${key}: no response definitions found.`)
+      for (const status of responses) {
+        const response = object(responsesObject?.[status])
+        if (!response) { warnings.push(`${key} response ${status}: response must be an object.`); continue }
+        inspectContent(response.content, `${key} response ${status}`)
+      }
       const parameters = [
         ...(Array.isArray(pathItem.parameters) ? pathItem.parameters : []),
         ...(Array.isArray(operation.parameters) ? operation.parameters : []),
       ].map(object).filter((item): item is Record<string, unknown> => item !== null)
       const requiredParams = parameters.filter(item => item.required === true && item.in !== 'body').map(item => (text(item.in) ? text(item.in) + ':' : '') + (text(item.name) || '(unnamed parameter)')).sort()
       const requestBody = object(operation.requestBody)
+      if (requestBody) inspectContent(requestBody.content, `${key} request body`)
       const bodyRequired = requestBody?.required === true || parameters.some(item => item.in === 'body' && item.required === true)
       operations.push({
         key, method: method.toUpperCase(), path,
@@ -55,6 +135,8 @@ function parseContract(raw: unknown, name: string): Contract {
     title: text(info.title) || name,
     operations,
     warnings,
+    schemaCount,
+    exampleCount,
   }
 }
 
@@ -130,7 +212,7 @@ export function ApiContractStudio() {
           <input type="file" accept=".json,application/json" aria-label={which === 'baseline' ? (en ? 'Baseline OpenAPI JSON' : 'OpenAPI JSON versi awal') : (en ? 'Current OpenAPI JSON' : 'OpenAPI JSON versi baru')} onChange={event => void load(which, event.target.files?.[0])} disabled={busy !== null}/>
         </label>
         {errors[which] && <p className="api-contract-error" role="alert">{errors[which]}</p>}
-        {(which === 'baseline' ? baseline : current) && <><div className="api-contract-loaded" role="status"><FileCheck2 size={15}/><div><strong>{(which === 'baseline' ? baseline : current)?.title}</strong><span>v{(which === 'baseline' ? baseline : current)?.version} · {(which === 'baseline' ? baseline : current)?.operations.length} {en ? 'operations' : 'operasi'}</span></div></div>{(which === 'baseline' ? baseline : current)?.warnings.map((warning, index) => <p className="api-contract-error" role="note" key={index}>{warning}</p>)}</>}
+        {(which === 'baseline' ? baseline : current) && <><div className="api-contract-loaded" role="status"><FileCheck2 size={15}/><div><strong>{(which === 'baseline' ? baseline : current)?.title}</strong><span>v{(which === 'baseline' ? baseline : current)?.version} · {(which === 'baseline' ? baseline : current)?.operations.length} {en ? 'operations' : 'operasi'} · {(which === 'baseline' ? baseline : current)?.schemaCount} {en ? 'schemas' : 'schema'} · {(which === 'baseline' ? baseline : current)?.exampleCount} {en ? 'examples' : 'contoh'}</span></div></div>{(which === 'baseline' ? baseline : current)?.warnings.map((warning, index) => <p className="api-contract-error" role="note" key={index}>{warning}</p>)}</>}
       </div>)}
     </div>
     {baseline && current && <div className="api-contract-results">
