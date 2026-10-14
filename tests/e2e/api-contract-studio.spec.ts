@@ -43,7 +43,9 @@ test('API Contract Studio inventories OpenAPI and detects likely breaking change
     name: 'current.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(currentSpec)),
   })
 
-  await expect(studio.getByText('1', { exact: true }).first()).toBeVisible()
+  await expect(studio.locator('.api-contract-summary article').nth(0)).toContainText('2')
+  await expect(studio.locator('.api-contract-summary article').nth(1)).toContainText('2')
+  await expect(studio.locator('.api-contract-summary article').nth(2)).toContainText('0')
   await expect(studio.getByText(/Operation removed: GET \/legacy/i)).toBeVisible()
   await expect(studio.getByText(/New required parameter: GET \/pets\/\{petId\}/i)).toBeVisible()
   await expect(studio.getByText(/Response definitions removed: GET \/pets\/\{petId\}/i)).toBeVisible()
