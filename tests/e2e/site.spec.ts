@@ -1117,7 +1117,7 @@ test('mobile navigation traps keyboard focus and Escape restores the trigger', a
   const close = drawer.getByRole('button', { name: /Close navigation|Tutup navigasi/i }).first()
   await expect(close).toBeFocused()
   await page.keyboard.press('Shift+Tab')
-  await expect(drawer.getByRole('button', { name: /Close navigation|Tutup navigasi/i }).last()).toBeFocused()
+  await expect(drawer.getByRole('button', { name: 'EN', exact: true })).toBeFocused()
   await page.keyboard.press('Escape')
   await expect(drawer).toHaveCount(0)
   await expect(toggle).toHaveAttribute('aria-expanded', 'false')
