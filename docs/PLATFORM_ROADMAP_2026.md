@@ -210,7 +210,7 @@ The repository currently contains a technology publication and browser-first eng
 
 ## 7. Execution status and immediate action list
 
-**Status snapshot:** 14 October 2026. Implementation, CI validation, and production deployment are separate gates. A merged PR is not production-complete merely because it is merged.
+**Status snapshot:** 15 October 2026. Implementation, CI validation, preview deployment, production deployment, and production smoke are separate gates. A merged PR is not production-complete merely because it is merged.
 
 ### Implemented and merged into the repository
 
@@ -233,21 +233,23 @@ The repository currently contains a technology publication and browser-first eng
 - [x] **Reliability & Incident Center — PR #74.** Dedicated local-first incident records, severity/status, timeline events, postmortem export, and manually entered delivery metrics. CI and desktop/mobile Playwright passed; the tool is not connected to live telemetry.
 - [x] **Threat-model worksheet.** Local STRIDE-inspired planning aid for assets, trust boundaries, threats, and mitigations; not automated threat detection.
 - [x] **Responsive/accessibility baseline and performance-budget checks.** Representative route viewport/keyboard checks, route inventory, and initial asset gzip budgets are part of repository verification.
+- [ ] **Premium engineering sidebar — PR #77 (in progress at this snapshot).** Right-side drawer, grouped platform taxonomy, internal scrolling, backdrop, focus trap/restoration, Escape behavior, scroll locking, and desktop/mobile Playwright coverage. Do not mark complete until both browser projects pass and the PR is merged.
 
 ### Production verification still required
 
-- [ ] **Exact-commit deployment.** Current `main` SHA is `bac79086a123cae11ec2c2aecdcfea08f2ede0d0`; the production alias remains on `9ba208f9621c2342b9f1386b659e89f575615911`. The Vercel status for current main reports a build-rate-limit failure. Do not claim the latest main code is deployed until Vercel reports READY for the exact SHA.
+- [ ] **Exact-commit deployment.** The repository snapshot at the start of this status refresh had `main` at `7085af895155971977b855a7de21f78b9a68b173`; the latest verified READY production deployment was still serving commit `9ba208f9621c2342b9f1386b659e89f575615911`. The current repository tip is therefore not proven deployed. Re-check Vercel after each merge and do not claim production completion until a READY deployment identifies the exact merged SHA.
 - [x] **Live smoke sample for the currently deployed version.** The homepage, `/api-playground`, `/rss.xml`, `/rss`, and `/sitemap.xml` returned HTTP 200. `/rss.xml` returned RSS XML; `/rss` returned the SPA HTML shell. Use `/rss.xml` as the subscription feed. This does not verify newer, undeployed commits.
 - [ ] **Fresh CI on exact main SHA.** Confirm typecheck, lint, build, output/i18n verification, and desktop/mobile Playwright for the exact merged commit. Passing PR checks alone is not proof of a fresh main run.
 - [ ] **Production smoke after the next successful deployment.** Verify the homepage, critical tool routes including `/reliability-center`, security headers, `/rss.xml`, and `/sitemap.xml` against the exact deployed SHA.
 
 ### Next implementation queue
 
-1. [ ] **Performance/accessibility follow-through.** Measure representative production routes and real-device Core Web Vitals, add automated WCAG scans and visual baselines, and tune budgets from stable measurements rather than arbitrary targets.
-2. [ ] **Internationalization and SEO production verification.** Validate Indonesian/English parity, long-label wrapping, canonical host, metadata, RSS, and sitemap against the exact deployed commit.
-3. [ ] **Shared navigation test helpers.** Reduce ambiguous duplicate locators and extend route/dead-link checks across desktop and mobile.
-4. [ ] **Evidence retention and privacy review.** Keep imports local by default, test scoped deletion, and disclose provenance, limits, and analysis scope in exports.
-5. [ ] **Collaboration/integrations only after architecture.** Do not simulate cloud sync. Require authentication/authorization, consent, retention/deletion, auditability, rate limits, and operational ownership before team features or GitHub integrations.
+1. [ ] **Finish sidebar PR #77.** Resolve desktop/mobile Playwright findings, verify 320–1440 px widths and keyboard-only interaction, merge only after required checks pass.
+2. [ ] **Production release recovery and exact-SHA smoke.** Re-check the Vercel build for the merged SHA, confirm the production alias points to it, then smoke-test core routes, `/rss.xml`, `/sitemap.xml`, and security headers. Preview READY is not production evidence.
+3. [ ] **Performance/accessibility follow-through.** Measure representative production routes and real-device Core Web Vitals, add automated WCAG scans and visual baselines, and tune budgets from stable measurements rather than arbitrary targets.
+4. [ ] **Internationalization and SEO production verification.** Validate Indonesian/English parity, long-label wrapping, canonical host, metadata, RSS, and sitemap against the exact deployed commit.
+5. [ ] **Shared navigation test helpers and evidence privacy.** Reduce ambiguous locators; extend route/dead-link checks; test scoped deletion and preserve unrelated browser storage.
+6. [ ] **Collaboration/integrations only after architecture.** Do not simulate cloud sync. Require authentication/authorization, consent, retention/deletion, auditability, rate limits, and operational ownership before team features or GitHub integrations.
 
 ### Required release sequence for every feature
 
