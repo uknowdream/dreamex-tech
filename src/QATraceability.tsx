@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { ArrowDownToLine, CheckCircle2, ClipboardCheck, FileUp, Link2, Plus, ShieldCheck, Trash2 } from 'lucide-react'
+import { ArrowDownToLine, ClipboardCheck, FileUp, Link2, Plus, ShieldCheck, Trash2 } from 'lucide-react'
 import { useLanguage } from './i18n'
 import './QATraceability.css'
 
