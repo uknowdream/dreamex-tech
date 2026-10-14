@@ -2786,3 +2786,30 @@ main, header, footer, section, .container {
   .tool-route-breadcrumbs { width: calc(100% - 32px); padding-top: 10px; font-size: 10px; }
   .tool-route-breadcrumbs ol { gap: 6px; }
 }
+
+
+/* Command palette discovery controls */
+.command-discovery { padding: 12px 16px 0; border-bottom: 1px solid var(--border, #26354a); }
+.command-category-filters { display: flex; flex-wrap: wrap; gap: 7px; padding-bottom: 12px; }
+.command-category-filters button { min-height: 32px; padding: 6px 10px; border: 1px solid var(--border, #2c3d55); border-radius: 999px; background: transparent; color: var(--muted, #9baac0); font: inherit; font-size: 10px; cursor: pointer; }
+.command-category-filters button:hover { color: var(--text, #e8edf7); border-color: var(--muted, #71839c); }
+.command-category-filters button.active,.command-category-filters button[aria-pressed="true"] { border-color: var(--accent, #c5ff70); background: color-mix(in srgb, var(--accent, #c5ff70) 10%, transparent); color: var(--text, #e8edf7); }
+.command-category-filters button:focus-visible,.command-recent button:focus-visible { outline: 2px solid var(--accent, #c5ff70); outline-offset: 2px; }
+.command-recent { padding: 0 0 12px; }
+.command-recent-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
+.command-recent-heading p { margin: 0; color: var(--muted, #8192aa); font-size: 9px; letter-spacing: .1em; }
+.command-recent-heading button { border: 0; background: transparent; color: var(--muted, #9baac0); font: inherit; font-size: 10px; cursor: pointer; }
+.command-recent-items { display: flex; flex-wrap: wrap; gap: 7px; }
+.command-recent-items button { display: inline-flex; align-items: center; gap: 7px; max-width: 100%; min-height: 34px; padding: 7px 10px; border: 1px solid var(--border, #2c3d55); border-radius: 8px; background: var(--surface, #101a2a); color: var(--text, #e8edf7); font: inherit; font-size: 10px; cursor: pointer; }
+.command-recent-items button svg { flex-shrink: 0; color: var(--accent, #c5ff70); }
+.command-recent-items button span { overflow-wrap: anywhere; }
+.command-recent-privacy { margin: 7px 0 0; color: var(--muted, #8192aa); font-size: 9px; line-height: 1.5; }
+@media (max-width: 480px) {
+  .command-discovery { padding: 10px 12px 0; }
+  .command-category-filters { gap: 6px; }
+  .command-category-filters button { min-height: 34px; padding-inline: 9px; }
+  .command-recent-items button { max-width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .command-category-filters button, .command-recent-items button { transition: none !important; }
+}
