@@ -24,3 +24,31 @@ test('traceability snapshot exports a portable manifest and content integrity di
   expect(snapshot.manifest.contentSha256).toMatch(/^[a-f0-9]{64}$/)
   expect(snapshot.note).toContain('does not prove authenticity')
 })
+
+test('traceability snapshot continues to import legacy schema 1.0 files', async ({ page }) => {
+  await page.goto('/qa-studio')
+  const matrix = page.getByRole('region', { name: /QA traceability matrix|Matriks traceability QA/i })
+  const legacy = {
+    schemaVersion: '1.0',
+    exportedAt: '2026-01-01T00:00:00.000Z',
+    note: 'Legacy portable snapshot',
+    items: [{
+      id: 'legacy-row-1',
+      requirement: 'REQ-LEGACY-001',
+      testCase: 'TC-LEGACY-001',
+      status: 'passed',
+      defect: '',
+      evidence: 'Legacy evidence reference',
+      releaseCriterion: true,
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    }],
+  }
+  await matrix.getByLabel(/Import traceability snapshot file|Impor file snapshot traceability/i).setInputFiles({
+    name: 'legacy-traceability.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(legacy)),
+  })
+  await expect(matrix.getByText('REQ-LEGACY-001', { exact: true })).toBeVisible()
+  await expect(matrix.getByText('TC-LEGACY-001', { exact: true })).toBeVisible()
+  await expect(matrix.getByText(/Snapshot imported|Snapshot diimpor/i)).toBeVisible()
+})
