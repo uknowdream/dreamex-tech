@@ -1116,6 +1116,11 @@ test('mobile navigation traps keyboard focus and Escape restores the trigger', a
   const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
   await expect(drawer).toBeVisible()
   const close = drawer.getByRole('button', { name: /Close navigation|Tutup navigasi/i }).first()
+  console.log('drawer-focus-debug', await page.evaluate(() => {
+    const nav = document.querySelector('.nav-links')
+    const target = nav?.querySelector('.nav-drawer-close')
+    return { activeTag: document.activeElement?.tagName, activeClass: (document.activeElement as HTMLElement | null)?.className, activeLabel: document.activeElement?.getAttribute('aria-label'), navClass: nav?.className, navVisibility: nav ? getComputedStyle(nav).visibility : null, targetExists: !!target, targetVisibility: target ? getComputedStyle(target).visibility : null, targetTabIndex: target ? (target as HTMLElement).tabIndex : null }
+  }))
   await expect(close).toBeFocused()
   await page.keyboard.press('Shift+Tab')
   await expect(drawer.getByRole('button', { name: 'EN', exact: true })).toBeFocused()
