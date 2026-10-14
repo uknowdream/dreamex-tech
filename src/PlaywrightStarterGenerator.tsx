@@ -5,9 +5,16 @@ import './PlaywrightStarterGenerator.css'
 
 type Assertion = 'heading' | 'main' | 'overflow'
 
+function containsControlCharacters(value: string): boolean {
+  return [...value].some(character => {
+    const code = character.charCodeAt(0)
+    return code < 32 || code === 127
+  })
+}
+
 function normalizeRoute(value: string): string | null {
   const route = value.trim()
-  if (!route.startsWith('/') || route.startsWith('//') || route.includes('\\') || /[\u0000-\u001f\u007f]/.test(route)) return null
+  if (!route.startsWith('/') || route.startsWith('//') || route.includes('\\\\') || containsControlCharacters(route)) return null
   const rawPath = route.split(/[?#]/, 1)[0]
   if (rawPath.split('/').some(segment => segment === '.' || segment === '..')) return null
   try {
