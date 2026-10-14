@@ -137,21 +137,21 @@ function Header() {
           </div>
           <div className="nav-mega-group">
             <span className="nav-group-label">{language === 'en' ? 'PLAN & OPERATE' : 'RENCANAKAN & KELOLA'}</span>
-            <Link to="/control-plane"><span className="nav-link-icon"><Activity size={15} /></span><span><b>{language === 'en' ? 'Control Plane' : 'Pusat Kendali'}</b><small>{language === 'en' ? 'Release readiness & operations' : 'Kesiapan rilis dan operasi'}</small></span></Link>
-            <Link to="/command-center"><span className="nav-link-icon"><ClipboardList size={15} /></span><span><b>{language === 'en' ? 'Command Center' : 'Command Center'}</b><small>{language === 'en' ? 'Tasks, incidents & decisions' : 'Tugas, insiden, dan keputusan'}</small></span></Link>
-            <Link to="/roadmap"><span className="nav-link-icon"><ArrowDownRight size={15} /></span><span><b>{language === 'en' ? 'Product Roadmap' : 'Roadmap Produk'}</b><small>{language === 'en' ? 'Priorities and milestones' : 'Prioritas dan pencapaian'}</small></span></Link>
+            <NavLink to="/control-plane"><span className="nav-link-icon"><Activity size={15} /></span><span><b>{language === 'en' ? 'Control Plane' : 'Pusat Kendali'}</b><small>{language === 'en' ? 'Release readiness & operations' : 'Kesiapan rilis dan operasi'}</small></span></NavLink>
+            <NavLink to="/command-center"><span className="nav-link-icon"><ClipboardList size={15} /></span><span><b>{language === 'en' ? 'Command Center' : 'Command Center'}</b><small>{language === 'en' ? 'Tasks, incidents & decisions' : 'Tugas, insiden, dan keputusan'}</small></span></NavLink>
+            <NavLink to="/roadmap"><span className="nav-link-icon"><ArrowDownRight size={15} /></span><span><b>{language === 'en' ? 'Product Roadmap' : 'Roadmap Produk'}</b><small>{language === 'en' ? 'Priorities and milestones' : 'Prioritas dan pencapaian'}</small></span></NavLink>
           </div>
           <div className="nav-mega-group">
             <span className="nav-group-label">{language === 'en' ? 'BUILD & VERIFY' : 'BANGUN & VALIDASI'}</span>
-            <Link to="/lab"><span className="nav-link-icon"><Terminal size={15} /></span><span><b>Engineering Lab</b><small>{language === 'en' ? 'Practical QA tools' : 'Perangkat QA praktis'}</small></span></Link>
-            <Link to="/quality-intelligence"><span className="nav-link-icon"><ShieldCheck size={15} /></span><span><b>{language === 'en' ? 'Quality Intelligence' : 'Quality Intelligence'}</b><small>{language === 'en' ? 'Test reports & failure signals' : 'Laporan tes dan sinyal kegagalan'}</small></span></Link>
-            <Link to="/api-playground"><span className="nav-link-icon"><Braces size={15} /></span><span><b>API Playground</b><small>{language === 'en' ? 'Inspect API contracts' : 'Periksa kontrak API'}</small></span></Link>
+            <NavLink to="/lab"><span className="nav-link-icon"><Terminal size={15} /></span><span><b>Engineering Lab</b><small>{language === 'en' ? 'Practical QA tools' : 'Perangkat QA praktis'}</small></span></NavLink>
+            <NavLink to="/quality-intelligence"><span className="nav-link-icon"><ShieldCheck size={15} /></span><span><b>{language === 'en' ? 'Quality Intelligence' : 'Quality Intelligence'}</b><small>{language === 'en' ? 'Test reports & failure signals' : 'Laporan tes dan sinyal kegagalan'}</small></span></NavLink>
+            <NavLink to="/api-playground"><span className="nav-link-icon"><Braces size={15} /></span><span><b>API Playground</b><small>{language === 'en' ? 'Inspect API contracts' : 'Periksa kontrak API'}</small></span></NavLink>
           </div>
           <div className="nav-mega-group nav-mega-group-last">
             <span className="nav-group-label">{language === 'en' ? 'SECURE & LEARN' : 'AMANKAN & PELAJARI'}</span>
-            <Link to="/security-center"><span className="nav-link-icon"><ShieldCheck size={15} /></span><span><b>{language === 'en' ? 'Security Center' : 'Pusat Keamanan'}</b><small>{language === 'en' ? 'Privacy and secure practices' : 'Privasi dan praktik aman'}</small></span></Link>
-            <Link to="/supply-chain-intelligence"><span className="nav-link-icon"><Network size={15} /></span><span><b>{language === 'en' ? 'Supply Chain' : 'Supply Chain'}</b><small>{language === 'en' ? 'SBOM inventory insights' : 'Insight inventaris SBOM'}</small></span></Link>
-            <Link to="/learn"><span className="nav-link-icon"><BookOpen size={15} /></span><span><b>{language === 'en' ? 'Learning Hub' : 'Pusat Belajar'}</b><small>{language === 'en' ? 'Structured learning paths' : 'Jalur belajar terstruktur'}</small></span></Link>
+            <NavLink to="/security-center"><span className="nav-link-icon"><ShieldCheck size={15} /></span><span><b>{language === 'en' ? 'Security Center' : 'Pusat Keamanan'}</b><small>{language === 'en' ? 'Privacy and secure practices' : 'Privasi dan praktik aman'}</small></span></NavLink>
+            <NavLink to="/supply-chain-intelligence"><span className="nav-link-icon"><Network size={15} /></span><span><b>{language === 'en' ? 'Supply Chain' : 'Supply Chain'}</b><small>{language === 'en' ? 'SBOM inventory insights' : 'Insight inventaris SBOM'}</small></span></NavLink>
+            <NavLink to="/learn"><span className="nav-link-icon"><BookOpen size={15} /></span><span><b>{language === 'en' ? 'Learning Hub' : 'Pusat Belajar'}</b><small>{language === 'en' ? 'Structured learning paths' : 'Jalur belajar terstruktur'}</small></span></NavLink>
           </div>
         </div>
       </details>
