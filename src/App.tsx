@@ -167,6 +167,7 @@ function Header() {
 function Footer() {
   const { t, language } = useLanguage()
   const en = language === 'en'
+  const arrow = <ArrowRight size={13} aria-hidden="true" />
   return <footer className="footer">
     <div className="container footer-inner">
       <div className="footer-main">
@@ -178,21 +179,36 @@ function Footer() {
           <p>{t('footerTagline')}</p>
           <span className="footer-status"><i /> {en ? 'Built with curiosity. Refined through iteration.' : 'Dibangun dengan rasa ingin tahu. Disempurnakan lewat iterasi.'}</span>
         </div>
-        <div className="footer-column">
+        <nav className="footer-column" aria-label={en ? 'Explore DreamEx' : 'Jelajahi DreamEx'}>
           <span className="footer-heading">{en ? 'EXPLORE' : 'JELAJAHI'}</span>
-          <Link to="/#topics">{t('footerTopics')} <ArrowRight size={13} /></Link>
-          <Link to="/#latest">{t('latestArticles')} <ArrowRight size={13} /></Link>
-          <Link to="/reading-list">{en ? 'Reading list' : 'Daftar bacaan'} <ArrowRight size={13} /></Link>
-          <Link to="/lab">Engineering Lab <ArrowRight size={13} /></Link><Link to="/workspace">Engineering Workspace <ArrowRight size={13} /></Link><Link to="/engineering-intelligence">{en ? 'Engineering Intelligence' : 'Engineering Intelligence'} <ArrowRight size={13} /></Link><Link to="/control-plane">{en ? 'Engineering Control Plane' : 'Pusat Kendali Engineering Terpadu'} <ArrowRight size={13} /></Link><Link to="/command-center">{en ? 'Engineering Command Center' : 'Pusat Kendali Engineering'} <ArrowRight size={13} /></Link><Link to="/qa-studio">{en ? "QA Automation Studio" : "Studio Otomasi QA"} <ArrowRight size={13} /></Link><Link to="/quality-intelligence">{en ? "Quality Intelligence Center" : "Pusat Quality Intelligence"} <ArrowRight size={13} /></Link><Link to="/supply-chain-intelligence">{en ? "Software Supply Chain Intelligence" : "Intelligence Software Supply Chain"} <ArrowRight size={13} /></Link><Link to="/security-center">{en ? "Security & Privacy Center" : "Pusat Keamanan & Privasi"} <ArrowRight size={13} /></Link><Link to="/roadmap">{en ? 'Product roadmap & readiness' : 'Roadmap produk & kesiapan'} <ArrowRight size={13} /></Link><Link to="/knowledge-graph">Knowledge Graph <ArrowRight size={13} /></Link>
-          <Link to="/learn">{en ? 'Learning hub' : 'Pusat belajar'} <ArrowRight size={13} /></Link><Link to="/performance">{en ? 'Performance Observatory' : 'Observatory Performa'} <ArrowRight size={13} /></Link><Link to="/api-playground">API Playground <ArrowRight size={13} /></Link>
-          <Link to="/about">{en ? 'About DreamEx' : 'Tentang DreamEx'} <ArrowRight size={13} /></Link>
-        </div>
-        <div className="footer-column">
-          <span className="footer-heading">{en ? 'ENGINEERING' : 'ENGINEERING'}</span>
-          <a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">{en ? 'Open-source repository' : 'Repositori open-source'} <ArrowRight size={13} /></a>
-          <a href="https://github.com/uknowdream" target="_blank" rel="noreferrer">{en ? 'GitHub profile' : 'Profil GitHub'} <ArrowRight size={13} /></a>
-          <a href="/rss">{en ? 'RSS feed' : 'Feed RSS'} <ArrowRight size={13} /></a>
-        </div>
+          <Link to="/#topics">{t('footerTopics')} {arrow}</Link>
+          <Link to="/#latest">{t('latestArticles')} {arrow}</Link>
+          <Link to="/reading-list">{en ? 'Reading list' : 'Daftar bacaan'} {arrow}</Link>
+          <Link to="/learn">{en ? 'Learning hub' : 'Pusat belajar'} {arrow}</Link>
+          <Link to="/about">{en ? 'About DreamEx' : 'Tentang DreamEx'} {arrow}</Link>
+          <Link to="/roadmap">{en ? 'Product roadmap' : 'Roadmap produk'} {arrow}</Link>
+        </nav>
+        <nav className="footer-column" aria-label={en ? 'Engineering tools' : 'Tools engineering'}>
+          <span className="footer-heading">{en ? 'BUILD & VERIFY' : 'BANGUN & UJI'}</span>
+          <Link to="/lab">Engineering Lab {arrow}</Link>
+          <Link to="/workspace">Engineering Workspace {arrow}</Link>
+          <Link to="/api-playground">API Playground {arrow}</Link>
+          <Link to="/qa-studio">{en ? 'QA Automation Studio' : 'Studio Otomasi QA'} {arrow}</Link>
+          <Link to="/quality-intelligence">{en ? 'Quality Intelligence' : 'Quality Intelligence'} {arrow}</Link>
+          <Link to="/performance">{en ? 'Performance Observatory' : 'Observatory Performa'} {arrow}</Link>
+        </nav>
+        <nav className="footer-column" aria-label={en ? 'Platform and resources' : 'Platform dan sumber daya'}>
+          <span className="footer-heading">{en ? 'PLATFORM & RESOURCES' : 'PLATFORM & SUMBER DAYA'}</span>
+          <Link to="/engineering-intelligence">{en ? 'Engineering Intelligence' : 'Engineering Intelligence'} {arrow}</Link>
+          <Link to="/control-plane">{en ? 'Engineering Control Plane' : 'Pusat Kendali Engineering'} {arrow}</Link>
+          <Link to="/command-center">{en ? 'Command Center' : 'Pusat Kendali'} {arrow}</Link>
+          <Link to="/supply-chain-intelligence">{en ? 'Supply Chain Intelligence' : 'Supply Chain Intelligence'} {arrow}</Link>
+          <Link to="/security-center">{en ? 'Security & Privacy' : 'Keamanan & Privasi'} {arrow}</Link>
+          <Link to="/knowledge-graph">{en ? 'Knowledge Graph' : 'Graf Pengetahuan'} {arrow}</Link>
+          <a href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">{en ? 'GitHub repository' : 'Repositori GitHub'} {arrow}</a>
+          <a href="https://github.com/uknowdream" target="_blank" rel="noreferrer">{en ? 'GitHub profile' : 'Profil GitHub'} {arrow}</a>
+          <Link to="/rss">{en ? 'RSS feed' : 'Feed RSS'} {arrow}</Link>
+        </nav>
       </div>
       <div className="footer-bottom">
         <span className="copyright">© {new Date().getFullYear()} DreamEx Tech. {t('footerCopyright')}</span>
