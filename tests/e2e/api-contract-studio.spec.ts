@@ -142,7 +142,16 @@ test('API Contract Studio flags unresolved local schema references and bounded i
       '/pets/{petId}': {
         get: {
           parameters: [{ name: 'petId', in: 'path', required: true, schema: { type: 'string' } }],
-          responses: { '200': { description: 'OK', content: { 'application/json': { schema: { $ref: '#/components/schemas/Pet' } } } },
+          responses: {
+            '200': {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Pet' },
+                },
+              },
+            },
+          },
         },
       },
     },
