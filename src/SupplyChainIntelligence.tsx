@@ -154,11 +154,10 @@ function downloadFile(name: string, content: string, type: string) {
 }
 const demo: Inventory = {
   source: 'Demo sample — not a real project SBOM', format: 'CycloneDX', importedAt: new Date().toISOString(),
-  provenance: { documentId: 'urn:example:dreamex:demo-bom', specVersion: '1.6', creators: ['DreamEx illustrative demo'], createdAt: 'Not supplied', declaredComponents: 5 },
-  duplicateIdentities: [{ identity: 'purl:pkg:npm/react@19.1.0', count: 2 }],
+  provenance: { documentId: 'urn:example:dreamex:demo-bom', specVersion: '1.6', creators: ['DreamEx illustrative demo'], createdAt: 'Not supplied', declaredComponents: 4 },
+  duplicateIdentities: [],
   components: [
-    { id: 'pkg:npm/react@19.1.0', name: 'react', version: '19.1.0', type: 'library', purl: 'pkg:npm/react@19.1.0', license: 'MIT', supplier: 'Meta', hashes: [], vulnerabilities: [], risks: ['review'] },
-    { id: 'demo-duplicate-react-entry', name: 'react', version: '19.1.0', type: 'library', purl: 'pkg:npm/react@19.1.0', license: 'MIT', supplier: 'Meta', hashes: [], vulnerabilities: [], risks: ['review'] },
+    { id: 'pkg:npm/react@19.1.0', name: 'react', version: '19.1.0', type: 'library', purl: 'pkg:npm/react@19.1.0', license: 'MIT', supplier: 'Meta', hashes: [], vulnerabilities: [], risks: [] },
     { id: 'pkg:npm/example-legacy@1.2.0', name: 'example-legacy', version: '1.2.0', type: 'library', purl: 'pkg:npm/example-legacy@1.2.0', license: 'UNKNOWN', supplier: '', hashes: [], vulnerabilities: ['DEMO-2026-0001'], risks: ['high', 'review'] },
     { id: 'pkg:npm/utility-kit', name: 'utility-kit', version: '', type: 'library', purl: '', license: 'NOASSERTION', supplier: '', hashes: [], vulnerabilities: [], risks: ['review'] },
     { id: 'pkg:npm/typescript@5.8.3', name: 'typescript', version: '5.8.3', type: 'library', purl: 'pkg:npm/typescript@5.8.3', license: 'Apache-2.0', supplier: 'Microsoft', hashes: [], vulnerabilities: [], risks: [] },
