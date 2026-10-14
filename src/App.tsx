@@ -133,6 +133,18 @@ function Header() {
   }, [location.pathname])
 
   useEffect(() => {
+    const handlePlatformEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || menuOpen) return
+      const platform = document.querySelector<HTMLDetailsElement>('.nav-platform')
+      if (!platform?.open) return
+      platform.open = false
+      platform.querySelector<HTMLElement>('summary')?.focus()
+    }
+    document.addEventListener('keydown', handlePlatformEscape)
+    return () => document.removeEventListener('keydown', handlePlatformEscape)
+  }, [menuOpen])
+
+  useEffect(() => {
     if (!menuOpen) return
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
