@@ -32,6 +32,19 @@ const checks = [
   { path: '/sitemap.xml', type: 'xml', markers: ['<urlset', '<url'] },
 ]
 
+const requiredSecurityHeaders = [
+  ['strict-transport-security', /max-age=31536000/i],
+  ['x-content-type-options', /^nosniff$/i],
+  ['x-frame-options', /^(deny|sameorigin)$/i],
+  ['referrer-policy', /^strict-origin-when-cross-origin$/i],
+  ['permissions-policy', /camera=\\(\\),\\s*microphone=\\(\\),\\s*geolocation=\\(\\)/i],
+]
+const reportOnlyDirectives = [
+  /default-src\\s+['"]?self['"]?/i,
+  /object-src\\s+['"]?none['"]?/i,
+  /frame-ancestors\\s+['"]?none['"]?/i,
+]
+
 const failures = []
 const results = await Promise.all(checks.map(async check => {
   const url = new URL(check.path, baseUrl)
@@ -65,6 +78,15 @@ const results = await Promise.all(checks.map(async check => {
   const body = await response.text()
   const issues = []
   if (!response.ok) issues.push(`HTTP ${response.status}`)
+  if (check.type === 'html') {
+    for (const [header, pattern] of requiredSecurityHeaders) {
+      const value = response.headers.get(header) || ''
+      if (!pattern.test(value)) issues.push(`security header ${header} is missing or does not meet the baseline (${value || 'missing'})`)
+    }
+    const reportOnly = response.headers.get('content-security-policy-report-only') || ''
+    if (!reportOnly) issues.push('Content-Security-Policy-Report-Only is missing')
+    else for (const directive of reportOnlyDirectives) if (!directive.test(reportOnly)) issues.push('Content-Security-Policy-Report-Only is missing a required baseline directive: ' + directive)
+  }
   if (check.type === 'html' && !contentType.toLowerCase().includes('text/html')) issues.push(`expected HTML content-type, received ${contentType || '(missing)'}`)
   if (check.type === 'xml' && !/(application|text)\/(xml|rss\+xml)/i.test(contentType)) issues.push(`expected XML content-type, received ${contentType || '(missing)'}`)
   if (check.type === 'json' && !/(application\/(json|manifest\+json))/i.test(contentType)) issues.push(`expected JSON/manifest content-type, received ${contentType || '(missing)'}`)
