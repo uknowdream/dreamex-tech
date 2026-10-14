@@ -2749,3 +2749,40 @@ main, header, footer, section, .container {
 
 /* Keep the keyboard focus visible on the shared command search field. */
 .command-search-row:focus-within { outline: 2px solid #c5ff70; outline-offset: -2px; border-radius: 8px; }
+
+
+/* Context breadcrumbs for deep engineering tools */
+.tool-route-breadcrumbs {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 13px 0 0;
+  color: var(--muted, #93a2ba);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.tool-route-breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.tool-route-breadcrumbs a {
+  color: var(--muted, #93a2ba);
+  text-decoration: none;
+  text-underline-offset: 3px;
+}
+.tool-route-breadcrumbs a:hover { color: var(--text, #e8edf7); text-decoration: underline; }
+.tool-route-breadcrumbs a:focus-visible {
+  outline: 2px solid var(--accent, #c5ff70);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+.tool-route-breadcrumb-separator { color: var(--muted, #6d7c92); }
+.tool-route-breadcrumbs [aria-current="page"] { color: var(--text, #e8edf7); font-weight: 600; overflow-wrap: anywhere; }
+@media (max-width: 480px) {
+  .tool-route-breadcrumbs { width: calc(100% - 32px); padding-top: 10px; font-size: 10px; }
+  .tool-route-breadcrumbs ol { gap: 6px; }
+}
