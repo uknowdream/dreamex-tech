@@ -208,14 +208,43 @@ The repository currently contains a technology publication and browser-first eng
 9. Production deployment confirmation for the exact commit and post-deploy smoke evidence.
 10. PR description documents scope, risk, test evidence, limitations, and rollback strategy.
 
-## 7. Immediate action list
+## 7. Execution status and immediate action list
 
-- [ ] Review PR #14 footer tablet balancing and verify the full check suite before merge.
-- [ ] Review PR #15 navigation drawer. CI, desktop Playwright, and mobile Playwright have reported success for its current head, but the automated reviewer reported six issues across two files; inspect and resolve those findings before merge.
-- [ ] Re-run checks after any fix and inspect the preview at compact mobile and tablet widths.
-- [ ] Merge only after review and required checks are green.
-- [ ] Verify the resulting production deployment and run smoke checks against the deployed commit.
-- [ ] Create follow-up issues from Phase 1–3 instead of combining unrelated features into one large PR.
+**Status snapshot:** 14 October 2026. This is a working execution queue; an item is complete only when its merged commit, checks, deployment, and applicable smoke evidence are verified.
+
+### Completed and merged
+
+- [x] **PR #14 — Footer tablet balancing.** Merged; typecheck, lint, build, desktop Playwright, and mobile Playwright passed for the reviewed change.
+- [x] **PR #15 — Navigation and mobile drawer.** Merged; CI and desktop/mobile Playwright passed for the reviewed change.
+- [x] **PR #16 — Platform roadmap.** Merged; this roadmap is now the planning baseline.
+- [x] **Production baseline smoke.** The deployed main baseline was checked for the homepage, RSS feed, and sitemap. Repeat smoke checks after each subsequent production deployment.
+
+### In progress — merge gates still apply
+
+- [ ] **PR #17 — Unified command palette.** Consolidate the existing palette and header trigger into one dialog; verify keyboard focus, localized article search, responsive header behavior, and desktop/mobile E2E before merge.
+- [ ] **PR #18 — Synthetic QA test data builder.** Validate deterministic fixtures, boundary cases, CSV/JSON export, privacy guardrails, typecheck/lint/build, and desktop/mobile E2E before merge.
+
+### Next implementation queue
+
+1. [ ] **Finish Phase 1 discovery.** Add route inventory/dead-link verification, reusable navigation/footer test helpers, breadcrumbs where useful, workspace category filters/recent tools, and explicit “does / does not do” capability notes.
+2. [ ] **API Contract Studio.** Ensure OpenAPI import supports endpoint inventory, schema/example validation, and static breaking-change comparison with clear input limits and parser errors.
+3. [ ] **QA traceability and evidence packages.** Connect requirements, test cases, execution records, defects, and release criteria in portable snapshots; include schema/version, timestamps, provenance, and explicit limitations.
+4. [ ] **Playwright starter generator.** Generate editable, review-required scaffolds from selected routes and assertions; add tests for escaping, invalid inputs, and deterministic output.
+5. [ ] **Security verification.** Introduce CSP Report-Only checks and a repeatable deployed security-header check; review violations before considering enforcement. Improve SBOM schema/duplicate/license checks and provenance.
+6. [ ] **Release and incident engineering.** Review the existing Reliability & Incident Center work before integrating it; improve timeline integrity, follow-up ownership, postmortem exports, release gates, rollback notes, and deployment/test-evidence linkage.
+7. [ ] **Performance and accessibility baselines.** Measure representative routes first, then set budgets; add automated accessibility checks, keyboard/focus/reduced-motion checks, and visual baselines for critical layouts.
+8. [ ] **Internationalization and SEO verification.** Check Indonesian/English parity, long-label wrapping, metadata, canonical URLs, RSS, and sitemap consistency.
+9. [ ] **Collaboration/integrations only after architecture.** Do not ship simulated cloud sync. Require authentication/authorization, consent, retention/deletion, auditability, rate limits, and operational ownership before GitHub integration or team collaboration.
+
+### Required release sequence for every feature
+
+- [ ] Review the implementation and risk, including automated reviewer findings.
+- [ ] Run typecheck, lint, production build, build-output verification, and bilingual verification.
+- [ ] Run relevant desktop and mobile Playwright coverage; investigate failures instead of bypassing them.
+- [ ] Inspect the exact preview deployment and check responsive, keyboard, focus, and reduced-motion behavior.
+- [ ] Merge only when required checks pass and the PR's stated limitations are accurate.
+- [ ] Verify the production deployment corresponds to the merged commit; smoke-test homepage, critical tool routes, `/rss.xml`, `/rss`, and `/sitemap.xml`.
+- [ ] Record failures, limitations, and rollback steps. Never infer a successful test or deployment from a successful build alone.
 
 ## 8. Definition of done
 
