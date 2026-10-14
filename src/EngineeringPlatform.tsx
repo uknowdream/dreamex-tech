@@ -32,8 +32,8 @@ function readRecentTools(): string[] {
 export function EngineeringWorkspacePage(){
  const {language}=useLanguage();const en=language==='en';const [query,setQuery]=useState('');const [category,setCategory]=useState('All');const [recent,setRecent]=useState<string[]>(readRecentTools)
  const recentItems=recent.map(id=>items.find(item=>item.id===id)).filter((item): item is typeof items[number]=>Boolean(item))
- const markRecent=(id:string)=>{const next=[id,...recent.filter(value=>value!==id)].slice(0,4);try{localStorage.setItem(RECENT_TOOLS_KEY,JSON.stringify(next))}catch{}setRecent(next)}
- const clearRecent=()=>{try{localStorage.removeItem(RECENT_TOOLS_KEY)}catch{}setRecent([])}
+ const markRecent=(id:string)=>{const next=[id,...recent.filter(value=>value!==id)].slice(0,4);try{localStorage.setItem(RECENT_TOOLS_KEY,JSON.stringify(next))}catch{/* Browser storage may be disabled; keep in-memory state. */}setRecent(next)}
+ const clearRecent=()=>{try{localStorage.removeItem(RECENT_TOOLS_KEY)}catch{/* Browser storage may be disabled; clear in-memory state. */}setRecent([])}
  const normalizedQuery=query.trim().toLocaleLowerCase()
  const visible=items.filter(x=>{const searchable=[x.title,x.description,x.category,x.keywords].join(' ').toLocaleLowerCase();return (category==='All'||x.category===category)&&(!normalizedQuery||searchable.includes(normalizedQuery))})
  const categories=['All',...new Set(items.map(x=>x.category))]
