@@ -955,3 +955,26 @@ test('keeps back-to-top navigation in the footer instead of a floating overlay',
   await expect(page.locator('.back-to-top')).toHaveCount(0)
   await expect(page.locator('.footer-top-link')).toBeVisible()
 })
+
+
+test('footer content is grouped and responsive on desktop and mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/')
+  const footer = page.locator('footer.footer')
+  await expect(footer.locator('.footer-brand')).toBeVisible()
+  await expect(footer.getByRole('navigation')).toHaveCount(3)
+  await expect(footer.getByRole('navigation', { name: /Explore DreamEx/i })).toBeVisible()
+  await expect(footer.getByRole('navigation', { name: /Engineering tools/i })).toBeVisible()
+  await expect(footer.getByRole('navigation', { name: /Platform and resources/i })).toBeVisible()
+  await expect(footer.getByRole('link', { name: /GitHub repository/i })).toBeVisible()
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.reload()
+  await expect(footer.locator('.footer-brand')).toBeVisible()
+  await expect(footer.getByRole('link', { name: /Back to top/i })).toBeVisible()
+  const dimensions = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    document: document.documentElement.scrollWidth,
+  }))
+  expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport)
+})
