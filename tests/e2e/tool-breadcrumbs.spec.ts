@@ -3,7 +3,8 @@ import { expect, test } from '@playwright/test'
 test('core tool routes expose an accessible breadcrumb and avoid mobile overflow', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/api-playground')
-  await page.getByRole('button', { name: 'EN', exact: true }).click()
+  const englishToggle = page.getByRole('button', { name: 'EN', exact: true })
+  if (await englishToggle.count()) await englishToggle.first().click()
   await page.setViewportSize({ width: 360, height: 800 })
 
   const breadcrumb = page.getByRole('navigation', { name: /Breadcrumb/i })
