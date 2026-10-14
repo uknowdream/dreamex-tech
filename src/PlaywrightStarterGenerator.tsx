@@ -35,6 +35,7 @@ export function PlaywrightStarterGenerator() {
   const [assertions, setAssertions] = useState<Assertion[]>(['heading', 'main', 'overflow'])
   const [syntax, setSyntax] = useState<'ts' | 'js'>('ts')
   const [draft, setDraft] = useState('')
+  const [notice, setNotice] = useState('')
   const route = useMemo(() => normalizeRoute(routeInput), [routeInput])
   const validation = useMemo(() => {
     if (!testTitle.trim()) return en ? 'Enter a descriptive test title.' : 'Masukkan judul pengujian yang jelas.'
@@ -69,8 +70,9 @@ export function PlaywrightStarterGenerator() {
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(draft)
+      setNotice(en ? 'Spec copied to clipboard.' : 'Spec disalin ke clipboard.')
     } catch {
-      // Keep the editable preview available when clipboard access is denied.
+      setNotice(en ? 'Clipboard access was blocked; download the spec instead.' : 'Akses clipboard diblokir; unduh spec sebagai gantinya.')
     }
   }
   return <section className="playwright-starter" aria-labelledby="playwright-starter-title">
@@ -97,6 +99,7 @@ export function PlaywrightStarterGenerator() {
         <textarea aria-label={en ? 'Editable Playwright test' : 'Tes Playwright yang dapat diedit'} value={draft} onChange={event => setDraft(event.target.value)} readOnly={Boolean(validation)} spellCheck={false} rows={17}/>
         <div className="playwright-starter-actions"><button type="button" className="button button-secondary" onClick={() => void copy()} disabled={!draft}><Clipboard size={15}/>{en ? 'Copy spec' : 'Salin spec'}</button><button type="button" className="button button-primary" onClick={() => downloadSpec(draft, filename)} disabled={!draft}><ArrowDownToLine size={15}/>{en ? 'Download spec' : 'Unduh spec'}</button></div>
         <p className="playwright-starter-note"><Sparkles size={14}/>{en ? 'Generated from your current inputs. Editing the inputs refreshes the scaffold; edit the code after you finish configuring it.' : 'Dibuat dari input saat ini. Mengubah input akan memperbarui kerangka; edit kode setelah konfigurasi selesai.'}</p>
+        {notice && <p className="command-center-notice" role="status">{notice}</p>}
       </div>
     </div>
   </section>
