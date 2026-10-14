@@ -28,4 +28,6 @@ test('SLO worksheet blocks inconsistent request counts', async ({ page }) => {
   await worksheet.getByLabel(/Failed requests/i).fill('100001')
   await expect(worksheet.getByRole('alert')).toBeVisible()
   await expect(worksheet.getByRole('button', { name: /Export calculation/i })).toBeDisabled()
+  await worksheet.getByLabel(/Availability SLO percent/i).fill('')
+  await expect(worksheet.getByRole('alert')).toBeVisible()
 })
