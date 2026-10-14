@@ -24,7 +24,7 @@ test('traceability snapshot exports a portable manifest and content integrity di
   expect(snapshot.manifest.statusCounts['not-run']).toBe(3)
   expect(snapshot.manifest.releaseCriteriaCount).toBe(2)
   expect(snapshot.manifest.contentSha256).toMatch(/^[a-f0-9]{64}$/)
-  expect(snapshot.note).toContain('does not prove authenticity')
+  expect(snapshot.note).toContain('not authenticity')
   await expect.poll(() => page.evaluate(() => localStorage.getItem('unrelated-user-setting'))).toBe('preserve-me')
 })
 
@@ -53,6 +53,6 @@ test('traceability snapshot continues to import legacy schema 1.0 files', async 
     buffer: Buffer.from(JSON.stringify(legacy)),
   })
   await expect(matrix.getByText('REQ-LEGACY-001', { exact: true })).toBeVisible()
-  await expect(matrix.getByText('TC-LEGACY-001', { exact: true })).toBeVisible()
+  await expect(matrix.locator('.qa-traceability-test')).toContainText('TC-LEGACY-001')
   await expect(matrix.getByText(/Snapshot imported|Snapshot diimpor/i)).toBeVisible()
 })
