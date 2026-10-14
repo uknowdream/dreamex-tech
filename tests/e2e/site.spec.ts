@@ -1008,3 +1008,42 @@ test('navigation drawer is keyboard-visible, scrollable, and responsive on compa
   const widths = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, page: document.documentElement.scrollWidth }))
   expect(widths.page).toBeLessThanOrEqual(widths.viewport)
 })
+
+
+test('unified command palette opens by keyboard, searches destinations, and navigates', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/')
+
+  await page.keyboard.press('Control+k')
+  const dialog = page.getByRole('dialog', { name: /Jump to anything|Cari dan buka apa saja/i })
+  await expect(dialog).toBeVisible()
+  const search = dialog.locator('.command-search-field input')
+  await expect(search).toBeFocused()
+  await search.fill('API Playground')
+  const result = dialog.getByRole('option', { name: /API Playground/i })
+  await expect(result).toBeVisible()
+  await expect(dialog.getByText(/No matching destinations|Tidak ada halaman yang cocok/i)).toHaveCount(0)
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('ArrowUp')
+  await page.keyboard.press('Enter')
+
+  await expect(page).toHaveURL(/api-playground$/)
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+})
+
+test('unified command palette is reachable on mobile and searches articles', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+
+  const trigger = page.getByRole('button', { name: /Search tools and articles|Cari tools dan artikel/i })
+  await expect(trigger).toBeVisible()
+  await trigger.click()
+  const dialog = page.getByRole('dialog', { name: /Jump to anything|Cari dan buka apa saja/i })
+  const search = dialog.locator('.command-search-field input')
+  await search.fill('Playwright Test Suite')
+  const result = dialog.getByRole('option', { name: /Playwright Test Suite/i })
+  await expect(result).toBeVisible()
+  await result.click()
+  await expect(page).toHaveURL(/blog\/playwright-test-architecture$/)
+  await expect(page.getByRole('dialog')).toHaveCount(0)
+})
