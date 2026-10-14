@@ -1567,6 +1567,13 @@ function CommandPalette() {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [recentTools, setRecentTools] = useState<string[]>(() => {
+    try {
+      const stored: unknown = JSON.parse(window.localStorage.getItem('dreamex-recent-tools-v1') ?? '[]')
+      return Array.isArray(stored) ? stored.filter((id): id is string => typeof id === 'string').slice(0, 4) : []
+    } catch { return [] }
+  })
   const inputRef = useRef<HTMLInputElement>(null)
   const previousPath = useRef(location.pathname)
   const isEnglish = language === 'en'
@@ -1592,6 +1599,21 @@ function CommandPalette() {
     { id: 'knowledge-graph', label: 'Engineering Knowledge Graph', detail: isEnglish ? 'Explore relationships between concepts and tools' : 'Jelajahi relasi konsep dan tools', icon: Share2, run: () => navigate('/knowledge-graph') },
     { id: 'learn', label: isEnglish ? 'Open Learning Hub' : 'Buka Pusat Belajar', detail: isEnglish ? 'Curated paths and engineering glossary' : 'Jalur belajar dan glosarium engineering', icon: BookOpen, run: () => navigate('/learn') },
   ]
+  const actionCategory: Record<string, string> = {
+    home: 'learn', about: 'learn', topics: 'learn', articles: 'learn', 'reading-list': 'learn', workspace: 'learn', 'knowledge-graph': 'learn', learn: 'learn',
+    lab: 'qa', 'qa-studio': 'qa', 'quality-intelligence': 'qa',
+    'api-playground': 'api', 'engineering-intelligence': 'api',
+    devtools: 'security', 'security-center': 'security', 'supply-chain-intelligence': 'security',
+    observatory: 'reliability', 'control-plane': 'reliability', 'command-center': 'reliability', performance: 'reliability',
+  }
+  const categories = [
+    { id: 'all', label: isEnglish ? 'All tools' : 'Semua tools' },
+    { id: 'qa', label: 'QA' },
+    { id: 'api', label: 'API' },
+    { id: 'security', label: isEnglish ? 'Security' : 'Keamanan' },
+    { id: 'reliability', label: isEnglish ? 'Reliability' : 'Reliabilitas' },
+    { id: 'learn', label: isEnglish ? 'Learn & discover' : 'Belajar & jelajahi' },
+  ]
   const term = query.trim().toLowerCase()
   const filteredArticles = articles.filter(article => {
     const translated = articleTranslations[article.slug]
@@ -1603,8 +1625,8 @@ function CommandPalette() {
     return searchableText.includes(term)
   }).slice(0, 6)
   const items = [
-    ...actions.filter(action => !term || `${action.label} ${action.detail}`.toLowerCase().includes(term)).map(action => ({ id: action.id, label: action.label, detail: action.detail, icon: action.icon, run: action.run })),
-    ...filteredArticles.map(article => {
+    ...actions.filter(action => (!term || `${action.label} ${action.detail}`.toLowerCase().includes(term)) && (categoryFilter === 'all' || actionCategory[action.id] === categoryFilter)).map(action => ({ id: action.id, label: action.label, detail: action.detail, icon: action.icon, run: action.run })),
+    ...(categoryFilter === 'all' ? filteredArticles.map(article => {
       const translated = articleTranslations[article.slug]
       const label = isEnglish ? (translated?.title ?? article.title) : article.title
       const alternateTitle = isEnglish ? article.title : translated?.title
@@ -1616,8 +1638,9 @@ function CommandPalette() {
         icon: BookOpen,
         run: () => navigate(`/blog/${article.slug}`),
       }
-    }),
+    }) : []),
   ]
+  const recentItems = recentTools.map(id => actions.find(action => action.id === id)).filter(action => action && (categoryFilter === 'all' || actionCategory[action.id] === categoryFilter)).slice(0, 4)
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
@@ -1646,7 +1669,7 @@ function CommandPalette() {
       previousFocus?.focus()
     }
   }, [open])
-  useEffect(() => setActiveIndex(0), [query])
+  useEffect(() => setActiveIndex(0), [query, categoryFilter])
   useEffect(() => {
     if (previousPath.current === location.pathname) return
     previousPath.current = location.pathname
@@ -1660,8 +1683,17 @@ function CommandPalette() {
     return () => window.cancelAnimationFrame(frame)
   }, [location.pathname])
   const runItem = (item: typeof items[number]) => {
+    if (actions.some(action => action.id === item.id)) {
+      const next = [item.id, ...recentTools.filter(id => id !== item.id)].slice(0, 4)
+      setRecentTools(next)
+      try { window.localStorage.setItem('dreamex-recent-tools-v1', JSON.stringify(next)) } catch { /* Recent tools are optional convenience only. */ }
+    }
     setOpen(false)
     item.run()
+  }
+  const clearRecentTools = () => {
+    setRecentTools([])
+    try { window.localStorage.removeItem('dreamex-recent-tools-v1') } catch { /* The current UI state is still cleared. */ }
   }
   return <>
     {open && <div className="command-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) setOpen(false) }}>
@@ -1681,6 +1713,19 @@ function CommandPalette() {
           if (event.key === 'ArrowUp') { event.preventDefault(); setActiveIndex(index => Math.max(0, index - 1)) }
           if (event.key === 'Enter' && items.length) { event.preventDefault(); runItem(items[Math.min(activeIndex, items.length - 1)]) }
         }} placeholder={isEnglish ? 'Search articles, topics, and pages…' : 'Cari artikel, topik, dan halaman…'} aria-label={isEnglish ? 'Search commands' : 'Cari perintah'} /><button onClick={() => setOpen(false)} aria-label={isEnglish ? 'Close command palette' : 'Tutup command palette'}><X size={18} /></button></div>
+        <div className="command-discovery">
+          <div className="command-category-filters" role="group" aria-label={isEnglish ? 'Tool categories' : 'Kategori tools'}>
+            {categories.map(category => <button key={category.id} type="button" aria-pressed={categoryFilter === category.id} className={categoryFilter === category.id ? 'active' : ''} onClick={() => setCategoryFilter(category.id)}>{category.label}</button>)}
+          </div>
+          {!term && recentItems.length > 0 && <section className="command-recent" aria-label={isEnglish ? 'Recently used tools' : 'Tools yang baru digunakan'}>
+            <div className="command-recent-heading"><p>{isEnglish ? 'RECENTLY USED' : 'BARU DIGUNAKAN'}</p><button type="button" onClick={clearRecentTools}>{isEnglish ? 'Clear recent' : 'Hapus riwayat'}</button></div>
+            <div className="command-recent-items">{recentItems.map(action => {
+              const Icon = action!.icon
+              return <button key={action!.id} type="button" onClick={() => runItem({ id: action!.id, label: action!.label, detail: action!.detail, icon: action!.icon, run: action!.run })}><Icon size={14}/><span>{action!.label}</span></button>
+            })}</div>
+            <p className="command-recent-privacy">{isEnglish ? 'Stored only in this browser profile.' : 'Disimpan hanya di profil browser ini.'}</p>
+          </section>}
+        </div>
         <div className="command-results" id="command-results">
           <p className="command-section-label" id="command-title">{term ? (isEnglish ? 'SEARCH RESULTS' : 'HASIL PENCARIAN') : (isEnglish ? 'QUICK ACTIONS & ARTICLES' : 'AKSI CEPAT & ARTIKEL')}</p>
           {items.length ? items.map((item, index) => {
