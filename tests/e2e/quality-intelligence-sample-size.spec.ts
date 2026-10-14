@@ -25,5 +25,6 @@ test('Quality Intelligence does not infer flaky retries from JUnit XML', async (
     buffer: Buffer.from(xml),
   })
   await expect(page.getByText(/JUnit XML does not preserve retry history|Parser ini tidak menyimpulkan status flaky dari JUnit XML/i)).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Flaky', exact: true })).toHaveCount(0)
+  await expect(page.locator('.quality-intelligence-metrics article').nth(3).locator('strong')).toHaveText('0')
+  await expect(page.getByText(/0 of 1 executed \(0%\)|0 dari 1 tes dijalankan \(0%\)/i)).toBeVisible()
 })
