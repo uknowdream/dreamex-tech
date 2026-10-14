@@ -34,5 +34,6 @@ test('Security Center threat model records examples and exports provenance limit
 test('Threat model form rejects empty required fields', async ({ page }) => {
   await page.goto('/security-center')
   const worksheet = page.getByRole('region', { name: /Threat model worksheet|Worksheet threat model/i })
-  await expect(worksheet.getByRole('button', { name: /Add threat|Tambah ancaman/i })).toBeDisabled()
+  await expect(worksheet.getByLabel(/Asset \/ data \/ capability|Aset \/ data \/ kapabilitas/i)).toHaveAttribute('required', '')
+  await expect(worksheet.getByLabel(/Threat hypothesis|Hipotesis ancaman/i)).toHaveAttribute('required', '')
 })
