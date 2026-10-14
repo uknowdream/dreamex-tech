@@ -130,6 +130,8 @@ function Header() {
     const onShortcut = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
+        setMenuOpen(false)
+        document.querySelector('.nav-platform')?.removeAttribute('open')
         setCommandOpen(true)
       } else if (event.key === 'Escape' && commandOpen) {
         event.preventDefault()
@@ -199,7 +201,7 @@ function Header() {
   }
   return <><header className="site-header"><div className="container nav-wrap">
     <Link className="brand" to="/" aria-label="DreamEx Tech beranda"><span className="brand-mark"><Braces size={21} /></span><span>DreamEx<span className="brand-muted"> Tech</span></span><span className="brand-beta">ENGINEERING NOTES</span></Link>
-    <button ref={commandTrigger} className="command-trigger" type="button" aria-label={language === 'en' ? 'Search tools and articles' : 'Cari tools dan artikel'} onClick={() => setCommandOpen(true)}><Search size={16} /><span>{language === 'en' ? 'Search tools' : 'Cari tools'}</span><kbd>⌘ K</kbd></button>
+    <button ref={commandTrigger} className="command-trigger" type="button" aria-keyshortcuts="Control+K Meta+K" aria-label={language === 'en' ? 'Search tools and articles' : 'Cari tools dan artikel'} onClick={() => { setMenuOpen(false); document.querySelector('.nav-platform')?.removeAttribute('open'); setCommandOpen(true) }}><Search size={16} /><span>{language === 'en' ? 'Search tools' : 'Cari tools'}</span><kbd>⌘ K</kbd></button>
     <button className="menu-toggle" aria-label={menuOpen ? t('closeMenu') : t('openMenu')} aria-expanded={menuOpen} onClick={() => setMenuOpen(value => !value)}><span /><span /></button>
     <nav className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={language === 'en' ? 'Main navigation' : 'Navigasi utama'}>
       <NavLink to="/" end>{language === 'en' ? 'Journal' : 'Jurnal'}</NavLink>
