@@ -210,48 +210,56 @@ The repository currently contains a technology publication and browser-first eng
 
 ## 7. Execution status and immediate action list
 
-**Status snapshot:** 14 October 2026. This is a working execution queue; an item is complete only when its merged commit, checks, deployment, and applicable smoke evidence are verified.
+**Status snapshot:** 14 October 2026. Implementation, CI validation, and production deployment are separate gates. A feature is not production-complete merely because its PR is merged.
 
 ### Implemented and merged into the repository
 
-- [x] **Footer and mobile navigation — PRs #14–#15.** Responsive refinements and keyboard/touch coverage merged.
-- [x] **Platform roadmap — PR #16.** This document is the planning baseline; the execution queue below is updated to reflect shipped code.
-- [x] **Unified command palette.** Route/article search, keyboard shortcut, focus handling, and desktop/mobile regression coverage are present in the repository.
-- [x] **Synthetic test data and Playwright starter generation.** QA Automation Studio includes deterministic local test data and editable starter scaffolds with explicit review guidance.
-- [x] **Production smoke workflow — PR #26.** A scheduled HTTPS smoke script checks critical tool routes, RSS, and sitemap with content-type/body markers and bounded retries.
-- [x] **SBOM provenance and duplicate/license metadata review.** CycloneDX/SPDX inventory stays browser-local; imported vulnerability records are not represented as a live scan.
-- [x] **CSP Report-Only and header verification.** Policy is non-enforcing; no server-side violation collection endpoint is configured.
-- [x] **QA traceability manifest — PR #30.** Schema 1.1 export includes metadata, counts, and a SHA-256 digest of the ordered items; legacy 1.0 import remains supported.
-- [x] **SLO/error-budget worksheet — PR #28.** Manual inputs only; it does not claim to read live telemetry.
-- [x] **API Contract Studio — PR #38.** OpenAPI JSON inventory, static compatibility heuristics, and a portable JSON report are integrated into API Playground.
-- [x] **Breadcrumb navigation.** Bilingual route breadcrumbs and narrow-screen/keyboard checks are present in the repository.
+- [x] **Responsive footer and navigation — PRs #14–#15.** Footer balancing, active routes, mobile drawer, keyboard/touch behavior, and desktop/mobile coverage.
+- [x] **Unified command palette — PR #17.** Route/article discovery, keyboard shortcut, focus management, and desktop/mobile regression coverage.
+- [x] **Workspace discovery — PR #45.** Category filters and clearable, browser-local recently used tools.
+- [x] **Synthetic QA data and Playwright starter generation — PR #22.** Deterministic fixtures and editable scaffolds with review guidance.
+- [x] **Production smoke workflow — PR #26.** Scheduled HTTPS checks for core routes, RSS, and sitemap with content/body markers and bounded retries.
+- [x] **SBOM provenance and metadata review — PR #23.** Browser-local CycloneDX/SPDX review; imported vulnerability data is not represented as a live scan.
+- [x] **CSP Report-Only and security-header verification — PR #24.** Non-enforcing baseline; no server-side violation collection endpoint is configured.
+- [x] **QA traceability manifest — PR #30.** Versioned export with metadata, counts, integrity digest, and legacy import support.
+- [x] **SLO/error-budget worksheet — PR #28.** Manual inputs only; not connected to live telemetry.
+- [x] **API Contract Studio — PR #38.** OpenAPI inventory, static compatibility comparison, schema heuristics, inline example checks, Swagger 2.0 body parameters, and JSON export.
+- [x] **OpenAPI local schema-reference integrity — PR #67.** Bounded checks for unresolved local references and malformed schema structures. External references are not fetched; this is not a complete validator.
+- [x] **Bilingual breadcrumbs — PR #29.** Localized route labels and keyboard/narrow-screen checks.
+- [x] **Release evidence register — PR #47.** Commit/deployment references, test evidence, risks, release notes, and rollback plan; manual references remain unverified until checked.
+- [x] **Quality Intelligence comparison — PR #49.** Imported report summary comparison and summary-only local history.
+- [x] **Flaky-test sample size — PR #61.** Retry-derived signals expose sample size and parser limitations.
+- [x] **Incident timeline integrity — PR #63.** Postmortem generation flags chronology, invalid incident windows, and missing follow-up owners/due dates.
+- [x] **Threat-model worksheet.** Local STRIDE-inspired planning aid for assets, trust boundaries, threats, and mitigations; not automated threat detection.
+- [x] **Responsive/accessibility baseline and performance-budget checks.** Representative route viewport/keyboard checks, route inventory, and initial asset gzip budgets are part of repository verification.
 
-### Release verification still required
+### In progress
 
-- [ ] **Production verification for the latest merged commit.** Confirm Vercel READY for the exact main SHA, then run the scheduled smoke checks and verify the homepage, critical tools, /rss.xml, /rss, and /sitemap.xml. A preview or prior production deployment is not sufficient evidence.
-- [ ] **Review current CI health on main.** Confirm the merged commit has fresh CI and desktop/mobile regression results. Do not infer a pass from older PR runs.
-- [ ] **Deployment freshness gap (14 October 2026).** The latest observed `main` SHA is `f8edfe45898b82591de0583c1236c2a31760d1a9`; the latest observed READY production deployment is for `9ba208f9621c2342b9f1386b659e89f575615911`. These are different commits, so production does not yet verify the current repository state. Manual HTTP smoke sampling returned 200 for the 23 configured route/feed endpoints, and the baseline security headers plus Report-Only CSP were confirmed on the homepage and representative tool routes. This is useful health evidence for the deployed version, but it is not a substitute for the exact-commit deployment gate.
+- [ ] **Reliability & Incident Center — PR #71.** Dedicated local-first incident records, event timeline, postmortem export, and manually entered delivery metrics. Requires desktop/mobile E2E before merge.
+
+### Production verification still required
+
+- [ ] **Exact-commit deployment.** Current `main` SHA at this snapshot is `80f3fb39fca154ca1de22dbff310d52820ee828c`; the production alias is still on `9ba208f9621c2342b9f1386b659e89f575615911`. The Vercel status for newer main commits reported a build-rate-limit failure. Do not claim the current main code is deployed until Vercel reports READY for the exact SHA.
+- [x] **Live smoke sample for the currently deployed version.** The homepage, `/api-playground`, `/rss.xml`, `/rss`, and `/sitemap.xml` returned HTTP 200. `/rss.xml` returned RSS XML; `/rss` returned the SPA HTML shell. Use `/rss.xml` as the subscription feed. These checks do not verify newer, undeployed commits.
+- [ ] **Fresh CI on exact main SHA.** Confirm typecheck, lint, build, output/i18n verification, and desktop/mobile Playwright for the exact merged commit. Passing PR checks alone is not proof of a fresh main run.
 
 ### Next implementation queue
 
-1. [x] **Workspace discovery.** Command palette has category filters, browser-local recently used tools with clear-history control and privacy notice, keyboard navigation, and an empty state.
-2. [x] **OpenAPI analysis depth (initial slice).** API Contract Studio checks common schema constraints and inline examples, recognizes Swagger 2.0 body parameters, and flags unresolved external examples. Remaining limitation: this is not a complete OpenAPI validator or runtime test.
-3. [x] **Quality Intelligence comparisons.** Imported report snapshots compare pass rate, average duration, test count, and failures; failure clusters and retry-derived flaky signals show sample limitations.
-4. [x] **Release evidence register (manual).** Release Evidence Panel records baseline/candidate commit, preview/production URL, test evidence, observation time, risks, release notes, and rollback plan. Treat all manually entered evidence as unverified until independently checked.
-5. [x] **Security and threat-model templates.** Security Center includes a local threat-model worksheet for assets, trust boundaries, threats, mitigations, severity, and status. It is a planning aid, not proof of security.
-6. [ ] **Performance/accessibility baselines.** Initial JS/CSS gzip budgets, route checks, responsive overflow tests, keyboard/focus/reduced-motion coverage exist. Still measure representative route/real-device Core Web Vitals, add automated WCAG scans and visual baselines, and tune budgets from stable measurements.
-7. [ ] **Internationalization and SEO verification.** Build-time locale checks and RSS/sitemap generation exist; production parity, canonical host consistency, long-label coverage, and the exact deployed commit still require fresh release verification.
-8. [ ] **Shared navigation test helpers.** Reduce ambiguous duplicate locators and expand route-inventory/dead-link checks across desktop/mobile.
-9. [ ] **Collaboration/integrations only after architecture.** Do not ship simulated cloud sync. Require authentication/authorization, consent, retention/deletion, auditability, rate limits, and operational ownership before GitHub integration or team collaboration.
+1. [ ] **Merge and verify PR #71** if desktop/mobile tests pass; otherwise fix the failing scenario before merge.
+2. [ ] **Performance/accessibility follow-through.** Measure representative production routes and real-device Core Web Vitals, add automated WCAG scans and visual baselines, and tune budgets from stable measurements rather than arbitrary targets.
+3. [ ] **Internationalization and SEO production verification.** Validate Indonesian/English parity, long-label wrapping, canonical host, metadata, RSS, and sitemap against the exact deployed commit.
+4. [ ] **Shared navigation test helpers.** Reduce ambiguous duplicate locators and extend route/dead-link checks across desktop and mobile.
+5. [ ] **Evidence retention and privacy review.** Keep imports local by default, test scoped deletion, and disclose provenance, limits, and analysis scope in exports.
+6. [ ] **Collaboration/integrations only after architecture.** Do not simulate cloud sync. Require authentication/authorization, consent, retention/deletion, auditability, rate limits, and operational ownership before team features or GitHub integrations.
 
 ### Required release sequence for every feature
 
-- [ ] Review the implementation and risk, including automated reviewer findings.
-- [ ] Run typecheck, lint, production build, build-output verification, and bilingual verification.
-- [ ] Run relevant desktop and mobile Playwright coverage; investigate failures instead of bypassing them.
-- [ ] Inspect the exact preview deployment and check responsive, keyboard, focus, and reduced-motion behavior.
-- [ ] Merge only when required checks pass and the PR's stated limitations are accurate.
-- [ ] Verify the production deployment corresponds to the merged commit; smoke-test homepage, critical tool routes, `/rss.xml`, `/rss`, and `/sitemap.xml`.
+- [ ] Review implementation risk and automated reviewer findings.
+- [ ] Run typecheck, lint, production build, output verification, and bilingual verification.
+- [ ] Run relevant desktop and mobile Playwright coverage; investigate failures rather than bypassing them.
+- [ ] Inspect the exact preview and verify responsive, keyboard, focus, and reduced-motion behavior.
+- [ ] Merge only when required checks pass and stated limitations are accurate.
+- [ ] Verify production corresponds to the merged commit; smoke-test the homepage, critical tool routes, `/rss.xml`, `/rss`, and `/sitemap.xml`.
 - [ ] Record failures, limitations, and rollback steps. Never infer a successful test or deployment from a successful build alone.
 
 ## 8. Definition of done
