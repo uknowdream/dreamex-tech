@@ -15,7 +15,7 @@ test('release evidence register validates inputs and exports manual release meta
 
   await register.getByLabel(/Source commit SHA|SHA commit sumber/i).fill('a'.repeat(40))
   await register.getByLabel(/Deployment URL \(HTTPS\)|URL deployment \(HTTPS\)/i).fill('https://www.dreamex.tech')
-  await register.getByLabel(/CI run IDs/i).fill('38500000000, 38500000001')
+  await register.getByLabel(/CI run IDs|ID CI run/i).fill('38500000000, 38500000001')
   await register.getByLabel(/Test evidence \/ report references|Referensi bukti tes \/ laporan/i).fill('Desktop and mobile Playwright reports')
   await register.getByLabel(/Known risks \/ exceptions|Risiko \/ pengecualian yang diketahui/i).fill('Production smoke still required.')
   await register.getByRole('button', { name: /Save release record|Simpan catatan rilis/i }).click()
@@ -24,7 +24,7 @@ test('release evidence register validates inputs and exports manual release meta
   await expect(record).toHaveCount(1)
   await expect(record.getByText(/MANUAL · NOT VERIFIED|MANUAL · BELUM DIVERIFIKASI/i)).toBeVisible()
   await expect(record.getByText('2026.10.14-rc1')).toBeVisible()
-  await expect(record.getByText('38500000000, 38500000001')).toHaveCount(0)
+  await expect(record.getByText(/2 CI run IDs|2 ID CI run/i)).toBeVisible()
   await expect(record.getByText(/Desktop and mobile Playwright reports/)).toBeVisible()
 
   const downloadPromise = page.waitForEvent('download')
@@ -37,6 +37,7 @@ test('release evidence register validates inputs and exports manual release meta
   const report = JSON.parse(json)
   expect(report.records[0].verificationStatus).toBe('manual-unverified')
   expect(report.records[0].sourceSha).toBe('a'.repeat(40))
+  expect(report.records[0].ciRunIds).toEqual(['38500000000', '38500000001'])
   expect(report.records[0].rollbackPlan).toContain('Revert to the prior READY deployment')
   expect(report.limitations.join(' ')).toContain('not been independently verified')
 
