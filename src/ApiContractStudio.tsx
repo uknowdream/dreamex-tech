@@ -82,6 +82,62 @@ function inspectMediaExamples(media: Record<string, unknown>, schema: Record<str
   }
 }
 
+function inspectSchemaReferences(root: Record<string, unknown>, warnings: string[]) {
+  const openapi3 = text(root.openapi).startsWith('3.')
+  const components = object(root.components)
+  const schemaContainer = object(openapi3 ? components?.schemas : root.definitions) ?? {}
+  const schemaNames = new Set(Object.keys(schemaContainer))
+  const knownTypes = new Set(['array', 'boolean', 'integer', 'number', 'object', 'string', 'null', 'file'])
+  const stack: Array<{ value: unknown; path: string; depth: number; inSchema: boolean }> = [
+    { value: root, path: 'root', depth: 0, inSchema: false },
+  ]
+  const visited = new WeakSet<object>()
+  const unresolved = new Set<string>()
+  let examined = 0
+  while (stack.length && examined < 12000 && warnings.length < 100) {
+    const current = stack.pop()!
+    examined += 1
+    if (current.depth > 80) {
+      warnings.push('Document nesting exceeds the 80-level static inspection limit.')
+      continue
+    }
+    if (Array.isArray(current.value)) {
+      current.value.forEach((value, index) => stack.push({
+        value, path: current.path + '[' + index + ']', depth: current.depth + 1, inSchema: current.inSchema,
+      }))
+      continue
+    }
+    const record = object(current.value)
+    if (!record || visited.has(record)) continue
+    visited.add(record)
+    const ref = text(record.$ref)
+    if (ref.startsWith('#/components/schemas/') || ref.startsWith('#/definitions/')) {
+      const pointer = ref.slice(ref.lastIndexOf('/') + 1).replace(/~1/g, '/').replace(/~0/g, '~')
+      if (!pointer || !schemaNames.has(pointer)) unresolved.add(ref)
+    }
+    if (current.inSchema && typeof record.type === 'string' && !knownTypes.has(record.type)) {
+      warnings.push(current.path + ': unsupported or unknown schema type "' + record.type + '".')
+    }
+    if (current.inSchema && record.type === 'array' && !('$ref' in record) && !('items' in record)) {
+      warnings.push(current.path + ': array schema is missing items.')
+    }
+    if (current.inSchema && record.type === 'object' && 'properties' in record && !object(record.properties)) {
+      warnings.push(current.path + ': object schema properties must be an object.')
+    }
+    for (const [key, value] of Object.entries(record)) {
+      const schemaKeys = new Set(['schemas', 'definitions', 'schema', 'items', 'properties', 'allOf', 'oneOf', 'anyOf', 'not'])
+      stack.push({
+        value,
+        path: current.path + '.' + key,
+        depth: current.depth + 1,
+        inSchema: current.inSchema || schemaKeys.has(key),
+      })
+    }
+  }
+  for (const ref of unresolved) warnings.push('Unresolved local schema reference: ' + ref + '.')
+  if (stack.length && warnings.length < 100) warnings.push('Static reference inspection stopped at its 12,000-node safety limit.')
+}
+
 function parseContract(raw: unknown, name: string): Contract {
   const root = object(raw)
   if (!root || (!text(root.openapi).startsWith('3.') && !text(root.swagger).startsWith('2.'))) throw new Error('Expected a valid OpenAPI 3.x or Swagger 2.0 JSON document.')
@@ -90,6 +146,7 @@ function parseContract(raw: unknown, name: string): Contract {
   if (!info || !paths) throw new Error('The specification must include info and paths objects.')
   const operations: Operation[] = []
   const warnings: string[] = []
+  inspectSchemaReferences(root, warnings)
   const isSwagger2 = text(root.swagger).startsWith('2.')
   const components = object(root.components)
   const schemas = object(isSwagger2 ? root.definitions : components?.schemas) ?? {}
