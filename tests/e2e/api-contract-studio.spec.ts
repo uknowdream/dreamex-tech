@@ -73,3 +73,61 @@ test('API Contract Studio rejects invalid and oversized formats without crashing
   })
   await expect(studio.getByRole('alert')).toContainText(/OpenAPI JSON/i)
 })
+
+
+test('API Contract Studio reports unresolved schema references and malformed examples', async ({ page }) => {
+  await page.goto('/api-playground')
+  const studio = page.locator('.api-contract-studio')
+  const baseline = {
+    openapi: '3.0.3',
+    info: { title: 'Schema review', version: '1.0.0' },
+    components: { schemas: { Pet: { $ref: '#/components/schemas/MissingPet' } } },
+    paths: { '/pets': { get: { responses: { '200': { description: 'OK' } } } } },
+  }
+  const current = {
+    openapi: '3.0.3',
+    info: { title: 'Schema review', version: '1.1.0' },
+    paths: {
+      '/pets': { get: { responses: { '200': {
+        description: 'OK',
+        content: { 'application/json': {
+          schema: { type: 'array' },
+          examples: { malformed: { summary: 'Missing value and externalValue' } },
+        } },
+      } } } },
+    },
+  }
+  await studio.getByLabel(/Baseline OpenAPI JSON/i).setInputFiles({
+    name: 'schema-baseline.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(baseline)),
+  })
+  await expect(studio.getByText(/Unresolved local schema reference/i)).toBeVisible()
+  await studio.getByLabel(/Current OpenAPI JSON/i).setInputFiles({
+    name: 'schema-current.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(current)),
+  })
+  await expect(studio.getByText(/array schema is missing items/i)).toBeVisible()
+  await expect(studio.getByText(/example malformed must include value or externalValue/i)).toBeVisible()
+  await expect(studio.locator('.api-contract-loaded').nth(1)).toContainText(/1 schemas · 0 examples|1 schema · 0 contoh/i)
+})
+
+test('API Contract Studio detects required Swagger 2.0 body parameters', async ({ page }) => {
+  await page.goto('/api-playground')
+  const studio = page.locator('.api-contract-studio')
+  const baseline = {
+    openapi: '3.0.3', info: { title: 'Orders', version: '1.0.0' },
+    paths: { '/orders': { post: { responses: { '201': { description: 'Created' } } } } },
+  }
+  const current = {
+    swagger: '2.0', info: { title: 'Orders', version: '2.0.0' },
+    paths: { '/orders': { post: {
+      parameters: [{ name: 'order', in: 'body', required: true, schema: { type: 'object' } }],
+      responses: { '201': { description: 'Created' } },
+    } } },
+  }
+  await studio.getByLabel(/Baseline OpenAPI JSON/i).setInputFiles({
+    name: 'orders-v1.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(baseline)),
+  })
+  await studio.getByLabel(/Current OpenAPI JSON/i).setInputFiles({
+    name: 'orders-v2.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(current)),
+  })
+  await expect(studio.getByText(/Request body is now required: POST \/orders/i)).toBeVisible()
+})
