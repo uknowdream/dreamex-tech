@@ -116,7 +116,7 @@ function parseContract(raw: unknown, name: string): Contract {
       const bodyParameters = parameters.filter(item => item.in === 'body')
       const bodyRequired = requestBody?.required === true || bodyParameters.some(item => item.required === true)
       const pathParameters = new Set(parameters.filter(item => item.in === 'path').map(item => text(item.name)).filter(Boolean))
-      for (const [, parameterName] of path.matchAll(/\{([^}]+)\}/g)) if (!pathParameters.has(parameterName)) warnings.push(\`\${key}: path template parameter "\${parameterName}" is not declared.\`)
+      for (const [, parameterName] of path.matchAll(/\{([^}]+)\}/g)) if (!pathParameters.has(parameterName)) warnings.push(key + ': path template parameter "' + parameterName + '" is not declared.')
       for (const parameter of parameters.filter(item => item.in === 'path')) if (parameter.required !== true) warnings.push(`${key}: path parameter "${text(parameter.name) || '(unnamed)'}" should be required.`)
       if (requestBody) {
         const content = object(requestBody.content) ?? {}
