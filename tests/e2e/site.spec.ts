@@ -1050,7 +1050,7 @@ test('unified command palette is reachable on mobile and searches articles', asy
   const dialog = page.getByRole('dialog', { name: /Jump to anything|Cari dan buka apa saja/i })
   const search = dialog.locator('.command-search-row input')
   await search.fill('playwright')
-  const result = dialog.getByRole('option', { name: /Playwright Test Architecture/i })
+  const result = dialog.getByRole('option', { name: /Playwright/i })
   await expect(result).toBeVisible()
   await result.click()
   await expect(page).toHaveURL(/blog\/playwright-test-architecture$/)
