@@ -1,0 +1,30 @@
+.release-evidence-panel { margin-top: 22px; padding: clamp(14px, 2.6vw, 22px); border: 1px solid var(--line, #304057); border-radius: 14px; background: linear-gradient(145deg, rgba(18, 29, 45, .88), rgba(9, 16, 28, .92)); color: var(--text, #e8edf7); }
+.release-evidence-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.release-evidence-heading h3 { margin: 8px 0 6px; font-size: clamp(17px, 2.4vw, 22px); letter-spacing: -.03em; }
+.release-evidence-heading p { max-width: 620px; margin: 0; color: var(--muted, #93a2ba); font-size: 11px; line-height: 1.75; }
+.release-evidence-count { flex-shrink: 0; padding: 7px 9px; border: 1px solid #394c62; border-radius: 999px; color: #c5ff70; font: 10px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.release-evidence-candidates { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+.release-evidence-card { display: grid; align-content: start; gap: 11px; min-width: 0; padding: 14px; border: 1px solid #2c3d54; border-radius: 10px; background: rgba(5, 12, 22, .55); }
+.release-evidence-overline { color: #9aabc2; font: 10px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .06em; }
+.release-evidence-card label,.release-evidence-notes label { display: grid; gap: 6px; min-width: 0; color: #b8c5d8; font-size: 10px; font-weight: 600; }
+.release-evidence-card input,.release-evidence-notes textarea { width: 100%; min-width: 0; padding: 9px 10px; border: 1px solid #34465d; border-radius: 7px; background: #070f1b; color: #e8edf7; font: inherit; font-size: 11px; line-height: 1.55; }
+.release-evidence-card input::placeholder,.release-evidence-notes textarea::placeholder { color: #71839b; }
+.release-evidence-card input:focus-visible,.release-evidence-notes textarea:focus-visible,.release-evidence-panel button:focus-visible { outline: 2px solid #c5ff70; outline-offset: 3px; }
+.release-evidence-diff { margin-top: 18px; }
+.release-evidence-diff h4 { margin: 0 0 9px; font-size: 13px; }
+.release-evidence-diff-table { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.release-evidence-diff-table > div { display: grid; gap: 6px; min-width: 0; padding: 11px; border: 1px solid #2c3d54; border-radius: 8px; background: rgba(5, 12, 22, .45); }
+.release-evidence-diff-table span { color: #93a2ba; font-size: 10px; }
+.release-evidence-diff-table strong { color: #dce6f6; font-size: 10px; line-height: 1.5; overflow-wrap: anywhere; }
+.release-evidence-notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.release-evidence-notes label:last-child { grid-column: 1 / -1; }
+.release-evidence-notes textarea { resize: vertical; }
+.release-evidence-error { margin: 14px 0 0; padding: 10px; border: 1px solid #77484a; border-radius: 8px; color: #ffb4b4; font-size: 10px; line-height: 1.7; overflow-wrap: anywhere; }
+.release-evidence-notice { margin: 14px 0 0; color: #c5ff70; font-size: 10px; line-height: 1.7; }
+.release-evidence-footer { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin-top: 16px; }
+.release-evidence-footer p { display: flex; align-items: flex-start; gap: 7px; max-width: 620px; margin: 0; color: #93a2ba; font-size: 10px; line-height: 1.8; }
+.release-evidence-footer p svg { flex-shrink: 0; margin-top: 2px; color: #c5ff70; }
+.release-evidence-footer button { flex-shrink: 0; }
+@media (max-width: 720px) { .release-evidence-heading,.release-evidence-footer { align-items: stretch; flex-direction: column; } .release-evidence-candidates,.release-evidence-notes { grid-template-columns: minmax(0, 1fr); } .release-evidence-notes label:last-child { grid-column: auto; } .release-evidence-footer button { width: 100%; justify-content: center; } }
+@media (max-width: 420px) { .release-evidence-diff-table { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .release-evidence-panel * { scroll-behavior: auto !important; transition-duration: 0s !important; } }
