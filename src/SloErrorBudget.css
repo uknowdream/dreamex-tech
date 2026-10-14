@@ -1,0 +1,36 @@
+.slo-worksheet {
+  margin: 24px 0;
+  padding: clamp(16px, 3vw, 24px);
+  border: 1px solid #2d3d55;
+  border-radius: 15px;
+  background: linear-gradient(145deg, #101b2b, #0b1220 78%);
+  color: #e8edf7;
+}
+.slo-worksheet-heading,.slo-worksheet-local,.slo-worksheet-note,.slo-worksheet-verdict { display: flex; align-items: center; }
+.slo-worksheet-heading { align-items: flex-start; justify-content: space-between; gap: 15px; }
+.slo-worksheet-heading h2 { margin: 9px 0 6px; font-size: clamp(19px, 2.8vw, 25px); letter-spacing: -.035em; }
+.slo-worksheet-heading p { margin: 0; color: #93a2ba; font-size: 11px; line-height: 1.7; }
+.slo-worksheet-local { flex-shrink: 0; gap: 6px; padding: 7px 10px; border: 1px solid #33445a; border-radius: 999px; color: #c5ff70; font-size: 10px; }
+.slo-worksheet-grid { display: grid; grid-template-columns: minmax(220px, .82fr) minmax(0, 1.18fr); gap: 18px; margin-top: 20px; }
+.slo-worksheet-fields { display: grid; align-content: start; gap: 12px; }
+.slo-worksheet-fields label { display: grid; gap: 7px; color: #aab8ce; font-size: 10px; font-weight: 600; }
+.slo-worksheet-fields input,.slo-worksheet-fields select { width: 100%; min-width: 0; min-height: 40px; padding: 9px 11px; border: 1px solid #35445c; border-radius: 8px; outline: none; background: #080f1b; color: #e8edf7; font: inherit; font-size: 12px; }
+.slo-worksheet-fields input:focus-visible,.slo-worksheet-fields select:focus-visible,.slo-worksheet button:focus-visible { outline: 2px solid #c5ff70; outline-offset: 3px; }
+.slo-worksheet-error { margin: 0; padding: 10px; border: 1px solid #78494b; border-radius: 8px; color: #ffb4b4; font-size: 10px; line-height: 1.7; }
+.slo-worksheet-results { display: grid; align-content: start; gap: 12px; min-width: 0; }
+.slo-worksheet-status { display: grid; gap: 7px; padding: 16px; border: 1px solid #344a3c; border-radius: 10px; background: #c5ff7008; }
+.slo-worksheet-status span,.slo-worksheet-metrics article span { color: #93a2ba; font-size: 10px; line-height: 1.5; }
+.slo-worksheet-status strong { color: #c5ff70; font-size: clamp(26px, 4vw, 35px); letter-spacing: -.05em; overflow-wrap: anywhere; }
+.slo-worksheet-status small { color: #8395ae; font-size: 9px; }
+.slo-worksheet-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+.slo-worksheet-metrics article { display: flex; min-width: 0; flex-direction: column; gap: 7px; padding: 12px; border: 1px solid #293950; border-radius: 8px; background: #0b1422; }
+.slo-worksheet-metrics article strong { color: #e8edf7; font-size: 16px; overflow-wrap: anywhere; }
+.slo-worksheet-verdict { align-items: flex-start; gap: 8px; padding: 11px; border-radius: 8px; font-size: 10px; line-height: 1.6; }
+.slo-worksheet-verdict svg { flex-shrink: 0; margin-top: 1px; }
+.slo-worksheet-verdict.meets { border: 1px solid #344a3c; background: #c5ff7008; color: #c5ff70; }
+.slo-worksheet-verdict.misses { border: 1px solid #725333; background: #ffbb7908; color: #ffd09b; }
+.slo-worksheet-note { align-items: flex-start; gap: 8px; margin: 16px 0 0; color: #93a2ba; font-size: 10px; line-height: 1.8; }
+.slo-worksheet-note svg { flex-shrink: 0; margin-top: 2px; color: #c5ff70; }
+@media (max-width: 720px) { .slo-worksheet-heading { flex-direction: column; } .slo-worksheet-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 420px) { .slo-worksheet-metrics { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .slo-worksheet * { scroll-behavior: auto !important; transition-duration: 0s !important; } }
