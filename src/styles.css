@@ -2813,3 +2813,23 @@ main, header, footer, section, .container {
 @media (prefers-reduced-motion: reduce) {
   .command-category-filters button, .command-recent-items button { transition: none !important; }
 }
+
+
+/* Quality Intelligence snapshot comparison */
+.quality-intelligence-comparison { margin: 20px 0; padding: clamp(16px, 2.5vw, 24px); border: 1px solid var(--line, #304057); border-radius: 14px; background: linear-gradient(145deg, rgba(18, 29, 45, .8), rgba(9, 16, 28, .92)); }
+.quality-intelligence-comparison .quality-intelligence-section-heading { align-items: flex-start; }
+.quality-comparison-select { display: grid; flex: 0 1 340px; min-width: 180px; gap: 6px; color: var(--muted, #93a2ba); font-size: 10px; font-weight: 600; }
+.quality-comparison-select select { width: 100%; min-width: 0; padding: 9px 10px; border: 1px solid #34465d; border-radius: 8px; background: #080f1b; color: var(--text, #e8edf7); font: inherit; font-size: 11px; }
+.quality-comparison-select select:focus-visible { outline: 2px solid var(--accent, #c5ff70); outline-offset: 3px; }
+.quality-comparison-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; margin-top: 16px; }
+.quality-comparison-metrics article { display: grid; align-content: start; gap: 7px; min-width: 0; padding: 13px; border: 1px solid #2b3b52; border-radius: 9px; background: rgba(5, 12, 22, .45); }
+.quality-comparison-metrics article span { color: var(--muted, #93a2ba); font-size: 10px; line-height: 1.5; }
+.quality-comparison-metrics article strong { color: var(--text, #e8edf7); font-size: clamp(18px, 2.2vw, 24px); letter-spacing: -.04em; overflow-wrap: anywhere; }
+.quality-comparison-metrics article strong.is-negative { color: #ffb0a7; }
+.quality-comparison-metrics article strong.is-positive { color: #c5ff70; }
+.quality-comparison-metrics article small { color: var(--muted, #93a2ba); font-size: 9px; line-height: 1.6; }
+.quality-comparison-note { display: flex; align-items: flex-start; gap: 8px; margin: 14px 0 0; color: var(--muted, #93a2ba); font-size: 10px; line-height: 1.8; }
+.quality-comparison-note svg { flex-shrink: 0; margin-top: 2px; color: var(--accent, #c5ff70); }
+@media (max-width: 900px) { .quality-comparison-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px) { .quality-intelligence-comparison .quality-intelligence-section-heading { flex-direction: column; } .quality-comparison-select { width: 100%; flex-basis: auto; } }
+@media (max-width: 360px) { .quality-comparison-metrics { grid-template-columns: minmax(0, 1fr); } }
