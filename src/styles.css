@@ -2721,3 +2721,27 @@ main, header, footer, section, .container {
   .command-backdrop, .command-dialog { animation: none !important; }
   .command-trigger, .command-close, .command-result { transition: none !important; }
 }
+
+
+/* The shared palette is triggered from the header, not a second floating button. */
+.site-header .command-trigger {
+  position: static;
+  inset: auto;
+  z-index: auto;
+  width: auto;
+  height: 38px;
+  min-width: 0;
+  padding: 0 10px;
+  margin: 0 16px 0 auto;
+  flex-shrink: 0;
+}
+.site-header .command-trigger > span,
+.site-header .command-trigger > kbd { display: inline-flex; }
+@media (max-width: 940px) {
+  .site-header .command-trigger { width: 38px; min-width: 38px; padding: 0; margin: 0 12px 0 auto; }
+  .site-header .command-trigger > span,
+  .site-header .command-trigger > kbd { display: none; }
+}
+@media (max-width: 640px) {
+  .site-header .command-trigger { width: 38px; min-width: 38px; height: 38px; margin: 0 10px 0 auto; }
+}
