@@ -15,6 +15,18 @@ const checks = [
   { path: '/control-plane', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/command-center', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/roadmap', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/workspace', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/observatory', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/devtools', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/engineering-intelligence', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/performance', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/knowledge-graph', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/lab', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/learn', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/about', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/reading-list', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/robots.txt', type: 'text', markers: ['User-agent:', 'Sitemap:'] },
+  { path: '/manifest.webmanifest', type: 'json', markers: ['"name"', 'DreamEx Tech'] },
   { path: '/rss.xml', type: 'xml', markers: ['<rss', '<channel'] },
   { path: '/rss', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/sitemap.xml', type: 'xml', markers: ['<urlset', '<url'] },
@@ -55,6 +67,8 @@ const results = await Promise.all(checks.map(async check => {
   if (!response.ok) issues.push(`HTTP ${response.status}`)
   if (check.type === 'html' && !contentType.toLowerCase().includes('text/html')) issues.push(`expected HTML content-type, received ${contentType || '(missing)'}`)
   if (check.type === 'xml' && !/(application|text)\/(xml|rss\+xml)/i.test(contentType)) issues.push(`expected XML content-type, received ${contentType || '(missing)'}`)
+  if (check.type === 'json' && !/(application\/(json|manifest\+json))/i.test(contentType)) issues.push(`expected JSON/manifest content-type, received ${contentType || '(missing)'}`)
+  if (check.type === 'text' && !contentType.toLowerCase().includes('text/plain')) issues.push(`expected plain-text content-type, received ${contentType || '(missing)'}`)
   for (const marker of check.markers) {
     if (!body.toLowerCase().includes(marker.toLowerCase())) issues.push(`missing expected marker ${JSON.stringify(marker)}`)
   }
