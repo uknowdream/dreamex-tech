@@ -15,7 +15,7 @@ test('homepage renders primary content and skip navigation', async ({ page }) =>
   await expect(page.locator('a.skip-link')).toHaveAttribute('href', '#main-content')
   await expect(page.locator('#latest')).toBeVisible()
   await openMobileNavigation(page)
-  await expect(page.getByRole('navigation').first()).toBeVisible()
+  await expect(page.locator('.nav-links')).toBeVisible()
 })
 
 test('engineering tools share a responsive page system across core routes', async ({ page }) => {
@@ -89,7 +89,7 @@ test('articles can be saved to and removed from the personal reading list', asyn
   await firstArticle.getByRole('button', { name: /save article|simpan artikel/i }).click()
   await expect(firstArticle.getByRole('button', { name: /remove saved article|hapus artikel tersimpan/i })).toHaveAttribute('aria-pressed', 'true')
   await openMobileNavigation(page)
-  await page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
+  await page.locator('.nav-links').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
   await expect(page).toHaveURL(/\/reading-list$/)
   await expect(page.getByRole('heading', { name: articleTitle })).toBeVisible()
   await page.getByRole('button', { name: /remove saved article|hapus artikel tersimpan/i }).click()
@@ -193,7 +193,7 @@ test('reading list can be exported as portable Markdown', async ({ page }) => {
   const title = (await firstArticle.locator('h3 a').innerText()).trim()
   await firstArticle.getByRole('button', { name: /save article|simpan artikel/i }).click()
   await openMobileNavigation(page)
-  await page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
+  await page.locator('.nav-links').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
   await page.evaluate(() => {
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
@@ -212,7 +212,7 @@ test('reading list backup can be imported, validated, and merged', async ({ page
   const firstArticle = page.locator('.article-card').first()
   await firstArticle.getByRole('button', { name: /save article|simpan artikel/i }).click()
   await openMobileNavigation(page)
-  await page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
+  await page.locator('.nav-links').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
   await page.getByLabel(/import reading list json backup/i).setInputFiles({
     name: 'reading-list.json',
     mimeType: 'application/json',
@@ -238,7 +238,7 @@ test('reading list backup can be imported, validated, and merged', async ({ page
 test('reading list backup downloads a versioned JSON file', async ({ page }) => {
   await page.locator('.article-card').first().getByRole('button', { name: /save article|simpan artikel/i }).click()
   await openMobileNavigation(page)
-  await page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
+  await page.locator('.nav-links').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
   const downloadPromise = page.waitForEvent('download')
   await page.getByRole('button', { name: /download json backup|unduh cadangan json/i }).click()
   const download = await downloadPromise
@@ -249,7 +249,7 @@ test('reading list can search and sort saved articles without losing saved items
   await page.locator('.article-card').nth(0).getByRole('button', { name: /save article|simpan artikel/i }).click()
   await page.locator('.article-card').nth(1).getByRole('button', { name: /save article|simpan artikel/i }).click()
   await openMobileNavigation(page)
-  await page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
+  await page.locator('.nav-links').getByRole('link', { name: /reading list|daftar bacaan/i }).click()
   const search = page.getByRole('searchbox', { name: /search saved articles|cari artikel tersimpan/i })
   await expect(page.locator('.article-card')).toHaveCount(2)
   await search.fill('typescript')
@@ -341,7 +341,7 @@ test('desktop navigation adapts to constrained widths without clipping', async (
   await expect(page.locator('.nav-links')).toBeHidden()
   await toggle.click()
   await expect(page.locator('.nav-links')).toBeVisible()
-  await expect(page.getByRole('navigation').getByRole('link', { name: /reading list|daftar bacaan/i })).toBeVisible()
+  await expect(page.locator('.nav-links').getByRole('link', { name: /reading list|daftar bacaan/i })).toBeVisible()
   const platform = page.locator('details.nav-platform')
   await platform.locator('summary').click()
   await expect(platform.getByRole('link', { name: /Open workspace/i })).toBeVisible()
@@ -954,4 +954,27 @@ test('keeps back-to-top navigation in the footer instead of a floating overlay',
 
   await expect(page.locator('.back-to-top')).toHaveCount(0)
   await expect(page.locator('.footer-top-link')).toBeVisible()
+})
+
+
+test('footer content is grouped and responsive on desktop and mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/')
+  const footer = page.locator('footer.footer')
+  await expect(footer.locator('.footer-brand')).toBeVisible()
+  await expect(footer.locator('.footer-column')).toHaveCount(3)
+  await expect(footer.locator('.footer-column').nth(0)).toContainText(/EXPLORE/i)
+  await expect(footer.locator('.footer-column').nth(1)).toContainText(/BUILD & VERIFY/i)
+  await expect(footer.locator('.footer-column').nth(2)).toContainText(/PLATFORM & RESOURCES/i)
+  await expect(footer.getByRole('link', { name: /GitHub repository/i })).toBeVisible()
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.reload()
+  await expect(footer.locator('.footer-brand')).toBeVisible()
+  await expect(footer.getByRole('link', { name: /Back to top/i })).toBeVisible()
+  const dimensions = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    document: document.documentElement.scrollWidth,
+  }))
+  expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport)
 })
