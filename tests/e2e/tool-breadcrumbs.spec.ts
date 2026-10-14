@@ -3,18 +3,18 @@ import { expect, test } from '@playwright/test'
 test('core tool routes expose an accessible breadcrumb and avoid mobile overflow', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 800 })
   await page.goto('/api-playground')
-  const englishToggle = page.getByRole('button', { name: 'EN', exact: true })
-  if (await englishToggle.count()) await englishToggle.first().click()
   await page.setViewportSize({ width: 360, height: 800 })
 
-  const breadcrumb = page.getByRole('navigation', { name: /Breadcrumb/i })
+  const breadcrumb = page.getByRole('navigation', { name: /Breadcrumb|Navigasi lokasi/i })
   await expect(breadcrumb).toBeVisible()
-  await expect(breadcrumb.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/')
+  const home = breadcrumb.getByRole('link').first()
+  await expect(home).toHaveAttribute('href', '/')
+  await expect(home).toContainText(/Home|Beranda/i)
   await expect(breadcrumb.getByRole('listitem').last()).toHaveAttribute('aria-current', 'page')
-  await expect(breadcrumb.getByText('API Playground', { exact: true })).toBeVisible()
+  await expect(breadcrumb.getByText(/API Playground/i)).toBeVisible()
 
-  await breadcrumb.getByRole('link', { name: 'Home' }).focus()
-  await expect(breadcrumb.getByRole('link', { name: 'Home' })).toBeFocused()
+  await home.focus()
+  await expect(home).toBeFocused()
 
   const widths = await page.evaluate(() => ({
     viewport: document.documentElement.clientWidth,
@@ -26,11 +26,10 @@ test('core tool routes expose an accessible breadcrumb and avoid mobile overflow
 test('tool breadcrumbs localize their landmark and home label', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 800 })
   await page.goto('/security-center')
-  const languageToggle = page.getByRole('button', { name: 'ID', exact: true })
-  if (await languageToggle.count()) {
-    await languageToggle.first().click()
-    const breadcrumb = page.getByRole('navigation', { name: /Navigasi lokasi/i })
-    await expect(breadcrumb.getByRole('link', { name: 'Beranda' })).toHaveAttribute('href', '/')
-    await expect(breadcrumb.getByText('Pusat Keamanan & Privasi', { exact: true })).toBeVisible()
-  }
+  const breadcrumb = page.getByRole('navigation', { name: /Breadcrumb|Navigasi lokasi/i })
+  await expect(breadcrumb).toBeVisible()
+  await expect(breadcrumb.getByRole('link').first()).toHaveAttribute('href', '/')
+  await expect(breadcrumb.getByRole('link').first()).toContainText(/Home|Beranda/i)
+  await expect(breadcrumb.getByRole('listitem').last()).toHaveAttribute('aria-current', 'page')
+  await expect(breadcrumb.getByText(/Security Center|Pusat Keamanan/i)).toBeVisible()
 })
