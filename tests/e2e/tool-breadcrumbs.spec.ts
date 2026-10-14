@@ -1,9 +1,10 @@
 import { expect, test } from '@playwright/test'
 
 test('core tool routes expose an accessible breadcrumb and avoid mobile overflow', async ({ page }) => {
-  await page.setViewportSize({ width: 360, height: 800 })
+  await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/api-playground')
   await page.getByRole('button', { name: 'EN', exact: true }).click()
+  await page.setViewportSize({ width: 360, height: 800 })
 
   const breadcrumb = page.getByRole('navigation', { name: /Breadcrumb/i })
   await expect(breadcrumb).toBeVisible()
@@ -22,6 +23,7 @@ test('core tool routes expose an accessible breadcrumb and avoid mobile overflow
 })
 
 test('tool breadcrumbs localize their landmark and home label', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/security-center')
   const languageToggle = page.getByRole('button', { name: 'ID', exact: true })
   if (await languageToggle.count()) {
