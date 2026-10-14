@@ -230,7 +230,7 @@ The repository currently contains a technology publication and browser-first eng
 
 - [ ] **Production verification for the latest merged commit.** Confirm Vercel READY for the exact main SHA, then run the scheduled smoke checks and verify the homepage, critical tools, /rss.xml, /rss, and /sitemap.xml. A preview or prior production deployment is not sufficient evidence.
 - [ ] **Review current CI health on main.** Confirm the merged commit has fresh CI and desktop/mobile regression results. Do not infer a pass from older PR runs.
-- [ ] **Deployment freshness gap (14 October 2026).** The latest observed `main` SHA is `63c5cb071f7c3960f734f6dd8dc63ab9dc501129`; the latest observed READY production deployment is for `cfb0e77ce303f2b06adb2801dca59435ec186afb`. These are different commits, so production does not yet verify the current repository state.
+- [ ] **Deployment freshness gap (14 October 2026).** The latest observed `main` SHA is `5992024b7ba7b0d24454a774a2c588eb1b3f293e`; the latest observed READY production deployment is for `cfb0e77ce303f2b06adb2801dca59435ec186afb`. These are different commits, so production does not yet verify the current repository state. Manual HTTP smoke sampling returned 200 for the 23 configured route/feed endpoints, and the baseline security headers plus Report-Only CSP were confirmed on the homepage and representative tool routes. This is useful health evidence for the deployed version, but it is not a substitute for the exact-commit deployment gate.
 
 ### Next implementation queue
 
