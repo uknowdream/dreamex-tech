@@ -22,5 +22,5 @@ test('traceability snapshot exports a portable manifest and content integrity di
   expect(snapshot.manifest.statusCounts['not-run']).toBe(3)
   expect(snapshot.manifest.releaseCriteriaCount).toBe(2)
   expect(snapshot.manifest.contentSha256).toMatch(/^[a-f0-9]{64}$/)
-  expect(snapshot.note).toContain('not authenticity')
+  expect(snapshot.note).toContain('does not prove authenticity')
 })
