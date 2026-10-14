@@ -1137,3 +1137,18 @@ test('mobile navigation backdrop closes the drawer and language selection remain
   await expect(drawer).toHaveCount(0)
   await expect(page.getByRole('button', { name: /Search tools and articles/i })).toBeVisible()
 })
+
+
+test('desktop engineering navigation exposes grouped destinations and closes on route selection', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/')
+  const platform = page.locator('.nav-platform')
+  await platform.locator('summary').click()
+  const panel = platform.locator('.nav-mega-panel')
+  await expect(panel).toBeVisible()
+  await expect(panel.getByText(/PLAN & OPERATE|RENCANAKAN & KELOLA/i)).toBeVisible()
+  await expect(panel.getByRole('link', { name: /Reliability & Incidents|Reliability & Insiden/i })).toBeVisible()
+  await panel.getByRole('link', { name: /API Playground/i }).click()
+  await expect(page).toHaveURL(/api-playground$/)
+  await expect(page.locator('.nav-platform')).not.toHaveAttribute('open', '')
+})
