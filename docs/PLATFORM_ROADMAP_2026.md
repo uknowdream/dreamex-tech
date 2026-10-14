@@ -230,16 +230,17 @@ The repository currently contains a technology publication and browser-first eng
 
 - [ ] **Production verification for the latest merged commit.** Confirm Vercel READY for the exact main SHA, then run the scheduled smoke checks and verify the homepage, critical tools, /rss.xml, /rss, and /sitemap.xml. A preview or prior production deployment is not sufficient evidence.
 - [ ] **Review current CI health on main.** Confirm the merged commit has fresh CI and desktop/mobile regression results. Do not infer a pass from older PR runs.
+- [ ] **Deployment freshness gap (14 October 2026).** The latest observed `main` SHA is `63c5cb071f7c3960f734f6dd8dc63ab9dc501129`; the latest observed READY production deployment is for `cfb0e77ce303f2b06adb2801dca59435ec186afb`. These are different commits, so production does not yet verify the current repository state.
 
 ### Next implementation queue
 
-1. [ ] **Workspace discovery.** Add category filters and a privacy-transparent “recently used tools” list to the existing command palette; retain keyboard navigation and an honest empty state.
-2. [ ] **OpenAPI analysis depth.** Add schema-level checks, request/response example validation, and Swagger 2.0 body-parameter handling. Keep static findings distinct from live API execution.
-3. [ ] **Quality Intelligence comparisons.** Compare two imported report snapshots, identify pass-rate/test-duration changes, and show sample size and parser limitations for flaky signals.
-4. [ ] **Release evidence register.** Link a release candidate to source SHA, deployment URL, CI run IDs, test evidence, risk notes, accessibility/security checks, and rollback steps. Mark manually entered evidence as unverified until checked.
-5. [ ] **Security and threat-model templates.** Add asset/trust-boundary/threat/mitigation templates, while keeping browser-visible security checks distinct from server-side assurance.
-6. [ ] **Performance/accessibility baselines.** Measure representative routes first; then add numeric budgets, automated accessibility checks, keyboard/focus/reduced-motion checks, and visual baselines.
-7. [ ] **Internationalization and SEO verification.** Check Indonesian/English parity, long-label wrapping, metadata, canonical URLs, RSS, and sitemap consistency on production.
+1. [x] **Workspace discovery.** Command palette has category filters, browser-local recently used tools with clear-history control and privacy notice, keyboard navigation, and an empty state.
+2. [x] **OpenAPI analysis depth (initial slice).** API Contract Studio checks common schema constraints and inline examples, recognizes Swagger 2.0 body parameters, and flags unresolved external examples. Remaining limitation: this is not a complete OpenAPI validator or runtime test.
+3. [x] **Quality Intelligence comparisons.** Imported report snapshots compare pass rate, average duration, test count, and failures; failure clusters and retry-derived flaky signals show sample limitations.
+4. [x] **Release evidence register (manual).** Release Evidence Panel records baseline/candidate commit, preview/production URL, test evidence, observation time, risks, release notes, and rollback plan. Treat all manually entered evidence as unverified until independently checked.
+5. [x] **Security and threat-model templates.** Security Center includes a local threat-model worksheet for assets, trust boundaries, threats, mitigations, severity, and status. It is a planning aid, not proof of security.
+6. [ ] **Performance/accessibility baselines.** Initial JS/CSS gzip budgets, route checks, responsive overflow tests, keyboard/focus/reduced-motion coverage exist. Still measure representative route/real-device Core Web Vitals, add automated WCAG scans and visual baselines, and tune budgets from stable measurements.
+7. [ ] **Internationalization and SEO verification.** Build-time locale checks and RSS/sitemap generation exist; production parity, canonical host consistency, long-label coverage, and the exact deployed commit still require fresh release verification.
 8. [ ] **Shared navigation test helpers.** Reduce ambiguous duplicate locators and expand route-inventory/dead-link checks across desktop/mobile.
 9. [ ] **Collaboration/integrations only after architecture.** Do not ship simulated cloud sync. Require authentication/authorization, consent, retention/deletion, auditability, rate limits, and operational ownership before GitHub integration or team collaboration.
 
