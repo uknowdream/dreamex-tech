@@ -124,3 +124,42 @@ test('API Contract Studio validates schemas and examples and recognizes Swagger 
   await expect(studio.getByText(/example value does not match schema type "array"/i)).toBeVisible()
   await expect(studio.getByText(/Request body is now required: POST \/orders/i)).toBeVisible()
 })
+
+
+test('API Contract Studio flags unresolved local schema references and bounded inspection', async ({ page }) => {
+  await page.goto('/api-playground')
+  const studio = page.locator('.api-contract-studio')
+  const spec = {
+    openapi: '3.0.3',
+    info: { title: 'Reference integrity', version: '1.0.0' },
+    components: {
+      schemas: {
+        Pet: { type: 'object', properties: { owner: { $ref: '#/components/schemas/MissingOwner' } } },
+        Tags: { type: 'array' },
+      },
+    },
+    paths: {
+      '/pets/{petId}': {
+        get: {
+          parameters: [{ name: 'petId', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: {
+            '200': {
+              description: 'OK',
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Pet' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  }
+  await studio.getByLabel(/Baseline OpenAPI JSON/i).setInputFiles({
+    name: 'reference-integrity.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(spec)),
+  })
+  await expect(studio.getByText(/Unresolved local schema reference: #\/components\/schemas\/MissingOwner/i)).toBeVisible()
+  await expect(studio.getByText(/array schema is missing items/i)).toBeVisible()
+  await expect(studio.getByText(/not declared/i)).toHaveCount(0)
+})
