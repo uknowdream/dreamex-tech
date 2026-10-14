@@ -34,9 +34,9 @@ function parseContract(raw: unknown, name: string): Contract {
         ...(Array.isArray(pathItem.parameters) ? pathItem.parameters : []),
         ...(Array.isArray(operation.parameters) ? operation.parameters : []),
       ].map(object).filter((item): item is Record<string, unknown> => item !== null)
-      const requiredParams = parameters.filter(item => item.required === true).map(item => text(item.name) || '(unnamed parameter)').sort()
+      const requiredParams = parameters.filter(item => item.required === true && item.in !== 'body').map(item => (text(item.in) ? text(item.in) + ':' : '') + (text(item.name) || '(unnamed parameter)')).sort()
       const requestBody = object(operation.requestBody)
-      const bodyRequired = requestBody?.required === true
+      const bodyRequired = requestBody?.required === true || parameters.some(item => item.in === 'body' && item.required === true)
       operations.push({
         key, method: method.toUpperCase(), path,
         operationId: text(operation.operationId),
