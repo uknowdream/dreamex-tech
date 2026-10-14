@@ -1109,7 +1109,8 @@ test('Reliability Center validates incident titles and can delete saved incident
 test('mobile navigation traps keyboard focus and Escape restores the trigger', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 780 })
   await page.goto('/')
-  const toggle = page.getByRole('button', { name: /Open menu|Buka menu/i })
+  const toggle = page.locator('.menu-toggle')
+  await expect(toggle).toHaveAttribute('aria-label', /Open menu|Buka menu/i)
   await toggle.focus()
   await page.keyboard.press('Enter')
   const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
