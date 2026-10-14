@@ -650,6 +650,42 @@ function EngineeringLabPage() {
     const lines = (value: string) => value.trim() ? value.trim().split(/\r?\n/).map(line => line.trim()).filter(Boolean) : []
     const timeline = lines(incidentTimeline)
     const followUps = lines(incidentFollowUps)
+    const timelineEvents = timeline.map(line => {
+      const prefix = line.match(/^\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?|\d{1,2}:\d{2}(?:\s+(?:UTC|WIB|WITA|WIT))?)/i)?.[1]
+      if (!prefix) return { line, value: null as number | null, mode: '' }
+      if (/^\d{4}-/.test(prefix)) {
+        const value = Date.parse(prefix)
+        return { line, value: Number.isFinite(value) ? value : null, mode: 'absolute' }
+      }
+      const clock = prefix.match(/^(\d{1,2}):(\d{2})(?:\s+(UTC|WIB|WITA|WIT))?$/i)
+      if (!clock) return { line, value: null as number | null, mode: '' }
+      const offsets: Record<string, number> = { UTC: 0, WIB: 7, WITA: 8, WIT: 9 }
+      const zone = (clock[3] || 'LOCAL').toUpperCase()
+      const value = Number(clock[1]) * 60 + Number(clock[2]) - (offsets[zone] ?? 0) * 60
+      return { line, value, mode: 'clock:' + zone }
+    })
+    const comparableTimeline = timelineEvents.length > 0 && timelineEvents.every(event => event.value !== null && event.mode === timelineEvents[0].mode)
+    const chronological = comparableTimeline && timelineEvents.every((event, index) => index === 0 || (event.value as number) >= (timelineEvents[index - 1].value as number))
+    const timelineStatus = !timeline.length ? 'NOT PROVIDED' : !comparableTimeline ? 'NOT VERIFIED' : chronological ? 'PASS' : 'WARNING'
+    const followUpEntries = followUps.map(line => {
+      const parts = line.split(/\s*(?:\||—|–)\s*/).map(part => part.trim())
+      const action = parts[0] || line
+      const owner = parts[1] || ''
+      const dueDate = parts[2] || ''
+      const parsedDue = /^\d{4}-\d{2}-\d{2}$/.test(dueDate) ? Date.parse(dueDate + 'T00:00:00Z') : NaN
+      const validDueDate = Number.isFinite(parsedDue) && new Date(parsedDue).toISOString().slice(0, 10) === dueDate
+      return { action, owner, dueDate, validDueDate, complete: Boolean(owner && validDueDate) }
+    })
+    const accountableFollowUps = followUpEntries.filter(item => item.complete).length
+    const startMs = incidentStart ? Date.parse(incidentStart) : NaN
+    const endMs = incidentEnd ? Date.parse(incidentEnd) : NaN
+    const invalidIncidentWindow = Number.isFinite(startMs) && Number.isFinite(endMs) && endMs < startMs
+    const warnings = [
+      ...(timelineStatus === 'WARNING' ? ['Timeline events are not in chronological order. Review the supplied timestamps.'] : []),
+      ...(timelineStatus === 'NOT VERIFIED' ? ['Timeline chronology could not be verified. Use consistent ISO 8601 timestamps or HH:mm values with a consistent timezone.'] : []),
+      ...(invalidIncidentWindow ? ['Incident end time is earlier than start time. Correct the incident window before sharing.'] : []),
+      ...(followUpEntries.some(item => !item.complete) ? ['Some follow-up actions are missing an owner or a valid YYYY-MM-DD due date.'] : []),
+    ]
     const report = [
       '# ' + (incidentTitle.trim() || (en ? 'Incident postmortem' : 'Postmortem insiden')),
       '',
@@ -670,6 +706,11 @@ function EngineeringLabPage() {
       '## Timeline',
       ...(timeline.length ? timeline.map(line => '- ' + line) : ['- ' + (en ? 'Add timestamped events in chronological order.' : 'Tambahkan peristiwa bertimestamp secara kronologis.')]),
       '',
+      '## Timeline integrity',
+      '- Timestamped events: ' + timelineEvents.filter(event => event.value !== null).length + ' / ' + timeline.length,
+      '- Chronology check: ' + timelineStatus,
+      '- Check scope: compares timestamps only when every event uses a supported, consistent format; it does not verify the truth of the events.',
+      '',
       '## Root cause',
       incidentRootCause.trim() || (en ? 'Describe the underlying system conditions, not an individual to blame.' : 'Jelaskan kondisi sistem yang mendasari, bukan menyalahkan individu.'),
       '',
@@ -679,8 +720,12 @@ function EngineeringLabPage() {
       '## Resolution and recovery',
       incidentResolution.trim() || (en ? 'Document mitigation, recovery steps, and validation performed.' : 'Dokumentasikan mitigasi, langkah pemulihan, dan validasi yang dilakukan.'),
       '',
-      '## Follow-up actions',
-      ...(followUps.length ? followUps.map(line => '- [ ] ' + line) : ['- [ ] ' + (en ? 'Add an owner, due date, and measurable completion criteria.' : 'Tambahkan penanggung jawab, tenggat, dan kriteria penyelesaian terukur.')]),
+      '## Follow-up accountability',
+      '- Actions with owner and valid due date: ' + accountableFollowUps + ' / ' + followUpEntries.length,
+      ...(followUpEntries.length ? followUpEntries.map(item => '- [ ] ' + item.action + ' — Owner: ' + (item.owner || 'UNASSIGNED') + ' — Due: ' + (item.validDueDate ? item.dueDate : 'UNSCHEDULED')) : ['- [ ] ' + (en ? 'Add an action, owner, due date, and measurable completion criteria.' : 'Tambahkan aksi, penanggung jawab, tenggat, dan kriteria penyelesaian terukur.')]),
+      '',
+      '## Completeness warnings',
+      ...(warnings.length ? warnings.map(warning => '- WARNING: ' + warning) : ['- No chronology/window/follow-up completeness warning was detected by these basic checks.']),
       '',
       '## Review notes',
       en ? 'Review this document with relevant stakeholders. Avoid sensitive credentials, personal data, and blame-focused language.' : 'Tinjau dokumen ini bersama stakeholder terkait. Hindari kredensial sensitif, data pribadi, dan bahasa yang menyalahkan individu.',
