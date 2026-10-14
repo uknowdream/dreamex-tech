@@ -3,7 +3,6 @@ import { Activity, ArrowDownToLine, Gauge, ShieldCheck } from 'lucide-react'
 import { useLanguage } from './i18n'
 import './SloErrorBudget.css'
 
-const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
 const numeric = (value: string, fallback = 0) => value.trim() === '' ? fallback : Number(value)
 
 export function SloErrorBudgetWorksheet() {
