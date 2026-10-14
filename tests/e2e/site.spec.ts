@@ -978,3 +978,27 @@ test('footer content is grouped and responsive on desktop and mobile', async ({ 
   }))
   expect(dimensions.document).toBeLessThanOrEqual(dimensions.viewport)
 })
+
+
+test('navigation drawer is keyboard-visible, scrollable, and responsive on compact screens', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+
+  const toggle = page.locator('.menu-toggle')
+  await expect(toggle).toBeVisible()
+  await toggle.click()
+  const nav = page.locator('.nav-links')
+  await expect(nav).toHaveClass(/nav-open/)
+  await expect(nav.getByRole('link', { name: /Journal/i })).toBeVisible()
+  await expect(nav.locator('.language-switch')).toBeVisible()
+
+  await nav.locator('.nav-platform > summary').click()
+  await expect(nav.locator('.nav-mega-panel')).toBeVisible()
+  await expect(nav.getByRole('link', { name: /Open workspace/i })).toBeVisible()
+
+  await page.getByRole('link', { name: /Open workspace/i }).click()
+  await expect(page).toHaveURL(/workspace$/)
+  await expect(page.locator('.nav-links')).not.toHaveClass(/nav-open/)
+  const widths = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, page: document.documentElement.scrollWidth }))
+  expect(widths.page).toBeLessThanOrEqual(widths.viewport)
+})
