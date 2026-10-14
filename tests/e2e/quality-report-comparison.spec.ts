@@ -1,38 +1,35 @@
 import { expect, test } from '@playwright/test'
 
-const baselineXml = `<?xml version="1.0"?><testsuite name="baseline" tests="2" failures="1" time="4"><testcase classname="suite" name="passed" time="1"/><testcase classname="suite" name="failed" time="3"><failure message="expected 200">received 500</failure></testcase></testsuite>`
-const currentXml = `<?xml version="1.0"?><testsuite name="candidate" tests="3" failures="1" time="7"><testcase classname="suite" name="passed A" time="1.5"/><testcase classname="suite" name="passed B" time="2.5"/><testcase classname="suite" name="failed" time="3"><failure message="expected 200">received 500</failure></testcase></testsuite>`
-
-test('Quality Intelligence compares imported report snapshots and labels summary-only history', async ({ page }) => {
+test('Quality Intelligence compares the current JUnit report with the previous local baseline', async ({ page }) => {
   await page.goto('/quality-intelligence')
-  const input = page.getByLabel(/Choose Playwright JSON or JUnit XML report/i)
+  const upload = page.getByLabel(/Choose Playwright JSON or JUnit XML report/i)
 
-  await input.setInputFiles({ name: 'baseline.xml', mimeType: 'application/xml', buffer: Buffer.from(baselineXml) })
-  await expect(page.getByRole('heading', { name: /baseline.xml/i })).toBeVisible()
+  await upload.setInputFiles({
+    name: 'baseline.xml',
+    mimeType: 'application/xml',
+    buffer: Buffer.from('<testsuite name="baseline" tests="2"><testcase classname="Auth" name="valid login" time="0.1"/><testcase classname="Catalog" name="renders list" time="0.2"/></testsuite>'),
+  })
+  await expect(page.locator('.quality-intelligence-summary-heading p')).toContainText('JUnit XML')
+  await expect(page.locator('.quality-intelligence-comparison')).toHaveCount(0)
 
-  await input.setInputFiles({ name: 'candidate.xml', mimeType: 'application/xml', buffer: Buffer.from(currentXml) })
-  const comparison = page.getByRole('region', { name: /SNAPSHOT COMPARISON|PERBANDINGAN SNAPSHOT/i })
+  await upload.setInputFiles({
+    name: 'current.xml',
+    mimeType: 'application/xml',
+    buffer: Buffer.from('<testsuite name="current" tests="2"><testcase classname="Auth" name="valid login" time="0.3"/><testcase classname="Catalog" name="renders list" time="0.5"><failure message="Expected 200">received 500</failure></testcase></testsuite>'),
+  })
+
+  const comparison = page.locator('.quality-intelligence-comparison')
   await expect(comparison).toBeVisible()
-  await expect(comparison.getByText(/Current 66.7% · baseline 50%|Saat ini 66,7% · baseline 50%/i)).toBeVisible()
-  await expect(comparison.getByText(/Test-count change|Perubahan jumlah tes/i)).toBeVisible()
-  await expect(comparison.getByText(/Summary-only comparison|Perbandingan ringkasan saja/i)).toBeVisible()
-  await expect(page.getByText(/historical test-level records are not stored|detail test historis tidak disimpan/i)).toBeVisible()
+  await expect(comparison.getByText(/Change since previous import|Perubahan sejak impor sebelumnya/i)).toBeVisible()
+  await expect(comparison.getByText('-50 pp', { exact: true })).toBeVisible()
+  await expect(comparison.getByText('+1', { exact: true })).toBeVisible()
+  await expect(comparison.getByText('+0.50s', { exact: true })).toBeVisible()
+  await expect(comparison.getByText(/baseline.xml/)).toBeVisible()
+  await expect(comparison.getByText(/sample sizes may differ|ukuran sampel dapat berbeda/i)).toBeVisible()
 })
 
-test('Quality Intelligence accepts legacy local history without average-duration metadata', async ({ page }) => {
+test('Quality Intelligence does not compare a demo report with unrelated saved history', async ({ page }) => {
   await page.goto('/quality-intelligence')
-  await page.evaluate(() => localStorage.setItem('dreamex-quality-intelligence-history-v1', JSON.stringify([{
-    id: 'legacy-snapshot',
-    importedAt: '2026-01-01T00:00:00.000Z',
-    source: 'legacy.xml',
-    total: 2,
-    passed: 1,
-    failed: 1,
-    flaky: 0,
-    skipped: 0,
-    passRate: 50,
-  }])))
-  await page.reload()
-  await expect(page.getByText('legacy.xml')).toBeVisible()
-  await expect(page.getByText(/2 tests|2 tes/i)).toBeVisible()
+  await page.getByRole('button', { name: /Open demo report|Buka laporan demo/i }).click()
+  await expect(page.locator('.quality-intelligence-comparison')).toHaveCount(0)
 })
