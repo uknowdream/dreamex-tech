@@ -2,11 +2,22 @@ import { ensurePrimaryNavigationVisible, openCommandPalette } from './helpers/na
 import { expect, test } from '@playwright/test'
 
 const routes = [
-  { path: '/', heading: /Think deeper|Pikirkan lebih dalam|Engineering|Explore/i },
-  { path: '/api-playground', heading: /API Playground/i },
+  { path: '/', heading: /Engineer with intent|Rekayasa dengan tujuan/i },
+  { path: '/api-playground', heading: /Explore APIs|Understand responses|Jelajahi API/i },
   { path: '/command-center', heading: /Operate with clarity|Kelola dengan jelas/i },
   { path: '/security-center', heading: /Security|Keamanan/i },
   { path: '/quality-intelligence', heading: /Turn test results|Ubah hasil pengujian/i },
+  { path: '/workspace', heading: /One workspace|Satu workspace/i },
+  { path: '/supply-chain-intelligence', heading: /Know what ships|Ketahui yang dirilis/i },
+  { path: '/control-plane', heading: /Engineering, in control|Engineering, lebih terkendali/i },
+  { path: '/roadmap', heading: /Build with intent|Bangun dengan arah/i },
+  { path: '/engineering-intelligence', heading: /Engineering Intelligence/i },
+  { path: '/performance', heading: /Measure what|Ukur yang/i },
+  { path: '/knowledge-graph', heading: /Follow the|Ikuti/i },
+  { path: '/devtools', heading: /Developer Utilities|Utilitas Developer/i },
+  { path: '/lab', heading: /Engineering Lab/i },
+  { path: '/learn', heading: /Learn with|Belajar lebih/i },
+  { path: '/reading-list', heading: /Reading list|Daftar bacaan/i },
 ]
 
 const widths = [320, 360, 390, 768, 1024, 1440]
@@ -17,6 +28,10 @@ for (const route of routes) {
     await page.goto(route.path)
     await expect(page.locator('main#main-content')).toHaveCount(1)
     await expect(page.locator('main#main-content h1').first()).toBeVisible()
+    await expect(page.locator('main#main-content h1').first()).toContainText(route.heading)
+    const metadata = await page.evaluate(() => ({ title: document.title.trim(), lang: document.documentElement.lang.trim() }))
+    expect(metadata.title, route.path + ' should have a document title').not.toBe('')
+    expect(metadata.lang, route.path + ' should declare a document language').toMatch(/^(en|id)(-|$)/)
     await expect(page.locator('a.skip-link')).toHaveCount(1)
 
     for (const width of widths) {
