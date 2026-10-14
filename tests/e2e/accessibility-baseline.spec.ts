@@ -37,7 +37,12 @@ for (const route of routes) {
 test('primary navigation and command search expose accessible names', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/')
-  await expect(page.getByRole('navigation', { name: /Main navigation|Navigasi utama/i })).toBeVisible()
+  const navigation = page.getByRole('navigation', { name: /Main navigation|Navigasi utama/i })
+  if (!(await navigation.isVisible())) {
+    const menuToggle = page.getByRole('button', { name: /Open menu|Buka menu/i })
+    if (await menuToggle.isVisible()) await menuToggle.click()
+  }
+  await expect(navigation).toBeVisible()
   await expect(page.getByRole('button', { name: /Search tools and articles|Cari tools dan artikel/i })).toBeVisible()
   await page.getByRole('button', { name: /Search tools and articles|Cari tools dan artikel/i }).click()
   const dialog = page.getByRole('dialog', { name: /Jump to anything|Cari dan buka apa saja/i })
