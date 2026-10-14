@@ -4,7 +4,7 @@ import { join } from 'node:path'
 const appSource = readFileSync('src/App.tsx', 'utf8')
 const declaredRoutes = [...appSource.matchAll(/<Route\b[^>]*\bpath=["']([^"']+)["']/g)]
   .map(match => match[1])
-const concreteRoutes = [...new Set(declaredRoutes.filter(route => route !== '*'))]
+const concreteRoutes = declaredRoutes.filter(route => route !== '*')
 
 function normalizePath(value) {
   const pathname = value.split(/[?#]/, 1)[0] || '/'
