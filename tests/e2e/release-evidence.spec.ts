@@ -28,7 +28,7 @@ test('Release evidence panel compares deployment candidates and exports provenan
   expect(report.baseline.commit).toBe('abc123')
   expect(report.candidate.commit).toBe('def456')
   expect(report.comparison.find((item: { field: string }) => item.field === 'commit').changed).toBe(true)
-  expect(report.limitations.join(' ')).toContain('not independently verified')
+  expect(report.manifest.provenance).toContain('not independently verified')
 })
 
 test('Release evidence panel rejects non-HTTPS deployment references', async ({ page }) => {
