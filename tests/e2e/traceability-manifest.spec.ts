@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test'
 
 test('traceability snapshot exports a portable manifest and content integrity digest', async ({ page }) => {
-  await page.goto('/qa-studio')
+  await page.goto('/command-center')
+  await page.getByRole('tab', { name: /QA traceability|Traceability QA/i }).click()
   const matrix = page.getByRole('region', { name: /QA traceability matrix|Matriks traceability QA/i })
   await expect(matrix).toBeVisible()
   await page.evaluate(() => localStorage.setItem('unrelated-user-setting', 'preserve-me'))
@@ -28,7 +29,8 @@ test('traceability snapshot exports a portable manifest and content integrity di
 })
 
 test('traceability snapshot continues to import legacy schema 1.0 files', async ({ page }) => {
-  await page.goto('/qa-studio')
+  await page.goto('/command-center')
+  await page.getByRole('tab', { name: /QA traceability|Traceability QA/i }).click()
   const matrix = page.getByRole('region', { name: /QA traceability matrix|Matriks traceability QA/i })
   const legacy = {
     schemaVersion: '1.0',
