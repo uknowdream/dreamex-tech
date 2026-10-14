@@ -4,7 +4,7 @@ import { useLanguage } from './i18n'
 
 type TestStatus = 'passed' | 'failed' | 'flaky' | 'skipped'
 type TestRecord = { id: string; title: string; file: string; status: TestStatus; durationMs: number; error: string }
-type ReportSummary = { id: string; importedAt: string; source: string; total: number; passed: number; failed: number; flaky: number; skipped: number; passRate: number }
+type ReportSummary = { id: string; importedAt: string; source: string; total: number; passed: number; failed: number; flaky: number; skipped: number; passRate: number; avgDurationMs: number | null }
 type Report = { source: string; format: 'JUnit XML' | 'Playwright JSON' | 'Demo sample'; tests: TestRecord[]; importedAt: string }
 const HISTORY_KEY = 'dreamex-quality-intelligence-history-v1'
 const MAX_REPORT_BYTES = 10 * 1024 * 1024
@@ -83,7 +83,8 @@ function summarize(report: Report): ReportSummary {
   const flaky = report.tests.filter(test => test.status === 'flaky').length
   const skipped = report.tests.filter(test => test.status === 'skipped').length
   const executed = total - skipped
-  return { id: report.importedAt + ':' + report.source, importedAt: report.importedAt, source: report.source, total, passed, failed, flaky, skipped, passRate: executed ? Math.round((passed + flaky) / executed * 1000) / 10 : 0 }
+  const avgDurationMs = executed ? Math.round(report.tests.filter(test => test.status !== 'skipped').reduce((sum, test) => sum + test.durationMs, 0) / executed) : 0
+  return { id: report.importedAt + ':' + report.source, importedAt: report.importedAt, source: report.source, total, passed, failed, flaky, skipped, passRate: executed ? Math.round((passed + flaky) / executed * 1000) / 10 : 0, avgDurationMs }
 }
 function readHistory(): ReportSummary[] {
   try {
@@ -92,7 +93,7 @@ function readHistory(): ReportSummary[] {
     return value.filter((item): item is ReportSummary => {
       const record = asRecord(item)
       return Boolean(record && typeof record.id === 'string' && typeof record.source === 'string' && typeof record.total === 'number' && typeof record.passRate === 'number')
-    }).slice(0, 8)
+    }).map(item => ({ ...item, avgDurationMs: typeof item.avgDurationMs === 'number' && Number.isFinite(item.avgDurationMs) ? item.avgDurationMs : null })).slice(0, 8)
   } catch { return [] }
 }
 function downloadFile(filename: string, content: string, type: string) {
@@ -124,7 +125,12 @@ export function QualityIntelligencePage() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [loading, setLoading] = useState(false)
+  const [comparisonId, setComparisonId] = useState('')
   const summary = report ? summarize(report) : null
+  const comparisonHistory = useMemo(() => history.filter(item => item.id !== summary?.id), [history, summary?.id])
+  const comparison = comparisonHistory.find(item => item.id === comparisonId) ?? comparisonHistory[0] ?? null
+  const passRateDelta = comparison && summary ? Math.round((summary.passRate - comparison.passRate) * 10) / 10 : null
+  const durationDelta = comparison && summary && summary.avgDurationMs !== null && comparison.avgDurationMs !== null ? summary.avgDurationMs - comparison.avgDurationMs : null
   const visibleTests = useMemo(() => (report?.tests ?? []).filter(test => (statusFilter === 'all' || test.status === statusFilter) && [test.title, test.file, test.error].join(' ').toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())), [report, statusFilter, query])
   const failures = useMemo(() => {
     const groups = new Map<string, { fingerprint: string; count: number; examples: string[] }>()
@@ -141,6 +147,7 @@ export function QualityIntelligencePage() {
 
   const applyReport = (nextReport: Report, persist = true) => {
     setReport(nextReport)
+    setComparisonId('')
     setStatusFilter('all')
     setQuery('')
     setError('')
@@ -204,6 +211,18 @@ export function QualityIntelligencePage() {
           <article><span><Clock3 size={16} />{en ? 'Slowest test' : 'Tes terlama'}</span><strong>{(Math.max(0, ...report.tests.map(test => test.durationMs)) / 1000).toFixed(2)}s</strong><small>{en ? 'Longest recorded test' : 'Durasi tes terpanjang'}</small></article>
         </div>
       </section>
+      {comparisonHistory.length > 0 && comparison && <section className="quality-intelligence-comparison" aria-labelledby="quality-comparison-title">
+        <div className="quality-intelligence-section-heading"><div><span className="section-kicker">{en ? 'SNAPSHOT COMPARISON' : 'PERBANDINGAN SNAPSHOT'}</span><h2 id="quality-comparison-title">{en ? 'Compare with a previous report' : 'Bandingkan dengan laporan sebelumnya'}</h2><p>{en ? 'Summary-only comparison; historical test-level records are not stored in this browser.' : 'Perbandingan ringkasan saja; detail test historis tidak disimpan di browser ini.'}</p></div>
+          <label className="quality-comparison-select">{en ? 'Baseline snapshot' : 'Snapshot baseline'}<select aria-label={en ? 'Baseline snapshot' : 'Snapshot baseline'} value={comparisonId || comparison.id} onChange={event => setComparisonId(event.target.value)}>{comparisonHistory.map(item => <option key={item.id} value={item.id}>{item.source} — {new Date(item.importedAt).toLocaleString(en ? 'en-US' : 'id-ID')}</option>)}</select></label>
+        </div>
+        <div className="quality-comparison-metrics">
+          <article><span>{en ? 'Pass-rate change' : 'Perubahan pass rate'}</span><strong className={passRateDelta !== null && passRateDelta < 0 ? 'is-negative' : 'is-positive'}>{passRateDelta === null ? '—' : (passRateDelta > 0 ? '+' : '') + passRateDelta + ' pp'}</strong><small>{en ? 'Current ' + summary.passRate + '% · baseline ' + comparison.passRate + '%' : 'Saat ini ' + summary.passRate + '% · baseline ' + comparison.passRate + '%'}</small></article>
+          <article><span>{en ? 'Average duration change' : 'Perubahan durasi rata-rata'}</span><strong className={durationDelta !== null && durationDelta > 0 ? 'is-negative' : 'is-positive'}>{durationDelta === null ? (en ? 'Unavailable' : 'Tidak tersedia') : (durationDelta > 0 ? '+' : '') + (durationDelta / 1000).toFixed(2) + 's'}</strong><small>{en ? 'Current average ' + ((summary.avgDurationMs ?? 0) / 1000).toFixed(2) + 's · baseline ' + (comparison.avgDurationMs === null ? 'unavailable' : (comparison.avgDurationMs / 1000).toFixed(2) + 's') : 'Rata-rata saat ini ' + ((summary.avgDurationMs ?? 0) / 1000).toFixed(2) + 's · baseline ' + (comparison.avgDurationMs === null ? 'tidak tersedia' : (comparison.avgDurationMs / 1000).toFixed(2) + 's')}</small></article>
+          <article><span>{en ? 'Test-count change' : 'Perubahan jumlah tes'}</span><strong>{summary.total - comparison.total > 0 ? '+' : ''}{summary.total - comparison.total}</strong><small>{en ? 'Current ' + summary.total + ' · baseline ' + comparison.total : 'Saat ini ' + summary.total + ' · baseline ' + comparison.total}</small></article>
+          <article><span>{en ? 'Failure change' : 'Perubahan kegagalan'}</span><strong className={summary.failed > comparison.failed ? 'is-negative' : 'is-positive'}>{summary.failed - comparison.failed > 0 ? '+' : ''}{summary.failed - comparison.failed}</strong><small>{en ? 'Current ' + summary.failed + ' · baseline ' + comparison.failed : 'Saat ini ' + summary.failed + ' · baseline ' + comparison.failed}</small></article>
+        </div>
+        <p className="quality-comparison-note"><ShieldCheck size={14}/>{en ? 'A lower pass rate or higher duration can be a signal, not a root-cause diagnosis. Reports may differ in suite composition, retries, environment, and sample size.' : 'Pass rate yang turun atau durasi yang naik merupakan sinyal, bukan diagnosis akar masalah. Laporan dapat berbeda dalam komposisi suite, retry, lingkungan, dan ukuran sampel.'}</p>
+      </section>}
       <section className="quality-intelligence-tests">
         <div className="quality-intelligence-section-heading"><div><span className="section-kicker">{en ? 'TEST INVENTORY' : 'INVENTARIS TES'}</span><h2>{en ? 'Test-level evidence' : 'Bukti per test'}</h2><p>{en ? 'Filter the imported results and inspect individual failure messages.' : 'Filter hasil impor dan periksa pesan kegagalan setiap test.'}</p></div><span className="quality-intelligence-count">{visibleTests.length} / {report.tests.length}</span></div>
         <div className="quality-intelligence-filters"><label><Filter size={15} /><select aria-label={en ? 'Filter tests by status' : 'Filter test berdasarkan status'} value={statusFilter} onChange={event => setStatusFilter(event.target.value as typeof statusFilter)}><option value="all">{en ? 'All statuses' : 'Semua status'}</option><option value="failed">{en ? 'Failed' : 'Gagal'}</option><option value="flaky">Flaky</option><option value="passed">{en ? 'Passed' : 'Lulus'}</option><option value="skipped">{en ? 'Skipped' : 'Dilewati'}</option></select></label><input type="search" aria-label={en ? 'Search test results' : 'Cari hasil tes'} placeholder={en ? 'Search title, file, or error…' : 'Cari judul, file, atau error…'} value={query} onChange={event => setQuery(event.target.value)} /></div>
