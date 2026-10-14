@@ -126,8 +126,11 @@ function Header() {
   const location = useLocation()
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const navRef = useRef<HTMLElement>(null)
+  const previousPathRef = useRef(location.pathname)
 
   useEffect(() => {
+    if (previousPathRef.current === location.pathname) return
+    previousPathRef.current = location.pathname
     setMenuOpen(false)
     document.querySelector('.nav-platform')?.removeAttribute('open')
   }, [location.pathname])
@@ -245,6 +248,7 @@ function Header() {
           <NavLink to="/about" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Sparkles size={16}/></span><span><b>{language === 'en' ? 'About DreamEx' : 'Tentang DreamEx'}</b><small>{language === 'en' ? 'Purpose and project details' : 'Tujuan dan detail proyek'}</small></span></NavLink>
           <a className="nav-github" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Github size={16}/></span><span><b>GitHub</b><small>{language === 'en' ? 'Source code & releases' : 'Kode sumber dan rilis'}</small></span></a>
           <InstallAppButton />
+          <div className="language-switch nav-desktop-language" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div>
           <div className="nav-drawer-footer">
             <div className="language-switch" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div>
             <span>{language === 'en' ? 'BUILD WITH EVIDENCE' : 'BANGUN DENGAN BUKTI'}</span>
