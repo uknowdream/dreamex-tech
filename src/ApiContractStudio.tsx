@@ -130,7 +130,7 @@ export function ApiContractStudio() {
           <input type="file" accept=".json,application/json" aria-label={which === 'baseline' ? (en ? 'Baseline OpenAPI JSON' : 'OpenAPI JSON versi awal') : (en ? 'Current OpenAPI JSON' : 'OpenAPI JSON versi baru')} onChange={event => void load(which, event.target.files?.[0])} disabled={busy !== null}/>
         </label>
         {errors[which] && <p className="api-contract-error" role="alert">{errors[which]}</p>}
-        {(which === 'baseline' ? baseline : current) && <div className="api-contract-loaded" role="status"><FileCheck2 size={15}/><div><strong>{(which === 'baseline' ? baseline : current)?.title}</strong><span>v{(which === 'baseline' ? baseline : current)?.version} · {(which === 'baseline' ? baseline : current)?.operations.length} {en ? 'operations' : 'operasi'}</span></div></div>}
+        {(which === 'baseline' ? baseline : current) && <><div className="api-contract-loaded" role="status"><FileCheck2 size={15}/><div><strong>{(which === 'baseline' ? baseline : current)?.title}</strong><span>v{(which === 'baseline' ? baseline : current)?.version} · {(which === 'baseline' ? baseline : current)?.operations.length} {en ? 'operations' : 'operasi'}</span></div></div>{(which === 'baseline' ? baseline : current)?.warnings.map((warning, index) => <p className="api-contract-error" role="note" key={index}>{warning}</p>)}</>}
       </div>)}
     </div>
     {baseline && current && <div className="api-contract-results">
