@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ArrowDownToLine, CheckCircle2, Clipboard, Database, RefreshCw, ShieldCheck } from 'lucide-react'
+import { ArrowDownToLine, Clipboard, Database, RefreshCw, ShieldCheck } from 'lucide-react'
 import { useLanguage } from './i18n'
 import './TestDataBuilder.css'
 
