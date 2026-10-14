@@ -16,6 +16,7 @@ const checks = [
   { path: '/command-center', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/roadmap', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/rss.xml', type: 'xml', markers: ['<rss', '<channel'] },
+  { path: '/rss', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/sitemap.xml', type: 'xml', markers: ['<urlset', '<url'] },
 ]
 
