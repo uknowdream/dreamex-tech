@@ -230,27 +230,24 @@ The repository currently contains a technology publication and browser-first eng
 - [x] **Quality Intelligence comparison — PR #49.** Imported report summary comparison and summary-only local history.
 - [x] **Flaky-test sample size — PR #61.** Retry-derived signals expose sample size and parser limitations.
 - [x] **Incident timeline integrity — PR #63.** Postmortem generation flags chronology, invalid incident windows, and missing follow-up owners/due dates.
+- [x] **Reliability & Incident Center — PR #74.** Dedicated local-first incident records, severity/status, timeline events, postmortem export, and manually entered delivery metrics. CI and desktop/mobile Playwright passed; the tool is not connected to live telemetry.
 - [x] **Threat-model worksheet.** Local STRIDE-inspired planning aid for assets, trust boundaries, threats, and mitigations; not automated threat detection.
 - [x] **Responsive/accessibility baseline and performance-budget checks.** Representative route viewport/keyboard checks, route inventory, and initial asset gzip budgets are part of repository verification.
 
-### In progress
-
-- [ ] **Reliability & Incident Center — PR #71.** Dedicated local-first incident records, event timeline, postmortem export, and manually entered delivery metrics. Requires desktop/mobile E2E before merge.
-
 ### Production verification still required
 
-- [ ] **Exact-commit deployment.** Current `main` SHA at this snapshot is `2a8e7799336f2cd756dc6c91c430ec40459bc981`; the production alias is still on `9ba208f9621c2342b9f1386b659e89f575615911`. The Vercel status for newer main commits reported a build-rate-limit failure. Do not claim the current main code is deployed until Vercel reports READY for the exact SHA.
-- [x] **Live smoke sample for the currently deployed version.** The homepage, `/api-playground`, `/rss.xml`, `/rss`, and `/sitemap.xml` returned HTTP 200. `/rss.xml` returned RSS XML; `/rss` returned the SPA HTML shell. Use `/rss.xml` as the subscription feed. This does not verify newer, undeployed commits. A separate recorded smoke snapshot covered the configured route/feed set; it likewise does not replace the exact-commit deployment gate.
+- [ ] **Exact-commit deployment.** Current `main` SHA is `bac79086a123cae11ec2c2aecdcfea08f2ede0d0`; the production alias remains on `9ba208f9621c2342b9f1386b659e89f575615911`. The Vercel status for current main reports a build-rate-limit failure. Do not claim the latest main code is deployed until Vercel reports READY for the exact SHA.
+- [x] **Live smoke sample for the currently deployed version.** The homepage, `/api-playground`, `/rss.xml`, `/rss`, and `/sitemap.xml` returned HTTP 200. `/rss.xml` returned RSS XML; `/rss` returned the SPA HTML shell. Use `/rss.xml` as the subscription feed. This does not verify newer, undeployed commits.
 - [ ] **Fresh CI on exact main SHA.** Confirm typecheck, lint, build, output/i18n verification, and desktop/mobile Playwright for the exact merged commit. Passing PR checks alone is not proof of a fresh main run.
+- [ ] **Production smoke after the next successful deployment.** Verify the homepage, critical tool routes including `/reliability-center`, security headers, `/rss.xml`, and `/sitemap.xml` against the exact deployed SHA.
 
 ### Next implementation queue
 
-1. [ ] **Merge and verify PR #71** if desktop/mobile tests pass; otherwise fix the failing scenario before merge.
-2. [ ] **Performance/accessibility follow-through.** Measure representative production routes and real-device Core Web Vitals, add automated WCAG scans and visual baselines, and tune budgets from stable measurements rather than arbitrary targets.
-3. [ ] **Internationalization and SEO production verification.** Validate Indonesian/English parity, long-label wrapping, canonical host, metadata, RSS, and sitemap against the exact deployed commit.
-4. [ ] **Shared navigation test helpers.** Reduce ambiguous duplicate locators and extend route/dead-link checks across desktop and mobile.
-5. [ ] **Evidence retention and privacy review.** Keep imports local by default, test scoped deletion, and disclose provenance, limits, and analysis scope in exports.
-6. [ ] **Collaboration/integrations only after architecture.** Do not simulate cloud sync. Require authentication/authorization, consent, retention/deletion, auditability, rate limits, and operational ownership before team features or GitHub integrations.
+1. [ ] **Performance/accessibility follow-through.** Measure representative production routes and real-device Core Web Vitals, add automated WCAG scans and visual baselines, and tune budgets from stable measurements rather than arbitrary targets.
+2. [ ] **Internationalization and SEO production verification.** Validate Indonesian/English parity, long-label wrapping, canonical host, metadata, RSS, and sitemap against the exact deployed commit.
+3. [ ] **Shared navigation test helpers.** Reduce ambiguous duplicate locators and extend route/dead-link checks across desktop and mobile.
+4. [ ] **Evidence retention and privacy review.** Keep imports local by default, test scoped deletion, and disclose provenance, limits, and analysis scope in exports.
+5. [ ] **Collaboration/integrations only after architecture.** Do not simulate cloud sync. Require authentication/authorization, consent, retention/deletion, auditability, rate limits, and operational ownership before team features or GitHub integrations.
 
 ### Required release sequence for every feature
 
