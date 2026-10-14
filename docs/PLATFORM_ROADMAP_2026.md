@@ -212,28 +212,35 @@ The repository currently contains a technology publication and browser-first eng
 
 **Status snapshot:** 14 October 2026. This is a working execution queue; an item is complete only when its merged commit, checks, deployment, and applicable smoke evidence are verified.
 
-### Completed and merged
+### Implemented and merged into the repository
 
-- [x] **PR #14 — Footer tablet balancing.** Merged; typecheck, lint, build, desktop Playwright, and mobile Playwright passed for the reviewed change.
-- [x] **PR #15 — Navigation and mobile drawer.** Merged; CI and desktop/mobile Playwright passed for the reviewed change.
-- [x] **PR #16 — Platform roadmap.** Merged; this roadmap is now the planning baseline.
-- [x] **Production baseline smoke.** The deployed main baseline was checked for the homepage, RSS feed, and sitemap. Repeat smoke checks after each subsequent production deployment.
+- [x] **Footer and mobile navigation — PRs #14–#15.** Responsive refinements and keyboard/touch coverage merged.
+- [x] **Platform roadmap — PR #16.** This document is the planning baseline; the execution queue below is updated to reflect shipped code.
+- [x] **Unified command palette.** Route/article search, keyboard shortcut, focus handling, and desktop/mobile regression coverage are present in the repository.
+- [x] **Synthetic test data and Playwright starter generation.** QA Automation Studio includes deterministic local test data and editable starter scaffolds with explicit review guidance.
+- [x] **Production smoke workflow — PR #26.** A scheduled HTTPS smoke script checks critical tool routes, RSS, and sitemap with content-type/body markers and bounded retries.
+- [x] **SBOM provenance and duplicate/license metadata review.** CycloneDX/SPDX inventory stays browser-local; imported vulnerability records are not represented as a live scan.
+- [x] **CSP Report-Only and header verification.** Policy is non-enforcing; no server-side violation collection endpoint is configured.
+- [x] **QA traceability manifest — PR #30.** Schema 1.1 export includes metadata, counts, and a SHA-256 digest of the ordered items; legacy 1.0 import remains supported.
+- [x] **SLO/error-budget worksheet — PR #28.** Manual inputs only; it does not claim to read live telemetry.
+- [x] **API Contract Studio — PR #38.** OpenAPI JSON inventory, static compatibility heuristics, and a portable JSON report are integrated into API Playground.
+- [x] **Breadcrumb navigation.** Bilingual route breadcrumbs and narrow-screen/keyboard checks are present in the repository.
 
-### In progress — merge gates still apply
+### Release verification still required
 
-- [ ] **PR #17 — Unified command palette.** Consolidate the existing palette and header trigger into one dialog; verify keyboard focus, localized article search, responsive header behavior, and desktop/mobile E2E before merge.
-- [ ] **PR #18 — Synthetic QA test data builder.** Validate deterministic fixtures, boundary cases, CSV/JSON export, privacy guardrails, typecheck/lint/build, and desktop/mobile E2E before merge.
+- [ ] **Production verification for the latest merged commit.** Confirm Vercel READY for the exact main SHA, then run the scheduled smoke checks and verify the homepage, critical tools, /rss.xml, /rss, and /sitemap.xml. A preview or prior production deployment is not sufficient evidence.
+- [ ] **Review current CI health on main.** Confirm the merged commit has fresh CI and desktop/mobile regression results. Do not infer a pass from older PR runs.
 
 ### Next implementation queue
 
-1. [ ] **Finish Phase 1 discovery.** Add route inventory/dead-link verification, reusable navigation/footer test helpers, breadcrumbs where useful, workspace category filters/recent tools, and explicit “does / does not do” capability notes.
-2. [ ] **API Contract Studio.** Ensure OpenAPI import supports endpoint inventory, schema/example validation, and static breaking-change comparison with clear input limits and parser errors.
-3. [ ] **QA traceability and evidence packages.** Connect requirements, test cases, execution records, defects, and release criteria in portable snapshots; include schema/version, timestamps, provenance, and explicit limitations.
-4. [ ] **Playwright starter generator.** Generate editable, review-required scaffolds from selected routes and assertions; add tests for escaping, invalid inputs, and deterministic output.
-5. [ ] **Security verification.** Introduce CSP Report-Only checks and a repeatable deployed security-header check; review violations before considering enforcement. Improve SBOM schema/duplicate/license checks and provenance.
-6. [ ] **Release and incident engineering.** Review the existing Reliability & Incident Center work before integrating it; improve timeline integrity, follow-up ownership, postmortem exports, release gates, rollback notes, and deployment/test-evidence linkage.
-7. [ ] **Performance and accessibility baselines.** Measure representative routes first, then set budgets; add automated accessibility checks, keyboard/focus/reduced-motion checks, and visual baselines for critical layouts.
-8. [ ] **Internationalization and SEO verification.** Check Indonesian/English parity, long-label wrapping, metadata, canonical URLs, RSS, and sitemap consistency.
+1. [ ] **Workspace discovery.** Add category filters and a privacy-transparent “recently used tools” list to the existing command palette; retain keyboard navigation and an honest empty state.
+2. [ ] **OpenAPI analysis depth.** Add schema-level checks, request/response example validation, and Swagger 2.0 body-parameter handling. Keep static findings distinct from live API execution.
+3. [ ] **Quality Intelligence comparisons.** Compare two imported report snapshots, identify pass-rate/test-duration changes, and show sample size and parser limitations for flaky signals.
+4. [ ] **Release evidence register.** Link a release candidate to source SHA, deployment URL, CI run IDs, test evidence, risk notes, accessibility/security checks, and rollback steps. Mark manually entered evidence as unverified until checked.
+5. [ ] **Security and threat-model templates.** Add asset/trust-boundary/threat/mitigation templates, while keeping browser-visible security checks distinct from server-side assurance.
+6. [ ] **Performance/accessibility baselines.** Measure representative routes first; then add numeric budgets, automated accessibility checks, keyboard/focus/reduced-motion checks, and visual baselines.
+7. [ ] **Internationalization and SEO verification.** Check Indonesian/English parity, long-label wrapping, metadata, canonical URLs, RSS, and sitemap consistency on production.
+8. [ ] **Shared navigation test helpers.** Reduce ambiguous duplicate locators and expand route-inventory/dead-link checks across desktop/mobile.
 9. [ ] **Collaboration/integrations only after architecture.** Do not ship simulated cloud sync. Require authentication/authorization, consent, retention/deletion, auditability, rate limits, and operational ownership before GitHub integration or team collaboration.
 
 ### Required release sequence for every feature
