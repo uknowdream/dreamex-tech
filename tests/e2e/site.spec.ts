@@ -1153,3 +1153,16 @@ test('desktop engineering navigation exposes grouped destinations and closes on 
   await expect(page).toHaveURL(/api-playground$/)
   await expect(page.locator('.nav-platform')).not.toHaveAttribute('open', '')
 })
+
+
+test('desktop platform menu closes on Escape and restores focus to its trigger', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/')
+  const summary = page.locator('.nav-platform > summary')
+  await summary.focus()
+  await page.keyboard.press('Enter')
+  await expect(page.locator('.nav-platform')).toHaveAttribute('open', '')
+  await page.keyboard.press('Escape')
+  await expect(page.locator('.nav-platform')).not.toHaveAttribute('open', '')
+  await expect(summary).toBeFocused()
+})
