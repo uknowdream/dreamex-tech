@@ -11,7 +11,7 @@ test('Quality Intelligence compares imported report snapshots and labels summary
   await expect(page.getByRole('heading', { name: /baseline.xml/i })).toBeVisible()
 
   await input.setInputFiles({ name: 'candidate.xml', mimeType: 'application/xml', buffer: Buffer.from(currentXml) })
-  const comparison = page.getByRole('region', { name: /SNAPSHOT COMPARISON|PERBANDINGAN SNAPSHOT/i })
+  const comparison = page.locator('.quality-intelligence-comparison')
   await expect(comparison).toBeVisible()
   await expect(comparison.getByText(/Current 66.7% · baseline 50%|Saat ini 66,7% · baseline 50%/i)).toBeVisible()
   await expect(comparison.getByText(/Test-count change|Perubahan jumlah tes/i)).toBeVisible()
