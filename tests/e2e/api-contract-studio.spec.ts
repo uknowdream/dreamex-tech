@@ -85,7 +85,7 @@ test('API Contract Studio validates schemas and examples and recognizes Swagger 
       '/orders': {
         post: {
           parameters: [{ name: 'body', in: 'body', required: false, schema: { type: 'object', properties: { id: { type: 'string' } } } }],
-          responses: { '200': { description: 'OK', schema: { type: 'object', properties: { ok: { type: 'boolean' } } }, examples: { 'application/json': { ok: 'yes' } } },
+          responses: { '200': { description: 'OK', schema: { type: 'object', properties: { ok: { type: 'boolean' } } }, examples: { 'application/json': { ok: 'yes' } } } },
         },
       },
     },
@@ -105,7 +105,7 @@ test('API Contract Studio validates schemas and examples and recognizes Swagger 
               },
             },
           },
-          responses: { '200': { description: 'OK', content: { 'application/json': { schema: { type: 'array', items: { type: 'string' } }, example: { unexpected: true } } } },
+          responses: { '200': { description: 'OK', content: { 'application/json': { schema: { type: 'array', items: { type: 'string' } }, example: { unexpected: true } } } } },
         },
       },
     },
