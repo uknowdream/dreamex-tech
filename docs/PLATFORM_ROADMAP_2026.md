@@ -251,12 +251,12 @@ The repository currently contains a technology publication and browser-first eng
 3. [x] **Accessibility baseline PR #80 merged.** The 17-route, six-viewport semantic/responsive suite and shared navigation helpers passed typecheck/lint/build/output verification plus desktop and mobile Playwright on PR head `1a8be009eb44599750886d1cfc1479f97315ee40`; merge commit `06e068779775bf84d2c3e8c0cb63f2b26db2bbf7` is now on `main`.
 4. [ ] **Performance/accessibility follow-through.** Measure representative production routes and real-device Core Web Vitals, add automated WCAG scans and visual baselines, and tune budgets from stable measurements rather than arbitrary targets.
 5. [x] **SEO metadata prerender — PR #84.** Route-specific static HTML carries titles, descriptions, canonical/social metadata, robots directives, and article publication dates before JavaScript runs. [x] **Sitemap/indexing integrity — PR #89 merged.** Command Center is included, personalized Reading List is `noindex, follow` and excluded from the sitemap, and smoke/SEO/E2E checks cover the policy. Production confirmation remains pending until the latest main commit is deployed.
-6. [ ] **Evidence privacy and collaboration architecture.** Test scoped deletion while preserving unrelated browser storage. Do not simulate cloud sync; require authentication/authorization, consent, retention/deletion, auditability, rate limits, and operational ownership before team features or GitHub integrations.
+6. [ ] **Evidence privacy and collaboration architecture.** Sidebar recent-history deletion is scoped and tested to preserve unrelated browser storage in PR #94. Extend the same deletion/privacy guarantees to evidence and report tools; do not simulate cloud sync, and require authentication/authorization, consent, retention/deletion, auditability, rate limits, and operational ownership before team features or GitHub integrations.
 
 ### Navigation polish follow-up
 
 - [x] **Sidebar quick-find live feedback.** Announce matching destination counts through a polite live region, show the localized empty state only when no matches exist, and test both states on mobile.
-- [ ] **Sidebar recents and keyboard shortcut — PR #94.** Validate the bounded local-only history, slash-to-search shortcut, storage-failure fallback, and preservation of unrelated browser storage before merge.
+- [ ] **Sidebar recents and keyboard shortcut — PR #94 (this change).** Validate the bounded local-only history, slash-to-search shortcut, focus timing, live search counts, desktop mega-menu, tablet drawer styling, and preservation of unrelated browser storage before merge.
 
 ### Deployment blocker to resolve
 
