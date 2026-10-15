@@ -2072,7 +2072,8 @@ function RouteMetadata() {
     upsertMeta('twitter:title', page.title)
     upsertMeta('twitter:description', page.description)
     upsertMeta('twitter:card', 'summary')
-    upsertMeta('robots', unknownArticle ? 'noindex, follow' : 'index, follow')
+    const privateUtilityRoute = route === '/reading-list'
+    upsertMeta('robots', unknownArticle || privateUtilityRoute ? 'noindex, follow' : 'index, follow')
     let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')
     if (!canonical) {
       canonical = document.createElement('link')
