@@ -1256,3 +1256,25 @@ test('slash shortcut focuses sidebar quick-find and search hides recent destinat
   await expect(drawer.locator('a[href="/api-playground"]')).toBeVisible()
   await expect(drawer.locator('.nav-search-empty')).toBeHidden()
 })
+
+
+test('clearing sidebar recents removes only its own local storage key', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/api-playground')
+  await page.evaluate(() => localStorage.setItem('dreamex.test.unrelated', 'preserve-me'))
+  await page.goto('/security-center')
+  await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
+
+  const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
+  const recent = drawer.getByRole('region', { name: /RECENTLY OPENED|BARU DIBUKA/i })
+  await expect(recent).toBeVisible()
+  await recent.getByRole('button', { name: /Clear recent tools|Hapus riwayat tools/i }).click()
+  await expect(drawer.getByRole('region', { name: /RECENTLY OPENED|BARU DIBUKA/i })).toHaveCount(0)
+
+  const stored = await page.evaluate(() => ({
+    recent: localStorage.getItem('dreamex.navigation.recent.v1'),
+    unrelated: localStorage.getItem('dreamex.test.unrelated'),
+  }))
+  expect(stored.recent).toBeNull()
+  expect(stored.unrelated).toBe('preserve-me')
+})
