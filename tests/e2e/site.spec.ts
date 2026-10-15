@@ -1260,6 +1260,10 @@ test('slash shortcut focuses sidebar quick-find and search hides recent destinat
   await expect(drawer.getByRole('region', { name: /RECENTLY OPENED|BARU DIBUKA/i })).toBeHidden()
   await expect(drawer.locator('a[href="/api-playground"]')).toBeVisible()
   await expect(drawer.locator('.nav-search-empty')).toBeHidden()
+
+  await search.fill('')
+  await page.keyboard.press('/')
+  await expect(search).toHaveValue('/')
 })
 
 
