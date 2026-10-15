@@ -242,7 +242,7 @@ function Header() {
 
   useEffect(() => {
     const handleQuickFindShortcut = (event: KeyboardEvent) => {
-      if (!menuOpenRef.current || event.key !== '/' || event.altKey || event.ctrlKey || event.metaKey) return
+      if (event.key !== '/' || event.altKey || event.ctrlKey || event.metaKey) return
       const target = event.target
       if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement ||
         (target instanceof HTMLElement && target.isContentEditable)) return
