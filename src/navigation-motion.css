@@ -453,3 +453,30 @@ html body .site-header .nav-links.nav-open[role="dialog"] .nav-mega-panel {
     border-radius: 18px !important;
   }
 }
+
+
+/* Root cause hardening: fixed-position dialogs must escape header clipping/containing blocks. */
+html body .site-header {
+  overflow: visible !important;
+  transform: none !important;
+  filter: none !important;
+  perspective: none !important;
+  contain: none !important;
+}
+html body .site-header .nav-links.nav-open[role="dialog"] {
+  position: fixed !important;
+  inset: max(76px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) auto !important;
+  width: min(500px, calc(100vw - 32px)) !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  clip: auto !important;
+  clip-path: none !important;
+  contain: none !important;
+}
+@media (max-width: 640px), (pointer: coarse) {
+  html body .site-header .nav-links.nav-open[role="dialog"] {
+    inset: max(72px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)) !important;
+    width: auto !important;
+  }
+}
