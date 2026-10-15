@@ -249,15 +249,12 @@ function Header() {
       const input = navRef.current?.querySelector<HTMLInputElement>('#nav-drawer-search-input')
       if (!input) return
       event.preventDefault()
-      window.requestAnimationFrame(() => {
-        if (menuOpenRef.current && navRef.current?.classList.contains('nav-open')) {
-          input.focus({ preventScroll: true })
-          if (document.activeElement !== input) input.focus()
-        }
-      })
+      if (!menuOpenRef.current || !navRef.current?.classList.contains('nav-open')) return
+      input.focus({ preventScroll: true })
+      if (document.activeElement !== input) input.focus()
     }
-    document.addEventListener('keydown', handleQuickFindShortcut)
-    return () => document.removeEventListener('keydown', handleQuickFindShortcut)
+    document.addEventListener('keydown', handleQuickFindShortcut, true)
+    return () => document.removeEventListener('keydown', handleQuickFindShortcut, true)
   }, [])
 
   useEffect(() => {
