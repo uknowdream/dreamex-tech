@@ -1232,6 +1232,7 @@ test('sidebar includes core engineering destinations and fits compact phone widt
 test('mobile sidebar remembers recent engineering tools and opens them locally', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/api-playground')
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('dreamex.navigation.recent.v1') || '')).toContain('/api-playground')
   await page.goto('/security-center')
   await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
 
@@ -1299,6 +1300,7 @@ test('desktop navigation keeps the mega-menu while mobile-only recents stay out 
 test('tablet drawer keeps recent tools and readable search-result feedback', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 800 })
   await page.goto('/api-playground')
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('dreamex.navigation.recent.v1') || '')).toContain('/api-playground')
   await page.goto('/security-center')
   await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
   const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
