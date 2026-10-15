@@ -3093,6 +3093,8 @@ main, header, footer, section, .container {
   cursor: pointer;
   transition: border-color .16s ease, background .16s ease, transform .16s ease;
 }
+.nav-recent-link::before,
+.nav-recent-link::after { display: none !important; content: none !important; }
 .nav-recent-link:hover { border-color: #c5ff7038; background: #c5ff7008; }
 .nav-recent-link:active { transform: translateY(1px); }
 .nav-recent-link:focus-visible { outline: 2px solid #c5ff70; outline-offset: 2px; }
@@ -3199,7 +3201,7 @@ main, header, footer, section, .container {
     max-height: min(48dvh, 460px);
     overflow-x: hidden;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior: auto;
     scrollbar-width: thin;
     scrollbar-color: #34445c transparent;
   }
