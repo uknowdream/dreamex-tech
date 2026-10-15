@@ -123,10 +123,49 @@ function InstallAppButton() {
 function Header() {
   const { language, setLanguage, t } = useLanguage()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [navQuery, setNavQuery] = useState('')
   const location = useLocation()
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const navRef = useRef<HTMLElement>(null)
   const previousPathRef = useRef(location.pathname)
+
+  useEffect(() => {
+    const nav = navRef.current
+    if (!nav) return
+    const query = menuOpen ? navQuery.trim().toLocaleLowerCase() : ''
+    const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('a[href]'))
+    const platform = nav.querySelector<HTMLDetailsElement>('.nav-platform')
+    const summary = platform?.querySelector<HTMLElement>('summary')
+    const intro = platform?.querySelector<HTMLElement>('.nav-mega-intro')
+    const groups = Array.from(nav.querySelectorAll<HTMLElement>('.nav-mega-group'))
+    const empty = nav.querySelector<HTMLElement>('.nav-search-empty')
+
+    if (!query) {
+      links.forEach(link => { link.hidden = false })
+      groups.forEach(group => { group.hidden = false })
+      if (intro) intro.hidden = false
+      if (summary) summary.hidden = false
+      if (platform) platform.hidden = false
+      if (empty) empty.hidden = true
+      if (!menuOpen && navQuery) setNavQuery('')
+      return
+    }
+
+    links.forEach(link => { link.hidden = !link.textContent?.toLocaleLowerCase().includes(query) })
+    groups.forEach(group => {
+      group.hidden = !Array.from(group.querySelectorAll<HTMLAnchorElement>('a[href]')).some(link => !link.hidden)
+    })
+    if (intro) intro.hidden = !intro.textContent?.toLocaleLowerCase().includes(query)
+    if (summary) summary.hidden = !summary.textContent?.toLocaleLowerCase().includes(query)
+    if (platform) {
+      const platformHasMatches = Boolean(platform.querySelector('.nav-mega-intro:not([hidden])')) ||
+        Boolean(platform.querySelector('.nav-mega-group:not([hidden])'))
+      platform.hidden = !platformHasMatches
+      if (platformHasMatches) platform.open = true
+    }
+    const visibleLinks = links.filter(link => !link.hidden).length
+    if (empty) empty.hidden = visibleLinks > 0
+  }, [menuOpen, navQuery, language])
 
   useEffect(() => {
     if (previousPathRef.current === location.pathname) return
@@ -210,6 +249,15 @@ function Header() {
           <div className="nav-drawer-head">
             <div><span className="nav-drawer-eyebrow">{language === 'en' ? 'DREAMEX ENGINEERING SUITE' : 'DREAMEX ENGINEERING SUITE'}</span><strong id="mobile-navigation-title">{language === 'en' ? 'Navigation' : 'Navigasi'}</strong></div>
             <button className="nav-drawer-close" type="button" data-drawer-close onClick={closeDrawer} aria-label={language === 'en' ? 'Close navigation' : 'Tutup navigasi'}><X size={18}/></button>
+          </div>
+          <div className="nav-drawer-search">
+            <label htmlFor="nav-drawer-search-input">{language === 'en' ? 'QUICK FIND' : 'CARI CEPAT'}</label>
+            <div className="nav-drawer-search-control">
+              <Search size={16} aria-hidden="true" />
+              <input id="nav-drawer-search-input" type="search" value={navQuery} onChange={event => setNavQuery(event.target.value)} placeholder={language === 'en' ? 'Find a tool or destination…' : 'Cari tools atau halaman…'} autoComplete="off" spellCheck={false} />
+              {navQuery && <button type="button" onClick={() => { setNavQuery(''); navRef.current?.querySelector<HTMLInputElement>('#nav-drawer-search-input')?.focus() }} aria-label={language === 'en' ? 'Clear navigation search' : 'Hapus pencarian navigasi'}><X size={15}/></button>}
+            </div>
+            <p className="nav-search-empty" role="status" hidden>{language === 'en' ? 'No destinations match this search. Try another keyword.' : 'Tidak ada halaman yang cocok. Coba kata kunci lain.'}</p>
           </div>
           <NavLink to="/" end onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><HomeIcon size={16}/></span><span><b>{language === 'en' ? 'Journal' : 'Jurnal'}</b><small>{language === 'en' ? 'Articles, ideas and guides' : 'Artikel, ide, dan panduan'}</small></span></NavLink>
           <details className="nav-platform">
