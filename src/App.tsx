@@ -307,7 +307,10 @@ function Header() {
         </button>
         <nav ref={navRef} id="primary-navigation" className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={language === 'en' ? 'Main navigation' : 'Navigasi utama'} role={menuOpen ? 'dialog' : undefined} aria-modal={menuOpen ? true : undefined} aria-labelledby={menuOpen ? 'mobile-navigation-title' : undefined} onTransitionEnd={event => {
           if (event.target === event.currentTarget && event.propertyName === 'transform' && menuOpen) {
-            navRef.current?.querySelector<HTMLElement>('.nav-drawer-close')?.focus({ preventScroll: true })
+            const nav = navRef.current
+            const activeElement = document.activeElement
+            if (nav && activeElement instanceof HTMLElement && nav.contains(activeElement)) return
+            nav?.querySelector<HTMLElement>('.nav-drawer-close')?.focus({ preventScroll: true })
           }
         }}>
           <div className="nav-drawer-head">
