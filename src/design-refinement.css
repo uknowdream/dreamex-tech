@@ -218,3 +218,155 @@ footer{border-top-color:rgba(127,151,190,.16)}
     border-radius: 16px;
   }
 }
+
+
+/* Responsive stability pass: shared safeguards across every route and viewport. */
+html, body, #root { min-width: 320px; max-width: 100%; }
+body { overflow-x: clip; }
+#root, main, header, footer, section, article, aside, nav, form, fieldset { min-width: 0; }
+img, picture, video, canvas, iframe, svg { max-width: 100%; }
+pre, table { max-width: 100%; }
+pre { overflow-x: auto; }
+table { display: block; overflow-x: auto; }
+input, select, textarea, button { max-width: 100%; }
+:where(.container, .tool-layout, .workspace-layout, .dashboard-grid, .metrics-grid, .tool-grid, .card-grid, .article-grid, .topics-grid, .featured-card, .hero-grid, .footer-inner) { min-width: 0; }
+:where(.tool-layout, .workspace-layout, .dashboard-grid, .metrics-grid, .tool-grid, .card-grid, .article-grid, .topics-grid) > * { min-width: 0; }
+:where(h1,h2,h3,h4,p,small,strong,label,a,button,code) { overflow-wrap: anywhere; }
+:where(button,a,input,select,textarea,summary) { touch-action: manipulation; }
+:where(button,a,summary) { scroll-margin-block: 12px; }
+:focus-visible { scroll-margin-block: 16px; }
+
+/* Replace the accumulated mobile mega-menu overrides with one predictable drawer layout. */
+@media (max-width: 1100px), (pointer: coarse) {
+  html body .site-header { isolation: auto !important; }
+  html body .site-header.navigation-open { z-index: 2101 !important; }
+  html body #primary-navigation.nav-open[role="dialog"] {
+    position: fixed !important;
+    inset: max(72px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 16px 14px max(14px, env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    border: 1px solid rgba(130,155,197,.28) !important;
+    border-radius: 18px !important;
+    background: linear-gradient(155deg, rgba(13,23,40,.99), rgba(6,11,20,.995)) !important;
+    box-shadow: 0 24px 80px rgba(0,0,0,.58) !important;
+    transform: none !important;
+    animation: none !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 2102 !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-head,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-footer {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] > a,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform > summary {
+    width: 100% !important;
+    min-width: 0 !important;
+    flex: 0 0 auto !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] > a,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform > summary {
+    min-height: 48px !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel {
+    position: static !important;
+    inset: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    flex: 0 0 auto !important;
+    margin: 4px 0 8px !important;
+    padding: 8px !important;
+    overflow: visible !important;
+    transform: none !important;
+    animation: none !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-content: start !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel .nav-mega-intro {
+    display: none !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel .nav-mega-group {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 3px !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 5px 0 !important;
+    overflow: visible !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel .nav-mega-group > a {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-height: 46px !important;
+    height: auto !important;
+    padding: 8px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel .nav-mega-group > a > span:last-child {
+    display: grid !important;
+    min-width: 0 !important;
+    gap: 3px !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel b,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel small {
+    display: block !important;
+    overflow-wrap: anywhere !important;
+  }
+}
+@media (max-width: 480px) {
+  .container { width: calc(100% - 32px); }
+  html body #primary-navigation.nav-open[role="dialog"] {
+    inset: max(68px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom)) 8px !important;
+    padding: 14px 12px max(12px, env(safe-area-inset-bottom)) !important;
+    border-radius: 15px !important;
+  }
+  .nav-drawer-head { gap: 10px; }
+  .nav-drawer-search-control { width: 100%; min-width: 0; }
+  .nav-drawer-search-control input { min-width: 0; }
+  .nav-recent-link { min-width: 0; }
+  .nav-recent-copy { min-width: 0; }
+}
+@media (min-width: 1101px) {
+  .nav-links.nav-open[role="dialog"] { position: static; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
