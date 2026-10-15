@@ -33,7 +33,7 @@ function routeOutput(pathname) {
   return output
 }
 
-function verifyPage(pathname, expected, type = 'website', publishedAt = '') {
+function verifyPage(pathname, expected, type = 'website', publishedAt = '', indexable = true) {
   const output = routeOutput(pathname)
   if (!existsSync(output)) {
     errors.push(pathname + ': missing prerendered HTML at ' + output)
@@ -51,7 +51,9 @@ function verifyPage(pathname, expected, type = 'website', publishedAt = '') {
   if (extractMeta(html, 'property', 'og:title') !== escapeHtml(expected.title)) errors.push(pathname + ': Open Graph title mismatch')
   if (extractMeta(html, 'property', 'og:description') !== escapeHtml(expected.description)) errors.push(pathname + ': Open Graph description mismatch')
   if (extractMeta(html, 'property', 'og:type') !== type) errors.push(pathname + ': Open Graph type should be ' + type)
-  if (extractMeta(html, 'name', 'robots')?.includes('noindex')) errors.push(pathname + ': indexable page unexpectedly contains noindex')
+  const robots = extractMeta(html, 'name', 'robots') || ''
+  if (indexable && robots.includes('noindex')) errors.push(pathname + ': indexable page unexpectedly contains noindex')
+  if (!indexable && !robots.includes('noindex')) errors.push(pathname + ': non-indexable utility route must include noindex')
   if (language !== 'en') errors.push(pathname + ': initial HTML should declare English as the default experience')
   if (!html.includes('id="root"')) errors.push(pathname + ': application root is missing from prerendered HTML')
   if (type === 'article' && extractMeta(html, 'property', 'article:published_time') !== publishedAt) errors.push(pathname + ': article publication date metadata mismatch')
@@ -65,7 +67,7 @@ for (const pathname of routePatterns) {
     errors.push(pathname + ': static route has no bilingual SEO entry')
     continue
   }
-  verifyPage(pathname, seo)
+  verifyPage(pathname, seo, 'website', '', pathname !== '/reading-list')
   staticPages += 1
 }
 
