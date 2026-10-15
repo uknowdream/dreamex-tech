@@ -3190,3 +3190,27 @@ main, header, footer, section, .container {
   .nav-search-count { font-size: 11px; }
   .nav-drawer-footer { padding-top: 16px; }
 }
+
+
+/* Keep expanded engineering navigation usable on short mobile screens. */
+@media (max-width: 760px) {
+  .nav-links { scrollbar-gutter: stable; }
+  .nav-mega-panel {
+    max-height: min(48dvh, 460px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #34445c transparent;
+  }
+  .nav-mega-intro { min-height: 0; }
+  .nav-mega-group { gap: 3px; }
+  .nav-mega-group > a { min-height: 46px; }
+}
+@media (max-width: 480px) {
+  .nav-mega-panel { max-height: min(42dvh, 380px); padding: 8px; }
+  .nav-mega-intro { padding: 13px; }
+  .nav-mega-intro > strong { font-size: 16px; }
+  .nav-mega-intro > p { font-size: 11px; }
+  .nav-mega-group > a { padding: 8px; }
+}
