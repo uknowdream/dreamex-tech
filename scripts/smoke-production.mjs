@@ -14,6 +14,7 @@ const checks = [
   { path: '/security-center', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/control-plane', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/command-center', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/reliability-center', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/roadmap', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/workspace', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/observatory', type: 'html', markers: ['id="root"', '<div'] },
@@ -28,6 +29,7 @@ const checks = [
   { path: '/robots.txt', type: 'text', markers: ['User-agent:', 'Sitemap:'] },
   { path: '/manifest.webmanifest', type: 'json', markers: ['"name"', 'DreamEx Tech'] },
   { path: '/rss.xml', type: 'xml', markers: ['<rss', '<channel'] },
+  { path: '/rss.xsl', type: 'xml', markers: ['<xsl:stylesheet', 'xsl:template'] },
   { path: '/rss', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/sitemap.xml', type: 'xml', markers: ['<urlset', '<url'] },
 ]
