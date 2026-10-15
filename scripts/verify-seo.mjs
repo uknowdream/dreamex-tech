@@ -106,10 +106,10 @@ for (const value of sitemapLocations) {
 for (const slug of articleSlugs) {
   if (!sitemapArticleSlugs.has(slug)) errors.push('Article is missing from sitemap: ' + slug)
 }
-for (const route of ['/','/about','/lab','/api-playground','/security-center','/sitemap.xml']) {
-  if (route === '/sitemap.xml') continue
+for (const route of ['/','/about','/lab','/api-playground','/security-center','/command-center']) {
   if (!sitemapPaths.has(route)) errors.push('Important route is missing from sitemap: ' + route)
 }
+if (sitemapPaths.has('/reading-list')) errors.push('Personalized browser-local reading list must not be included in the sitemap.')
 
 const rssItems = [...rss.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(match => match[1])
 const rssArticleSlugs = new Set()
