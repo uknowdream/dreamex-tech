@@ -370,3 +370,60 @@ input, select, textarea, button { max-width: 100%; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+
+/* Drawer geometry correction: constrain every nested flex/grid item to the panel width. */
+@media (max-width: 1100px), (pointer: coarse) {
+  html body #primary-navigation.nav-open[role="dialog"],
+  html body #primary-navigation.nav-open[role="dialog"] * {
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] {
+    width: auto !important;
+    max-width: none !important;
+    overflow-x: clip !important;
+    contain: inline-size;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-head,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-recent-tools,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-recent-list,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-mega-panel,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-mega-group,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-footer {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-recent-link,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform > summary,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-mega-group > a,
+  html body #primary-navigation.nav-open[role="dialog"] > a {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex-shrink: 1 !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-recent-copy,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-mega-group > a > span:last-child,
+  html body #primary-navigation.nav-open[role="dialog"] > a > span:last-child,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform > summary > span:nth-child(2) {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search-control {
+    display: flex !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search-control input {
+    width: 100% !important;
+    min-width: 0 !important;
+    flex: 1 1 0 !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-mega-panel {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
