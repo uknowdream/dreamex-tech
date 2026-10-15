@@ -1,5 +1,41 @@
 # DreamEx Tech — Platform Roadmap 2026–2027
 
+## 0. Unified delivery control (authoritative)
+
+This file is the **single source of truth** for product priorities, implementation status, and release acceptance. Architecture details for future collaboration remain in [Collaboration & Integration Architecture](./COLLABORATION_INTEGRATION_ARCHITECTURE.md); that document is subordinate to this roadmap and does not create a separate delivery queue.
+
+### Status vocabulary
+- **Implemented (repo):** code and tests exist in the repository; production status is not implied.
+- **Verified (production):** exact deployed commit and production checks are recorded.
+- **In progress:** implementation or required verification is actively underway.
+- **Planned:** not implemented; no claim of availability.
+- **Blocked:** dependent on credentials, quota, infrastructure, approval, or evidence not currently available.
+
+### Consolidated priority queue
+
+| Priority | Workstream | Acceptance gate | Status |
+|---|---|---|---|
+| P0 | Navigation, Quick Find, responsive drawer and footer | Desktop + mobile Playwright, keyboard/focus, short viewport scrolling, no overflow | In progress; verify current PR before merge |
+| P0 | Release integrity | CI, production build/output/bilingual checks, desktop + mobile E2E, preview review, exact-SHA deployment, production smoke | Required for every release; latest SHA still needs final E2E result |
+| P1 | One engineering discovery model | Keep one command palette and one sidebar Quick Find; avoid duplicate search surfaces; group tools by user task | Iterative; prune duplicates only after route and test audit |
+| P1 | QA and API contract quality | Reproducible fixtures, OpenAPI parsing/reference checks, explicit heuristic limitations, export integrity | Existing local-first tools; improve from test gaps |
+| P1 | Security and supply-chain evidence | Safe import bounds, secret redaction, SBOM provenance, clear distinction between imported data and live scanning | Existing local-first workflows; no live scanner claim |
+| P1 | Reliability and release evidence | Traceable source SHA, test run, environment, risk, rollback, and evidence provenance | Existing manual/local-first workflows; provider evidence unverified until fetched |
+| P1 | International and inclusive UX | EN/ID parity, metadata/canonical/sitemap/RSS integrity, keyboard and reduced motion, responsive viewports, automated accessibility scans | Mixed: existing baseline; expand coverage and verify production |
+| P2 | Performance observability | Real production measurements and Core Web Vitals before tuning budgets | Planned; do not fabricate telemetry |
+| P2 | Collaboration/GitHub cloud integration | Approved threat model, OIDC, server-side tenant authorization, secret manager, audit, retention/deletion, rate limits, restore tests | Planned; local-first remains default |
+
+### Product pruning and scope rules
+1. Keep a feature only when it has a distinct user job, a reachable route, useful non-placeholder behavior, and a testable acceptance criterion.
+2. Consolidate duplicate discovery/navigation rather than adding another command palette or another roadmap page.
+3. Do not remove a route merely because its name overlaps another tool; audit imports, route references, inbound links, sitemap, and tests first. Redirect or document any intentional retirement.
+4. Label manual worksheets, static heuristics, sample data, imported reports, and browser-local records accurately. Never label them as live integrations, autonomous scans, or verified production telemetry.
+5. Do not add cloud sync or AI-backed claims without real infrastructure, consent, security controls, operational ownership, and failure-mode tests.
+
+### Definition of done
+A change is done only when its commit is identified; required CI and desktop/mobile E2E are green; keyboard, focus, reduced-motion, and responsive acceptance are checked; preview behavior is reviewed; production deployment matches the merged SHA; and the production smoke suite passes. Missing evidence is **not verified**, never assumed.
+
+
 > **Status:** Proposed product and engineering roadmap. This document is a planning baseline, not a claim that proposed capabilities are already implemented or deployed.
 >
 > **Product direction:** Build DreamEx Tech into a trustworthy, international engineering platform combining technical publishing with practical QA, API, security, reliability, and release-readiness workflows.
