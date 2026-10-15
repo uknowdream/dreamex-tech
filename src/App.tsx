@@ -249,6 +249,8 @@ function Header() {
       const input = navRef.current?.querySelector<HTMLInputElement>('#nav-drawer-search-input')
       if (!input) return
       event.preventDefault()
+      // Claim the shortcut before window-level palettes or article search can steal focus.
+      event.stopImmediatePropagation()
       const nav = navRef.current
       if (!nav?.classList.contains('nav-open')) return
       input.focus({ preventScroll: true })
