@@ -190,6 +190,9 @@ function Header() {
     if (!menuOpen) return
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
+    const initialFocusFrame = window.requestAnimationFrame(() => {
+      navRef.current?.querySelector<HTMLElement>('.nav-drawer-close')?.focus({ preventScroll: true })
+    })
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault()
@@ -198,7 +201,7 @@ function Header() {
         return
       }
       if (event.key !== 'Tab') return
-      const focusables = Array.from(navRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), summary, [tabindex]:not([tabindex="-1"])') ?? [])
+      const focusables = Array.from(navRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])') ?? [])
         .filter(element => element.getClientRects().length > 0)
       if (!focusables.length) {
         event.preventDefault()
@@ -216,6 +219,7 @@ function Header() {
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => {
+      window.cancelAnimationFrame(initialFocusFrame)
       document.removeEventListener('keydown', handleKeyDown)
       document.body.style.overflow = previousOverflow
     }
