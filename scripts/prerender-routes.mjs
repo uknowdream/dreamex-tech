@@ -68,6 +68,9 @@ const routeSeo = [...app.matchAll(routeSeoPattern)].map(match => ({
 }))
 
 if (!routeSeo.length) errors.push('No route SEO entries could be parsed from src/App.tsx.')
+const rootEntry = routeSeo.find(entry => entry.path === '/')
+if (!rootEntry) errors.push('The homepage is missing its route SEO entry.')
+else writeFileSync(indexPath, renderMetadata(rootEntry.page, 'https://dreamex.tech/'))
 
 function writeRoute(pathname, html) {
   const segments = pathname.split('/').filter(Boolean)
@@ -85,7 +88,7 @@ function writeRoute(pathname, html) {
   return true
 }
 
-let staticPages = 0
+let staticPages = rootEntry ? 1 : 0
 for (const entry of routeSeo) {
   if (entry.path === '/') continue
   if (entry.path.includes(':') || entry.path.includes('*')) continue
