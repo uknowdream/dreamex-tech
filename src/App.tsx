@@ -165,7 +165,7 @@ function Header() {
     }
     const visibleLinks = links.filter(link => !link.hidden).length
     if (empty) empty.hidden = visibleLinks > 0
-  }, [menuOpen, navQuery])
+  }, [menuOpen, navQuery, language])
 
   useEffect(() => {
     if (previousPathRef.current === location.pathname) return
