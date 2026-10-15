@@ -5,6 +5,7 @@ const root = process.cwd()
 const dist = resolve(root, 'dist')
 const app = readFileSync(join(root, 'src/App.tsx'), 'utf8')
 const articlesSource = readFileSync(join(root, 'src/articles.ts'), 'utf8')
+const translationsSource = readFileSync(join(root, 'src/articleTranslations.ts'), 'utf8')
 const errors = []
 const canonicalOrigin = 'https://dreamex.tech'
 
@@ -12,7 +13,7 @@ const routePatterns = [...app.matchAll(/<Route\b[^>]*\bpath=["']([^"']+)["']/g)]
   .map(match => match[1])
   .filter(path => path !== '*' && !path.includes(':'))
 const seoEntries = [...app.matchAll(/^\s*'([^']+)': \{ en: \{ title: '([^']+)', description: '([^']+)' \}, id: \{ title: '([^']+)', description: '([^']+)' \} \},?$/gm)]
-  .map(match => ({ path: match[1], title: match[4], description: match[5] }))
+  .map(match => ({ path: match[1], title: match[2], description: match[3] }))
 const seoByPath = new Map(seoEntries.map(entry => [entry.path, entry]))
 
 function escapeHtml(value) {
@@ -51,7 +52,7 @@ function verifyPage(pathname, expected, type = 'website', publishedAt = '') {
   if (extractMeta(html, 'property', 'og:description') !== escapeHtml(expected.description)) errors.push(pathname + ': Open Graph description mismatch')
   if (extractMeta(html, 'property', 'og:type') !== type) errors.push(pathname + ': Open Graph type should be ' + type)
   if (extractMeta(html, 'name', 'robots')?.includes('noindex')) errors.push(pathname + ': indexable page unexpectedly contains noindex')
-  if (language !== 'id') errors.push(pathname + ': initial HTML should declare Indonesian as the default language')
+  if (language !== 'en') errors.push(pathname + ': initial HTML should declare English as the default experience')
   if (!html.includes('id="root"')) errors.push(pathname + ': application root is missing from prerendered HTML')
   if (type === 'article' && extractMeta(html, 'property', 'article:published_time') !== publishedAt) errors.push(pathname + ': article publication date metadata mismatch')
 }
@@ -68,6 +69,7 @@ for (const pathname of routePatterns) {
   staticPages += 1
 }
 
+const articleTranslations = new Map([...translationsSource.matchAll(/^\s*'([^']+)':\s*\{\s*title:\s*'([^']*)',\s*excerpt:\s*'([^']*)'/gm)].map(match => [match[1], { title: match[2], description: match[3] }]))
 const articleObjects = [...articlesSource.matchAll(/\{\s*slug:\s*'([^']+)'([\s\S]*?)\s*\},?/g)]
 const seenSlugs = new Set()
 let articlePages = 0
@@ -90,7 +92,12 @@ for (const match of articleObjects) {
     errors.push('Article metadata is incomplete: ' + slug)
     continue
   }
-  verifyPage('/blog/' + slug, { title: title + ' — DreamEx Tech', description }, 'article', date)
+  const translated = articleTranslations.get(slug)
+  if (!translated?.title || !translated.description) {
+    errors.push('Missing English article metadata: ' + slug)
+    continue
+  }
+  verifyPage('/blog/' + slug, { title: translated.title + ' — DreamEx Tech', description: translated.description }, 'article', date)
   articlePages += 1
 }
 
