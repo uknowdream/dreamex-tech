@@ -317,7 +317,7 @@ function Header() {
             <p className="nav-search-hint">{language === 'en' ? 'Tip: press / to focus search' : 'Tip: tekan / untuk fokus ke pencarian'}</p>
           </div>
           {recentRoutes.length > 0 && <section className="nav-recent-tools" hidden={Boolean(navQuery.trim())} aria-labelledby="nav-recent-tools-title">
-            <div className="nav-recent-heading"><span id="nav-recent-tools-title">{language === 'en' ? 'RECENTLY OPENED' : 'BARU DIBUKA'}</span><span className="nav-recent-count">{recentRoutes.length}</span></div>
+            <div className="nav-recent-heading"><span id="nav-recent-tools-title">{language === 'en' ? 'RECENTLY OPENED' : 'BARU DIBUKA'}</span><div className="nav-recent-heading-actions"><span className="nav-recent-count">{recentRoutes.length}</span><button type="button" className="nav-recent-clear" aria-label={language === 'en' ? 'Clear recent tools' : 'Hapus riwayat tools'} onClick={() => { setRecentRoutes([]); try { window.localStorage.removeItem(RECENT_NAV_STORAGE_KEY) } catch { /* Core navigation must work when storage is unavailable. */ } }}>{language === 'en' ? 'Clear' : 'Hapus'}</button></div></div>
             <div className="nav-recent-list">
               {recentRoutes.map(path => {
                 const destination = NAV_DESTINATIONS[path]
