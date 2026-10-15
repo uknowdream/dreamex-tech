@@ -139,6 +139,7 @@ function Header() {
     const intro = platform?.querySelector<HTMLElement>('.nav-mega-intro')
     const groups = Array.from(nav.querySelectorAll<HTMLElement>('.nav-mega-group'))
     const empty = nav.querySelector<HTMLElement>('.nav-search-empty')
+    const resultCount = nav.querySelector<HTMLElement>('.nav-search-count')
 
     if (!query) {
       links.forEach(link => { link.hidden = false })
@@ -147,6 +148,7 @@ function Header() {
       if (summary) summary.hidden = false
       if (platform) platform.hidden = false
       if (empty) empty.hidden = true
+      if (resultCount) resultCount.hidden = true
       if (!menuOpen) setNavQuery('')
       return
     }
@@ -165,6 +167,12 @@ function Header() {
     }
     const visibleLinks = links.filter(link => !link.hidden).length
     if (empty) empty.hidden = visibleLinks > 0
+    if (resultCount) {
+      resultCount.hidden = visibleLinks === 0
+      resultCount.textContent = language === 'en'
+        ? `${visibleLinks} destination${visibleLinks === 1 ? '' : 's'} found`
+        : `${visibleLinks} tujuan ditemukan`
+    }
   }, [menuOpen, navQuery, language])
 
   useEffect(() => {
@@ -258,6 +266,7 @@ function Header() {
               {navQuery && <button type="button" onClick={() => { setNavQuery(''); navRef.current?.querySelector<HTMLInputElement>('#nav-drawer-search-input')?.focus() }} aria-label={language === 'en' ? 'Clear navigation search' : 'Hapus pencarian navigasi'}><X size={15}/></button>}
             </div>
             <p className="nav-search-empty" role="status" hidden>{language === 'en' ? 'No destinations match this search. Try another keyword.' : 'Tidak ada halaman yang cocok. Coba kata kunci lain.'}</p>
+            <p className="nav-search-count" role="status" aria-live="polite" hidden />
           </div>
           <NavLink to="/" end onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><HomeIcon size={16}/></span><span><b>{language === 'en' ? 'Journal' : 'Jurnal'}</b><small>{language === 'en' ? 'Articles, ideas and guides' : 'Artikel, ide, dan panduan'}</small></span></NavLink>
           <details className="nav-platform">
