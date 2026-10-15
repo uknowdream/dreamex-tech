@@ -3109,8 +3109,10 @@ main, header, footer, section, .container {
 .nav-recent-copy small { overflow: hidden; color: #8192aa; font-size: 9px; line-height: 1.5; text-overflow: ellipsis; white-space: nowrap; }
 .nav-recent-arrow { flex: 0 0 auto; color: #71829a; }
 .nav-recent-link:hover .nav-recent-arrow { color: #c5ff70; }
-@media (min-width: 761px) {
+@media (min-width: 1101px) {
   .nav-recent-tools { display: none !important; }
+}
+@media (min-width: 761px) {
   .nav-search-hint { display: none; }
 }
 @media (max-width: 760px) {
