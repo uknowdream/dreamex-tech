@@ -169,7 +169,7 @@ function Header() {
     const nav = navRef.current
     if (!nav) return
     const query = menuOpen ? navQuery.trim().toLocaleLowerCase() : ''
-    const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('a[href]'))
+    const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('a[href]:not(.nav-recent-link)'))
     const platform = nav.querySelector<HTMLDetailsElement>('.nav-platform')
     const summary = platform?.querySelector<HTMLElement>('summary')
     const intro = platform?.querySelector<HTMLElement>('.nav-mega-intro')
