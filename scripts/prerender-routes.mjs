@@ -6,6 +6,7 @@ const dist = resolve(root, 'dist')
 const indexPath = join(dist, 'index.html')
 const appPath = join(root, 'src/App.tsx')
 const articlesPath = join(root, 'src/articles.ts')
+const translationsPath = join(root, 'src/articleTranslations.ts')
 
 if (!existsSync(indexPath)) {
   console.error('Route prerender failed: dist/index.html is missing. Run the Vite build first.')
@@ -14,6 +15,7 @@ if (!existsSync(indexPath)) {
 
 const app = readFileSync(appPath, 'utf8')
 const articleSource = readFileSync(articlesPath, 'utf8')
+const translationsSource = readFileSync(translationsPath, 'utf8')
 const template = readFileSync(indexPath, 'utf8')
 const errors = []
 const escapeHtml = value => String(value)
@@ -36,7 +38,7 @@ function replaceMeta(html, attribute, key, value) {
 
 function renderMetadata(page, canonical, type = 'website', publishedAt = '') {
   let html = template
-  html = html.replace(/<html\b([^>]*)\blang=["'][^"']*["']([^>]*)>/i, '<html$1lang="id"$2>')
+  html = html.replace(/<html\b([^>]*)\blang=["'][^"']*["']([^>]*)>/i, '<html$1lang="en"$2>')
   html = html.replace(/<title>[\s\S]*?<\/title>/i, '<title>' + escapeHtml(page.title) + '</title>')
   html = replaceMeta(html, 'name', 'description', page.description)
   html = replaceMeta(html, 'name', 'robots', 'index, follow, max-image-preview:large')
@@ -64,7 +66,7 @@ function renderMetadata(page, canonical, type = 'website', publishedAt = '') {
 const routeSeoPattern = /^\s*'([^']+)': \{ en: \{ title: '([^']+)', description: '([^']+)' \}, id: \{ title: '([^']+)', description: '([^']+)' \} \},?$/gm
 const routeSeo = [...app.matchAll(routeSeoPattern)].map(match => ({
   path: match[1],
-  page: { title: match[4], description: match[5] },
+  page: { title: match[2], description: match[3] },
 }))
 
 if (!routeSeo.length) errors.push('No route SEO entries could be parsed from src/App.tsx.')
