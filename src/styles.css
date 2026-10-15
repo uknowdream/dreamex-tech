@@ -3142,3 +3142,15 @@ main, header, footer, section, .container {
 }
 .nav-recent-clear:hover { border-color: #c5ff7055; color: #c5ff70; }
 .nav-recent-clear:focus-visible { outline: 2px solid #c5ff70; outline-offset: 2px; }
+
+
+@media (max-width: 760px) {
+  .nav-search-count {
+    margin: 0;
+    padding: 0 2px 2px;
+    color: #c5ff70;
+    font: 10px/1.6 var(--mono, ui-monospace, monospace);
+    letter-spacing: .01em;
+  }
+  .nav-search-count[hidden] { display: none !important; }
+}
