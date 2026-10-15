@@ -106,8 +106,15 @@ for (const value of sitemapLocations) {
 for (const slug of articleSlugs) {
   if (!sitemapArticleSlugs.has(slug)) errors.push('Article is missing from sitemap: ' + slug)
 }
-for (const route of ['/','/about','/lab','/api-playground','/security-center','/command-center']) {
-  if (!sitemapPaths.has(route)) errors.push('Important route is missing from sitemap: ' + route)
+const indexableRoutes = [
+  '/', '/about', '/lab', '/observatory', '/devtools', '/workspace',
+  '/engineering-intelligence', '/control-plane', '/command-center',
+  '/quality-intelligence', '/reliability-center', '/supply-chain-intelligence',
+  '/roadmap', '/qa-studio', '/security-center', '/api-playground',
+  '/performance', '/knowledge-graph', '/learn', '/rss',
+]
+for (const route of indexableRoutes) {
+  if (!sitemapPaths.has(route)) errors.push('Indexable route is missing from sitemap: ' + route)
 }
 if (sitemapPaths.has('/reading-list')) errors.push('Personalized browser-local reading list must not be included in the sitemap.')
 
