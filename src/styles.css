@@ -3034,3 +3034,15 @@ main, header, footer, section, .container {
 @media (prefers-reduced-motion: reduce) {
   .nav-drawer-search-control { transition: none; }
 }
+
+
+@media (max-width: 760px) {
+  .nav-search-count {
+    margin: 0;
+    padding: 0 2px 2px;
+    color: #c5ff70;
+    font: 10px/1.6 var(--mono, ui-monospace, monospace);
+    letter-spacing: .01em;
+  }
+  .nav-search-count[hidden] { display: none !important; }
+}
