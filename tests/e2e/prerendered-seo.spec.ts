@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test('engineering route HTML includes route-specific metadata before client JavaScript runs', async ({ page }) => {
-  const response = await page.request.get('/api-playground')
+  const response = await page.request.get('/api-playground/')
   expect(response.status()).toBe(200)
   const html = await response.text()
   expect(html).toContain('<html lang="en">')
@@ -14,7 +14,7 @@ test('engineering route HTML includes route-specific metadata before client Java
 })
 
 test('article HTML includes article metadata and publication date before JavaScript runs', async ({ page }) => {
-  const response = await page.request.get('/blog/playwright-test-architecture')
+  const response = await page.request.get('/blog/playwright-test-architecture/')
   expect(response.status()).toBe(200)
   const html = await response.text()
   expect(html).toContain('<title>Designing a Stable Playwright Test Suite — DreamEx Tech</title>')
