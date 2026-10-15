@@ -25,7 +25,7 @@ const escapeHtml = value => String(value)
 
 function replaceMeta(html, attribute, key, value) {
   const escapedKey = key.replace(/[.*+?^$()|[\]\\]/g, '\\$&')
-  const pattern = new RegExp('<meta\\b(?=[^>]*\\b' + attribute + '\\s*=\\s*["\\']' + escapedKey + '["\\'])[^>]*>', 'i')
+  const pattern = new RegExp("<meta\\b(?=[^>]*\\b" + attribute + "\\s*=\\s*[\"']" + escapedKey + "[\"'])[^>]*>", 'i')
   const safeValue = escapeHtml(value)
   const update = tag => /\bcontent\s*=/i.test(tag)
     ? tag.replace(/\bcontent\s*=\s*(["']).*?\1/i, 'content="' + safeValue + '"')
@@ -98,7 +98,7 @@ for (const entry of routeSeo) {
 }
 
 function readField(body, field) {
-  const match = body.match(new RegExp('(?:^|[,\\n]\\s*)' + field + ':\\s*\\'((?:\\\\.|[^\\'])*)\\''))
+  const match = body.match(new RegExp("(?:^|[,\\n]\\s*)" + field + ":\\s*'([^']*)'"))
   return match?.[1]?.replaceAll("\\\\'", "'").replaceAll('\\\\\\\\', '\\\\')
 }
 
