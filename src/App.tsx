@@ -205,7 +205,7 @@ function Header() {
     const visibleLinks = links.filter(link => !link.hidden).length
     if (empty) empty.hidden = visibleLinks > 0
     if (resultCount) {
-      resultCount.hidden = visibleLinks === 0
+      resultCount.hidden = false
       resultCount.textContent = language === 'en'
         ? `${visibleLinks} destination${visibleLinks === 1 ? '' : 's'} found`
         : `${visibleLinks} tujuan ditemukan`
