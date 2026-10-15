@@ -151,7 +151,7 @@ function Header() {
     try {
       const saved: unknown = JSON.parse(window.localStorage.getItem(RECENT_NAV_STORAGE_KEY) || '[]')
       return Array.isArray(saved)
-        ? saved.filter((path): path is string => typeof path === 'string' && Object.prototype.hasOwnProperty.call(NAV_DESTINATIONS, path)).slice(0, RECENT_NAV_LIMIT)
+        ? [...new Set(saved.filter((path): path is string => typeof path === 'string' && Object.prototype.hasOwnProperty.call(NAV_DESTINATIONS, path)))].slice(0, RECENT_NAV_LIMIT)
         : []
     } catch {
       return []
