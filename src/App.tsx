@@ -242,7 +242,7 @@ function Header() {
 
   useEffect(() => {
     const handleQuickFindShortcut = (event: KeyboardEvent) => {
-      if (!menuOpenRef.current || event.key !== '/' || event.altKey || event.ctrlKey || event.metaKey) return
+      if (event.key !== '/' || event.altKey || event.ctrlKey || event.metaKey) return
       const target = event.target
       if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement ||
         (target instanceof HTMLElement && target.isContentEditable)) return
@@ -253,8 +253,17 @@ function Header() {
       event.stopImmediatePropagation()
       input.focus({ preventScroll: true })
       if (document.activeElement !== input) {
-        input.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
-        input.focus()
+        // The opening drawer transition can temporarily prevent focus; retry after layout.
+        window.requestAnimationFrame(() => {
+          if (!navRef.current?.classList.contains('nav-open')) return
+          const currentInput = navRef.current.querySelector<HTMLInputElement>('#nav-drawer-search-input')
+          currentInput?.focus({ preventScroll: true })
+        })
+        window.setTimeout(() => {
+          if (!navRef.current?.classList.contains('nav-open')) return
+          const currentInput = navRef.current.querySelector<HTMLInputElement>('#nav-drawer-search-input')
+          currentInput?.focus({ preventScroll: true })
+        }, 350)
       }
     }
     document.addEventListener('keydown', handleQuickFindShortcut, true)
