@@ -36,12 +36,12 @@ function replaceMeta(html, attribute, key, value) {
   return html.replace('</head>', '  <meta ' + attribute + '="' + escapeHtml(key) + '" content="' + safeValue + '" />\n  </head>')
 }
 
-function renderMetadata(page, canonical, type = 'website', publishedAt = '') {
+function renderMetadata(page, canonical, type = 'website', publishedAt = '', indexable = true) {
   let html = template
   html = html.replace(/<html\b([^>]*)\blang=["'][^"']*["']([^>]*)>/i, '<html$1lang="en"$2>')
   html = html.replace(/<title>[\s\S]*?<\/title>/i, '<title>' + escapeHtml(page.title) + '</title>')
   html = replaceMeta(html, 'name', 'description', page.description)
-  html = replaceMeta(html, 'name', 'robots', 'index, follow, max-image-preview:large')
+  html = replaceMeta(html, 'name', 'robots', indexable ? 'index, follow, max-image-preview:large' : 'noindex, follow')
   html = replaceMeta(html, 'property', 'og:title', page.title)
   html = replaceMeta(html, 'property', 'og:description', page.description)
   html = replaceMeta(html, 'property', 'og:url', canonical)
@@ -99,7 +99,7 @@ for (const entry of routeSeo) {
     continue
   }
   const canonical = 'https://dreamex.tech' + entry.path.replace(/\/+$/, '')
-  if (writeRoute(entry.path, renderMetadata(entry.page, canonical))) staticPages += 1
+  if (writeRoute(entry.path, renderMetadata(entry.page, canonical, 'website', '', entry.path !== '/reading-list'))) staticPages += 1
 }
 
 const articleTranslations = new Map([...translationsSource.matchAll(/^\s*'([^']+)':\s*\{\s*title:\s*'([^']*)',\s*excerpt:\s*'([^']*)'/gm)].map(match => [match[1], { title: match[2], description: match[3] }]))
