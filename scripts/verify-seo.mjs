@@ -57,7 +57,7 @@ if (origin) {
 
 const routeDeclarations = [...app.matchAll(/<Route\b[^>]*\bpath=["']([^"']+)["']/g)].map(match => match[1])
 const routePatterns = routeDeclarations.filter(route => route !== '*')
-const routeSeoEntries = [...app.matchAll(/^\\s*'([^']+)': \\{ en: \\{ title: '([^']+)', description: '([^']+)' \\}, id: \\{ title: '([^']+)', description: '([^']+)' \\} \\},?$/gm)]
+const routeSeoEntries = [...app.matchAll(/^\s*'([^']+)': \{ en: \{ title: '([^']+)', description: '([^']+)' \}, id: \{ title: '([^']+)', description: '([^']+)' \} \},?$/gm)]
 const routeSeoPaths = new Set(routeSeoEntries.map(match => match[1]))
 if (!app.includes('function RouteMetadata()') || !app.includes("upsertMeta('og:url'")) errors.push('Route-specific metadata controller is missing')
 for (const route of routePatterns) {
