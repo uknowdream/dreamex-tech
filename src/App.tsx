@@ -298,8 +298,9 @@ function Header() {
           <span /><span /><span className="menu-toggle-label">{language === 'en' ? 'MENU' : 'MENU'}</span>
         </button>
         <nav ref={navRef} id="primary-navigation" className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={language === 'en' ? 'Main navigation' : 'Navigasi utama'} role={menuOpen ? 'dialog' : undefined} aria-modal={menuOpen ? true : undefined} aria-labelledby={menuOpen ? 'mobile-navigation-title' : undefined} onTransitionEnd={event => {
-          if (event.target === event.currentTarget && event.propertyName === 'transform' && menuOpen) {
-            navRef.current?.querySelector<HTMLElement>('.nav-drawer-close')?.focus({ preventScroll: true })
+          const nav = navRef.current
+          if (event.target === event.currentTarget && event.propertyName === 'transform' && menuOpen && nav && !nav.contains(document.activeElement)) {
+            nav.querySelector<HTMLElement>('.nav-drawer-close')?.focus({ preventScroll: true })
           }
         }}>
           <div className="nav-drawer-head">
