@@ -249,9 +249,13 @@ function Header() {
       const input = navRef.current?.querySelector<HTMLInputElement>('#nav-drawer-search-input')
       if (!input) return
       event.preventDefault()
-      if (!menuOpenRef.current || !navRef.current?.classList.contains('nav-open')) return
+      const nav = navRef.current
+      if (!nav?.classList.contains('nav-open')) return
       input.focus({ preventScroll: true })
-      if (document.activeElement !== input) input.focus()
+      if (document.activeElement !== input) {
+        input.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+        input.focus()
+      }
     }
     document.addEventListener('keydown', handleQuickFindShortcut, true)
     return () => document.removeEventListener('keydown', handleQuickFindShortcut, true)
