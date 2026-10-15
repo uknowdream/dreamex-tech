@@ -1,5 +1,41 @@
 # DreamEx Tech — Platform Roadmap 2026–2027
 
+## 0. Unified delivery control (authoritative)
+
+This file is the **single source of truth** for product priorities, implementation status, and release acceptance. Architecture details for future collaboration remain in [Collaboration & Integration Architecture](./COLLABORATION_INTEGRATION_ARCHITECTURE.md); that document is subordinate to this roadmap and does not create a separate delivery queue.
+
+### Status vocabulary
+- **Implemented (repo):** code and tests exist in the repository; production status is not implied.
+- **Verified (production):** exact deployed commit and production checks are recorded.
+- **In progress:** implementation or required verification is actively underway.
+- **Planned:** not implemented; no claim of availability.
+- **Blocked:** dependent on credentials, quota, infrastructure, approval, or evidence not currently available.
+
+### Consolidated priority queue
+
+| Priority | Workstream | Acceptance gate | Status |
+|---|---|---|---|
+| P0 | Navigation, Quick Find, responsive drawer and footer | Desktop + mobile Playwright, keyboard/focus, short viewport scrolling, no overflow | In progress; verify current PR before merge |
+| P0 | Release integrity | CI, production build/output/bilingual checks, desktop + mobile E2E, preview review, exact-SHA deployment, production smoke | Required for every release; latest SHA still needs final E2E result |
+| P1 | One engineering discovery model | Keep one command palette and one sidebar Quick Find; avoid duplicate search surfaces; group tools by user task | Iterative; prune duplicates only after route and test audit |
+| P1 | QA and API contract quality | Reproducible fixtures, OpenAPI parsing/reference checks, explicit heuristic limitations, export integrity | Existing local-first tools; improve from test gaps |
+| P1 | Security and supply-chain evidence | Safe import bounds, secret redaction, SBOM provenance, clear distinction between imported data and live scanning | Existing local-first workflows; no live scanner claim |
+| P1 | Reliability and release evidence | Traceable source SHA, test run, environment, risk, rollback, and evidence provenance | Existing manual/local-first workflows; provider evidence unverified until fetched |
+| P1 | International and inclusive UX | EN/ID parity, metadata/canonical/sitemap/RSS integrity, keyboard and reduced motion, responsive viewports, automated accessibility scans | Mixed: existing baseline; expand coverage and verify production |
+| P2 | Performance observability | Real production measurements and Core Web Vitals before tuning budgets | Planned; do not fabricate telemetry |
+| P2 | Collaboration/GitHub cloud integration | Approved threat model, OIDC, server-side tenant authorization, secret manager, audit, retention/deletion, rate limits, restore tests | Planned; local-first remains default |
+
+### Product pruning and scope rules
+1. Keep a feature only when it has a distinct user job, a reachable route, useful non-placeholder behavior, and a testable acceptance criterion.
+2. Consolidate duplicate discovery/navigation rather than adding another command palette or another roadmap page.
+3. Do not remove a route merely because its name overlaps another tool; audit imports, route references, inbound links, sitemap, and tests first. Redirect or document any intentional retirement.
+4. Label manual worksheets, static heuristics, sample data, imported reports, and browser-local records accurately. Never label them as live integrations, autonomous scans, or verified production telemetry.
+5. Do not add cloud sync or AI-backed claims without real infrastructure, consent, security controls, operational ownership, and failure-mode tests.
+
+### Definition of done
+A change is done only when its commit is identified; required CI and desktop/mobile E2E are green; keyboard, focus, reduced-motion, and responsive acceptance are checked; preview behavior is reviewed; production deployment matches the merged SHA; and the production smoke suite passes. Missing evidence is **not verified**, never assumed.
+
+
 > **Status:** Proposed product and engineering roadmap. This document is a planning baseline, not a claim that proposed capabilities are already implemented or deployed.
 >
 > **Product direction:** Build DreamEx Tech into a trustworthy, international engineering platform combining technical publishing with practical QA, API, security, reliability, and release-readiness workflows.
@@ -239,19 +275,28 @@ The repository currently contains a technology publication and browser-first eng
 
 ### Production verification still required
 
-- [x] **Exact-commit deployment verified (15 Oct 2026).** Latest production deployment `dpl_A9rGeYwyyMBKGaDqUg71FuGEPh9e` is `READY`, target `production`, and identifies current `main` commit `06e068779775bf84d2c3e8c0cb63f2b26db2bbf7`. Production aliases include `www.dreamex.tech` and `dreamex.tech`. The premium sidebar was introduced by merge commit `a435918f54f1f6a41eb84a3ae0625a95c678057f` and remains present in the current deployed commit.
-- [x] **Production smoke verified for current deployed `main` (15 Oct 2026).** A manual equivalent of the 25-path route/feed smoke suite passed 25/25 against production commit `06e068779775bf84d2c3e8c0cb63f2b26db2bbf7`: all 20 app HTML routes, `/robots.txt`, `/manifest.webmanifest`, `/rss.xml`, `/rss.xsl`, and `/sitemap.xml` returned HTTP 200 with expected body markers and content types. All 20 HTML endpoints passed HSTS, `X-Content-Type-Options`, `X-Frame-Options`, Referrer Policy, Permissions Policy, and CSP Report-Only directive checks. `/rss.xml` is the RSS 2.0 feed; `/rss.xsl` is its display stylesheet. PR #81 added Reliability Center and RSS stylesheet to the repeatable smoke script. The GitHub scheduled workflow itself has not yet been observed completing on this SHA, so that gate remains separate.
-- [ ] **Fresh CI on exact main SHA.** PR #83 (SEO metadata) passed typecheck/lint/build/output verification and both Playwright projects on its head; a separate fresh main-push CI result remains unverified in the available evidence.
-- [ ] **Full scheduled production smoke after deployment.** Confirm the complete 23-path `scripts/smoke-production.mjs` workflow succeeds against the exact deployed SHA, including every required response marker and security-header assertion. The manual sample above is narrower.
+- [ ] **Exact-commit deployment verification is pending for current `main`.** The latest READY production deployment returned by Vercel is `dpl_8vQSUSC33rhpSezn61wVsQBsizGR`, commit `63b1cad3cf4df373a6f3912c91622b861185bba9`. PR #89 has since advanced `main` to `db429c81e04538c5783bdeb473f867801cc6a285`; that SHA is not yet confirmed deployed. Vercel reports `build-rate-limit` for new preview/deployment checks. Production aliases are `www.dreamex.tech` and `dreamex.tech`.
+- [ ] **Production smoke on the current deployment remains unverified.** A manual equivalent of the 25-path route/feed suite previously passed 25/25 against the older production commit `06e068779775bf84d2c3e8c0cb63f2b26db2bbf7`; that result must not be reused as proof for commit `63b1cad3cf4df373a6f3912c91622b861185bba9` or newer `main`. Run `npm run smoke:production` after the latest main SHA has a READY production deployment. The script covers static routes, article metadata, feeds, sitemap, manifest, redirects, content types, and security headers.
+- [ ] **Fresh CI on exact main SHA.** PR checks are not a substitute for verifying the latest main-push workflow after PR #89 merged as `db429c81e04538c5783bdeb473f867801cc6a285`; the available commit status only reports the Vercel build-rate-limit failure, so the main-push Actions result remains unverified.
+- [ ] **Full scripted production smoke after deployment.** Run `npm run smoke:production` against the exact production alias after main deploys the sitemap/indexing fix. The script checks route and article metadata, feeds, sitemap, manifest, redirects, content types, and security headers; a manual request sample is not equivalent to a successful script run.
 
 ### Next implementation queue
 
 1. [x] **Finish premium sidebar PR #77 and deploy.** Merged after typecheck/lint/build/output verification and desktop/mobile Playwright passed; exact merge SHA is deployed READY.
-2. [ ] **Fresh main CI and scripted smoke workflow.** Manual equivalent of all 25 route/feed/security-header checks passed against the exact deployed `main` SHA; still verify the GitHub main-push CI and run the actual scheduled smoke workflow end-to-end.
+2. [ ] **Fresh main CI and scripted smoke workflow.** The last documented manual 25-path smoke pass was for historical commit `06e068779775bf84d2c3e8c0cb63f2b26db2bbf7`, not the current deployment. The last confirmed production deployment is `63b1cad3cf4df373a6f3912c91622b861185bba9`, while `main` is `db429c81e04538c5783bdeb473f867801cc6a285` and has not deployed because Vercel hit its 100-deployments-per-24-hour limit. Verify fresh main-push CI and run the full scripted smoke after that exact main SHA reaches `READY`.
 3. [x] **Accessibility baseline PR #80 merged.** The 17-route, six-viewport semantic/responsive suite and shared navigation helpers passed typecheck/lint/build/output verification plus desktop and mobile Playwright on PR head `1a8be009eb44599750886d1cfc1479f97315ee40`; merge commit `06e068779775bf84d2c3e8c0cb63f2b26db2bbf7` is now on `main`.
 4. [ ] **Performance/accessibility follow-through.** Measure representative production routes and real-device Core Web Vitals, add automated WCAG scans and visual baselines, and tune budgets from stable measurements rather than arbitrary targets.
-5. [x] **Client-side metadata parity — PR #83 and static metadata prerender — PR #84.** Route-specific HTML now carries titles, descriptions, canonical/OG/Twitter metadata, robots directives, and article publication dates before JavaScript runs; the React page body remains client-rendered. [ ] **Sitemap/indexing follow-through:** ensure all public tool routes are listed and personalized browser-local routes are marked noindex and excluded from the sitemap.
-6. [ ] **Evidence privacy and collaboration architecture.** Test scoped deletion while preserving unrelated browser storage. Do not simulate cloud sync; require authentication/authorization, consent, retention/deletion, auditability, rate limits, and operational ownership before team features or GitHub integrations.
+5. [x] **SEO metadata prerender — PR #84.** Route-specific static HTML carries titles, descriptions, canonical/social metadata, robots directives, and article publication dates before JavaScript runs. [x] **Sitemap/indexing integrity — PR #89 merged.** Command Center is included, personalized Reading List is `noindex, follow` and excluded from the sitemap, and smoke/SEO/E2E checks cover the policy. Production confirmation remains pending until the latest main commit is deployed.
+6. [ ] **Evidence privacy and collaboration architecture.** Sidebar recent-history deletion is scoped and tested to preserve unrelated browser storage in PR #94. Extend the same deletion/privacy guarantees to evidence and report tools; do not simulate cloud sync, and require authentication/authorization, consent, retention/deletion, auditability, rate limits, and operational ownership before team features or GitHub integrations.
+
+### Navigation polish follow-up
+
+- [x] **Sidebar quick-find live feedback.** Announce matching destination counts through a polite live region, show the localized empty state only when no matches exist, and test both states on mobile.
+- [ ] **Sidebar recents and keyboard shortcut — PR #94 (this change).** Validate the bounded local-only history, slash-to-search shortcut, focus timing, live search counts, desktop mega-menu, tablet drawer styling, and preservation of unrelated browser storage before merge.
+
+### Deployment blocker to resolve
+
+- **Vercel preview/production deployment checks are returning `build-rate-limit`.** GitHub typecheck/build/E2E results are separate and must not be represented as a successful Vercel deployment. Re-check the project deployment quota, avoid creating redundant preview builds, and verify the exact main SHA reaches `READY` before declaring production complete.
 
 ### Required release sequence for every feature
 

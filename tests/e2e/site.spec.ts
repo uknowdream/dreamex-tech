@@ -1184,9 +1184,13 @@ test('mobile sidebar quick-find filters routes, announces empty results, and res
   await expect(drawer.locator('a[href="/api-playground"]')).toBeVisible()
   await expect(drawer.locator('a[href="/reliability-center"]')).toBeHidden()
   await expect(drawer.locator('.nav-search-empty')).toBeHidden()
+  await expect(drawer.locator('.nav-search-count')).toContainText(/destinations? found|tujuan ditemukan/i)
+  await expect(drawer.locator('.nav-search-count')).toBeVisible()
 
   await search.fill('this-destination-does-not-exist')
-  await expect(drawer.getByRole('status')).toContainText(/No destinations match|Tidak ada halaman yang cocok/i)
+  await expect(drawer.locator('.nav-search-empty')).toContainText(/No destinations match|Tidak ada halaman yang cocok/i)
+  await expect(drawer.locator('.nav-search-count')).toBeVisible()
+  await expect(drawer.locator('.nav-search-count')).toContainText(/0 destinations found|0 tujuan ditemukan/i)
   await expect(drawer.locator('a[href="/api-playground"]')).toBeHidden()
 
   await drawer.getByRole('button', { name: /Clear navigation search|Hapus pencarian navigasi/i }).click()
@@ -1224,4 +1228,100 @@ test('sidebar includes core engineering destinations and fits compact phone widt
   }))
   expect(overflow.document).toBeLessThanOrEqual(overflow.viewport)
   expect(overflow.drawer).toBeLessThanOrEqual(overflow.drawerClient)
+})
+
+test('mobile sidebar remembers recent engineering tools and opens them locally', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/api-playground')
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('dreamex.navigation.recent.v1') || '')).toContain('/api-playground')
+  await page.goto('/security-center')
+  await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
+
+  const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
+  const recent = drawer.getByRole('region', { name: /RECENTLY OPENED|BARU DIBUKA/i })
+  await expect(recent).toBeVisible()
+  const recentApi = recent.getByRole('link', { name: /Open recent tool API Playground|Buka tool terbaru API Playground/i })
+  await expect(recentApi).toBeVisible()
+  await recentApi.click()
+  await expect(page).toHaveURL(/api-playground$/)
+  await expect(page.getByRole('dialog', { name: /Navigation|Navigasi/i })).toHaveCount(0)
+})
+
+test('slash shortcut focuses sidebar quick-find and search hides recent destinations', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/security-center')
+  await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
+  const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
+  const search = drawer.getByRole('searchbox', { name: /QUICK FIND|CARI CEPAT/i })
+  await search.focus()
+  await page.keyboard.press('/')
+  await expect(search).toBeFocused()
+  await expect(search).toHaveValue('/')
+  await search.fill('')
+
+  await drawer.getByRole('button', { name: /Close navigation|Tutup navigasi/i }).focus()
+  await page.keyboard.press('/')
+  await expect(search).toBeFocused()
+  await expect(drawer.getByRole('region', { name: /RECENTLY OPENED|BARU DIBUKA/i })).toBeVisible()
+  await search.fill('API Playground')
+  await expect(drawer.getByRole('region', { name: /RECENTLY OPENED|BARU DIBUKA/i })).toBeHidden()
+  await expect(drawer.locator('a[href="/api-playground"]')).toBeVisible()
+  await expect(drawer.locator('.nav-search-empty')).toBeHidden()
+})
+
+
+test('clearing sidebar recents removes only its own local storage key', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/api-playground')
+  await page.evaluate(() => localStorage.setItem('dreamex.test.unrelated', 'preserve-me'))
+  await page.goto('/security-center')
+  await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
+
+  const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
+  const recent = drawer.getByRole('region', { name: /RECENTLY OPENED|BARU DIBUKA/i })
+  await expect(recent).toBeVisible()
+  await recent.getByRole('button', { name: /Clear recent tools|Hapus riwayat tools/i }).click()
+  await expect(drawer.getByRole('region', { name: /RECENTLY OPENED|BARU DIBUKA/i })).toHaveCount(0)
+
+  const stored = await page.evaluate(() => ({
+    recent: localStorage.getItem('dreamex.navigation.recent.v1'),
+    unrelated: localStorage.getItem('dreamex.test.unrelated'),
+  }))
+  expect(stored.recent).toBeNull()
+  expect(stored.unrelated).toBe('preserve-me')
+})
+
+
+test('desktop navigation keeps the mega-menu while mobile-only recents stay out of the desktop header', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/api-playground')
+  const navigation = page.getByRole('navigation', { name: /Main navigation|Navigasi utama/i })
+  await expect(navigation).toBeVisible()
+  await expect(navigation.locator('.nav-recent-tools')).toBeHidden()
+
+  const platform = navigation.locator('.nav-platform')
+  await platform.locator('summary').click()
+  await expect(platform).toHaveAttribute('open', '')
+  await expect(platform.locator('a[href="/api-playground"]')).toHaveAttribute('aria-current', 'page')
+})
+
+test('tablet drawer keeps recent tools and readable search-result feedback', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 800 })
+  await page.goto('/api-playground')
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('dreamex.navigation.recent.v1') || '')).toContain('/api-playground')
+  await page.goto('/security-center')
+  await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
+  const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
+  await expect(drawer.getByRole('region', { name: /RECENTLY OPENED|BARU DIBUKA/i })).toBeVisible()
+
+  const search = drawer.getByRole('searchbox', { name: /QUICK FIND|CARI CEPAT/i })
+  await search.fill('API Playground')
+  const count = drawer.locator('.nav-search-count')
+  await expect(count).toBeVisible()
+  const style = await count.evaluate(element => ({
+    fontSize: getComputedStyle(element).fontSize,
+    marginTop: getComputedStyle(element).marginTop,
+  }))
+  expect(style.fontSize).toBe('10px')
+  expect(style.marginTop).toBe('0px')
 })

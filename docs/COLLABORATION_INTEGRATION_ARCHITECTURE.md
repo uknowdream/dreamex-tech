@@ -1,5 +1,7 @@
 # DreamEx Tech — Collaboration & Integration Architecture Readiness
 
+> **Roadmap authority:** Product scope, priority, implementation status, and release gates are governed by [Platform Roadmap 2026–2027](./PLATFORM_ROADMAP_2026.md). This document is a subordinate architecture specification only; it is not a second roadmap.
+
 > **Status:** Proposed architecture for review; no cloud-sync or team-collaboration infrastructure is claimed to exist.
 >
 > **Decision:** Keep current tools local-first. Do not connect external accounts or upload browser data until the security, privacy, and operational gates below are approved and implemented.
