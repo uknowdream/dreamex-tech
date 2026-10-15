@@ -3306,3 +3306,46 @@ main, header, footer, section, .container {
     padding: 18px 14px max(16px, env(safe-area-inset-bottom)) !important;
   }
 }
+
+
+/* Definitive drawer fix: animated/sticky header must not establish a containing block for fixed nav. */
+@media (max-width: 1050px) {
+  html body .site-header.navigation-open {
+    animation: none !important;
+    transform: none !important;
+    translate: none !important;
+    rotate: none !important;
+    scale: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    perspective: none !important;
+    contain: none !important;
+    will-change: auto !important;
+    overflow: visible !important;
+    z-index: 2101 !important;
+  }
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] {
+    position: fixed !important;
+    top: max(76px, env(safe-area-inset-top)) !important;
+    right: max(12px, env(safe-area-inset-right)) !important;
+    bottom: max(12px, env(safe-area-inset-bottom)) !important;
+    left: auto !important;
+    width: min(460px, calc(100vw - 24px)) !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    transform: none !important;
+    animation: none !important;
+    z-index: 2102 !important;
+  }
+}
+@media (max-width: 640px) {
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] {
+    top: max(68px, env(safe-area-inset-top)) !important;
+    right: max(8px, env(safe-area-inset-right)) !important;
+    bottom: max(8px, env(safe-area-inset-bottom)) !important;
+    left: max(8px, env(safe-area-inset-left)) !important;
+    width: auto !important;
+  }
+}
