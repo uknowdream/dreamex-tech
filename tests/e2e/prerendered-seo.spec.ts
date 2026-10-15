@@ -23,3 +23,19 @@ test('article HTML includes article metadata and publication date before JavaScr
   expect(html).toContain('<meta property="article:published_time" content="2026-10-10" />')
   expect(html).toContain('content="Practical page-object patterns, resilient locators, data isolation, and strategies to reduce flaky tests."')
 })
+
+
+test('personalized reading list is excluded from indexing and sitemap discovery', async ({ page }) => {
+  const response = await page.request.get('/reading-list/')
+  expect(response.status()).toBe(200)
+  const html = await response.text()
+  expect(html).toContain('<title>Reading List — DreamEx Tech</title>')
+  expect(html).toContain('<meta name="robots" content="noindex, follow" />')
+  expect(html).toContain('<link rel="canonical" href="https://dreamex.tech/reading-list" />')
+
+  const sitemapResponse = await page.request.get('/sitemap.xml')
+  expect(sitemapResponse.status()).toBe(200)
+  const sitemap = await sitemapResponse.text()
+  expect(sitemap).toContain('<loc>https://dreamex.tech/command-center</loc>')
+  expect(sitemap).not.toContain('<loc>https://dreamex.tech/reading-list</loc>')
+})
