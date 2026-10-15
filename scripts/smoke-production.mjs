@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+
 const baseUrl = new URL(process.env.SMOKE_BASE_URL || 'https://www.dreamex.tech')
 if (baseUrl.protocol !== 'https:' && process.env.ALLOW_INSECURE_SMOKE !== '1') {
   throw new Error('Production smoke checks require HTTPS. Set ALLOW_INSECURE_SMOKE=1 only for local test environments.')
@@ -10,6 +12,7 @@ const checks = [
   { path: '/', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/api-playground', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/qa-studio', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/quality-intelligence', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/supply-chain-intelligence', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/security-center', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/control-plane', type: 'html', markers: ['id="root"', '<div'] },
@@ -33,6 +36,60 @@ const checks = [
   { path: '/rss', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/sitemap.xml', type: 'xml', markers: ['<urlset', '<url'] },
 ]
+
+const appSource = readFileSync(new URL('../src/App.tsx', import.meta.url), 'utf8')
+const articleSource = readFileSync(new URL('../src/articles.ts', import.meta.url), 'utf8')
+const translationSource = readFileSync(new URL('../src/articleTranslations.ts', import.meta.url), 'utf8')
+const escapeHtml = value => String(value)
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#39;')
+
+const routeMetadata = [...appSource.matchAll(/^\s*'([^']+)': \{ en: \{ title: '([^']+)', description: '([^']+)' \}, id: \{ title: '([^']+)', description: '([^']+)' \} \},?$/gm)]
+  .map(match => ({ path: match[1], title: match[2], description: match[3] }))
+const missingRouteChecks = routeMetadata.filter(metadata => metadata.path !== '/blog/:slug' && !checks.some(item => item.path === metadata.path && item.type === 'html'))
+if (missingRouteChecks.length) throw new Error('Production smoke route inventory is missing static metadata checks: ' + missingRouteChecks.map(item => item.path).join(', '))
+for (const metadata of routeMetadata) {
+  const check = checks.find(item => item.path === metadata.path && item.type === 'html')
+  if (!check) continue
+  const canonical = 'https://dreamex.tech' + (metadata.path === '/' ? '/' : metadata.path)
+  check.markers.push(
+    '<title>' + escapeHtml(metadata.title) + '</title>',
+    '<meta property="og:url" content="' + canonical + '" />',
+    '<link rel="canonical" href="' + canonical + '" />',
+  )
+}
+
+const translations = new Map([...translationSource.matchAll(/^\s*'([^']+)':\s*\{\s*title:\s*'([^']*)',\s*excerpt:\s*'([^']*)'/gm)]
+  .map(match => [match[1], { title: match[2], description: match[3] }]))
+const articleObjects = [...articleSource.matchAll(/\{\s*slug:\s*'([^']+)'([\s\S]*?)\s*\},?/g)]
+function articleField(body, field) {
+  return body.match(new RegExp("(?:^|[,\\n]\\s*)" + field + ":\\s*'([^']*)'"))?.[1]
+}
+for (const match of articleObjects) {
+  const slug = match[1]
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) continue
+  const translated = translations.get(slug)
+  const date = articleField(match[2], 'date')
+  if (!translated?.title || !translated.description || !date) continue
+  const pathname = '/blog/' + slug
+  const canonical = 'https://dreamex.tech' + pathname
+  checks.push({
+    path: pathname,
+    type: 'html',
+    markers: [
+      'id="root"',
+      '<title>' + escapeHtml(translated.title + ' — DreamEx Tech') + '</title>',
+      '<meta name="description" content="' + escapeHtml(translated.description) + '" />',
+      '<meta property="og:url" content="' + canonical + '" />',
+      '<link rel="canonical" href="' + canonical + '" />',
+      '<meta property="og:type" content="article" />',
+      '<meta property="article:published_time" content="' + date + '" />',
+    ],
+  })
+}
 
 const requiredSecurityHeaders = [
   ['strict-transport-security', /max-age=31536000/i],
