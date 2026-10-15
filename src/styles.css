@@ -3045,6 +3045,7 @@ main, header, footer, section, .container {
 }
 .nav-recent-tools {
   display: grid;
+  width: 100%;
   gap: 8px;
   margin: 0 0 7px;
   padding: 11px;
@@ -3086,7 +3087,9 @@ main, header, footer, section, .container {
   border-radius: 9px;
   background: #ffffff03;
   color: #dce6f6;
+  font: inherit;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   transition: border-color .16s ease, background .16s ease, transform .16s ease;
 }
