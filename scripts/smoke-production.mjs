@@ -12,6 +12,7 @@ const checks = [
   { path: '/', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/api-playground', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/qa-studio', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/quality-intelligence', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/supply-chain-intelligence', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/security-center', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/control-plane', type: 'html', markers: ['id="root"', '<div'] },
@@ -48,6 +49,8 @@ const escapeHtml = value => String(value)
 
 const routeMetadata = [...appSource.matchAll(/^\s*'([^']+)': \{ en: \{ title: '([^']+)', description: '([^']+)' \}, id: \{ title: '([^']+)', description: '([^']+)' \} \},?$/gm)]
   .map(match => ({ path: match[1], title: match[2], description: match[3] }))
+const missingRouteChecks = routeMetadata.filter(metadata => metadata.path !== '/blog/:slug' && !checks.some(item => item.path === metadata.path && item.type === 'html'))
+if (missingRouteChecks.length) throw new Error('Production smoke route inventory is missing static metadata checks: ' + missingRouteChecks.map(item => item.path).join(', '))
 for (const metadata of routeMetadata) {
   const check = checks.find(item => item.path === metadata.path && item.type === 'html')
   if (!check) continue
