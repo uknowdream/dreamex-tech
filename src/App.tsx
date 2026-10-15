@@ -490,11 +490,16 @@ function Home() {
   }, [])
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
-      if (event.key === '/' && !(event.target instanceof HTMLInputElement) && !(event.target instanceof HTMLTextAreaElement)) {
+      // The navigation drawer owns "/" while open; do not steal focus back to article search.
+      if (event.defaultPrevented) return
+      const target = event.target
+      const isEditing = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement || (target instanceof HTMLElement && target.isContentEditable)
+      if (event.key === '/' && !isEditing) {
         event.preventDefault()
         searchInput.current?.focus()
       }
-      if (event.key === 'Escape') searchInput.current?.blur()
+      if (event.key === 'Escape' && target instanceof HTMLInputElement && target === searchInput.current) searchInput.current?.blur()
     }
     window.addEventListener('keydown', handleShortcut)
     return () => window.removeEventListener('keydown', handleShortcut)
