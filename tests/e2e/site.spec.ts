@@ -1240,7 +1240,7 @@ test('mobile sidebar remembers recent engineering tools and opens them locally',
   const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
   const recent = drawer.getByRole('region', { name: /RECENTLY OPENED|BARU DIBUKA/i })
   await expect(recent).toBeVisible()
-  const recentApi = recent.getByRole('button', { name: /Open recent tool API Playground|Buka tool terbaru API Playground/i })
+  const recentApi = recent.getByRole('link', { name: /Open recent tool API Playground|Buka tool terbaru API Playground/i })
   await expect(recentApi).toBeVisible()
   await recentApi.click()
   await expect(page).toHaveURL(/api-playground$/)
