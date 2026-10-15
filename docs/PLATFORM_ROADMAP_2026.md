@@ -256,7 +256,7 @@ The repository currently contains a technology publication and browser-first eng
 ### Navigation polish follow-up
 
 - [x] **Sidebar quick-find live feedback.** Announce matching destination counts through a polite live region, show the localized empty state only when no matches exist, and test both states on mobile.
-- [ ] **Sidebar recents and keyboard shortcut — PR #90.** Validate the bounded local-only history, slash-to-search shortcut, storage-failure fallback, and preservation of unrelated browser storage before merge.
+- [ ] **Sidebar recents and keyboard shortcut — PR #94.** Validate the bounded local-only history, slash-to-search shortcut, storage-failure fallback, and preservation of unrelated browser storage before merge.
 
 ### Deployment blocker to resolve
 
