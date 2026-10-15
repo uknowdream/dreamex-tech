@@ -102,6 +102,8 @@ for (const entry of routeSeo) {
   if (writeRoute(entry.path, renderMetadata(entry.page, canonical))) staticPages += 1
 }
 
+const articleTranslations = new Map([...translationsSource.matchAll(/^\s*'([^']+)':\s*\{\s*title:\s*'([^']*)',\s*excerpt:\s*'([^']*)'/gm)].map(match => [match[1], { title: match[2], description: match[3] }]))
+
 function readField(body, field) {
   const match = body.match(new RegExp("(?:^|[,\\n]\\s*)" + field + ":\\s*'([^']*)'"))
   return match?.[1]?.replaceAll("\\\\'", "'").replaceAll('\\\\\\\\', '\\\\')
@@ -132,9 +134,14 @@ for (const article of articles) {
     errors.push('Article metadata is incomplete: ' + article.slug)
     continue
   }
+  const translated = articleTranslations.get(article.slug)
+  if (!translated?.title || !translated.description) {
+    errors.push('Missing English article metadata: ' + article.slug)
+    continue
+  }
   const pathname = '/blog/' + article.slug
   const canonical = 'https://dreamex.tech' + pathname
-  if (writeRoute(pathname, renderMetadata({ title: article.title + ' — DreamEx Tech', description: article.description }, canonical, 'article', article.date))) articlePages += 1
+  if (writeRoute(pathname, renderMetadata({ title: translated.title + ' — DreamEx Tech', description: translated.description }, canonical, 'article', article.date))) articlePages += 1
 }
 
 if (errors.length) {
