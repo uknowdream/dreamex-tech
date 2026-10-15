@@ -1281,3 +1281,37 @@ test('clearing sidebar recents removes only its own local storage key', async ({
   expect(stored.recent).toBeNull()
   expect(stored.unrelated).toBe('preserve-me')
 })
+
+
+test('desktop navigation keeps the mega-menu while mobile-only recents stay out of the desktop header', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/api-playground')
+  const navigation = page.getByRole('navigation', { name: /Main navigation|Navigasi utama/i })
+  await expect(navigation).toBeVisible()
+  await expect(navigation.locator('.nav-recent-tools')).toBeHidden()
+
+  const platform = navigation.locator('.nav-platform')
+  await platform.locator('summary').click()
+  await expect(platform).toHaveAttribute('open', '')
+  await expect(platform.locator('a[href="/api-playground"]')).toHaveAttribute('aria-current', 'page')
+})
+
+test('tablet drawer keeps recent tools and readable search-result feedback', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 800 })
+  await page.goto('/api-playground')
+  await page.goto('/security-center')
+  await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
+  const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
+  await expect(drawer.getByRole('region', { name: /RECENTLY OPENED|BARU DIBUKA/i })).toBeVisible()
+
+  const search = drawer.getByRole('searchbox', { name: /QUICK FIND|CARI CEPAT/i })
+  await search.fill('API Playground')
+  const count = drawer.locator('.nav-search-count')
+  await expect(count).toBeVisible()
+  const style = await count.evaluate(element => ({
+    fontSize: getComputedStyle(element).fontSize,
+    marginTop: getComputedStyle(element).marginTop,
+  }))
+  expect(style.fontSize).toBe('10px')
+  expect(style.marginTop).toBe('0px')
+})
