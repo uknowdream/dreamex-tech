@@ -104,3 +104,117 @@ footer{border-top-color:rgba(127,151,190,.16)}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+
+/* Navigation drawer v2: enforce the same balanced panel across desktop-mode mobile browsers. */
+.nav-links.nav-open[role="dialog"] {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+@media (max-width: 1050px) {
+  .nav-links.nav-open[role="dialog"] {
+    position: fixed;
+    inset: max(66px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)) auto;
+    width: min(560px, calc(100vw - 24px));
+    height: auto;
+    min-height: 0;
+    max-height: calc(100dvh - 90px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 20px 16px max(16px, env(safe-area-inset-bottom));
+    border: 1px solid rgba(130,155,197,.28);
+    border-radius: 20px;
+    background:
+      radial-gradient(ellipse at 100% 0%, rgba(131,213,255,.09), transparent 42%),
+      linear-gradient(155deg, rgba(13,23,40,.99), rgba(6,11,20,.995));
+    box-shadow: 0 24px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.025);
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+    z-index: 1200;
+  }
+  .nav-links.nav-open[role="dialog"] .nav-drawer-head {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0 0 12px;
+    padding: 0 0 16px;
+    border-bottom: 1px solid rgba(255,255,255,.09);
+  }
+  .nav-links.nav-open[role="dialog"] .nav-drawer-head strong {
+    font-size: clamp(22px, 4vw, 27px);
+    line-height: 1.15;
+    letter-spacing: -.04em;
+  }
+  .nav-links.nav-open[role="dialog"] .nav-drawer-search {
+    display: grid;
+    flex: 0 0 auto;
+    gap: 9px;
+    margin: 0 0 6px;
+    padding: 0 0 8px;
+  }
+  .nav-links.nav-open[role="dialog"] .nav-drawer-search-control {
+    min-height: 48px;
+    border-radius: 12px;
+  }
+  .nav-links.nav-open[role="dialog"] .nav-drawer-search-control input {
+    min-height: 46px;
+    font-size: 14px;
+  }
+  .nav-links.nav-open[role="dialog"] > a,
+  .nav-links.nav-open[role="dialog"] .nav-platform > summary {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 58px;
+    padding: 10px 12px;
+    gap: 12px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    font-size: 14px;
+  }
+  .nav-links.nav-open[role="dialog"] > a b,
+  .nav-links.nav-open[role="dialog"] .nav-platform > summary b {
+    font-size: 14px;
+    line-height: 1.3;
+  }
+  .nav-links.nav-open[role="dialog"] > a small,
+  .nav-links.nav-open[role="dialog"] .nav-platform > summary small {
+    display: block;
+    margin-top: 3px;
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  .nav-links.nav-open[role="dialog"] .nav-link-icon {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border-radius: 11px;
+  }
+  .nav-links.nav-open[role="dialog"] .nav-drawer-footer {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+    padding: 14px 3px 3px;
+    border-top: 1px solid rgba(255,255,255,.1);
+  }
+}
+@media (max-width: 380px) {
+  .nav-links.nav-open[role="dialog"] {
+    inset: max(66px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom)) 8px;
+    width: auto;
+    max-height: calc(100dvh - 82px);
+    padding: 16px 12px max(12px, env(safe-area-inset-bottom));
+    border-radius: 16px;
+  }
+}
