@@ -250,7 +250,9 @@ function Header() {
       const input = navRef.current?.querySelector<HTMLInputElement>('#nav-drawer-search-input')
       if (!input) return
       event.preventDefault()
-      input.focus()
+      window.requestAnimationFrame(() => {
+        if (menuOpenRef.current && navRef.current?.classList.contains('nav-open')) input.focus()
+      })
     }
     document.addEventListener('keydown', handleQuickFindShortcut)
     return () => document.removeEventListener('keydown', handleQuickFindShortcut)
