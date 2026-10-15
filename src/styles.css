@@ -3159,3 +3159,34 @@ main, header, footer, section, .container {
   }
   .nav-search-count[hidden] { display: none !important; }
 }
+
+
+/* Mobile navigation polish: enforce a usable drawer width and improve scanability. */
+@media (max-width: 480px) {
+  .nav-links.nav-open,
+  .nav-links {
+    width: min(440px, 100vw) !important;
+    max-width: 100vw !important;
+    padding-left: max(18px, env(safe-area-inset-left));
+    padding-right: max(18px, env(safe-area-inset-right));
+  }
+  .nav-drawer-head { margin-bottom: 14px; padding-bottom: 16px; }
+  .nav-drawer-head strong { font-size: 23px; letter-spacing: -.045em; }
+  .nav-drawer-eyebrow { font-size: 10px; letter-spacing: .12em; }
+  .nav-drawer-search { gap: 9px; padding-bottom: 10px; }
+  .nav-drawer-search > label { font-size: 10px; }
+  .nav-drawer-search-control { min-height: 48px; padding-inline: 13px; border-radius: 12px; }
+  .nav-drawer-search-control input { min-height: 46px; font-size: 14px; }
+  .nav-links > a { min-height: 62px; gap: 12px; padding: 11px 12px; border-radius: 12px; }
+  .nav-links > a b, .nav-platform > summary b { font-size: 13px; }
+  .nav-links > a small, .nav-platform > summary small { font-size: 11px; line-height: 1.55; }
+  .nav-link-icon { width: 34px; height: 34px; flex-basis: 34px; border-radius: 9px; }
+  .nav-platform > summary { grid-template-columns: 34px minmax(0,1fr) 18px; min-height: 62px; gap: 12px; padding: 11px 12px; }
+  .nav-recent-tools { padding: 12px; gap: 9px; }
+  .nav-recent-heading { font-size: 10px; }
+  .nav-recent-link { min-height: 54px; padding: 9px 10px; }
+  .nav-recent-copy b { font-size: 12px; }
+  .nav-recent-copy small { font-size: 10px; }
+  .nav-search-count { font-size: 11px; }
+  .nav-drawer-footer { padding-top: 16px; }
+}
