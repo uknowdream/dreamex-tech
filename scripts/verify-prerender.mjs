@@ -21,7 +21,7 @@ function escapeHtml(value) {
 
 function extractMeta(html, attribute, key) {
   const escapedKey = key.replace(/[.*+?^$()|[\]\\]/g, '\\$&')
-  const pattern = new RegExp('<meta\\b(?=[^>]*\\b' + attribute + '\\s*=\\s*["\\']' + escapedKey + '["\\'])[^>]*\\bcontent\\s*=\\s*(["'])(.*?)\\1', 'i')
+  const pattern = new RegExp("<meta\\b(?=[^>]*\\b" + attribute + "\\s*=\\s*[\"']" + escapedKey + "[\"'])[^>]*\\bcontent\\s*=\\s*([\"'])(.*?)\\1", 'i')
   return html.match(pattern)?.[2] ?? null
 }
 
