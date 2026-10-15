@@ -60,6 +60,7 @@ for (const metadata of routeMetadata) {
     '<meta property="og:url" content="' + canonical + '" />',
     '<link rel="canonical" href="' + canonical + '" />',
   )
+  if (metadata.path === '/reading-list') check.markers.push('<meta name="robots" content="noindex, follow" />')
 }
 
 const translations = new Map([...translationSource.matchAll(/^\s*'([^']+)':\s*\{\s*title:\s*'([^']*)',\s*excerpt:\s*'([^']*)'/gm)]
