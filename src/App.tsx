@@ -246,7 +246,9 @@ function Header() {
       const target = event.target
       if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement ||
         (target instanceof HTMLElement && target.isContentEditable)) return
-      const input = navRef.current?.querySelector<HTMLInputElement>('#nav-drawer-search-input')
+      const nav = navRef.current
+      if (!nav?.classList.contains('nav-open')) return
+      const input = nav.querySelector<HTMLInputElement>('#nav-drawer-search-input')
       if (!input) return
       event.preventDefault()
       // Claim the shortcut before window-level palettes or article search can steal focus.
