@@ -156,7 +156,6 @@ function Header() {
     } catch { return [] }
   })
   const location = useLocation()
-  const navigate = useNavigate()
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const navRef = useRef<HTMLElement>(null)
   const menuOpenRef = useRef(false)
@@ -341,11 +340,11 @@ function Header() {
                 const destination = NAV_DESTINATIONS[path]
                 if (!destination) return null
                 const label = language === 'en' ? destination.en : destination.id
-                return <button type="button" className="nav-recent-link" key={path} aria-label={language === 'en' ? `Open recent tool ${label}` : `Buka tool terbaru ${label}`} onClick={() => { setNavQuery(''); setDrawerOpen(false); navigate(path) }}>
+                return <Link to={path} className="nav-recent-link" key={path} aria-label={language === 'en' ? `Open recent tool ${label}` : `Buka tool terbaru ${label}`} onClick={() => { setNavQuery(''); closeDrawer() }}>
                   <span className="nav-recent-icon"><Clock3 size={14}/></span>
                   <span className="nav-recent-copy"><b>{label}</b><small>{language === 'en' ? destination.descriptionEn : destination.descriptionId}</small></span>
                   <ArrowRight size={14} className="nav-recent-arrow" aria-hidden="true"/>
-                </button>
+                </Link>
               })}
             </div>
           </section>}
