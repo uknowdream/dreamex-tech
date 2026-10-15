@@ -1253,6 +1253,13 @@ test('slash shortcut focuses sidebar quick-find and search hides recent destinat
   await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
   const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
   const search = drawer.getByRole('searchbox', { name: /QUICK FIND|CARI CEPAT/i })
+  await search.focus()
+  await page.keyboard.press('/')
+  await expect(search).toBeFocused()
+  await expect(search).toHaveValue('/')
+  await search.fill('')
+
+  await drawer.getByRole('button', { name: /Close navigation|Tutup navigasi/i }).focus()
   await page.keyboard.press('/')
   await expect(search).toBeFocused()
   await expect(drawer.getByRole('region', { name: /RECENTLY OPENED|BARU DIBUKA/i })).toBeVisible()
@@ -1260,10 +1267,6 @@ test('slash shortcut focuses sidebar quick-find and search hides recent destinat
   await expect(drawer.getByRole('region', { name: /RECENTLY OPENED|BARU DIBUKA/i })).toBeHidden()
   await expect(drawer.locator('a[href="/api-playground"]')).toBeVisible()
   await expect(drawer.locator('.nav-search-empty')).toBeHidden()
-
-  await search.fill('')
-  await page.keyboard.press('/')
-  await expect(search).toHaveValue('/')
 })
 
 
