@@ -198,7 +198,7 @@ function Header() {
         return
       }
       if (event.key !== 'Tab') return
-      const focusables = Array.from(navRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), summary, [tabindex]:not([tabindex="-1"])') ?? [])
+      const focusables = Array.from(navRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])') ?? [])
         .filter(element => element.getClientRects().length > 0)
       if (!focusables.length) {
         event.preventDefault()
