@@ -1165,3 +1165,59 @@ test('desktop platform menu closes on Escape and restores focus to its trigger',
   await expect(page.locator('.nav-platform')).not.toHaveAttribute('open', '')
   await expect(summary).toBeFocused()
 })
+
+
+test('mobile sidebar quick-find filters routes, announces empty results, and restores the full menu', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
+  const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
+  await expect(drawer).toBeVisible()
+
+  const search = drawer.getByRole('searchbox', { name: /QUICK FIND|CARI CEPAT/i })
+  await expect(search).toBeVisible()
+  await search.fill('API Playground')
+  await expect(drawer.locator('a[href="/api-playground"]')).toBeVisible()
+  await expect(drawer.locator('a[href="/reliability-center"]')).toBeHidden()
+  await expect(drawer.locator('.nav-search-empty')).toBeHidden()
+
+  await search.fill('this-destination-does-not-exist')
+  await expect(drawer.getByRole('status')).toContainText(/No destinations match|Tidak ada halaman yang cocok/i)
+  await expect(drawer.locator('a[href="/api-playground"]')).toBeHidden()
+
+  await drawer.getByRole('button', { name: /Clear navigation search|Hapus pencarian navigasi/i }).click()
+  await expect(search).toBeFocused()
+  await expect(drawer.locator('a[href="/api-playground"]')).toBeVisible()
+  await expect(drawer.locator('a[href="/reliability-center"]')).toBeVisible()
+
+  await search.fill('Knowledge Graph')
+  await drawer.locator('a[href="/knowledge-graph"]').click()
+  await expect(page).toHaveURL(/knowledge-graph$/)
+  await expect(page.getByRole('dialog', { name: /Navigation|Navigasi/i })).toHaveCount(0)
+})
+
+test('sidebar includes core engineering destinations and fits compact phone widths', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 740 })
+  await page.goto('/')
+  await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
+  const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
+  await expect(drawer).toBeVisible()
+  const search = drawer.getByRole('searchbox', { name: /QUICK FIND|CARI CEPAT/i })
+  for (const [term, route] of [
+    ['Engineering Intelligence', '/engineering-intelligence'],
+    ['Performance Observatory', '/performance'],
+    ['Developer Utilities', '/devtools'],
+    ['Web Quality Observatory', '/observatory'],
+  ]) {
+    await search.fill(term)
+    await expect(drawer.locator(`a[href="${route}"]`)).toBeVisible()
+  }
+  const overflow = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    document: document.documentElement.scrollWidth,
+    drawer: document.querySelector<HTMLElement>('.nav-links')?.scrollWidth ?? 0,
+    drawerClient: document.querySelector<HTMLElement>('.nav-links')?.clientWidth ?? 0,
+  }))
+  expect(overflow.document).toBeLessThanOrEqual(overflow.viewport)
+  expect(overflow.drawer).toBeLessThanOrEqual(overflow.drawerClient)
+})

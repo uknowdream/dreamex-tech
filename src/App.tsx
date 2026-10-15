@@ -123,10 +123,49 @@ function InstallAppButton() {
 function Header() {
   const { language, setLanguage, t } = useLanguage()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [navQuery, setNavQuery] = useState('')
   const location = useLocation()
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const navRef = useRef<HTMLElement>(null)
   const previousPathRef = useRef(location.pathname)
+
+  useEffect(() => {
+    const nav = navRef.current
+    if (!nav) return
+    const query = menuOpen ? navQuery.trim().toLocaleLowerCase() : ''
+    const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('a[href]'))
+    const platform = nav.querySelector<HTMLDetailsElement>('.nav-platform')
+    const summary = platform?.querySelector<HTMLElement>('summary')
+    const intro = platform?.querySelector<HTMLElement>('.nav-mega-intro')
+    const groups = Array.from(nav.querySelectorAll<HTMLElement>('.nav-mega-group'))
+    const empty = nav.querySelector<HTMLElement>('.nav-search-empty')
+
+    if (!query) {
+      links.forEach(link => { link.hidden = false })
+      groups.forEach(group => { group.hidden = false })
+      if (intro) intro.hidden = false
+      if (summary) summary.hidden = false
+      if (platform) platform.hidden = false
+      if (empty) empty.hidden = true
+      if (!menuOpen) setNavQuery('')
+      return
+    }
+
+    links.forEach(link => { link.hidden = !link.textContent?.toLocaleLowerCase().includes(query) })
+    groups.forEach(group => {
+      group.hidden = !Array.from(group.querySelectorAll<HTMLAnchorElement>('a[href]')).some(link => !link.hidden)
+    })
+    if (intro) intro.hidden = !intro.textContent?.toLocaleLowerCase().includes(query)
+    if (summary) summary.hidden = !summary.textContent?.toLocaleLowerCase().includes(query)
+    if (platform) {
+      const platformHasMatches = Boolean(platform.querySelector('.nav-mega-intro:not([hidden])')) ||
+        Boolean(platform.querySelector('.nav-mega-group:not([hidden])'))
+      platform.hidden = !platformHasMatches
+      if (platformHasMatches) platform.open = true
+    }
+    const visibleLinks = links.filter(link => !link.hidden).length
+    if (empty) empty.hidden = visibleLinks > 0
+  }, [menuOpen, navQuery, language])
 
   useEffect(() => {
     if (previousPathRef.current === location.pathname) return
@@ -211,6 +250,15 @@ function Header() {
             <div><span className="nav-drawer-eyebrow">{language === 'en' ? 'DREAMEX ENGINEERING SUITE' : 'DREAMEX ENGINEERING SUITE'}</span><strong id="mobile-navigation-title">{language === 'en' ? 'Navigation' : 'Navigasi'}</strong></div>
             <button className="nav-drawer-close" type="button" data-drawer-close onClick={closeDrawer} aria-label={language === 'en' ? 'Close navigation' : 'Tutup navigasi'}><X size={18}/></button>
           </div>
+          <div className="nav-drawer-search">
+            <label htmlFor="nav-drawer-search-input">{language === 'en' ? 'QUICK FIND' : 'CARI CEPAT'}</label>
+            <div className="nav-drawer-search-control">
+              <Search size={16} aria-hidden="true" />
+              <input id="nav-drawer-search-input" type="search" value={navQuery} onChange={event => setNavQuery(event.target.value)} placeholder={language === 'en' ? 'Find a tool or destination…' : 'Cari tools atau halaman…'} autoComplete="off" spellCheck={false} />
+              {navQuery && <button type="button" onClick={() => { setNavQuery(''); navRef.current?.querySelector<HTMLInputElement>('#nav-drawer-search-input')?.focus() }} aria-label={language === 'en' ? 'Clear navigation search' : 'Hapus pencarian navigasi'}><X size={15}/></button>}
+            </div>
+            <p className="nav-search-empty" role="status" hidden>{language === 'en' ? 'No destinations match this search. Try another keyword.' : 'Tidak ada halaman yang cocok. Coba kata kunci lain.'}</p>
+          </div>
           <NavLink to="/" end onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><HomeIcon size={16}/></span><span><b>{language === 'en' ? 'Journal' : 'Jurnal'}</b><small>{language === 'en' ? 'Articles, ideas and guides' : 'Artikel, ide, dan panduan'}</small></span></NavLink>
           <details className="nav-platform">
             <summary><span className="nav-link-icon"><Layers3 size={16}/></span><span><b>{language === 'en' ? 'Engineering platform' : 'Platform engineering'}</b><small>{language === 'en' ? 'Explore all engineering tools' : 'Jelajahi semua tools engineering'}</small></span><ChevronDown size={15} className="nav-chevron" /></summary>
@@ -224,6 +272,7 @@ function Header() {
               <div className="nav-mega-group">
                 <span className="nav-group-label">{language === 'en' ? 'PLAN & OPERATE' : 'RENCANAKAN & KELOLA'}</span>
                 <NavLink to="/control-plane" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Activity size={15}/></span><span><b>Control Plane</b><small>{language === 'en' ? 'Release readiness & operations' : 'Kesiapan rilis dan operasi'}</small></span></NavLink>
+                <NavLink to="/engineering-intelligence" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Activity size={15}/></span><span><b>Engineering Intelligence</b><small>{language === 'en' ? 'Cross-tool quality insights' : 'Insight kualitas lintas tools'}</small></span></NavLink>
                 <NavLink to="/command-center" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><ClipboardList size={15}/></span><span><b>Command Center</b><small>{language === 'en' ? 'Tasks, incidents & decisions' : 'Tugas, insiden, dan keputusan'}</small></span></NavLink>
                 <NavLink to="/roadmap" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><ArrowDownRight size={15}/></span><span><b>{language === 'en' ? 'Product Roadmap' : 'Roadmap Produk'}</b><small>{language === 'en' ? 'Priorities and milestones' : 'Prioritas dan pencapaian'}</small></span></NavLink>
               </div>
@@ -232,6 +281,9 @@ function Header() {
                 <NavLink to="/lab" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Terminal size={15}/></span><span><b>Engineering Lab</b><small>{language === 'en' ? 'Practical QA tools' : 'Perangkat QA praktis'}</small></span></NavLink>
                 <NavLink to="/quality-intelligence" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><ShieldCheck size={15}/></span><span><b>Quality Intelligence</b><small>{language === 'en' ? 'Test reports & failure signals' : 'Laporan tes dan sinyal kegagalan'}</small></span></NavLink>
                 <NavLink to="/reliability-center" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Gauge size={15}/></span><span><b>{language === 'en' ? 'Reliability & Incidents' : 'Reliability & Insiden'}</b><small>{language === 'en' ? 'Incident timelines & delivery metrics' : 'Timeline insiden dan metrik delivery'}</small></span></NavLink>
+                <NavLink to="/performance" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Gauge size={15}/></span><span><b>Performance Observatory</b><small>{language === 'en' ? 'Performance and asset budgets' : 'Performa dan budget aset'}</small></span></NavLink>
+                <NavLink to="/knowledge-graph" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Network size={15}/></span><span><b>Knowledge Graph</b><small>{language === 'en' ? 'Explore platform relationships' : 'Jelajahi relasi platform'}</small></span></NavLink>
+                <NavLink to="/devtools" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Terminal size={15}/></span><span><b>Developer Utilities</b><small>{language === 'en' ? 'Everyday developer helpers' : 'Tools bantu developer'}</small></span></NavLink>
                 <NavLink to="/api-playground" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Braces size={15}/></span><span><b>API Playground</b><small>{language === 'en' ? 'Inspect API contracts' : 'Periksa kontrak API'}</small></span></NavLink>
                 <NavLink to="/qa-studio" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><CheckCircle2 size={15}/></span><span><b>QA Automation Studio</b><small>{language === 'en' ? 'Build and review test plans' : 'Bangun dan tinjau rencana tes'}</small></span></NavLink>
               </div>
@@ -239,6 +291,7 @@ function Header() {
                 <span className="nav-group-label">{language === 'en' ? 'SECURE & LEARN' : 'AMANKAN & PELAJARI'}</span>
                 <NavLink to="/security-center" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><ShieldCheck size={15}/></span><span><b>{language === 'en' ? 'Security Center' : 'Pusat Keamanan'}</b><small>{language === 'en' ? 'Privacy and secure practices' : 'Privasi dan praktik aman'}</small></span></NavLink>
                 <NavLink to="/supply-chain-intelligence" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Network size={15}/></span><span><b>Supply Chain</b><small>{language === 'en' ? 'SBOM inventory insights' : 'Insight inventaris SBOM'}</small></span></NavLink>
+                <NavLink to="/observatory" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Activity size={15}/></span><span><b>Web Quality Observatory</b><small>{language === 'en' ? 'Explore web quality signals' : 'Pantau sinyal kualitas web'}</small></span></NavLink>
                 <NavLink to="/learn" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><BookOpen size={15}/></span><span><b>{language === 'en' ? 'Learning Hub' : 'Pusat Belajar'}</b><small>{language === 'en' ? 'Structured learning paths' : 'Jalur belajar terstruktur'}</small></span></NavLink>
               </div>
             </div>
