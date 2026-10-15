@@ -250,7 +250,10 @@ function Header() {
       if (!input) return
       event.preventDefault()
       window.requestAnimationFrame(() => {
-        if (menuOpenRef.current && navRef.current?.classList.contains('nav-open')) input.focus()
+        if (menuOpenRef.current && navRef.current?.classList.contains('nav-open')) {
+          input.focus({ preventScroll: true })
+          if (document.activeElement !== input) input.focus()
+        }
       })
     }
     document.addEventListener('keydown', handleQuickFindShortcut)
