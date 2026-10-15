@@ -57,6 +57,19 @@ if (origin) {
 
 const routeDeclarations = [...app.matchAll(/<Route\b[^>]*\bpath=["']([^"']+)["']/g)].map(match => match[1])
 const routePatterns = routeDeclarations.filter(route => route !== '*')
+const routeSeoEntries = [...app.matchAll(/^\s*'([^']+)': \{ en: \{ title: '([^']+)', description: '([^']+)' \}, id: \{ title: '([^']+)', description: '([^']+)' \} \},?$/gm)]
+const routeSeoPaths = new Set(routeSeoEntries.map(match => match[1]))
+if (!app.includes('function RouteMetadata()') || !app.includes("upsertMeta('og:url'")) errors.push('Route-specific metadata controller is missing')
+for (const route of routePatterns) {
+  if (route === '/blog/:slug' || route.includes(':')) continue
+  if (!routeSeoPaths.has(route)) errors.push('Route is missing bilingual SEO metadata: ' + route)
+}
+for (const [, route, enTitle, enDescription, idTitle, idDescription] of routeSeoEntries) {
+  for (const [language, title, description] of [['English', enTitle, enDescription], ['Indonesian', idTitle, idDescription]]) {
+    if (title.length < 10 || title.length > 70) errors.push(route + ' ' + language + ' SEO title must be 10–70 characters.')
+    if (description.length < 50 || description.length > 180) errors.push(route + ' ' + language + ' meta description must be 50–180 characters.')
+  }
+}
 const articleSlugs = new Set([...articlesSource.matchAll(/slug:\s*'([^']+)'/g)].map(match => match[1]))
 const sitemapLocations = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1])
 if (!sitemapLocations.length) errors.push('Sitemap has no URL entries.')
