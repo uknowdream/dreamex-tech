@@ -382,3 +382,74 @@
     border-radius: 16px;
   }
 }
+
+
+/* Emergency hardening: the open navigation must never collapse into a thin header strip. */
+html body .site-header .nav-links.nav-open[role="dialog"] {
+  position: fixed !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  top: max(82px, env(safe-area-inset-top)) !important;
+  right: max(20px, env(safe-area-inset-right)) !important;
+  bottom: max(20px, env(safe-area-inset-bottom)) !important;
+  left: auto !important;
+  width: min(480px, calc(100vw - 40px)) !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 22px 18px max(18px, env(safe-area-inset-bottom)) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  gap: 7px !important;
+  border: 1px solid rgba(130,155,197,.28) !important;
+  border-radius: 20px !important;
+  background: linear-gradient(155deg, rgba(13,23,40,.995), rgba(6,11,20,.995)) !important;
+  box-shadow: 0 24px 80px rgba(0,0,0,.6), 0 0 0 100vmax rgba(3,7,15,.62) !important;
+  backdrop-filter: blur(24px) !important;
+  transform: none !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  z-index: 2000 !important;
+}
+html body .site-header .nav-links.nav-open[role="dialog"] .nav-drawer-head,
+html body .site-header .nav-links.nav-open[role="dialog"] .nav-drawer-search,
+html body .site-header .nav-links.nav-open[role="dialog"] .nav-drawer-footer {
+  display: flex !important;
+  flex: 0 0 auto !important;
+}
+html body .site-header .nav-links.nav-open[role="dialog"] .nav-drawer-search {
+  flex-direction: column !important;
+  gap: 9px !important;
+}
+html body .site-header .nav-links.nav-open[role="dialog"] > a,
+html body .site-header .nav-links.nav-open[role="dialog"] .nav-platform > summary {
+  display: flex !important;
+  width: 100% !important;
+  min-height: 58px !important;
+  flex: 0 0 auto !important;
+}
+html body .site-header .nav-links.nav-open[role="dialog"] .nav-mega-panel {
+  position: static !important;
+  display: grid !important;
+  width: 100% !important;
+  max-height: min(44dvh, 400px) !important;
+  flex: 0 1 auto !important;
+  overflow: auto !important;
+  transform: none !important;
+  animation: none !important;
+}
+@media (max-width: 640px), (pointer: coarse) {
+  html body .site-header .nav-links.nav-open[role="dialog"] {
+    top: max(72px, env(safe-area-inset-top)) !important;
+    right: max(10px, env(safe-area-inset-right)) !important;
+    bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    left: max(10px, env(safe-area-inset-left)) !important;
+    width: auto !important;
+    padding: 18px 14px max(16px, env(safe-area-inset-bottom)) !important;
+    border-radius: 18px !important;
+  }
+}
