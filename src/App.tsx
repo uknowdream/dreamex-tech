@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowDownRight, ArrowRight, BookOpen, Bookmark, BookmarkCheck, Braces, Check, ChevronUp, ChevronDown, Layers3, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap, Rss, Activity, AlertTriangle, CheckCircle2, Download, ClipboardList, Network, Gauge, Clock3 } from 'lucide-react'
 import { articles } from './articles'
@@ -160,10 +160,10 @@ function Header() {
   const navRef = useRef<HTMLElement>(null)
   const menuOpenRef = useRef(false)
   const previousPathRef = useRef(location.pathname)
-  const setDrawerOpen = (open: boolean) => {
+  const setDrawerOpen = useCallback((open: boolean) => {
     menuOpenRef.current = open
     setMenuOpen(open)
-  }
+  }, [])
 
   useEffect(() => {
     const nav = navRef.current
@@ -217,7 +217,7 @@ function Header() {
     setDrawerOpen(false)
     setNavQuery('')
     document.querySelector('.nav-platform')?.removeAttribute('open')
-  }, [location.pathname])
+  }, [location.pathname, setDrawerOpen])
 
   useEffect(() => {
     if (!NAV_DESTINATIONS[location.pathname]) return
@@ -290,7 +290,7 @@ function Header() {
       document.removeEventListener('keydown', handleKeyDown)
       document.body.style.overflow = previousOverflow
     }
-  }, [menuOpen])
+  }, [menuOpen, setDrawerOpen])
 
   const closeDrawer = () => {
     setDrawerOpen(false)
