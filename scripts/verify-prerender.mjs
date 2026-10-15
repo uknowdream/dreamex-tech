@@ -58,7 +58,6 @@ function verifyPage(pathname, expected, type = 'website', publishedAt = '') {
 
 let staticPages = 0
 for (const pathname of routePatterns) {
-  if (pathname === '/') continue
   if (pathname.startsWith('/blog/')) continue
   const seo = seoByPath.get(pathname)
   if (!seo) {
