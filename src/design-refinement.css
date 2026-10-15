@@ -315,6 +315,14 @@ input, select, textarea, button { max-width: 100%; }
     backdrop-filter: none !important;
   }
   html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel .nav-mega-intro {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    gap: 7px !important;
+    padding: 10px !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel .nav-mega-kicker,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel .nav-mega-intro p {
     display: none !important;
   }
   html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel .nav-mega-group {

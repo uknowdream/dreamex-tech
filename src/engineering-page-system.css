@@ -97,3 +97,39 @@
   .workspace-open,.command-center-actions .button,.quality-suite-actions .button,.quality-intelligence-export .button,.supply-chain-actions .button{transition:none}
   .workspace-open:hover,.command-center-actions .button:hover,.quality-suite-actions .button:hover,.quality-intelligence-export .button:hover,.supply-chain-actions .button:hover{transform:none}
 }
+
+/* Navigation drawer: viewport-bounded, scrollable, and respectful of filtered hidden states. */
+@media (max-width: 1100px), (pointer: coarse) {
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] {
+    position: fixed !important;
+    inset: max(72px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)) !important;
+    width: auto !important;
+    height: auto !important;
+    max-height: calc(100dvh - 84px) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"],
+  html body #primary-navigation.nav-open[role="dialog"] * {
+    box-sizing: border-box !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-mega-group,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-mega-group > a {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+  }
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] [hidden],
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel .nav-mega-group > a[hidden],
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-platform > summary[hidden],
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-platform[hidden] {
+    display: none !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-mega-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+}

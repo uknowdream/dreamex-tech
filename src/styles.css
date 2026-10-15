@@ -3379,7 +3379,20 @@ main, header, footer, section, .container {
     box-shadow: none !important;
   }
   html body #primary-navigation .nav-platform[open] > .nav-mega-panel .nav-mega-intro {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    gap: 7px !important;
+    padding: 10px !important;
+  }
+  html body #primary-navigation .nav-platform[open] > .nav-mega-panel .nav-mega-kicker,
+  html body #primary-navigation .nav-platform[open] > .nav-mega-panel .nav-mega-intro p {
     display: none !important;
+  }
+  html body #primary-navigation .nav-platform[open] > .nav-mega-panel {
+    max-height: none !important;
+    overflow: visible !important;
+    overscroll-behavior: auto !important;
   }
   html body #primary-navigation .nav-platform[open] > .nav-mega-panel .nav-mega-group {
     display: flex !important;
