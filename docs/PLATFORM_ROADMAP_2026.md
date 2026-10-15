@@ -239,10 +239,11 @@ The repository currently contains a technology publication and browser-first eng
 
 ### Production verification still required
 
-- [x] **Exact-commit deployment verified (15 Oct 2026).** Latest production deployment `dpl_A9rGeYwyyMBKGaDqUg71FuGEPh9e` is `READY`, target `production`, and identifies current `main` commit `06e068779775bf84d2c3e8c0cb63f2b26db2bbf7`. Production aliases include `www.dreamex.tech` and `dreamex.tech`. The premium sidebar was introduced by merge commit `a435918f54f1f6a41eb84a3ae0625a95c678057f` and remains present in the current deployed commit.
-- [x] **Production smoke verified for current deployed `main` (15 Oct 2026).** A manual equivalent of the 25-path route/feed smoke suite passed 25/25 against production commit `06e068779775bf84d2c3e8c0cb63f2b26db2bbf7`: all 20 app HTML routes, `/robots.txt`, `/manifest.webmanifest`, `/rss.xml`, `/rss.xsl`, and `/sitemap.xml` returned HTTP 200 with expected body markers and content types. All 20 HTML endpoints passed HSTS, `X-Content-Type-Options`, `X-Frame-Options`, Referrer Policy, Permissions Policy, and CSP Report-Only directive checks. `/rss.xml` is the RSS 2.0 feed; `/rss.xsl` is its display stylesheet. PR #81 added Reliability Center and RSS stylesheet to the repeatable smoke script. The GitHub scheduled workflow itself has not yet been observed completing on this SHA, so that gate remains separate.
-- [ ] **Fresh CI on exact main SHA.** PR #83 (SEO metadata) passed typecheck/lint/build/output verification and both Playwright projects on its head; a separate fresh main-push CI result remains unverified in the available evidence.
-- [ ] **Full scheduled production smoke after deployment.** Confirm the complete 23-path `scripts/smoke-production.mjs` workflow succeeds against the exact deployed SHA, including every required response marker and security-header assertion. The manual sample above is narrower.
+- [x] **Last confirmed production deployment.** Vercel deployment `dpl_8vQSUSC33rhpSezn61wVsQBsizGR` is `READY` for production commit `63b1cad3cf4df373a6f3912c91622b861185bba9`; aliases include `www.dreamex.tech` and `dreamex.tech`. This confirms the premium sidebar and searchable tool navigation are deployed.
+- [ ] **Current main deployment is pending.** Repository `main` is now `db429c81e04538c5783bdeb473f867801cc6a285`, which is newer than the last confirmed production commit. Vercel has rejected newer deployment attempts with `api-deployments-free-per-day` (more than 100 deployments in 24 hours). Do not claim PR #89 sitemap/indexing updates or this PR's changes are live until Vercel successfully deploys the exact main SHA.
+- [x] **Historical manual smoke baseline only.** A manual equivalent of the 25-path route/feed suite passed on `06e068779775bf84d2c3e8c0cb63f2b26db2bbf7`; that is historical evidence, not a fresh verification of production commit `63b1cad3cf4df373a6f3912c91622b861185bba9` or current main.
+- [ ] **Fresh main CI on exact SHA.** Confirm the GitHub push-triggered CI result independently of PR checks for the latest main commit.
+- [ ] **Full scripted production smoke after deployment.** Run `npm run smoke:production` against the exact deployed alias after the latest main SHA is deployed; confirm all route/article metadata, feeds, sitemap, manifest, redirects, content types, and security-header assertions. A manual request sample is not equivalent to a successful full script run.
 
 ### Next implementation queue
 
@@ -252,6 +253,11 @@ The repository currently contains a technology publication and browser-first eng
 4. [ ] **Performance/accessibility follow-through.** Measure representative production routes and real-device Core Web Vitals, add automated WCAG scans and visual baselines, and tune budgets from stable measurements rather than arbitrary targets.
 5. [x] **Client-side metadata parity — PR #83 and static metadata prerender — PR #84.** Route-specific HTML now carries titles, descriptions, canonical/OG/Twitter metadata, robots directives, and article publication dates before JavaScript runs; the React page body remains client-rendered. [ ] **Sitemap/indexing follow-through:** ensure all public tool routes are listed and personalized browser-local routes are marked noindex and excluded from the sitemap.
 6. [ ] **Evidence privacy and collaboration architecture.** Test scoped deletion while preserving unrelated browser storage. Do not simulate cloud sync; require authentication/authorization, consent, retention/deletion, auditability, rate limits, and operational ownership before team features or GitHub integrations.
+
+### Navigation polish follow-up
+
+- [x] **Sidebar recent tools and keyboard-first Quick Find (this change).** Keep the four most recently visited engineering destinations in a dedicated localStorage key, deduplicate and validate restored paths, support `/` to focus Quick Find, announce localized result counts, and allow users to clear only this history without deleting unrelated browser data. Desktop and mobile Playwright cover recent navigation, search, focus transitions, empty states, and scoped deletion.
+- [ ] **Production rollout of this change.** CI and Playwright evidence must pass on the merged commit; production deployment remains blocked until the Vercel daily deployment quota resets.
 
 ### Required release sequence for every feature
 
