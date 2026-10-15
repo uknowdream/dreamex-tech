@@ -1998,8 +1998,8 @@ function RouteMetadata() {
   const { pathname } = useLocation()
   const { language } = useLanguage()
   useEffect(() => {
-    const route = pathname.replace(/\\/+$/, '') || '/'
-    const slug = route.match(/^\\/blog\\/([^/]+)$/)?.[1]
+    const route = pathname.replace(/\/+$/, '') || '/'
+    const slug = route.match(/^\/blog\/([^/]+)$/)?.[1]
     const article = slug ? articles.find(item => item.slug === slug) : undefined
     const translated = article && language === 'en' ? articleTranslations[article.slug] : undefined
     const unknownArticle = Boolean(slug && !article)
