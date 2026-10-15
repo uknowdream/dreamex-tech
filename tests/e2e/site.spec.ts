@@ -1,9 +1,8 @@
 import { expect, test, type Page } from '@playwright/test'
+import { ensurePrimaryNavigationVisible } from './helpers/navigation'
 
 async function openMobileNavigation(page: Page) {
-  // Navigation collapses at tablet and compact desktop widths, not only on phones.
-  const toggle = page.getByRole('button', { name: /open menu|buka menu/i })
-  if (await toggle.isVisible()) await toggle.click()
+  await ensurePrimaryNavigationVisible(page)
 }
 
 test.beforeEach(async ({ page }) => {
