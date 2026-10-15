@@ -449,3 +449,42 @@ input, select, textarea, button { max-width: 100%; }
     max-height: calc(100dvh - max(68px, calc(env(safe-area-inset-top) + 8px)) - 8px) !important;
   }
 }
+
+
+/* Navigation drawer final responsive composition: compact phone sheet, full-height side panel on wider layouts. */
+@media (min-width: 600px) and (max-width: 1100px), (min-width: 600px) and (pointer: coarse) {
+  html body #primary-navigation.nav-open[role="dialog"] {
+    position: fixed !important;
+    inset: max(76px, calc(env(safe-area-inset-top) + 12px)) 12px max(12px, env(safe-area-inset-bottom)) auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: min(400px, calc(100vw - 32px)) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    border-radius: 18px !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-footer {
+    margin-top: auto !important;
+    padding-top: 14px !important;
+  }
+}
+@media (max-width: 599px) {
+  html body #primary-navigation.nav-open[role="dialog"] {
+    position: fixed !important;
+    inset: max(68px, calc(env(safe-area-inset-top) + 8px)) 8px max(8px, env(safe-area-inset-bottom)) 8px !important;
+    width: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    border-radius: 16px !important;
+  }
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-footer {
+    margin-top: 12px !important;
+    padding-top: 12px !important;
+  }
+}
