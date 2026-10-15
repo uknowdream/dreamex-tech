@@ -427,3 +427,25 @@ input, select, textarea, button { max-width: 100%; }
     grid-template-columns: minmax(0, 1fr) !important;
   }
 }
+
+
+/* Compact, content-led drawer: avoid the full-height empty shell seen on phones. */
+@media (max-width: 1100px), (pointer: coarse) {
+  html body #primary-navigation.nav-open[role="dialog"] {
+    inset: max(72px, calc(env(safe-area-inset-top) + 12px)) max(12px, env(safe-area-inset-right)) auto auto !important;
+    width: min(420px, calc(100vw - 24px)) !important;
+    height: auto !important;
+    max-height: calc(100dvh - max(72px, calc(env(safe-area-inset-top) + 12px)) - 16px) !important;
+    min-height: 0 !important;
+    overflow-x: clip !important;
+    overflow-y: auto !important;
+    align-self: flex-start !important;
+  }
+}
+@media (max-width: 480px) {
+  html body #primary-navigation.nav-open[role="dialog"] {
+    inset: max(68px, calc(env(safe-area-inset-top) + 8px)) 8px auto auto !important;
+    width: calc(100vw - 16px) !important;
+    max-height: calc(100dvh - max(68px, calc(env(safe-area-inset-top) + 8px)) - 8px) !important;
+  }
+}
