@@ -253,19 +253,19 @@ function Header() {
       event.preventDefault()
       // Claim the shortcut before window-level palettes or article search can steal focus.
       event.stopImmediatePropagation()
+      const focusBeforeShortcut = document.activeElement
       input.focus({ preventScroll: true })
       if (document.activeElement !== input) {
-        // The opening drawer transition can temporarily prevent focus; retry after layout.
-        window.requestAnimationFrame(() => {
-          if (!navRef.current?.classList.contains('nav-open')) return
-          const currentInput = navRef.current.querySelector<HTMLInputElement>('#nav-drawer-search-input')
+        // Retry after the drawer transition only if the user has not moved focus.
+        const retryFocus = () => {
+          if (document.activeElement !== focusBeforeShortcut) return
+          const currentNav = navRef.current
+          if (!currentNav?.classList.contains('nav-open')) return
+          const currentInput = currentNav.querySelector<HTMLInputElement>('#nav-drawer-search-input')
           currentInput?.focus({ preventScroll: true })
-        })
-        window.setTimeout(() => {
-          if (!navRef.current?.classList.contains('nav-open')) return
-          const currentInput = navRef.current.querySelector<HTMLInputElement>('#nav-drawer-search-input')
-          currentInput?.focus({ preventScroll: true })
-        }, 350)
+        }
+        window.requestAnimationFrame(retryFocus)
+        window.setTimeout(retryFocus, 350)
       }
     }
     document.addEventListener('keydown', handleQuickFindShortcut, true)
