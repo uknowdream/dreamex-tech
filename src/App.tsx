@@ -124,53 +124,138 @@ function Header() {
   const { language, setLanguage, t } = useLanguage()
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
-  useEffect(() => { setMenuOpen(false); document.querySelector('.nav-platform')?.removeAttribute('open') }, [location.pathname])
-  return <><header className="site-header"><div className="container nav-wrap">
-    <Link className="brand" to="/" aria-label="DreamEx Tech beranda"><span className="brand-mark"><Braces size={21} /></span><span>DreamEx<span className="brand-muted"> Tech</span></span><span className="brand-beta">ENGINEERING NOTES</span></Link>
-    <button className="command-trigger" type="button" aria-keyshortcuts="Control+K Meta+K" aria-label={language === 'en' ? 'Search tools and articles' : 'Cari tools dan artikel'} onClick={() => { setMenuOpen(false); document.querySelector('.nav-platform')?.removeAttribute('open'); window.dispatchEvent(new Event('dreamex-open-command-palette')) }}><Search size={16} /><span>{language === 'en' ? 'Search tools' : 'Cari tools'}</span><kbd>{typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl'} K</kbd></button>
-    <button className="menu-toggle" aria-label={menuOpen ? t('closeMenu') : t('openMenu')} aria-expanded={menuOpen} onClick={() => setMenuOpen(value => !value)}><span /><span /></button>
-    <nav className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={language === 'en' ? 'Main navigation' : 'Navigasi utama'}>
-      <NavLink to="/" end>{language === 'en' ? 'Journal' : 'Jurnal'}</NavLink>
-      <details className="nav-platform">
-        <summary><Layers3 size={15} /> {language === 'en' ? 'Platform' : 'Platform'} <ChevronDown size={14} className="nav-chevron" /></summary>
-        <div className="nav-mega-panel">
-          <div className="nav-mega-intro">
-            <span className="nav-mega-kicker">{language === 'en' ? 'DREAMEX ENGINEERING SUITE' : 'SUITE ENGINEERING DREAMEX'}</span>
-            <strong>{language === 'en' ? 'From first idea to reliable release.' : 'Dari ide pertama hingga rilis yang andal.'}</strong>
-            <p>{language === 'en' ? 'A focused workspace for building, testing, and improving software.' : 'Ruang kerja terpadu untuk membangun, menguji, dan meningkatkan perangkat lunak.'}</p>
-            <Link to="/workspace">{language === 'en' ? 'Open workspace' : 'Buka workspace'} <ArrowRight size={14} /></Link>
-            <div className="nav-mega-orbit" aria-hidden="true"><span /><span /><span /></div>
-          </div>
-          <div className="nav-mega-group">
-            <span className="nav-group-label">{language === 'en' ? 'PLAN & OPERATE' : 'RENCANAKAN & KELOLA'}</span>
-            <NavLink to="/control-plane"><span className="nav-link-icon"><Activity size={15} /></span><span><b>{language === 'en' ? 'Control Plane' : 'Pusat Kendali'}</b><small>{language === 'en' ? 'Release readiness & operations' : 'Kesiapan rilis dan operasi'}</small></span></NavLink>
-            <NavLink to="/command-center"><span className="nav-link-icon"><ClipboardList size={15} /></span><span><b>{language === 'en' ? 'Command Center' : 'Command Center'}</b><small>{language === 'en' ? 'Tasks, incidents & decisions' : 'Tugas, insiden, dan keputusan'}</small></span></NavLink>
-            <NavLink to="/roadmap"><span className="nav-link-icon"><ArrowDownRight size={15} /></span><span><b>{language === 'en' ? 'Product Roadmap' : 'Roadmap Produk'}</b><small>{language === 'en' ? 'Priorities and milestones' : 'Prioritas dan pencapaian'}</small></span></NavLink>
-          </div>
-          <div className="nav-mega-group">
-            <span className="nav-group-label">{language === 'en' ? 'BUILD & VERIFY' : 'BANGUN & VALIDASI'}</span>
-            <NavLink to="/lab"><span className="nav-link-icon"><Terminal size={15} /></span><span><b>Engineering Lab</b><small>{language === 'en' ? 'Practical QA tools' : 'Perangkat QA praktis'}</small></span></NavLink>
-            <NavLink to="/quality-intelligence"><span className="nav-link-icon"><ShieldCheck size={15} /></span><span><b>{language === 'en' ? 'Quality Intelligence' : 'Quality Intelligence'}</b><small>{language === 'en' ? 'Test reports & failure signals' : 'Laporan tes dan sinyal kegagalan'}</small></span></NavLink>
-            <NavLink to="/reliability-center"><span className="nav-link-icon"><Gauge size={15} /></span><span><b>{language === 'en' ? 'Reliability & Incident Center' : 'Pusat Reliability & Insiden'}</b><small>{language === 'en' ? 'Incident timelines & delivery metrics' : 'Timeline insiden dan metrik delivery'}</small></span></NavLink>
-            <NavLink to="/api-playground"><span className="nav-link-icon"><Braces size={15} /></span><span><b>API Playground</b><small>{language === 'en' ? 'Inspect API contracts' : 'Periksa kontrak API'}</small></span></NavLink>
-          </div>
-          <div className="nav-mega-group nav-mega-group-last">
-            <span className="nav-group-label">{language === 'en' ? 'SECURE & LEARN' : 'AMANKAN & PELAJARI'}</span>
-            <NavLink to="/security-center"><span className="nav-link-icon"><ShieldCheck size={15} /></span><span><b>{language === 'en' ? 'Security Center' : 'Pusat Keamanan'}</b><small>{language === 'en' ? 'Privacy and secure practices' : 'Privasi dan praktik aman'}</small></span></NavLink>
-            <NavLink to="/supply-chain-intelligence"><span className="nav-link-icon"><Network size={15} /></span><span><b>{language === 'en' ? 'Supply Chain' : 'Supply Chain'}</b><small>{language === 'en' ? 'SBOM inventory insights' : 'Insight inventaris SBOM'}</small></span></NavLink>
-            <NavLink to="/learn"><span className="nav-link-icon"><BookOpen size={15} /></span><span><b>{language === 'en' ? 'Learning Hub' : 'Pusat Belajar'}</b><small>{language === 'en' ? 'Structured learning paths' : 'Jalur belajar terstruktur'}</small></span></NavLink>
-          </div>
-        </div>
-      </details>
-      <NavLink to="/reading-list">{language === 'en' ? 'Reading list' : 'Daftar bacaan'}</NavLink>
-      <NavLink to="/about">{language === 'en' ? 'About' : 'Tentang'}</NavLink>
-      <a className="nav-github" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">GitHub <Github size={14} /></a>
-      <InstallAppButton />
-      <div className="language-switch" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div>
-    </nav>
-  </div></header>
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+  const navRef = useRef<HTMLElement>(null)
+  const previousPathRef = useRef(location.pathname)
 
-</>
+  useEffect(() => {
+    if (previousPathRef.current === location.pathname) return
+    previousPathRef.current = location.pathname
+    setMenuOpen(false)
+    document.querySelector('.nav-platform')?.removeAttribute('open')
+  }, [location.pathname])
+
+  useEffect(() => {
+    const handlePlatformEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || menuOpen) return
+      const platform = document.querySelector<HTMLDetailsElement>('.nav-platform')
+      if (!platform?.open) return
+      platform.open = false
+      platform.querySelector<HTMLElement>('summary')?.focus()
+    }
+    document.addEventListener('keydown', handlePlatformEscape)
+    return () => document.removeEventListener('keydown', handlePlatformEscape)
+  }, [menuOpen])
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setMenuOpen(false)
+        window.requestAnimationFrame(() => menuButtonRef.current?.focus())
+        return
+      }
+      if (event.key !== 'Tab') return
+      const focusables = Array.from(navRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), summary, [tabindex]:not([tabindex="-1"])') ?? [])
+        .filter(element => element.getClientRects().length > 0)
+      if (!focusables.length) {
+        event.preventDefault()
+        return
+      }
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [menuOpen])
+
+  const closeDrawer = () => {
+    setMenuOpen(false)
+    window.requestAnimationFrame(() => menuButtonRef.current?.focus())
+  }
+
+  return <>
+    {menuOpen && <button className="nav-backdrop" type="button" aria-label={language === 'en' ? 'Close navigation' : 'Tutup navigasi'} onClick={closeDrawer} />}
+    <header className={menuOpen ? 'site-header navigation-open' : 'site-header'}>
+      <div className="container nav-wrap">
+        <Link className="brand" to="/" aria-label="DreamEx Tech beranda">
+          <span className="brand-mark"><Braces size={21} /></span>
+          <span>DreamEx<span className="brand-muted"> Tech</span></span>
+          <span className="brand-beta">ENGINEERING NOTES</span>
+        </Link>
+        <button className="command-trigger" type="button" aria-keyshortcuts="Control+K Meta+K" aria-label={language === 'en' ? 'Search tools and articles' : 'Cari tools dan artikel'} onClick={() => { setMenuOpen(false); document.querySelector('.nav-platform')?.removeAttribute('open'); window.dispatchEvent(new Event('dreamex-open-command-palette')) }}>
+          <Search size={16} /><span>{language === 'en' ? 'Search tools' : 'Cari tools'}</span><kbd>{typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl'} K</kbd>
+        </button>
+        <button ref={menuButtonRef} className="menu-toggle" type="button" aria-label={menuOpen ? (language === 'en' ? 'Close navigation' : 'Tutup navigasi') : t('openMenu')} aria-expanded={menuOpen} aria-controls="primary-navigation" onClick={() => setMenuOpen(value => !value)}>
+          <span /><span /><span className="menu-toggle-label">{language === 'en' ? 'MENU' : 'MENU'}</span>
+        </button>
+        <nav ref={navRef} id="primary-navigation" className={menuOpen ? 'nav-links nav-open' : 'nav-links'} aria-label={language === 'en' ? 'Main navigation' : 'Navigasi utama'} role={menuOpen ? 'dialog' : undefined} aria-modal={menuOpen ? true : undefined} aria-labelledby={menuOpen ? 'mobile-navigation-title' : undefined} onTransitionEnd={event => {
+          if (event.target === event.currentTarget && event.propertyName === 'transform' && menuOpen) {
+            navRef.current?.querySelector<HTMLElement>('.nav-drawer-close')?.focus({ preventScroll: true })
+          }
+        }}>
+          <div className="nav-drawer-head">
+            <div><span className="nav-drawer-eyebrow">{language === 'en' ? 'DREAMEX ENGINEERING SUITE' : 'DREAMEX ENGINEERING SUITE'}</span><strong id="mobile-navigation-title">{language === 'en' ? 'Navigation' : 'Navigasi'}</strong></div>
+            <button className="nav-drawer-close" type="button" data-drawer-close onClick={closeDrawer} aria-label={language === 'en' ? 'Close navigation' : 'Tutup navigasi'}><X size={18}/></button>
+          </div>
+          <NavLink to="/" end onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><HomeIcon size={16}/></span><span><b>{language === 'en' ? 'Journal' : 'Jurnal'}</b><small>{language === 'en' ? 'Articles, ideas and guides' : 'Artikel, ide, dan panduan'}</small></span></NavLink>
+          <details className="nav-platform">
+            <summary><span className="nav-link-icon"><Layers3 size={16}/></span><span><b>{language === 'en' ? 'Engineering platform' : 'Platform engineering'}</b><small>{language === 'en' ? 'Explore all engineering tools' : 'Jelajahi semua tools engineering'}</small></span><ChevronDown size={15} className="nav-chevron" /></summary>
+            <div className="nav-mega-panel">
+              <div className="nav-mega-intro">
+                <span className="nav-mega-kicker">{language === 'en' ? 'ENGINEERING WORKSPACE' : 'RUANG KERJA ENGINEERING'}</span>
+                <strong>{language === 'en' ? 'From first idea to reliable release.' : 'Dari ide hingga rilis yang andal.'}</strong>
+                <p>{language === 'en' ? 'A focused workspace for building, testing, securing and improving software.' : 'Ruang kerja terpadu untuk membangun, menguji, mengamankan, dan meningkatkan software.'}</p>
+                <Link to="/workspace" onClick={() => setMenuOpen(false)}>{language === 'en' ? 'Open workspace' : 'Buka workspace'} <ArrowRight size={14}/></Link>
+              </div>
+              <div className="nav-mega-group">
+                <span className="nav-group-label">{language === 'en' ? 'PLAN & OPERATE' : 'RENCANAKAN & KELOLA'}</span>
+                <NavLink to="/control-plane" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Activity size={15}/></span><span><b>Control Plane</b><small>{language === 'en' ? 'Release readiness & operations' : 'Kesiapan rilis dan operasi'}</small></span></NavLink>
+                <NavLink to="/command-center" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><ClipboardList size={15}/></span><span><b>Command Center</b><small>{language === 'en' ? 'Tasks, incidents & decisions' : 'Tugas, insiden, dan keputusan'}</small></span></NavLink>
+                <NavLink to="/roadmap" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><ArrowDownRight size={15}/></span><span><b>{language === 'en' ? 'Product Roadmap' : 'Roadmap Produk'}</b><small>{language === 'en' ? 'Priorities and milestones' : 'Prioritas dan pencapaian'}</small></span></NavLink>
+              </div>
+              <div className="nav-mega-group">
+                <span className="nav-group-label">{language === 'en' ? 'BUILD & VERIFY' : 'BANGUN & VALIDASI'}</span>
+                <NavLink to="/lab" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Terminal size={15}/></span><span><b>Engineering Lab</b><small>{language === 'en' ? 'Practical QA tools' : 'Perangkat QA praktis'}</small></span></NavLink>
+                <NavLink to="/quality-intelligence" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><ShieldCheck size={15}/></span><span><b>Quality Intelligence</b><small>{language === 'en' ? 'Test reports & failure signals' : 'Laporan tes dan sinyal kegagalan'}</small></span></NavLink>
+                <NavLink to="/reliability-center" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Gauge size={15}/></span><span><b>{language === 'en' ? 'Reliability & Incidents' : 'Reliability & Insiden'}</b><small>{language === 'en' ? 'Incident timelines & delivery metrics' : 'Timeline insiden dan metrik delivery'}</small></span></NavLink>
+                <NavLink to="/api-playground" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Braces size={15}/></span><span><b>API Playground</b><small>{language === 'en' ? 'Inspect API contracts' : 'Periksa kontrak API'}</small></span></NavLink>
+                <NavLink to="/qa-studio" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><CheckCircle2 size={15}/></span><span><b>QA Automation Studio</b><small>{language === 'en' ? 'Build and review test plans' : 'Bangun dan tinjau rencana tes'}</small></span></NavLink>
+              </div>
+              <div className="nav-mega-group">
+                <span className="nav-group-label">{language === 'en' ? 'SECURE & LEARN' : 'AMANKAN & PELAJARI'}</span>
+                <NavLink to="/security-center" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><ShieldCheck size={15}/></span><span><b>{language === 'en' ? 'Security Center' : 'Pusat Keamanan'}</b><small>{language === 'en' ? 'Privacy and secure practices' : 'Privasi dan praktik aman'}</small></span></NavLink>
+                <NavLink to="/supply-chain-intelligence" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Network size={15}/></span><span><b>Supply Chain</b><small>{language === 'en' ? 'SBOM inventory insights' : 'Insight inventaris SBOM'}</small></span></NavLink>
+                <NavLink to="/learn" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><BookOpen size={15}/></span><span><b>{language === 'en' ? 'Learning Hub' : 'Pusat Belajar'}</b><small>{language === 'en' ? 'Structured learning paths' : 'Jalur belajar terstruktur'}</small></span></NavLink>
+              </div>
+            </div>
+          </details>
+          <NavLink to="/reading-list" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Bookmark size={16}/></span><span><b>{language === 'en' ? 'Reading list' : 'Daftar bacaan'}</b><small>{language === 'en' ? 'Your saved articles' : 'Artikel yang disimpan'}</small></span></NavLink>
+          <NavLink to="/about" aria-label={language === 'en' ? 'About' : 'Tentang'} onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Sparkles size={16}/></span><span><b>{language === 'en' ? 'About DreamEx' : 'Tentang DreamEx'}</b><small>{language === 'en' ? 'Purpose and project details' : 'Tujuan dan detail proyek'}</small></span></NavLink>
+          <a className="nav-github" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Github size={16}/></span><span><b>GitHub</b><small>{language === 'en' ? 'Source code & releases' : 'Kode sumber dan rilis'}</small></span></a>
+          <InstallAppButton />
+          <div className="language-switch nav-desktop-language" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div>
+          <div className="nav-drawer-footer">
+            <div className="language-switch" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div>
+            <span>{language === 'en' ? 'BUILD WITH EVIDENCE' : 'BANGUN DENGAN BUKTI'}</span>
+          </div>
+        </nav>
+      </div>
+    </header>
+  </>
 }
 
 function Footer() {
