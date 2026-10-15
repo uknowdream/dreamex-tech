@@ -3216,3 +3216,93 @@ main, header, footer, section, .container {
   .nav-mega-intro > p { font-size: 11px; }
   .nav-mega-group > a { padding: 8px; }
 }
+
+
+/* Critical mobile drawer override: keep the navigation panel above its backdrop and fully visible. */
+@media (max-width: 1050px) {
+  html body .site-header.navigation-open {
+    position: relative !important;
+    z-index: 2101 !important;
+    isolation: auto !important;
+    overflow: visible !important;
+    transform: none !important;
+    filter: none !important;
+    contain: none !important;
+  }
+  html body .nav-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2000 !important;
+    display: block !important;
+  }
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] {
+    position: fixed !important;
+    z-index: 2102 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    top: max(76px, env(safe-area-inset-top)) !important;
+    right: max(12px, env(safe-area-inset-right)) !important;
+    bottom: max(12px, env(safe-area-inset-bottom)) !important;
+    left: auto !important;
+    width: min(480px, calc(100vw - 24px)) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 20px 16px max(18px, env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    border: 1px solid #34445c !important;
+    border-radius: 20px !important;
+    background: linear-gradient(155deg, #111c2d 0%, #080f1c 100%) !important;
+    box-shadow: 0 28px 90px #000b, inset 0 1px #ffffff0a !important;
+    transform: none !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    clip: auto !important;
+    clip-path: none !important;
+  }
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] > *,
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-drawer-head,
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-drawer-search,
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-drawer-footer {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-drawer-head {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding-bottom: 16px !important;
+    margin-bottom: 10px !important;
+    border-bottom: 1px solid #ffffff18 !important;
+  }
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-drawer-search {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] > a,
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-platform,
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-platform > summary {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-height: 56px !important;
+  }
+}
+@media (max-width: 640px) {
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] {
+    top: max(68px, env(safe-area-inset-top)) !important;
+    right: max(8px, env(safe-area-inset-right)) !important;
+    bottom: max(8px, env(safe-area-inset-bottom)) !important;
+    left: max(8px, env(safe-area-inset-left)) !important;
+    width: auto !important;
+    padding: 18px 14px max(16px, env(safe-area-inset-bottom)) !important;
+  }
+}
