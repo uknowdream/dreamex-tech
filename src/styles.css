@@ -3013,3 +3013,24 @@ main, header, footer, section, .container {
   .nav-links,.nav-links *,.nav-backdrop,.menu-toggle span { animation: none !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
 @keyframes nav-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+
+
+/* Searchable navigation drawer */
+.nav-links [hidden] { display: none !important; }
+@media (max-width: 760px) {
+  .nav-drawer-search { display: grid; flex: 0 0 auto; gap: 7px; padding: 1px 1px 8px; }
+  .nav-drawer-search > label { color: #8fa1bb; font: 9px/1.5 var(--mono, ui-monospace, monospace); letter-spacing: .13em; }
+  .nav-drawer-search-control { display: flex; min-width: 0; min-height: 44px; align-items: center; gap: 9px; padding: 0 11px; border: 1px solid #34445c; border-radius: 11px; background: #060d18; color: #8fa1bb; transition: border-color .16s ease, box-shadow .16s ease; }
+  .nav-drawer-search-control:focus-within { border-color: #c5ff7077; box-shadow: 0 0 0 3px #c5ff7012; }
+  .nav-drawer-search-control > svg { flex: 0 0 auto; }
+  .nav-drawer-search-control input { width: 100%; min-width: 0; min-height: 42px; padding: 0; border: 0; outline: 0; background: transparent; color: #edf4ff; font: inherit; font-size: 12px; }
+  .nav-drawer-search-control input::placeholder { color: #71829a; }
+  .nav-drawer-search-control input::-webkit-search-cancel-button { display: none; }
+  .nav-drawer-search-control button { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border: 1px solid #34445c; border-radius: 8px; background: #ffffff06; color: #c9d5e8; cursor: pointer; }
+  .nav-drawer-search-control button:hover,.nav-drawer-search-control button:focus-visible { border-color: #c5ff7066; color: #c5ff70; }
+  .nav-search-empty { margin: 0; padding: 13px 12px; border: 1px dashed #34445c; border-radius: 10px; color: #a7b5ca; font-size: 11px; line-height: 1.7; }
+  .nav-platform[hidden] { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-drawer-search-control { transition: none; }
+}
