@@ -3017,7 +3017,7 @@ main, header, footer, section, .container {
 
 /* Searchable navigation drawer */
 .nav-links [hidden] { display: none !important; }
-@media (max-width: 760px) {
+@media (max-width: 1100px) {
   .nav-drawer-search { display: grid; flex: 0 0 auto; gap: 7px; padding: 1px 1px 8px; }
   .nav-drawer-search > label { color: #8fa1bb; font: 9px/1.5 var(--mono, ui-monospace, monospace); letter-spacing: .13em; }
   .nav-drawer-search-control { display: flex; min-width: 0; min-height: 44px; align-items: center; gap: 9px; padding: 0 11px; border: 1px solid #34445c; border-radius: 11px; background: #060d18; color: #8fa1bb; transition: border-color .16s ease, box-shadow .16s ease; }
