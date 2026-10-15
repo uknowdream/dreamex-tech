@@ -9,9 +9,13 @@ export async function ensurePrimaryNavigationVisible(page: Page): Promise<Locato
   if (await drawer.isVisible()) return drawer
 
   const toggle = page.getByRole('button', { name: /Open menu|Buka menu/i })
-  if (await toggle.isVisible()) await toggle.click()
+  if (await toggle.isVisible()) {
+    await toggle.click()
+    // The mobile drawer intentionally changes the nav landmark into a modal dialog.
+    await expect(drawer).toBeVisible()
+    return drawer
+  }
 
-  if (await drawer.isVisible()) return drawer
   await expect(navigation).toBeVisible()
   return navigation
 }
