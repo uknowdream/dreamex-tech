@@ -242,7 +242,7 @@ function Header() {
 
   useEffect(() => {
     const handleQuickFindShortcut = (event: KeyboardEvent) => {
-      if (event.key !== '/' || event.altKey || event.ctrlKey || event.metaKey) return
+      if (!menuOpenRef.current || event.key !== '/' || event.altKey || event.ctrlKey || event.metaKey) return
       const target = event.target
       if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement ||
         (target instanceof HTMLElement && target.isContentEditable)) return
@@ -251,8 +251,6 @@ function Header() {
       event.preventDefault()
       // Claim the shortcut before window-level palettes or article search can steal focus.
       event.stopImmediatePropagation()
-      const nav = navRef.current
-      if (!nav?.classList.contains('nav-open')) return
       input.focus({ preventScroll: true })
       if (document.activeElement !== input) {
         input.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
