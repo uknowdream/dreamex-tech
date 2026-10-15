@@ -1225,3 +1225,34 @@ test('sidebar includes core engineering destinations and fits compact phone widt
   expect(overflow.document).toBeLessThanOrEqual(overflow.viewport)
   expect(overflow.drawer).toBeLessThanOrEqual(overflow.drawerClient)
 })
+
+
+test('mobile sidebar remembers recent engineering tools and opens them locally', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/api-playground')
+  await page.goto('/security-center')
+  await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
+
+  const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
+  const recent = drawer.getByRole('region', { name: /RECENTLY OPENED|BARU DIBUKA/i })
+  await expect(recent).toBeVisible()
+  const recentApi = recent.getByRole('button', { name: /Open recent tool API Playground|Buka tool terbaru API Playground/i })
+  await expect(recentApi).toBeVisible()
+  await recentApi.click()
+  await expect(page).toHaveURL(/api-playground$/)
+  await expect(page.getByRole('dialog', { name: /Navigation|Navigasi/i })).toHaveCount(0)
+})
+
+test('slash shortcut focuses sidebar quick-find and search hides recent destinations', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/security-center')
+  await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
+  const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
+  const search = drawer.getByRole('searchbox', { name: /QUICK FIND|CARI CEPAT/i })
+  await page.keyboard.press('/')
+  await expect(search).toBeFocused()
+  await expect(drawer.getByRole('region', { name: /RECENTLY OPENED|BARU DIBUKA/i })).toBeHidden()
+  await search.fill('API Playground')
+  await expect(drawer.locator('a[href="/api-playground"]')).toBeVisible()
+  await expect(drawer.locator('.nav-search-empty')).toBeHidden()
+})
