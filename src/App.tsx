@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowDownRight, ArrowRight, BookOpen, Bookmark, BookmarkCheck, Braces, Check, ChevronUp, ChevronDown, Layers3, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap, Rss, Activity, AlertTriangle, CheckCircle2, Download, ClipboardList, Network, Gauge } from 'lucide-react'
+import { ArrowDownRight, ArrowRight, BookOpen, Bookmark, BookmarkCheck, Braces, Check, ChevronUp, ChevronDown, Layers3, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap, Rss, Activity, AlertTriangle, CheckCircle2, Download, ClipboardList, Network, Gauge, Clock3 } from 'lucide-react'
 import { articles } from './articles'
 import { articleTranslations } from './articleTranslations'
 import { useLanguage } from './i18n'
@@ -120,11 +120,43 @@ function InstallAppButton() {
   return <>{installPrompt && <button type="button" className="install-app-button" onClick={install}><Zap size={14} /> {language === 'en' ? 'Install app' : 'Pasang aplikasi'}</button>}{status && <span className="install-app-status" role="status">{status}</span>}</>
 }
 
+const RECENT_NAV_STORAGE_KEY = 'dreamex.navigation.recent.v1'
+const RECENT_NAV_LIMIT = 4
+const NAV_DESTINATIONS: Record<string, { id: string; en: string; descriptionId: string; descriptionEn: string }> = {
+  '/workspace': { id: 'Engineering Workspace', en: 'Engineering Workspace', descriptionId: 'Ruang kerja terpadu', descriptionEn: 'Unified engineering workspace' },
+  '/control-plane': { id: 'Pusat Kendali Engineering', en: 'Engineering Control Plane', descriptionId: 'Kesiapan rilis dan operasi', descriptionEn: 'Release readiness and operations' },
+  '/engineering-intelligence': { id: 'Engineering Intelligence', en: 'Engineering Intelligence', descriptionId: 'Insight kualitas lintas tools', descriptionEn: 'Cross-tool quality insights' },
+  '/command-center': { id: 'Command Center', en: 'Command Center', descriptionId: 'Tugas, insiden, dan keputusan', descriptionEn: 'Tasks, incidents and decisions' },
+  '/qa-studio': { id: 'QA Automation Studio', en: 'QA Automation Studio', descriptionId: 'Rencana dan otomasi pengujian', descriptionEn: 'Test planning and automation' },
+  '/quality-intelligence': { id: 'Quality Intelligence', en: 'Quality Intelligence', descriptionId: 'Laporan dan tren kualitas', descriptionEn: 'Quality reports and trends' },
+  '/reliability-center': { id: 'Reliability & Insiden', en: 'Reliability & Incidents', descriptionId: 'Timeline insiden dan metrik', descriptionEn: 'Incident timelines and metrics' },
+  '/supply-chain-intelligence': { id: 'Supply Chain', en: 'Supply Chain Intelligence', descriptionId: 'Inventaris dan provenance SBOM', descriptionEn: 'SBOM inventory and provenance' },
+  '/security-center': { id: 'Pusat Keamanan', en: 'Security Center', descriptionId: 'Privasi dan praktik keamanan', descriptionEn: 'Privacy and security practices' },
+  '/api-playground': { id: 'API Playground', en: 'API Playground', descriptionId: 'Kontrak dan workflow API', descriptionEn: 'API contracts and workflows' },
+  '/performance': { id: 'Performance Observatory', en: 'Performance Observatory', descriptionId: 'Performa dan budget aset', descriptionEn: 'Performance and asset budgets' },
+  '/knowledge-graph': { id: 'Knowledge Graph', en: 'Knowledge Graph', descriptionId: 'Relasi platform engineering', descriptionEn: 'Engineering platform relationships' },
+  '/roadmap': { id: 'Roadmap Produk', en: 'Product Roadmap', descriptionId: 'Prioritas dan milestone', descriptionEn: 'Priorities and milestones' },
+  '/lab': { id: 'Engineering Lab', en: 'Engineering Lab', descriptionId: 'Tools praktis developer dan QA', descriptionEn: 'Practical developer and QA tools' },
+  '/devtools': { id: 'Developer Utilities', en: 'Developer Utilities', descriptionId: 'Utilitas developer', descriptionEn: 'Developer utilities' },
+  '/observatory': { id: 'Web Quality Observatory', en: 'Web Quality Observatory', descriptionId: 'Sinyal kualitas web', descriptionEn: 'Web quality signals' },
+  '/learn': { id: 'Pusat Belajar', en: 'Learning Hub', descriptionId: 'Jalur belajar terstruktur', descriptionEn: 'Structured learning paths' },
+}
+
 function Header() {
   const { language, setLanguage, t } = useLanguage()
   const [menuOpen, setMenuOpen] = useState(false)
   const [navQuery, setNavQuery] = useState('')
+  const [recentRoutes, setRecentRoutes] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return []
+    try {
+      const saved: unknown = JSON.parse(window.localStorage.getItem(RECENT_NAV_STORAGE_KEY) || '[]')
+      return Array.isArray(saved)
+        ? [...new Set(saved.filter((path): path is string => typeof path === 'string' && Object.prototype.hasOwnProperty.call(NAV_DESTINATIONS, path)))].slice(0, RECENT_NAV_LIMIT)
+        : []
+    } catch { return [] }
+  })
   const location = useLocation()
+  const navigate = useNavigate()
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const navRef = useRef<HTMLElement>(null)
   const previousPathRef = useRef(location.pathname)
@@ -139,6 +171,7 @@ function Header() {
     const intro = platform?.querySelector<HTMLElement>('.nav-mega-intro')
     const groups = Array.from(nav.querySelectorAll<HTMLElement>('.nav-mega-group'))
     const empty = nav.querySelector<HTMLElement>('.nav-search-empty')
+    const resultCount = nav.querySelector<HTMLElement>('.nav-search-count')
 
     if (!query) {
       links.forEach(link => { link.hidden = false })
@@ -147,6 +180,7 @@ function Header() {
       if (summary) summary.hidden = false
       if (platform) platform.hidden = false
       if (empty) empty.hidden = true
+      if (resultCount) resultCount.hidden = true
       if (!menuOpen) setNavQuery('')
       return
     }
@@ -165,13 +199,29 @@ function Header() {
     }
     const visibleLinks = links.filter(link => !link.hidden).length
     if (empty) empty.hidden = visibleLinks > 0
+    if (resultCount) {
+      resultCount.hidden = visibleLinks === 0
+      resultCount.textContent = language === 'en'
+        ? `${visibleLinks} destination${visibleLinks === 1 ? '' : 's'} found`
+        : `${visibleLinks} tujuan ditemukan`
+    }
   }, [menuOpen, navQuery, language])
 
   useEffect(() => {
     if (previousPathRef.current === location.pathname) return
     previousPathRef.current = location.pathname
     setMenuOpen(false)
+    setNavQuery('')
     document.querySelector('.nav-platform')?.removeAttribute('open')
+  }, [location.pathname])
+
+  useEffect(() => {
+    if (!NAV_DESTINATIONS[location.pathname]) return
+    setRecentRoutes(previous => {
+      const next = [location.pathname, ...previous.filter(path => path !== location.pathname)].slice(0, RECENT_NAV_LIMIT)
+      try { window.localStorage.setItem(RECENT_NAV_STORAGE_KEY, JSON.stringify(next)) } catch { /* Recent tools are optional when browser storage is blocked. */ }
+      return next
+    })
   }, [location.pathname])
 
   useEffect(() => {
@@ -195,6 +245,12 @@ function Header() {
         event.preventDefault()
         setMenuOpen(false)
         window.requestAnimationFrame(() => menuButtonRef.current?.focus())
+        return
+      }
+      const target = event.target as HTMLElement | null
+      if (event.key === '/' && !event.altKey && !event.ctrlKey && !event.metaKey && target?.tagName !== 'INPUT' && target?.tagName !== 'TEXTAREA' && target?.isContentEditable !== true) {
+        event.preventDefault()
+        navRef.current?.querySelector<HTMLInputElement>('#nav-drawer-search-input')?.focus()
         return
       }
       if (event.key !== 'Tab') return
@@ -258,7 +314,24 @@ function Header() {
               {navQuery && <button type="button" onClick={() => { setNavQuery(''); navRef.current?.querySelector<HTMLInputElement>('#nav-drawer-search-input')?.focus() }} aria-label={language === 'en' ? 'Clear navigation search' : 'Hapus pencarian navigasi'}><X size={15}/></button>}
             </div>
             <p className="nav-search-empty" role="status" hidden>{language === 'en' ? 'No destinations match this search. Try another keyword.' : 'Tidak ada halaman yang cocok. Coba kata kunci lain.'}</p>
+            <p className="nav-search-count" role="status" aria-live="polite" hidden />
+            <p className="nav-search-hint">{language === 'en' ? 'Tip: press / to focus search' : 'Tip: tekan / untuk fokus ke pencarian'}</p>
           </div>
+          {recentRoutes.length > 0 && <section className="nav-recent-tools" hidden={Boolean(navQuery.trim())} aria-labelledby="nav-recent-tools-title">
+            <div className="nav-recent-heading"><span id="nav-recent-tools-title">{language === 'en' ? 'RECENTLY OPENED' : 'BARU DIBUKA'}</span><div className="nav-recent-heading-actions"><span className="nav-recent-count">{recentRoutes.length}</span><button type="button" className="nav-recent-clear" aria-label={language === 'en' ? 'Clear recent tools' : 'Hapus riwayat tools'} onClick={() => { setRecentRoutes([]); try { window.localStorage.removeItem(RECENT_NAV_STORAGE_KEY) } catch { /* Core navigation must work when storage is unavailable. */ } }}>{language === 'en' ? 'Clear' : 'Hapus'}</button></div></div>
+            <div className="nav-recent-list">
+              {recentRoutes.map(path => {
+                const destination = NAV_DESTINATIONS[path]
+                if (!destination) return null
+                const label = language === 'en' ? destination.en : destination.id
+                return <button type="button" className="nav-recent-link" key={path} aria-label={language === 'en' ? `Open recent tool ${label}` : `Buka tool terbaru ${label}`} onClick={() => { setNavQuery(''); setMenuOpen(false); navigate(path) }}>
+                  <span className="nav-recent-icon"><Clock3 size={14}/></span>
+                  <span className="nav-recent-copy"><b>{label}</b><small>{language === 'en' ? destination.descriptionEn : destination.descriptionId}</small></span>
+                  <ArrowRight size={14} className="nav-recent-arrow" aria-hidden="true"/>
+                </button>
+              })}
+            </div>
+          </section>}
           <NavLink to="/" end onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><HomeIcon size={16}/></span><span><b>{language === 'en' ? 'Journal' : 'Jurnal'}</b><small>{language === 'en' ? 'Articles, ideas and guides' : 'Artikel, ide, dan panduan'}</small></span></NavLink>
           <details className="nav-platform">
             <summary><span className="nav-link-icon"><Layers3 size={16}/></span><span><b>{language === 'en' ? 'Engineering platform' : 'Platform engineering'}</b><small>{language === 'en' ? 'Explore all engineering tools' : 'Jelajahi semua tools engineering'}</small></span><ChevronDown size={15} className="nav-chevron" /></summary>
