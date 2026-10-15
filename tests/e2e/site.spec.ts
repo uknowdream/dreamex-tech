@@ -1189,7 +1189,8 @@ test('mobile sidebar quick-find filters routes, announces empty results, and res
 
   await search.fill('this-destination-does-not-exist')
   await expect(drawer.locator('.nav-search-empty')).toContainText(/No destinations match|Tidak ada halaman yang cocok/i)
-  await expect(drawer.locator('.nav-search-count')).toBeHidden()
+  await expect(drawer.locator('.nav-search-count')).toBeVisible()
+  await expect(drawer.locator('.nav-search-count')).toContainText(/0 destinations found|0 tujuan ditemukan/i)
   await expect(drawer.locator('a[href="/api-playground"]')).toBeHidden()
 
   await drawer.getByRole('button', { name: /Clear navigation search|Hapus pencarian navigasi/i }).click()
