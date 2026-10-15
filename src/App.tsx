@@ -272,6 +272,7 @@ function Header() {
               <div className="nav-mega-group">
                 <span className="nav-group-label">{language === 'en' ? 'PLAN & OPERATE' : 'RENCANAKAN & KELOLA'}</span>
                 <NavLink to="/control-plane" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Activity size={15}/></span><span><b>Control Plane</b><small>{language === 'en' ? 'Release readiness & operations' : 'Kesiapan rilis dan operasi'}</small></span></NavLink>
+                <NavLink to="/engineering-intelligence" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Activity size={15}/></span><span><b>Engineering Intelligence</b><small>{language === 'en' ? 'Cross-tool quality insights' : 'Insight kualitas lintas tools'}</small></span></NavLink>
                 <NavLink to="/command-center" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><ClipboardList size={15}/></span><span><b>Command Center</b><small>{language === 'en' ? 'Tasks, incidents & decisions' : 'Tugas, insiden, dan keputusan'}</small></span></NavLink>
                 <NavLink to="/roadmap" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><ArrowDownRight size={15}/></span><span><b>{language === 'en' ? 'Product Roadmap' : 'Roadmap Produk'}</b><small>{language === 'en' ? 'Priorities and milestones' : 'Prioritas dan pencapaian'}</small></span></NavLink>
               </div>
@@ -284,9 +285,13 @@ function Header() {
                 <NavLink to="/qa-studio" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><CheckCircle2 size={15}/></span><span><b>QA Automation Studio</b><small>{language === 'en' ? 'Build and review test plans' : 'Bangun dan tinjau rencana tes'}</small></span></NavLink>
               </div>
               <div className="nav-mega-group">
-                <span className="nav-group-label">{language === 'en' ? 'SECURE & LEARN' : 'AMANKAN & PELAJARI'}</span>
+                <span className="nav-group-label">{language === 'en' ? 'SECURE & EXPLORE' : 'KEAMANAN & EKSPLORASI'}</span>
                 <NavLink to="/security-center" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><ShieldCheck size={15}/></span><span><b>{language === 'en' ? 'Security Center' : 'Pusat Keamanan'}</b><small>{language === 'en' ? 'Privacy and secure practices' : 'Privasi dan praktik aman'}</small></span></NavLink>
                 <NavLink to="/supply-chain-intelligence" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Network size={15}/></span><span><b>Supply Chain</b><small>{language === 'en' ? 'SBOM inventory insights' : 'Insight inventaris SBOM'}</small></span></NavLink>
+                <NavLink to="/performance" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Gauge size={15}/></span><span><b>Performance Observatory</b><small>{language === 'en' ? 'Performance budgets and signals' : 'Budget performa dan sinyal kualitas web'}</small></span></NavLink>
+                <NavLink to="/observatory" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Activity size={15}/></span><span><b>Web Quality Observatory</b><small>{language === 'en' ? 'Inspect metadata and accessibility signals' : 'Periksa metadata dan sinyal aksesibilitas'}</small></span></NavLink>
+                <NavLink to="/devtools" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Terminal size={15}/></span><span><b>Developer Utilities</b><small>{language === 'en' ? 'JSON, regex and token utilities' : 'Utilitas JSON, regex, dan token'}</small></span></NavLink>
+                <NavLink to="/knowledge-graph" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><Network size={15}/></span><span><b>Engineering Knowledge Graph</b><small>{language === 'en' ? 'Explore related concepts and tools' : 'Jelajahi konsep dan tools terkait'}</small></span></NavLink>
                 <NavLink to="/learn" onClick={() => setMenuOpen(false)}><span className="nav-link-icon"><BookOpen size={15}/></span><span><b>{language === 'en' ? 'Learning Hub' : 'Pusat Belajar'}</b><small>{language === 'en' ? 'Structured learning paths' : 'Jalur belajar terstruktur'}</small></span></NavLink>
               </div>
             </div>
