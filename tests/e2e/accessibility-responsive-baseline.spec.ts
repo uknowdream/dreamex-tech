@@ -151,3 +151,45 @@ test('navigation drawer keeps filtered links hidden and uses a bounded content-l
   expect(geometry.bottom).toBeLessThanOrEqual(geometry.viewportHeight + 1)
   expect(geometry.height).toBeLessThanOrEqual(geometry.viewportHeight * 0.8 + 2)
 })
+
+
+test('desktop navigation remains usable at compact and wide desktop widths', async ({ page }) => {
+  for (const width of [1024, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/')
+    const header = page.locator('.site-header')
+    await expect(header).toBeVisible()
+
+    const menuButton = page.locator('.menu-toggle')
+    if (await menuButton.isVisible()) {
+      await menuButton.click()
+      await expect(page.locator('#primary-navigation.nav-open')).toBeVisible()
+    } else {
+      const platform = page.locator('.nav-platform')
+      await expect(platform).toBeVisible()
+      await platform.locator('summary').click()
+      await expect(platform.locator('.nav-mega-panel')).toBeVisible()
+    }
+
+    const nav = page.locator('#primary-navigation')
+    const bounds = await nav.evaluate(element => {
+      const rect = element.getBoundingClientRect()
+      return { left: rect.left, right: rect.right, width: rect.width, viewport: document.documentElement.clientWidth }
+    })
+    expect(bounds.left, `Navigation clipped on desktop at ${width}px`).toBeGreaterThanOrEqual(-1)
+    expect(bounds.right, `Navigation exceeds desktop viewport at ${width}px`).toBeLessThanOrEqual(bounds.viewport + 1)
+    expect(bounds.width).toBeGreaterThan(0)
+  }
+})
+
+test('navigation drawer can be closed with its close control and restores page interaction', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.locator('.menu-toggle').click()
+  const drawer = page.locator('#primary-navigation.nav-open[role="dialog"]')
+  await expect(drawer).toBeVisible()
+  const closeButton = drawer.locator('.nav-drawer-close, button[aria-label*="Close"], button[aria-label*="Tutup"]')
+  await expect(closeButton.first()).toBeVisible()
+  await closeButton.first().click()
+  await expect(page.locator('#primary-navigation.nav-open')).toHaveCount(0)
+})
