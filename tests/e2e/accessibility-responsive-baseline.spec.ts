@@ -116,3 +116,38 @@ test('mobile navigation and expanded engineering links remain visible and scroll
   expect(geometry!.panelHeight).toBeGreaterThan(0)
   expect(geometry!.panelScrollHeight).toBeGreaterThan(0)
 })
+
+test('navigation drawer keeps filtered links hidden and uses a bounded content-led sheet', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await page.locator('.menu-toggle').click()
+  const drawer = page.locator('#primary-navigation.nav-open[role="dialog"]')
+  await expect(drawer).toBeVisible()
+
+  const search = drawer.locator('#nav-drawer-search-input')
+  await search.fill('no-such-dreamex-destination')
+  const emptyState = drawer.locator('.nav-search-empty')
+  await expect(emptyState).toBeVisible()
+  const hiddenLinks = drawer.locator('a[hidden]')
+  await expect(hiddenLinks.first()).toHaveCSS('display', 'none')
+
+  await search.fill('')
+  await expect(drawer.getByRole('link', { name: /Journal|Jurnal/ })).toBeVisible()
+  const geometry = await drawer.evaluate(element => {
+    const rect = element.getBoundingClientRect()
+    return {
+      left: rect.left,
+      right: rect.right,
+      top: rect.top,
+      bottom: rect.bottom,
+      height: rect.height,
+      viewportWidth: document.documentElement.clientWidth,
+      viewportHeight: document.documentElement.clientHeight,
+    }
+  })
+  expect(geometry.left).toBeGreaterThanOrEqual(0)
+  expect(geometry.right).toBeLessThanOrEqual(geometry.viewportWidth + 1)
+  expect(geometry.top).toBeGreaterThanOrEqual(0)
+  expect(geometry.bottom).toBeLessThanOrEqual(geometry.viewportHeight + 1)
+  expect(geometry.height).toBeLessThanOrEqual(geometry.viewportHeight * 0.8 + 2)
+})
