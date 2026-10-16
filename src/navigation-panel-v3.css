@@ -105,3 +105,72 @@
     transition: none !important;
   }
 }
+
+
+/* Explicitly outrank legacy responsive declarations that use !important. */
+@media (max-width: 1050px) {
+  .site-header .nav-links.nav-open[role="dialog"] {
+    position: fixed !important;
+    inset-block-start: max(72px, env(safe-area-inset-top)) !important;
+    inset-block-end: max(12px, env(safe-area-inset-bottom)) !important;
+    inset-inline-start: auto !important;
+    inset-inline-end: 20px !important;
+    width: min(680px, calc(100vw - 40px)) !important;
+    max-width: calc(100vw - 40px) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: calc(100dvh - 92px) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    transform: none !important;
+    box-sizing: border-box !important;
+  }
+
+  .site-header .nav-links.nav-open[role="dialog"] .nav-mega-panel {
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    max-height: min(38dvh, 320px) !important;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    box-sizing: border-box !important;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1050px) {
+  .site-header .nav-links.nav-open[role="dialog"] {
+    inset-inline-start: auto !important;
+    inset-inline-end: 20px !important;
+    width: min(680px, calc(100vw - 40px)) !important;
+    max-width: calc(100vw - 40px) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .site-header .nav-links.nav-open[role="dialog"] {
+    inset-inline-start: 12px !important;
+    inset-inline-end: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    padding: 16px 14px max(14px, env(safe-area-inset-bottom)) !important;
+    border-radius: 18px !important;
+  }
+
+  .site-header .nav-links.nav-open[role="dialog"] .nav-mega-panel {
+    max-height: min(34dvh, 260px) !important;
+    padding: 12px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .site-header .nav-links.nav-open[role="dialog"] {
+    inset-inline-start: 8px !important;
+    inset-inline-end: 8px !important;
+    padding-inline: 12px !important;
+  }
+}
