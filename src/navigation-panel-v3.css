@@ -1,0 +1,107 @@
+/* Navigation panel v3 — intentionally balanced at tablet and mobile widths. */
+@media (max-width: 1050px) {
+  .nav-links.nav-open[role="dialog"] {
+    inset-block-start: max(72px, env(safe-area-inset-top));
+    inset-block-end: max(12px, env(safe-area-inset-bottom));
+    inset-inline-start: auto;
+    inset-inline-end: 20px;
+    width: min(680px, calc(100vw - 40px));
+    max-width: calc(100vw - 40px);
+    height: auto;
+    max-height: calc(100dvh - 92px);
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    border-radius: 20px;
+    padding: 20px 18px max(18px, env(safe-area-inset-bottom));
+    transform: none;
+  }
+
+  .nav-links.nav-open[role="dialog"] .nav-platform {
+    flex: 0 0 auto;
+    min-width: 0;
+  }
+
+  .nav-links.nav-open[role="dialog"] .nav-platform[open] {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .nav-links.nav-open[role="dialog"] .nav-mega-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+    width: 100%;
+    max-width: 100%;
+    max-height: min(38dvh, 320px);
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    padding: 14px;
+    margin-block: 8px 4px;
+    border-radius: 14px;
+  }
+
+  .nav-links.nav-open[role="dialog"] .nav-mega-intro,
+  .nav-links.nav-open[role="dialog"] .nav-mega-group {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .nav-links.nav-open[role="dialog"] .nav-mega-group a {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1050px) {
+  .nav-links.nav-open[role="dialog"] {
+    inset-inline-start: auto;
+    inset-inline-end: 20px;
+    width: min(680px, calc(100vw - 40px));
+  }
+}
+
+@media (max-width: 760px) {
+  .nav-links.nav-open[role="dialog"] {
+    inset-inline-start: 12px;
+    inset-inline-end: 12px;
+    width: auto;
+    max-width: none;
+    padding: 16px 14px max(14px, env(safe-area-inset-bottom));
+    border-radius: 18px;
+  }
+
+  .nav-links.nav-open[role="dialog"] .nav-mega-panel {
+    max-height: min(34dvh, 260px);
+    padding: 12px;
+  }
+
+  .nav-links.nav-open[role="dialog"] .nav-drawer-head {
+    gap: 12px;
+  }
+
+  .nav-links.nav-open[role="dialog"] .nav-drawer-head strong {
+    font-size: 23px;
+  }
+}
+
+@media (max-width: 380px) {
+  .nav-links.nav-open[role="dialog"] {
+    inset-inline-start: 8px;
+    inset-inline-end: 8px;
+    padding-inline: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-links.nav-open[role="dialog"] {
+    scroll-behavior: auto;
+    transition: none !important;
+  }
+}
