@@ -234,3 +234,29 @@ test('navigation drawer close returns keyboard focus to the menu toggle', async 
   await expect(page.locator('#primary-navigation.nav-open')).toHaveCount(0)
   await expect(toggle).toBeFocused()
 })
+
+test('tablet navigation drawer is centered with balanced side gutters', async ({ page }) => {
+  for (const width of [768, 820, 1024, 1100]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/')
+    const menuButton = page.locator('.menu-toggle')
+    await expect(menuButton).toBeVisible()
+    await menuButton.click()
+    const drawer = page.locator('#primary-navigation.nav-open[role="dialog"]')
+    await expect(drawer).toBeVisible()
+
+    const bounds = await drawer.evaluate(element => {
+      const rect = element.getBoundingClientRect()
+      return {
+        left: rect.left,
+        right: rect.right,
+        width: rect.width,
+        viewport: document.documentElement.clientWidth,
+      }
+    })
+    expect(bounds.left, `Tablet drawer left gutter at ${width}px`).toBeGreaterThanOrEqual(0)
+    expect(bounds.right, `Tablet drawer right edge at ${width}px`).toBeLessThanOrEqual(width + 1)
+    expect(Math.abs(bounds.left - (bounds.viewport - bounds.right)), `Tablet drawer should be centered at ${width}px`).toBeLessThanOrEqual(2)
+    expect(bounds.width, `Tablet drawer should not collapse into a narrow column at ${width}px`).toBeGreaterThanOrEqual(Math.min(520, width - 48))
+  }
+})
