@@ -318,3 +318,20 @@
     padding: 9px !important;
   }
 }
+
+/*
+ * Tablet composition: avoid the narrow, right-anchored drawer that reads as
+ * an accidental side column at 761–1100px. Center the panel with equal gutters.
+ * Phones keep their near-full-width sheet rules above; wide desktop keeps the
+ * existing full navigation layout.
+ */
+@media (min-width: 761px) and (max-width: 1100px) {
+  html body #primary-navigation.nav-open[role="dialog"] {
+    inset-inline: auto !important;
+    left: 50% !important;
+    right: auto !important;
+    width: min(560px, calc(100vw - 48px)) !important;
+    max-width: calc(100vw - 48px) !important;
+    transform: translateX(-50%) !important;
+  }
+}
