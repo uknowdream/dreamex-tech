@@ -178,7 +178,12 @@ test('navigation drawer and submenu remain bounded at tablet and desktop widths'
     }
 
     const platform = nav.locator('.nav-platform').first()
-    await platform.locator('summary').click()
+    // On desktop, the menu trigger above already opens the details element.
+    // Only click the summary when it is currently closed; clicking an open
+    // summary again closes the panel and makes the geometry check misleading.
+    if (await platform.getAttribute('open') === null) {
+      await platform.locator('summary').click()
+    }
     const panel = platform.locator('.nav-mega-panel')
     await expect(panel).toBeVisible()
 
