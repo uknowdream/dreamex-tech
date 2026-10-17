@@ -1,0 +1,337 @@
+/*
+ * Navigation panel v4
+ * This file is imported after legacy styles on purpose. The repository has
+ * several accumulated !important drawer rules, so layout selectors must match
+ * their specificity instead of relying on source order alone.
+ */
+@media (max-width: 1100px), (pointer: coarse) {
+  html body #primary-navigation.nav-open[role="dialog"] {
+    position: fixed !important;
+    inset: max(76px, calc(env(safe-area-inset-top) + 12px)) 16px max(12px, env(safe-area-inset-bottom)) auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    gap: 7px !important;
+    box-sizing: border-box !important;
+    width: min(440px, calc(100vw - 32px)) !important;
+    max-width: calc(100vw - 32px) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: calc(100dvh - max(76px, calc(env(safe-area-inset-top) + 12px)) - 24px) !important;
+    margin: 0 !important;
+    padding: 16px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    border: 1px solid rgba(130, 155, 197, .28) !important;
+    border-radius: 18px !important;
+    background: linear-gradient(155deg, rgba(16, 28, 48, .99), rgba(7, 13, 24, .995)) !important;
+    box-shadow: 0 24px 72px rgba(0, 0, 0, .56), 0 0 0 1px rgba(255, 255, 255, .025) !important;
+    transform: none !important;
+    animation: none !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 2102 !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] *,
+  html body #primary-navigation.nav-open[role="dialog"] *::before,
+  html body #primary-navigation.nav-open[role="dialog"] *::after {
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-head,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-footer {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-head {
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    margin: 0 0 4px !important;
+    padding: 0 0 14px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, .1) !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search-control,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search-control input {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] > a,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform > summary {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] > a,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform > summary {
+    display: flex !important;
+    align-items: center !important;
+    min-height: 48px !important;
+    height: auto !important;
+    padding: 10px 11px !important;
+    border-radius: 11px !important;
+    white-space: normal !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel {
+    position: static !important;
+    inset: auto !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    align-content: start !important;
+    gap: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: min(38dvh, 300px) !important;
+    flex: 0 0 auto !important;
+    margin: 4px 0 6px !important;
+    padding: 10px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    transform: none !important;
+    animation: none !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel .nav-mega-intro {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    gap: 7px !important;
+    padding: 10px !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel .nav-mega-kicker,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel .nav-mega-intro p {
+    display: none !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel .nav-mega-group {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 3px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 5px 0 !important;
+    overflow: visible !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel .nav-mega-group > a {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 44px !important;
+    height: auto !important;
+    padding: 8px !important;
+    overflow-wrap: anywhere !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel .nav-mega-group > a > span:last-child {
+    display: grid !important;
+    gap: 3px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel b,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel small {
+    display: block !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-footer {
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+    margin-top: 8px !important;
+    padding: 12px 2px 2px !important;
+    border-top: 1px solid rgba(255, 255, 255, .1) !important;
+  }
+}
+
+/* Phones: a near-full-width sheet, with a small and consistent outer gutter. */
+@media (max-width: 760px) {
+  html body #primary-navigation.nav-open[role="dialog"] {
+    inset: max(68px, calc(env(safe-area-inset-top) + 8px)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)) !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    padding: 14px 12px max(12px, env(safe-area-inset-bottom)) !important;
+    border-radius: 16px !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform[open] > .nav-mega-panel {
+    max-height: min(34dvh, 250px) !important;
+    padding: 9px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  html body #primary-navigation.nav-open[role="dialog"] {
+    inset-inline: 8px !important;
+    padding-inline: 10px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html body #primary-navigation.nav-open[role="dialog"],
+  html body #primary-navigation.nav-open[role="dialog"] * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/*
+ * Engineering Platform click-state correction.
+ * Keep the opened submenu in document flow on touch layouts, avoid the
+ * tiny 34vh viewport that clipped tool groups, and remove the oversized
+ * intro block so the first useful destinations stay visible.
+ */
+@media (max-width: 1100px), (pointer: coarse) {
+  html body #primary-navigation.nav-open[role="dialog"] details.nav-platform {
+    display: block !important;
+    flex: 0 0 auto !important;
+    overflow: visible !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] details.nav-platform > summary {
+    position: relative !important;
+    z-index: 1 !important;
+    cursor: pointer !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: rgba(131, 213, 255, .16);
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] details.nav-platform[open] > .nav-mega-panel {
+    position: static !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    max-height: min(48dvh, 420px) !important;
+    height: auto !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain !important;
+    -webkit-overflow-scrolling: touch !important;
+    scroll-padding-block: 8px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] details.nav-platform[open] > .nav-mega-panel > .nav-mega-intro {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    padding: 10px !important;
+    gap: 7px !important;
+    overflow: visible !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] details.nav-platform[open] > .nav-mega-panel > .nav-mega-intro .nav-mega-kicker,
+  html body #primary-navigation.nav-open[role="dialog"] details.nav-platform[open] > .nav-mega-panel > .nav-mega-intro p {
+    display: none !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] details.nav-platform[open] > .nav-mega-panel > .nav-mega-intro strong {
+    font-size: 15px !important;
+    max-width: none !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] details.nav-platform[open] > .nav-mega-panel > .nav-mega-intro > a {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    min-height: 40px !important;
+    align-items: center !important;
+    position: relative !important;
+    z-index: 2 !important;
+    pointer-events: auto !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] details.nav-platform[open] > .nav-mega-panel > .nav-mega-group {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] details.nav-platform[open] > .nav-mega-panel .nav-mega-group[hidden],
+  html body #primary-navigation.nav-open[role="dialog"] details.nav-platform[open] > .nav-mega-panel a[hidden] {
+    display: none !important;
+  }
+}
+
+@media (max-width: 760px) {
+  html body #primary-navigation.nav-open[role="dialog"] details.nav-platform[open] > .nav-mega-panel {
+    max-height: min(48dvh, 420px) !important;
+    margin-block: 5px 8px !important;
+    padding: 8px !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] details.nav-platform[open] > .nav-mega-panel .nav-mega-group > a {
+    min-height: 44px !important;
+    padding: 9px !important;
+  }
+}
+
+/*
+ * Tablet composition: avoid the narrow, right-anchored drawer that reads as
+ * an accidental side column at 761–1100px. Center the panel with equal gutters.
+ * Phones keep their near-full-width sheet rules above; wide desktop keeps the
+ * existing full navigation layout.
+ */
+@media (min-width: 761px) and (max-width: 1100px) {
+  html body #primary-navigation.nav-open[role="dialog"] {
+    inset-inline: auto !important;
+    left: 50% !important;
+    right: auto !important;
+    width: min(560px, calc(100vw - 48px)) !important;
+    max-width: calc(100vw - 48px) !important;
+    transform: translateX(-50%) !important;
+  }
+}

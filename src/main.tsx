@@ -8,6 +8,7 @@ import './navigation-motion.css'
 import './design-refinement.css'
 import './engineering-launchpad.css'
 import './engineering-page-system.css'
+import './navigation-panel-v3.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
