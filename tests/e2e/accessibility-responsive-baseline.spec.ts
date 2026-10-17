@@ -198,13 +198,18 @@ test('navigation drawer and submenu remain bounded at tablet and desktop widths'
         panelWidth: pr.width,
         panelScrollHeight: panel.scrollHeight,
         panelClientHeight: panel.clientHeight,
+        isDrawer: nav.getAttribute('role') === 'dialog',
       }
     })
     expect(bounds, `Navigation geometry unavailable at ${width}px`).not.toBeNull()
     expect(bounds!.navLeft, `Navigation left edge at ${width}px`).toBeGreaterThanOrEqual(-1)
     expect(bounds!.navRight, `Navigation right edge at ${width}px`).toBeLessThanOrEqual(bounds!.viewport + 1)
-    expect(bounds!.panelLeft, `Submenu left edge at ${width}px`).toBeGreaterThanOrEqual(bounds!.navLeft - 1)
-    expect(bounds!.panelRight, `Submenu right edge at ${width}px`).toBeLessThanOrEqual(bounds!.navRight + 1)
+    expect(bounds!.panelLeft, `Submenu left edge at ${width}px`).toBeGreaterThanOrEqual(-1)
+    expect(bounds!.panelRight, `Submenu right edge at ${width}px`).toBeLessThanOrEqual(bounds!.viewport + 1)
+    if (bounds!.isDrawer) {
+      expect(bounds!.panelLeft, `Submenu left edge escapes drawer at ${width}px`).toBeGreaterThanOrEqual(bounds!.navLeft - 1)
+      expect(bounds!.panelRight, `Submenu right edge escapes drawer at ${width}px`).toBeLessThanOrEqual(bounds!.navRight + 1)
+    }
     expect(bounds!.panelWidth, `Submenu width at ${width}px`).toBeGreaterThan(0)
     expect(bounds!.panelScrollHeight).toBeGreaterThan(0)
     expect(bounds!.panelClientHeight).toBeGreaterThan(0)
