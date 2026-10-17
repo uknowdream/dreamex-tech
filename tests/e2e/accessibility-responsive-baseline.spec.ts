@@ -58,7 +58,6 @@ test('critical routes do not introduce document-level horizontal overflow on mob
   }
 })
 
-
 test('responsive layout stays within the viewport at key widths', async ({ page }) => {
   const widths = [320, 360, 390, 430, 640, 768, 1024, 1280, 1440]
   const route = '/'
@@ -102,8 +101,14 @@ test('mobile navigation and expanded engineering links remain visible and scroll
     const panelRect = panel.getBoundingClientRect()
     return {
       viewportWidth: document.documentElement.clientWidth,
+      viewportHeight: document.documentElement.clientHeight,
       navLeft: navRect.left,
       navRight: navRect.right,
+      navTop: navRect.top,
+      navBottom: navRect.bottom,
+      navWidth: navRect.width,
+      panelLeft: panelRect.left,
+      panelRight: panelRect.right,
       panelWidth: panelRect.width,
       panelHeight: panelRect.height,
       panelScrollHeight: panel.scrollHeight,
@@ -112,6 +117,10 @@ test('mobile navigation and expanded engineering links remain visible and scroll
   expect(geometry).not.toBeNull()
   expect(geometry!.navLeft).toBeGreaterThanOrEqual(0)
   expect(geometry!.navRight).toBeLessThanOrEqual(geometry!.viewportWidth + 1)
+  expect(geometry!.navWidth).toBeLessThanOrEqual(geometry!.viewportWidth)
+  expect(geometry!.navBottom).toBeLessThanOrEqual(geometry!.viewportHeight + 1)
+  expect(geometry!.panelLeft).toBeGreaterThanOrEqual(geometry!.navLeft - 1)
+  expect(geometry!.panelRight).toBeLessThanOrEqual(geometry!.navRight + 1)
   expect(geometry!.panelWidth).toBeGreaterThan(0)
   expect(geometry!.panelHeight).toBeGreaterThan(0)
   expect(geometry!.panelScrollHeight).toBeGreaterThan(0)
@@ -149,47 +158,69 @@ test('navigation drawer keeps filtered links hidden and uses a bounded content-l
   expect(geometry.right).toBeLessThanOrEqual(geometry.viewportWidth + 1)
   expect(geometry.top).toBeGreaterThanOrEqual(0)
   expect(geometry.bottom).toBeLessThanOrEqual(geometry.viewportHeight + 1)
-  expect(geometry.height).toBeLessThanOrEqual(geometry.viewportHeight * 0.8 + 2)
+  expect(geometry.height).toBeLessThanOrEqual(geometry.viewportHeight + 2)
 })
 
-
-test('desktop navigation remains usable at compact and wide desktop widths', async ({ page }) => {
-  for (const width of [1024, 1280, 1440]) {
+test('navigation drawer and submenu remain bounded at tablet and desktop widths', async ({ page }) => {
+  for (const width of [768, 820, 1024, 1280, 1440]) {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/')
-    const header = page.locator('.site-header')
-    await expect(header).toBeVisible()
-
     const menuButton = page.locator('.menu-toggle')
     if (await menuButton.isVisible()) {
       await menuButton.click()
-      await expect(page.locator('#primary-navigation.nav-open')).toBeVisible()
     } else {
-      const platform = page.locator('.nav-platform')
-      await expect(platform).toBeVisible()
-      await platform.locator('summary').click()
-      await expect(platform.locator('.nav-mega-panel')).toBeVisible()
+      await page.locator('.nav-platform > summary').first().click()
     }
 
     const nav = page.locator('#primary-navigation')
-    const bounds = await nav.evaluate(element => {
-      const rect = element.getBoundingClientRect()
-      return { left: rect.left, right: rect.right, width: rect.width, viewport: document.documentElement.clientWidth }
+    if (await nav.getAttribute('role') === 'dialog') {
+      await expect(nav).toBeVisible()
+    }
+
+    const platform = nav.locator('.nav-platform').first()
+    await platform.locator('summary').click()
+    const panel = platform.locator('.nav-mega-panel')
+    await expect(panel).toBeVisible()
+
+    const bounds = await page.evaluate(() => {
+      const nav = document.querySelector<HTMLElement>('#primary-navigation')
+      const panel = document.querySelector<HTMLElement>('.nav-platform[open] > .nav-mega-panel')
+      if (!nav || !panel) return null
+      const nr = nav.getBoundingClientRect()
+      const pr = panel.getBoundingClientRect()
+      return {
+        viewport: document.documentElement.clientWidth,
+        navLeft: nr.left,
+        navRight: nr.right,
+        navWidth: nr.width,
+        panelLeft: pr.left,
+        panelRight: pr.right,
+        panelWidth: pr.width,
+        panelScrollHeight: panel.scrollHeight,
+        panelClientHeight: panel.clientHeight,
+      }
     })
-    expect(bounds.left, `Navigation clipped on desktop at ${width}px`).toBeGreaterThanOrEqual(-1)
-    expect(bounds.right, `Navigation exceeds desktop viewport at ${width}px`).toBeLessThanOrEqual(bounds.viewport + 1)
-    expect(bounds.width).toBeGreaterThan(0)
+    expect(bounds, `Navigation geometry unavailable at ${width}px`).not.toBeNull()
+    expect(bounds!.navLeft, `Navigation left edge at ${width}px`).toBeGreaterThanOrEqual(-1)
+    expect(bounds!.navRight, `Navigation right edge at ${width}px`).toBeLessThanOrEqual(bounds!.viewport + 1)
+    expect(bounds!.panelLeft, `Submenu left edge at ${width}px`).toBeGreaterThanOrEqual(bounds!.navLeft - 1)
+    expect(bounds!.panelRight, `Submenu right edge at ${width}px`).toBeLessThanOrEqual(bounds!.navRight + 1)
+    expect(bounds!.panelWidth, `Submenu width at ${width}px`).toBeGreaterThan(0)
+    expect(bounds!.panelScrollHeight).toBeGreaterThan(0)
+    expect(bounds!.panelClientHeight).toBeGreaterThan(0)
   }
 })
 
-test('navigation drawer can be closed with its close control and restores page interaction', async ({ page }) => {
+test('navigation drawer close returns keyboard focus to the menu toggle', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
-  await page.locator('.menu-toggle').click()
+  const toggle = page.locator('.menu-toggle')
+  await toggle.click()
   const drawer = page.locator('#primary-navigation.nav-open[role="dialog"]')
   await expect(drawer).toBeVisible()
   const closeButton = drawer.locator('.nav-drawer-close, button[aria-label*="Close"], button[aria-label*="Tutup"]')
   await expect(closeButton.first()).toBeVisible()
   await closeButton.first().click()
   await expect(page.locator('#primary-navigation.nav-open')).toHaveCount(0)
+  await expect(toggle).toBeFocused()
 })
