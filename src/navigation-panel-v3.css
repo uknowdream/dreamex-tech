@@ -264,7 +264,32 @@
   }
 
   html body #primary-navigation.nav-open[role="dialog"] details.nav-platform[open] > .nav-mega-panel > .nav-mega-intro {
+    display: flex !important;
+    flex: 0 0 auto !important;
+    min-height: 0 !important;
+    padding: 10px !important;
+    gap: 7px !important;
+    overflow: visible !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] details.nav-platform[open] > .nav-mega-panel > .nav-mega-intro .nav-mega-kicker,
+  html body #primary-navigation.nav-open[role="dialog"] details.nav-platform[open] > .nav-mega-panel > .nav-mega-intro p {
     display: none !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] details.nav-platform[open] > .nav-mega-panel > .nav-mega-intro strong {
+    font-size: 15px !important;
+    max-width: none !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] details.nav-platform[open] > .nav-mega-panel > .nav-mega-intro > a {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    min-height: 40px !important;
+    align-items: center !important;
+    position: relative !important;
+    z-index: 2 !important;
+    pointer-events: auto !important;
   }
 
   html body #primary-navigation.nav-open[role="dialog"] details.nav-platform[open] > .nav-mega-panel > .nav-mega-group {
