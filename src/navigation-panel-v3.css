@@ -335,3 +335,143 @@
     transform: translateX(-50%) !important;
   }
 }
+
+
+/*
+ * Drawer visual alignment polish (Android desktop-mode and touch browsers).
+ * Keep the search field native-control styles neutral and align every
+ * navigation row to the same left edge inside the drawer.
+ */
+@media (max-width: 1100px), (pointer: coarse) {
+  html body #primary-navigation.nav-open[role="dialog"] {
+    align-items: stretch !important;
+    text-align: left !important;
+    gap: 8px !important;
+    padding: 16px !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 7px !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 0 8px !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search > label {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    text-align: left !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search-control {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-height: 44px !important;
+    margin: 0 !important;
+    padding: 0 12px !important;
+    border: 1px solid #34445c !important;
+    border-radius: 10px !important;
+    background: #080f1c !important;
+    color: #c9d5e8 !important;
+    box-shadow: none !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search-control input,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search-control input[type="search"] {
+    display: block !important;
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 42px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: 0 !important;
+    background: transparent !important;
+    color: #edf4ff !important;
+    box-shadow: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    font: inherit !important;
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search-control input::placeholder {
+    color: #71829a !important;
+    opacity: 1 !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] > a,
+  html body #primary-navigation.nav-open[role="dialog"] > details.nav-platform,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-footer > * {
+    align-self: stretch !important;
+    text-align: left !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] > a {
+    display: flex !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
+    min-height: 48px !important;
+    margin: 0 !important;
+    padding: 9px 11px !important;
+    text-align: left !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] > a > span:last-child {
+    display: grid !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    gap: 3px !important;
+    text-align: left !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] > a .nav-link-icon,
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform > summary .nav-link-icon {
+    flex: 0 0 30px !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] > .nav-recent-tools {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-platform > summary {
+    justify-content: flex-start !important;
+    width: 100% !important;
+    text-align: left !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-footer {
+    align-items: stretch !important;
+    text-align: left !important;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1100px) {
+  html body #primary-navigation.nav-open[role="dialog"] {
+    width: min(620px, calc(100vw - 48px)) !important;
+    max-width: calc(100vw - 48px) !important;
+    padding: 18px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  html body #primary-navigation.nav-open[role="dialog"] {
+    gap: 7px !important;
+    padding: 14px 12px max(12px, env(safe-area-inset-bottom)) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search-control {
+    transition: none !important;
+  }
+}
