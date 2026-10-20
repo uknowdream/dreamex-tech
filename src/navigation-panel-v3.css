@@ -635,3 +635,24 @@
     margin-top: 8px !important;
   }
 }
+
+
+/* Keep the drawer inside the viewport even when legacy centering transforms
+   are present in desktop-mode browsers on touch devices. */
+@media (pointer: coarse) and (min-width: 761px) {
+  html body #primary-navigation.nav-open[role="dialog"] {
+    box-sizing: border-box !important;
+    left: auto !important;
+    right: max(20px, env(safe-area-inset-right)) !important;
+    width: min(620px, calc(100vw - 56px)) !important;
+    max-width: calc(100vw - 56px) !important;
+    transform: none !important;
+    translate: none !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] *,
+  html body #primary-navigation.nav-open[role="dialog"] *::before,
+  html body #primary-navigation.nav-open[role="dialog"] *::after {
+    box-sizing: border-box;
+  }
+}
