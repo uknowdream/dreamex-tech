@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dreamex-tech-shell-v1'
+const CACHE_NAME = 'dreamex-tech-shell-v2'
 const PRECACHE_URLS = ['/', '/manifest.webmanifest', '/favicon.svg', '/icon-192.png', '/icon-512.png']
 
 self.addEventListener('install', event => {
