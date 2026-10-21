@@ -64,4 +64,40 @@ export const articleTranslations: Record<string, ArticleTranslation> = {
       'After release, monitor quality with privacy-appropriate data, user feedback, latency, cost, and escalation rates. Separate offline evaluation from production monitoring, then use production findings to refresh test datasets regularly.',
     ],
   },
+
+  'web-accessibility-audits-with-axe': {
+    title: 'Making Accessibility Audits Part of CI',
+    excerpt: 'Integrate axe-core into browser tests without treating automated scores as WCAG certification.',
+    body: [
+      'Accessibility is most effective when it is checked throughout development instead of only before launch. Automated audits can find patterns missed in code review, including missing accessible names, incorrect label relationships, and some contrast issues.',
+      'Integrate axe-core into browser tests for high-risk routes and frequent user journeys. Run the audit after the page has rendered, and preserve rule IDs, affected elements, and failure summaries so findings are actionable.',
+      'Start by blocking releases for critical issues, then assign owners and remediation targets for other serious findings. Avoid turning every finding into a hard error before triage because complex pages may already have accessibility debt.',
+      'Automated checks cannot verify the whole experience. Manual testing still needs keyboard navigation, focus order, zoom, reflow, screen readers, form validation messages, and key journeys with assistive technology.',
+      'Use axe output as actionable evidence, not a compliance certificate. Track findings over time, route coverage, defect age, and regressions after shared component changes.',
+    ],
+  },
+  'production-smoke-tests-after-deployment': {
+    title: 'Designing Smoke Tests After Deployment',
+    excerpt: 'Validate routes, metadata, security headers, feeds, and application readiness after promoting a build to production.',
+    body: [
+      'A successful build proves that an artifact was created. Domain configuration, rewrites, headers, environment variables, and platform integrations can still fail after release.',
+      'Run smoke tests after the deployment is ready. Check critical routes with direct HTTP requests, status codes, content types, redirects, canonical metadata, sitemap, RSS, and required security headers.',
+      'Keep checks fast and deterministic. Use content markers to distinguish the correct page from an unexpected HTML fallback, and verify that protected endpoints reject unauthenticated requests as intended.',
+      'HTTP smoke tests do not replace browser tests. Add browser regression for interactions, application rendering, forms, navigation, and data persistence. Use Lighthouse to track performance and accessibility, not as a functional test substitute.',
+      'When a smoke test fails, stop further promotion, notify owners with the route and evidence, and evaluate rollback. Record the commit, deployment ID, verification result, and review ownership.',
+      'Keep production checks from changing business data. Use read-only paths or a restricted test identity, and never place production tokens in logs or report artifacts.',
+    ],
+  },
+  'secure-browser-based-engineering-tools': {
+    title: 'Building Secure Browser-Based Engineering Tools',
+    excerpt: 'Set safe boundaries for CORS, browser storage, secrets, file imports, and backend endpoints in engineering tools.',
+    body: [
+      'Browser-based engineering tools are useful for experiments and local analysis, but their security boundaries must be explicit. Data in localStorage or sessionStorage belongs to a browser profile and is not managed storage with backups or team access controls.',
+      'CORS is a browser policy for cross-origin requests. A CORS error does not always mean that an API is down, and disabling browser security is not a production solution.',
+      'Do not store passwords, admin tokens, or production credentials in frontend code. Build variables prefixed with VITE_ can become part of the public bundle; secrets belong in the server environment and should only be used by authorized backend endpoints.',
+      'A backend that forwards requests to user-selected URLs can introduce server-side request forgery risk. Use destination allowlists, block internal network addresses, restrict protocols and response sizes, enforce timeouts, and apply rate limits.',
+      'For imported JSON, OpenAPI, JUnit, or SBOM files, validate schemas, component counts, nesting, and input size. Communicate the limits of heuristic analysis and do not interpret a file with no findings as proof that a system is vulnerability-free.',
+      'Document where data is stored, when it is shared, how tokens can be revoked, and what the tool does not protect. Honest limitations are part of product security.',
+    ],
+  },
 }
