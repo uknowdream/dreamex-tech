@@ -76,21 +76,58 @@ test('API health and sign-in endpoints fail closed when OAuth is not configured'
   assert.equal(authResponse.json().error, 'github_oauth_not_configured')
 })
 
-test('private integration APIs require an authenticated signed session', async () => {
+test('private workspace and invitation APIs require an authenticated signed session', async () => {
   const workspaceResponse = mockResponse()
   await workspace(request('GET'), workspaceResponse)
   assert.equal(workspaceResponse.statusCode, 401)
   assert.equal(workspaceResponse.json().error, 'authentication_required')
 
-  const githubResponse = mockResponse()
-  await githubIntegration(request('GET'), githubResponse)
-  assert.equal(githubResponse.statusCode, 401)
-  assert.equal(githubResponse.json().error, 'authentication_required')
-
   const inviteResponse = mockResponse()
   await invites(request('POST', { origin: 'https://dreamex.tech', body: { role: 'viewer' } }), inviteResponse)
   assert.equal(inviteResponse.statusCode, 401)
   assert.equal(inviteResponse.json().error, 'authentication_required')
+})
+
+test('public GitHub integration loads the configured owner without sign-in and requests public data only', async () => {
+  delete process.env.GITHUB_CLIENT_ID
+  delete process.env.GITHUB_CLIENT_SECRET
+  process.env.SESSION_SECRET = ''
+  process.env.GITHUB_PUBLIC_OWNER = 'uknowdream'
+  const originalFetch = globalThis.fetch
+  const requests = []
+  globalThis.fetch = async (input, init) => {
+    const url = String(input)
+    requests.push({ url, init })
+    if (url.includes('/users/uknowdream/repos?')) {
+      return new Response(JSON.stringify([
+        { id: 1, name: 'dreamex-tech', full_name: 'uknowdream/dreamex-tech', html_url: 'https://github.com/uknowdream/dreamex-tech', default_branch: 'main', stargazers_count: 7, updated_at: '2026-10-21T00:00:00Z', fork: false, archived: false },
+        { id: 2, name: 'forked', full_name: 'uknowdream/forked', fork: true, archived: false },
+        { id: 3, name: 'archived', full_name: 'uknowdream/archived', fork: false, archived: true }
+      ]), { status: 200, headers: { 'content-type': 'application/json' } })
+    }
+    if (url.includes('/repos/uknowdream/dreamex-tech/actions/runs?')) {
+      return new Response(JSON.stringify({ workflow_runs: [{ name: 'CI', status: 'completed', conclusion: 'success', html_url: 'https://github.com/uknowdream/dreamex-tech/actions/runs/1', updated_at: '2026-10-21T00:00:00Z' }] }), { status: 200, headers: { 'content-type': 'application/json' } })
+    }
+    throw new Error('Unexpected public GitHub URL: ' + url)
+  }
+  try {
+    const response = mockResponse()
+    await githubIntegration(request('GET'), response)
+    assert.equal(response.statusCode, 200)
+    const body = response.json()
+    assert.equal(body.authenticated, false)
+    assert.equal(body.accountPersonalized, false)
+    assert.equal(body.username, 'uknowdream')
+    assert.equal(body.repositories.length, 1)
+    assert.equal(body.repositories[0].fullName, 'uknowdream/dreamex-tech')
+    assert.equal(body.repositories[0].workflow.run.conclusion, 'success')
+    assert.match(body.limitations, /Private repositories and private workflow runs are never queried/)
+    assert.equal(requests.length, 2)
+    assert.equal(requests.some(item => String(item.init?.headers?.Authorization || '').length > 0), false)
+  } finally {
+    globalThis.fetch = originalFetch
+    delete process.env.GITHUB_PUBLIC_OWNER
+  }
 })
 
 test('logout is POST-only and rejects cross-site origins', async () => {
