@@ -109,7 +109,13 @@ async function requireSession() {
   if (!session) throw new Error('Sign in before syncing workspace data.')
   if (session.expires_at > Math.floor(Date.now() / 1000) + 60) return session
 
-  const payload = await authRequest('token?grant_type=refresh_token', { refresh_token: session.refresh_token })
+  let payload: unknown
+  try {
+    payload = await authRequest('token?grant_type=refresh_token', { refresh_token: session.refresh_token })
+  } catch {
+    storeSession(null)
+    throw new Error('Your cloud session could not be refreshed. Sign in again.')
+  }
   const refreshed = sessionFrom(payload)
   if (!refreshed) {
     storeSession(null)
