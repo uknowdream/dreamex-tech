@@ -390,7 +390,7 @@ test('stale admin privileges are revalidated inside atomic role mutations', asyn
       headers: auth(admin.token),
     })
     assert.equal(result.status, 403)
-    assert.equal(result.body.error, 'member_removal_forbidden')
+    assert.equal(result.body.error, 'forbidden')
     assert.equal(memberRecords.has(hashToken(editor.token)), true)
   } finally { clearConfigured() }
 })
