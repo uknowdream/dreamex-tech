@@ -62,7 +62,7 @@ Release discipline: validate CI and desktop/mobile browser regression before tre
 The Team Workspace backend remains disabled until its server-side credentials are configured. Create an Upstash Redis REST database and add these variables to the **Vercel Production** environment (never prefix them with `VITE_`):
 
 - `KV_REST_API_URL` and `KV_REST_API_TOKEN` (or `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`).
-- `DREAMEX_WORKSPACE_TOKEN`: at least 32 random characters shared only with trusted collaborators.
+- `DREAMEX_WORKSPACE_TOKEN`: at least 32 random characters kept only by the workspace owner; use the UI to issue scoped member tokens instead of sharing this bootstrap secret.
 - Optional `DREAMEX_ALLOWED_ORIGINS`: comma-separated exact origins; defaults to `https://dreamex.tech,https://www.dreamex.tech`.
 
-Redeploy after changing environment variables. Each token holder has full read/write access to one shared snapshot (maximum 100 KB), so this is a trusted-collaborator MVP, not per-user authentication or role-based access control. Use it only for non-sensitive planning data. See [docs/TEAM-WORKSPACE.md](docs/TEAM-WORKSPACE.md).
+Redeploy after changing environment variables. The bootstrap owner token can issue per-member access tokens with server-enforced owner/admin/editor/viewer roles. Member tokens are stored as SHA-256 hashes in Redis and the raw token is shown once. Editors can publish snapshots; viewers are read-only; owner/admin control membership with admin escalation restricted to the owner. All authorized members still share one snapshot (maximum 100 KB), so the MVP does not provide per-project tenant isolation or individual actor identity. Owner/admin can inspect a bounded server-side action audit feed that excludes token values and snapshot contents. Use it only for non-sensitive planning data. See [docs/TEAM-WORKSPACE.md](docs/TEAM-WORKSPACE.md).
