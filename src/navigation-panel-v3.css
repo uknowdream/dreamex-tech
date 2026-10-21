@@ -326,13 +326,27 @@
  * existing full navigation layout.
  */
 @media (min-width: 761px) and (max-width: 1100px) {
-  html body #primary-navigation.nav-open[role="dialog"] {
+  /*
+   * The header has legacy high-specificity navigation rules. Qualify this
+   * selector with the open header so tablet geometry wins in normal and
+   * Android desktop-mode browsers instead of falling back to a right rail.
+   */
+  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] {
+    position: fixed !important;
     inset-inline: auto !important;
-    left: 50% !important;
+    top: max(76px, calc(env(safe-area-inset-top) + 12px)) !important;
     right: auto !important;
+    bottom: auto !important;
+    left: 50% !important;
+    box-sizing: border-box !important;
     width: min(560px, calc(100vw - 48px)) !important;
     max-width: calc(100vw - 48px) !important;
+    max-height: calc(100dvh - max(76px, calc(env(safe-area-inset-top) + 12px)) - 24px) !important;
+    margin: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
     transform: translateX(-50%) !important;
+    translate: none !important;
   }
 }
 
@@ -399,8 +413,44 @@
     appearance: none !important;
     -webkit-appearance: none !important;
     font: inherit !important;
-    font-size: 12px !important;
+    font-size: 16px !important;
     line-height: 1.4 !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search-control:focus-within {
+    border-color: #c5ff70 !important;
+    box-shadow: 0 0 0 3px rgba(197, 255, 112, .2) !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search-control > button {
+    display: grid !important;
+    flex: 0 0 30px !important;
+    place-items: center !important;
+    width: 30px !important;
+    min-width: 30px !important;
+    height: 30px !important;
+    min-height: 30px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid transparent !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: #9eafc8 !important;
+    box-shadow: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    cursor: pointer !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search-control > button:hover {
+    border-color: #34445c !important;
+    background: rgba(255, 255, 255, .06) !important;
+    color: #edf4ff !important;
+  }
+
+  html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search-control > button:focus-visible {
+    outline: 2px solid #c5ff70 !important;
+    outline-offset: 2px !important;
   }
 
   html body #primary-navigation.nav-open[role="dialog"] .nav-drawer-search-control input::placeholder {
@@ -636,23 +686,3 @@
   }
 }
 
-
-/* Keep the drawer inside the viewport even when legacy centering transforms
-   are present in desktop-mode browsers on touch devices. */
-@media (pointer: coarse) and (min-width: 761px) {
-  html body #primary-navigation.nav-open[role="dialog"] {
-    box-sizing: border-box !important;
-    left: auto !important;
-    right: max(20px, env(safe-area-inset-right)) !important;
-    width: min(620px, calc(100vw - 56px)) !important;
-    max-width: calc(100vw - 56px) !important;
-    transform: none !important;
-    translate: none !important;
-  }
-
-  html body #primary-navigation.nav-open[role="dialog"] *,
-  html body #primary-navigation.nav-open[role="dialog"] *::before,
-  html body #primary-navigation.nav-open[role="dialog"] *::after {
-    box-sizing: border-box;
-  }
-}
