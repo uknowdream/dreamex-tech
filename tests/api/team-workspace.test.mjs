@@ -54,6 +54,31 @@ function setConfigured() {
         storedSnapshot = next
         result = [1, next]
       }
+    } else if (op === 'EVAL' && String(command[1]).includes('dreamex_workspace_member_update')) {
+      const hash = String(command[4])
+      const actor = String(command[5])
+      const nextRole = String(command[6])
+      const existingRaw = memberRecords.get(hash)
+      if (!existingRaw) result = -1
+      else {
+        const current = JSON.parse(existingRaw)
+        if (current.status !== 'active' || current.role === 'owner' || nextRole === 'owner') result = -2
+        else if (!['owner', 'admin'].includes(actor)) result = -3
+        else if (actor === 'admin' && (current.role === 'admin' || nextRole === 'admin')) result = -4
+        else { memberRecords.set(hash, String(command[7])); result = 1 }
+      }
+    } else if (op === 'EVAL' && String(command[1]).includes('dreamex_workspace_member_delete')) {
+      const hash = String(command[4])
+      const actor = String(command[5])
+      const existingRaw = memberRecords.get(hash)
+      if (!existingRaw) result = -1
+      else {
+        const current = JSON.parse(existingRaw)
+        if (current.status !== 'active' || current.role === 'owner') result = -2
+        else if (!['owner', 'admin'].includes(actor)) result = -3
+        else if (actor === 'admin' && current.role === 'admin') result = -4
+        else { memberRecords.delete(hash); result = 1 }
+      }
     } else if (op === 'EVAL' && String(command[1]).includes('HLEN')) {
       if (memberRecords.size >= Number(command[4])) result = 0
       else {
