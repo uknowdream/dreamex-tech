@@ -59,7 +59,10 @@ function setConfigured() {
       const actor = String(command[5])
       const nextRole = String(command[6])
       const existingRaw = memberRecords.get(hash)
+      const actorHash = String(command[8] || '')
+      const actorRaw = actorHash ? memberRecords.get(actorHash) : null
       if (!existingRaw) result = -1
+      else if (actorHash && (!actorRaw || JSON.parse(actorRaw).status !== 'active' || JSON.parse(actorRaw).role !== actor)) result = -5
       else {
         const current = JSON.parse(existingRaw)
         if (current.status !== 'active' || current.role === 'owner' || nextRole === 'owner') result = -2
@@ -70,8 +73,11 @@ function setConfigured() {
     } else if (op === 'EVAL' && String(command[1]).includes('dreamex_workspace_member_delete')) {
       const hash = String(command[4])
       const actor = String(command[5])
+      const actorHash = String(command[6] || '')
+      const actorRaw = actorHash ? memberRecords.get(actorHash) : null
       const existingRaw = memberRecords.get(hash)
       if (!existingRaw) result = -1
+      else if (actorHash && (!actorRaw || JSON.parse(actorRaw).status !== 'active' || JSON.parse(actorRaw).role !== actor)) result = -5
       else {
         const current = JSON.parse(existingRaw)
         if (current.status !== 'active' || current.role === 'owner') result = -2
@@ -366,5 +372,25 @@ test('member registry enforces its 100-token cap atomically under concurrent req
     assert.equal(results.filter(result => result.status === 409 && result.body.error === 'member_limit_reached').length, 1)
     assert.equal(memberRecords.size, 100)
     assert.ok(auditRecords.length <= 200)
+  } finally { clearConfigured() }
+})
+
+
+test('stale admin privileges are revalidated inside atomic role mutations', async () => {
+  setConfigured()
+  try {
+    const admin = await createMember('admin', 'Stale admin')
+    const editor = await createMember('editor', 'Editor')
+    const adminHash = hashToken(admin.token)
+    const adminRecord = JSON.parse(memberRecords.get(adminHash))
+    adminRecord.role = 'viewer'
+    memberRecords.set(adminHash, JSON.stringify(adminRecord))
+    const result = await invoke('DELETE', {
+      url: '/api/team-workspace?resource=members&id=' + encodeURIComponent(editor.member.id),
+      headers: auth(admin.token),
+    })
+    assert.equal(result.status, 403)
+    assert.equal(result.body.error, 'member_removal_forbidden')
+    assert.equal(memberRecords.has(hashToken(editor.token)), true)
   } finally { clearConfigured() }
 })
