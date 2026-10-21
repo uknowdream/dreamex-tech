@@ -17,7 +17,7 @@ The API uses an Upstash Redis compare-and-set Lua script so a write with a stale
 
 ## Security model and role-based access
 
-The workspace uses one owner/bootstrap secret from `DREAMEX_WORKSPACE_TOKEN` plus optional per-member bearer tokens. The bootstrap secret has owner permissions and can issue/revoke access. New member tokens are generated with a cryptographically secure random source; the server stores only their SHA-256 hashes in Redis and reveals the raw token once at creation. Never commit or place a member token in a `VITE_*` variable.
+The workspace uses one owner/bootstrap secret from `DREAMEX_WORKSPACE_TOKEN` plus optional per-member bearer tokens. Keep the bootstrap secret owner-only; share only scoped member tokens with collaborators. The bootstrap secret has owner permissions and can issue/revoke access. New member tokens are generated with a cryptographically secure random source; the server stores only their SHA-256 hashes in Redis and reveals the raw token once at creation. Never commit or place a member token in a `VITE_*` variable.
 
 - **Owner:** read/write snapshots, issue any non-owner role, change roles, revoke members (including admins).
 - **Admin:** read/write snapshots, add editors/viewers, and manage editor/viewer roles; cannot create, demote, or revoke admins.
