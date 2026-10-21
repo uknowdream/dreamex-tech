@@ -141,3 +141,117 @@
   .control-plane-cloud-grid { grid-template-columns: minmax(0,1fr); }
   .control-plane-integration-actions { width: 100%; }
 }
+
+.control-plane-cloud-field select,
+.control-plane-team-member-actions select {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1px solid rgba(132,159,196,.25);
+  border-radius: 9px;
+  background: #0b1322;
+  color: #e8ecf5;
+  font: 12px var(--font, 'DM Sans', sans-serif);
+}
+.control-plane-team {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(132,159,196,.16);
+}
+.control-plane-team-create,
+.control-plane-team-select { margin-top: 13px; }
+.control-plane-team-create { grid-template-columns: minmax(0,1fr) auto; }
+.control-plane-team-create > button { align-self: end; min-height: 42px; }
+.control-plane-team-id {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--eng-muted,#9cacc1);
+  font-size: 11px;
+}
+.control-plane-team-id code { overflow-wrap: anywhere; color: #c5ff70; }
+.control-plane-team-roster-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0 10px;
+  color: #e8ecf5;
+  font-size: 12px;
+}
+.control-plane-team-roster-heading span { color: var(--eng-muted,#9cacc1); font-size: 11px; }
+.control-plane-team-roster {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.control-plane-team-member {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: 10px 13px;
+  align-items: center;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(132,159,196,.14);
+  border-radius: 10px;
+  background: rgba(5,11,20,.28);
+}
+.control-plane-team-member-identity { display: grid; gap: 5px; min-width: 0; }
+.control-plane-team-member-identity strong { font-size: 11px; color: #e8ecf5; }
+.control-plane-team-member-identity code { color: #8fa2be; font-size: 10px; overflow-wrap: anywhere; }
+.control-plane-team-role {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 5px 8px;
+  border: 1px solid rgba(132,159,196,.23);
+  border-radius: 99px;
+  color: #c1cee0;
+  font: 600 10px/1.2 var(--mono,monospace);
+}
+.control-plane-team-role.is-owner,
+.control-plane-team-role.is-admin { color: #c5ff70; border-color: rgba(197,255,112,.28); }
+.control-plane-team-role.is-viewer { color: #9fc6ff; border-color: rgba(159,198,255,.28); }
+.control-plane-team-member-actions {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  gap: 8px;
+  align-items: center;
+}
+.control-plane-team-member-actions select { width: auto; min-width: 130px; }
+.control-plane-team-member-actions .control-plane-integration-button { min-height: 34px; padding: 6px 9px; }
+.control-plane-team-invite {
+  margin-top: 16px;
+  padding: 15px;
+  border: 1px solid rgba(132,159,196,.16);
+  border-radius: 12px;
+  background: rgba(5,11,20,.2);
+}
+.control-plane-team-invite .control-plane-cloud-grid { margin-top: 12px; }
+.control-plane-team-invite .control-plane-cloud-copy { margin: 0; }
+.control-plane-team-actions { margin-top: 14px; }
+.control-plane-visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0,0,0,0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+@media(max-width:640px) {
+  .control-plane-team-create { grid-template-columns: minmax(0,1fr); }
+  .control-plane-team-create > button { width: fit-content; }
+  .control-plane-team-member { grid-template-columns: minmax(0,1fr) auto; }
+  .control-plane-team-member-actions { flex-wrap: wrap; }
+  .control-plane-team-member-actions select { flex: 1 1 120px; min-width: 0; }
+}
