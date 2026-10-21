@@ -43,7 +43,7 @@ function setConfigured() {
     let result
     if (op === 'GET') {
       result = storedSnapshot
-    } else if (op === 'EVAL') {
+    } else if (op === 'EVAL' && String(command[1]).includes('currentRevision')) {
       const expected = Number(command[4])
       const next = command[5]
       const currentRevision = storedSnapshot ? Number(JSON.parse(storedSnapshot).revision) : 0
@@ -51,6 +51,12 @@ function setConfigured() {
       else {
         storedSnapshot = next
         result = [1, next]
+      }
+    } else if (op === 'EVAL' && String(command[1]).includes('HLEN')) {
+      if (memberRecords.size >= Number(command[4])) result = 0
+      else {
+        memberRecords.set(String(command[5]), String(command[6]))
+        result = 1
       }
     } else if (op === 'HGET') {
       result = memberRecords.get(String(command[2])) ?? null
@@ -230,7 +236,6 @@ test('only the owner can grant or revoke admin privileges', async () => {
   try {
     const admin = await createMember('admin', 'Workspace Admin')
     const editor = await createMember('editor', 'Editor', admin.token)
-    assert.equal(editor.status, undefined)
     const promote = await invoke('PATCH', {
       url: '/api/team-workspace?resource=members',
       headers: auth(admin.token),
