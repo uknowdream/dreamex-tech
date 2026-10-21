@@ -8,6 +8,7 @@ type WorkspaceRole = 'owner' | 'admin' | 'editor' | 'viewer'
 type AssignableRole = Exclude<WorkspaceRole, 'owner'>
 type RemoteSnapshot = { revision: number; updatedAt: string | null; state: JsonObject }
 type WorkspaceMember = { id: string; label: string; role: WorkspaceRole; createdAt: string; updatedAt?: string | null }
+type WorkspaceAuditEntry = { id: string; at: string; actorRole: WorkspaceRole; action: string; targetId: string | null; role: string | null; revision: number | null }
 type NoticeKind = 'success' | 'warning' | 'error' | 'info'
 
 const TOKEN_KEY = 'dreamex-team-workspace-token-v1'
@@ -53,9 +54,35 @@ export function TeamWorkspacePage() {
   const [notice, setNotice] = useState<{ kind: NoticeKind; text: string } | null>(null)
   const [role, setRole] = useState<WorkspaceRole | null>(null)
   const [members, setMembers] = useState<WorkspaceMember[]>([])
+  const [auditEntries, setAuditEntries] = useState<WorkspaceAuditEntry[]>([])
   const [memberLabel, setMemberLabel] = useState('')
   const [memberRole, setMemberRole] = useState<AssignableRole>('editor')
   const [issuedToken, setIssuedToken] = useState('')
+
+  const loadAudit = async (accessToken = token) => {
+    try {
+      const response = await fetch('/api/team-workspace?resource=audit', {
+        method: 'GET',
+        cache: 'no-store',
+        headers: { Authorization: 'Bearer ' + accessToken.trim(), Accept: 'application/json' },
+      })
+      const payload = await readPayload(response)
+      if (!response.ok || !Array.isArray(payload.entries)) {
+        setAuditEntries([])
+        return
+      }
+      const next = payload.entries.filter((value): value is WorkspaceAuditEntry => Boolean(
+        value && typeof value === 'object'
+          && typeof (value as Record<string, unknown>).id === 'string'
+          && typeof (value as Record<string, unknown>).at === 'string'
+          && typeof (value as Record<string, unknown>).actorRole === 'string'
+          && typeof (value as Record<string, unknown>).action === 'string'
+      ))
+      setAuditEntries(next)
+    } catch {
+      setAuditEntries([])
+    }
+  }
 
   const loadMembers = async (accessToken = token) => {
     try {
@@ -83,6 +110,7 @@ export function TeamWorkspacePage() {
           && typeof (value as Record<string, unknown>).createdAt === 'string'
       ))
       setMembers(next)
+      await loadAudit(accessToken)
       return true
     } catch {
       setNotice({ kind: 'error', text: en ? 'Could not reach team member management.' : 'Pengelolaan anggota tim tidak dapat dijangkau.' })
@@ -108,6 +136,7 @@ export function TeamWorkspacePage() {
         setConnected(false)
         setRole(null)
         setMembers([])
+        setAuditEntries([])
         setNotice({ kind: 'warning', text: en ? 'The shared backend is not configured yet. The site owner must set the Upstash Redis REST and workspace-token environment variables in Vercel. Your local draft is still available.' : 'Backend bersama belum dikonfigurasi. Pemilik situs harus mengatur environment variable Upstash Redis REST dan token workspace di Vercel. Draft lokal Anda tetap tersedia.' })
         return
       }
@@ -115,6 +144,7 @@ export function TeamWorkspacePage() {
         setConnected(false)
         setRole(null)
         setMembers([])
+        setAuditEntries([])
         setNotice({ kind: 'error', text: en ? 'The access token is invalid. Check the token with the workspace owner.' : 'Token akses tidak valid. Periksa token dengan pemilik workspace.' })
         return
       }
@@ -122,6 +152,7 @@ export function TeamWorkspacePage() {
         setConnected(false)
         setRole(null)
         setMembers([])
+        setAuditEntries([])
         setNotice({ kind: 'error', text: typeof payload.error === 'string' ? payload.error : (en ? 'The shared workspace could not be loaded.' : 'Workspace bersama tidak dapat dimuat.') })
         return
       }
@@ -408,6 +439,18 @@ export function TeamWorkspacePage() {
           </li>)}
         </ul>
         <p className="team-workspace-footnote">{en ? 'A revoked token stops authenticating immediately. Share a newly issued token through a trusted channel and never commit tokens into Git.' : 'Token yang dicabut langsung berhenti mengautentikasi. Bagikan token baru melalui saluran tepercaya dan jangan pernah commit token ke Git.'}</p>
+        <section className="team-workspace-audit" aria-labelledby="team-workspace-audit-title">
+          <div className="team-workspace-member-list-head"><strong id="team-workspace-audit-title">{en ? 'Server-side action audit' : 'Audit aksi sisi server'} ({auditEntries.length})</strong><button className="button button-ghost" type="button" onClick={() => void loadAudit()} disabled={busy}><RefreshCw size={13} /> {en ? 'Refresh log' : 'Muat ulang log'}</button></div>
+          <p className="team-workspace-footnote">{en ? 'Recent successful snapshot publishes, member grants, role changes and revocations. Raw tokens and snapshot contents are never logged. Retention is limited to 200 events.' : 'Aktivitas sukses berupa publikasi snapshot, pemberian akses, perubahan role, dan pencabutan akses. Token mentah dan isi snapshot tidak pernah dicatat. Retensi dibatasi 200 kejadian.'}</p>
+          {auditEntries.length > 0 ? <ul className="team-workspace-audit-list">
+            {auditEntries.map(entry => <li key={entry.id} className="team-workspace-audit-row">
+              <span className="team-workspace-audit-action">{entry.action}</span>
+              <span className="team-workspace-audit-meta">{en ? 'Actor role: ' : 'Role pelaku: '}{entry.actorRole}{entry.role ? ' · ' + (en ? 'Target role: ' : 'Role target: ') + entry.role : ''}{entry.revision !== null ? ' · Revision ' + entry.revision : ''}</span>
+              {entry.targetId && <code>{entry.targetId}</code>}
+              <time dateTime={entry.at}>{new Date(entry.at).toLocaleString(en ? 'en-GB' : 'id-ID')}</time>
+            </li>)}
+          </ul> : <p className="team-workspace-footnote">{en ? 'No recorded mutations yet.' : 'Belum ada perubahan yang tercatat.'}</p>}
+        </section>
       </section>}
 
       <section className="team-workspace-panel" aria-labelledby="team-workspace-editor-title">
