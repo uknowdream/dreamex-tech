@@ -1,12 +1,21 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import handler from '../../api/team-workspace.js'
 
-const validToken = 'unit-test-workspace-token-32-characters-long'
+const ownerToken = 'unit-test-workspace-token-32-characters-long'
+const redisToken = 'unit-test-redis-token'
+const originalFetch = globalThis.fetch
+let storedSnapshot
+let memberRecords
+
+function hashToken(token) {
+  return createHash('sha256').update(token, 'utf8').digest('hex')
+}
 
 function invoke(method, options = {}) {
   const headers = { ...(options.headers || {}) }
-  const req = { method, headers, body: options.body }
+  const req = { method, headers, body: options.body, url: options.url || '/' }
   const res = {
     statusCode: 200,
     headers: {},
@@ -22,10 +31,43 @@ function invoke(method, options = {}) {
 }
 
 function setConfigured() {
-  process.env.DREAMEX_WORKSPACE_TOKEN = validToken
+  process.env.DREAMEX_WORKSPACE_TOKEN = ownerToken
   process.env.KV_REST_API_URL = 'https://redis.example.test'
-  process.env.KV_REST_API_TOKEN = 'unit-test-redis-token'
+  process.env.KV_REST_API_TOKEN = redisToken
   process.env.NODE_ENV = 'test'
+  storedSnapshot = null
+  memberRecords = new Map()
+  globalThis.fetch = async (_url, options = {}) => {
+    const command = JSON.parse(options.body)
+    const op = command[0]
+    let result
+    if (op === 'GET') {
+      result = storedSnapshot
+    } else if (op === 'EVAL') {
+      const expected = Number(command[4])
+      const next = command[5]
+      const currentRevision = storedSnapshot ? Number(JSON.parse(storedSnapshot).revision) : 0
+      if (currentRevision !== expected) result = [0, storedSnapshot || '']
+      else {
+        storedSnapshot = next
+        result = [1, next]
+      }
+    } else if (op === 'HGET') {
+      result = memberRecords.get(String(command[2])) ?? null
+    } else if (op === 'HGETALL') {
+      result = [...memberRecords.entries()].flatMap(([key, value]) => [key, value])
+    } else if (op === 'HLEN') {
+      result = memberRecords.size
+    } else if (op === 'HSET') {
+      memberRecords.set(String(command[1]), String(command[2]))
+      result = 1
+    } else if (op === 'HDEL') {
+      result = memberRecords.delete(String(command[1])) ? 1 : 0
+    } else {
+      throw new Error('Unexpected Redis command: ' + op)
+    }
+    return new Response(JSON.stringify({ result }), { status: 200, headers: { 'content-type': 'application/json' } })
+  }
 }
 
 function clearConfigured() {
@@ -34,9 +76,25 @@ function clearConfigured() {
   delete process.env.KV_REST_API_TOKEN
   delete process.env.UPSTASH_REDIS_REST_URL
   delete process.env.UPSTASH_REDIS_REST_TOKEN
+  delete process.env.NODE_ENV
+  globalThis.fetch = originalFetch
 }
 
-test('shared workspace returns safe disabled status when server token is not configured', async () => {
+function auth(token = ownerToken) {
+  return { authorization: 'Bearer ' + token, origin: 'https://dreamex.tech', 'content-type': 'application/json' }
+}
+
+async function createMember(role, label = 'QA teammate', token = ownerToken) {
+  const result = await invoke('POST', {
+    url: '/api/team-workspace?resource=members',
+    headers: auth(token),
+    body: { label, role },
+  })
+  assert.equal(result.status, 201)
+  return result.body
+}
+
+test('shared workspace returns a safe disabled status when the server token is not configured', async () => {
   clearConfigured()
   const result = await invoke('GET')
   assert.equal(result.status, 503)
@@ -44,81 +102,178 @@ test('shared workspace returns safe disabled status when server token is not con
   assert.equal(result.headers['cache-control'], 'no-store, max-age=0')
 })
 
-test('shared workspace rejects unauthorized requests before contacting Redis', async () => {
-  clearConfigured()
-  process.env.DREAMEX_WORKSPACE_TOKEN = validToken
-  const originalFetch = globalThis.fetch
-  globalThis.fetch = async () => { throw new Error('Redis must not be called for unauthorized requests') }
+test('unknown access tokens are rejected after a read-only token-hash lookup', async () => {
+  setConfigured()
   try {
-    const result = await invoke('GET')
+    const result = await invoke('PUT', { headers: auth('random-invalid-token'), body: { revision: 0, state: {} } })
     assert.equal(result.status, 401)
     assert.equal(result.body.error, 'unauthorized')
-  } finally {
-    globalThis.fetch = originalFetch
-    clearConfigured()
-  }
+    assert.equal(storedSnapshot, null)
+  } finally { clearConfigured() }
 })
 
 test('shared workspace rejects unexpected origins', async () => {
   setConfigured()
-  const result = await invoke('GET', { headers: { origin: 'https://attacker.example' } })
-  assert.equal(result.status, 403)
-  assert.equal(result.body.error, 'origin_not_allowed')
-  clearConfigured()
+  try {
+    const result = await invoke('GET', { headers: { origin: 'https://attacker.example' } })
+    assert.equal(result.status, 403)
+    assert.equal(result.body.error, 'origin_not_allowed')
+  } finally { clearConfigured() }
 })
 
 test('shared workspace rejects methods outside the documented contract', async () => {
-  clearConfigured()
-  const result = await invoke('POST')
-  assert.equal(result.status, 405)
-  assert.match(result.headers.allow, /GET, PUT/)
+  setConfigured()
+  try {
+    const result = await invoke('POST')
+    assert.equal(result.status, 405)
+    assert.match(result.headers.allow, /GET, PUT/)
+  } finally { clearConfigured() }
+})
+
+test('unknown resources are rejected and API preflight has no cached response', async () => {
+  setConfigured()
+  try {
+    const unknown = await invoke('GET', { url: '/api/team-workspace?resource=secrets', headers: auth() })
+    assert.equal(unknown.status, 404)
+    assert.equal(unknown.body.error, 'unknown_resource')
+    const options = await invoke('OPTIONS')
+    assert.equal(options.status, 204)
+    assert.equal(options.headers['cache-control'], 'no-store, max-age=0')
+  } finally { clearConfigured() }
 })
 
 test('shared workspace rejects malformed or oversized update payloads', async () => {
   setConfigured()
-  const headers = { authorization: 'Bearer ' + validToken, origin: 'https://dreamex.tech', 'content-type': 'application/json' }
-  const malformed = await invoke('PUT', { headers, body: '{' })
-  assert.equal(malformed.status, 400)
-  const oversized = await invoke('PUT', { headers, body: { revision: 0, state: { data: 'x'.repeat(101_000) } } })
-  assert.equal(oversized.status, 413)
-  clearConfigured()
+  try {
+    const malformed = await invoke('PUT', { headers: auth(), body: '{' })
+    assert.equal(malformed.status, 400)
+    const oversized = await invoke('PUT', { headers: auth(), body: { revision: 0, state: { data: 'x'.repeat(101_000) } } })
+    assert.equal(oversized.status, 413)
+  } finally { clearConfigured() }
 })
 
-test('shared workspace applies optimistic revision checks and persists one shared snapshot', async () => {
+test('owner snapshot writes preserve optimistic revision checks and expose the owner role', async () => {
   setConfigured()
-  const originalFetch = globalThis.fetch
-  let stored = null
-  globalThis.fetch = async (_url, options = {}) => {
-    const command = JSON.parse(options.body)
-    if (command[0] === 'GET') {
-      return new Response(JSON.stringify({ result: stored }), { status: 200, headers: { 'content-type': 'application/json' } })
-    }
-    if (command[0] === 'EVAL') {
-      const expected = Number(command[4])
-      const next = command[5]
-      const currentRevision = stored ? Number(JSON.parse(stored).revision) : 0
-      if (currentRevision !== expected) return new Response(JSON.stringify({ result: [0, stored || ''] }), { status: 200, headers: { 'content-type': 'application/json' } })
-      stored = next
-      return new Response(JSON.stringify({ result: [1, next] }), { status: 200, headers: { 'content-type': 'application/json' } })
-    }
-    throw new Error('Unexpected Redis command')
-  }
   try {
-    const headers = { authorization: 'Bearer ' + validToken, origin: 'https://dreamex.tech', 'content-type': 'application/json' }
+    const headers = auth()
     const first = await invoke('PUT', { headers, body: { revision: 0, state: { project: 'DreamEx', tasks: [{ id: 'T-1' }] } } })
     assert.equal(first.status, 200)
     assert.equal(first.body.revision, 1)
-    assert.equal(first.body.state.tasks[0].id, 'T-1')
+    assert.equal(first.body.access.role, 'owner')
+    assert.equal(first.body.access.canManageMembers, true)
     const stale = await invoke('PUT', { headers, body: { revision: 0, state: { project: 'stale' } } })
     assert.equal(stale.status, 409)
     assert.equal(stale.body.current.revision, 1)
     const loaded = await invoke('GET', { headers })
     assert.equal(loaded.status, 200)
-    assert.equal(loaded.body.revision, 1)
     assert.equal(loaded.body.state.project, 'DreamEx')
+    assert.equal(loaded.body.access.role, 'owner')
     assert.equal(loaded.headers['x-content-type-options'], 'nosniff')
-  } finally {
-    globalThis.fetch = originalFetch
-    clearConfigured()
-  }
+  } finally { clearConfigured() }
+})
+
+test('owner can create hashed tokens and list safe member metadata', async () => {
+  setConfigured()
+  try {
+    const created = await createMember('editor', 'QA Editor')
+    assert.equal(created.member.label, 'QA Editor')
+    assert.equal(created.member.role, 'editor')
+    assert.equal(created.tokenVisibleOnce, true)
+    assert.equal(typeof created.token, 'string')
+    assert.ok(created.token.length >= 40)
+    const digest = hashToken(created.token)
+    assert.equal(memberRecords.has(digest), true)
+    assert.equal([...memberRecords.values()].some(value => value.includes(created.token)), false)
+    const roster = await invoke('GET', { url: '/api/team-workspace?resource=members', headers: auth() })
+    assert.equal(roster.status, 200)
+    assert.equal(roster.body.members.length, 1)
+    assert.equal(roster.body.members[0].id, created.member.id)
+    assert.equal(JSON.stringify(roster.body).includes(created.token), false)
+  } finally { clearConfigured() }
+})
+
+test('viewer can read snapshots but cannot update them or manage membership', async () => {
+  setConfigured()
+  try {
+    const created = await createMember('viewer')
+    const headers = auth(created.token)
+    const read = await invoke('GET', { headers })
+    assert.equal(read.status, 200)
+    assert.equal(read.body.access.role, 'viewer')
+    assert.equal(read.body.access.canWrite, false)
+    const write = await invoke('PUT', { headers, body: { revision: 0, state: { blocked: true } } })
+    assert.equal(write.status, 403)
+    assert.equal(write.body.error, 'read_only_role')
+    const roster = await invoke('GET', { url: '/api/team-workspace?resource=members', headers })
+    assert.equal(roster.status, 403)
+    assert.equal(roster.body.error, 'forbidden')
+    assert.equal(storedSnapshot, null)
+  } finally { clearConfigured() }
+})
+
+test('editor can update shared snapshots but cannot manage members', async () => {
+  setConfigured()
+  try {
+    const created = await createMember('editor')
+    const headers = auth(created.token)
+    const write = await invoke('PUT', { headers, body: { revision: 0, state: { editorWrite: true } } })
+    assert.equal(write.status, 200)
+    assert.equal(write.body.access.role, 'editor')
+    assert.equal(write.body.access.canWrite, true)
+    const roster = await invoke('GET', { url: '/api/team-workspace?resource=members', headers })
+    assert.equal(roster.status, 403)
+  } finally { clearConfigured() }
+})
+
+test('only the owner can grant or revoke admin privileges', async () => {
+  setConfigured()
+  try {
+    const admin = await createMember('admin', 'Workspace Admin')
+    const editor = await createMember('editor', 'Editor', admin.token)
+    assert.equal(editor.status, undefined)
+    const promote = await invoke('PATCH', {
+      url: '/api/team-workspace?resource=members',
+      headers: auth(admin.token),
+      body: { id: editor.member.id, role: 'admin' },
+    })
+    assert.equal(promote.status, 403)
+    assert.equal(promote.body.error, 'role_change_forbidden')
+    const list = await invoke('GET', { url: '/api/team-workspace?resource=members', headers: auth() })
+    const adminMember = list.body.members.find(member => member.id === admin.member.id)
+    const deleteAdmin = await invoke('DELETE', { url: '/api/team-workspace?resource=members&id=' + adminMember.id, headers: auth(admin.token) })
+    assert.equal(deleteAdmin.status, 403)
+    const ownerDelete = await invoke('DELETE', { url: '/api/team-workspace?resource=members&id=' + adminMember.id, headers: auth() })
+    assert.equal(ownerDelete.status, 200)
+    const revoked = await invoke('GET', { headers: auth(admin.token) })
+    assert.equal(revoked.status, 401)
+  } finally { clearConfigured() }
+})
+
+test('admin can manage editor/viewer members but cannot grant a new admin', async () => {
+  setConfigured()
+  try {
+    const admin = await createMember('admin', 'Admin')
+    const forbiddenAdmin = await invoke('POST', {
+      url: '/api/team-workspace?resource=members',
+      headers: auth(admin.token),
+      body: { label: 'Escalation attempt', role: 'admin' },
+    })
+    assert.equal(forbiddenAdmin.status, 403)
+    const editor = await createMember('editor', 'Editor', admin.token)
+    assert.equal(editor.member.role, 'editor')
+    const changed = await invoke('PATCH', {
+      url: '/api/team-workspace?resource=members',
+      headers: auth(admin.token),
+      body: { id: editor.member.id, role: 'viewer' },
+    })
+    assert.equal(changed.status, 200)
+    assert.equal(changed.body.member.role, 'viewer')
+    const deleted = await invoke('DELETE', {
+      url: '/api/team-workspace?resource=members&id=' + editor.member.id,
+      headers: auth(admin.token),
+    })
+    assert.equal(deleted.status, 200)
+    const revoked = await invoke('GET', { headers: auth(editor.token) })
+    assert.equal(revoked.status, 401)
+  } finally { clearConfigured() }
 })
