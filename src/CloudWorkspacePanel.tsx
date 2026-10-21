@@ -97,7 +97,10 @@ export function CloudWorkspacePanel() {
     const url = new URL(window.location.href)
     const accountResult = url.searchParams.get('account')
     const invitation = new URLSearchParams(url.hash.startsWith('#') ? url.hash.slice(1) : '').get('invite')
-    if (invitation) setInviteCode(invitation)
+    let pendingInvite = ''
+    try { pendingInvite = window.sessionStorage.getItem('dreamex_pending_invite_v1') || ''; window.sessionStorage.removeItem('dreamex_pending_invite_v1') } catch { /* Session storage is optional. */ }
+    const initialInvite = invitation || pendingInvite
+    if (initialInvite) setInviteCode(initialInvite)
     if (accountResult === 'connected') setNotice(en ? 'GitHub sign-in completed.' : 'Login GitHub berhasil.')
     if (accountResult === 'cancelled') setNotice(en ? 'GitHub sign-in was cancelled.' : 'Login GitHub dibatalkan.')
     if (accountResult === 'error') setError(en ? 'GitHub sign-in did not complete. Check the OAuth app configuration and try again.' : 'Login GitHub belum berhasil. Periksa konfigurasi OAuth lalu coba lagi.')
@@ -282,7 +285,7 @@ export function CloudWorkspacePanel() {
       <div className="cloud-workspace-toolbar">
         <label>{en ? 'Snapshot scope' : 'Cakupan snapshot'}<select value={scope} onChange={event => { setScope(event.target.value as 'personal' | 'team'); setRemote(null); setConsent(false); setError(''); setNotice('') }}><option value="personal">{en ? 'Personal account' : 'Akun pribadi'}</option>{canUseTeam && <option value="team">{en ? 'Shared team workspace' : 'Workspace tim bersama'}</option>}</select></label>
         <button type="button" className="button button-secondary" onClick={loadSnapshot} disabled={busy || !account.cloudSyncReady || (scope === 'team' && !canUseTeam)}><Cloud size={14} />{en ? 'Load cloud snapshot' : 'Muat snapshot cloud'}</button>
-        <button type="button" className="button button-primary" onClick={saveSnapshot} disabled={busy || !account.cloudSyncReady || (scope === 'team' && !canWriteTeam) || !consent}><CheckCircle2 size={14} />{en ? 'Save local snapshot to cloud' : 'Simpan snapshot lokal ke cloud'}</button>
+        <button type="button" className="button button-primary" onClick={saveSnapshot} disabled={busy || !account.cloudSyncReady || (scope === 'team' && !canWriteTeam) || !consent || !remote}><CheckCircle2 size={14} />{en ? 'Save local snapshot to cloud' : 'Simpan snapshot lokal ke cloud'}</button>
       </div>
       <div className="cloud-workspace-consent"><label><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} /><span>{en ? 'I have reviewed the selected data and understand this action uploads a sanitized snapshot to the selected cloud scope.' : 'Saya telah meninjau data yang dipilih dan memahami bahwa tindakan ini mengunggah snapshot yang disanitasi ke cakupan cloud yang dipilih.'}</span></label></div>
       <div className="cloud-workspace-restore">
