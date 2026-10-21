@@ -1,4 +1,4 @@
-import { appError, cloudConfigured, getSession, getTeamRole, kvGet, kvSet, requireSameOrigin, sendJson, sendMethodNotAllowed, readJsonBody } from './_lib/platform.js'
+import { appError, cloudConfigured, getSession, getTeamRole, kvCompareAndSet, kvGet, requireSameOrigin, sendJson, sendMethodNotAllowed, readJsonBody } from '../server/platform.js'
 
 const PERSONAL_KEY = user => 'dreamex_workspace_personal_' + user.id
 const TEAM_KEY = 'dreamex_workspace_team_shared'
@@ -71,10 +71,8 @@ export default async function handler(req, res) {
     if (!Object.prototype.hasOwnProperty.call(body, 'expectedUpdatedAt')) {
       return sendJson(res, 400, { error: 'expected_snapshot_version_required', message: 'Load the current snapshot before saving so concurrent edits are not silently overwritten.' })
     }
-    const current = await kvGet(access.key)
-    const currentUpdatedAt = current && typeof current === 'object' && typeof current.updatedAt === 'string' ? current.updatedAt : null
-    if ((body.expectedUpdatedAt ?? null) !== currentUpdatedAt) {
-      return sendJson(res, 409, { error: 'workspace_snapshot_conflict', message: 'This cloud snapshot changed since it was loaded. Load the latest snapshot and merge before saving again.', currentUpdatedAt })
+    if (body.expectedUpdatedAt !== null && typeof body.expectedUpdatedAt !== 'string') {
+      return sendJson(res, 400, { error: 'invalid_snapshot_version', message: 'expectedUpdatedAt must be a timestamp string or null.' })
     }
     const entries = cleanEntries(body.entries, scope)
     const snapshot = {
@@ -84,7 +82,12 @@ export default async function handler(req, res) {
       updatedBy: { id: user.id, login: user.login },
       entries,
     }
-    await kvSet(access.key, snapshot)
+    const accepted = await kvCompareAndSet(access.key, body.expectedUpdatedAt || '', snapshot)
+    if (!accepted) {
+      const current = await kvGet(access.key)
+      const currentUpdatedAt = current && typeof current === 'object' && typeof current.updatedAt === 'string' ? current.updatedAt : null
+      return sendJson(res, 409, { error: 'workspace_snapshot_conflict', message: 'This cloud snapshot changed since it was loaded. Load the latest snapshot and merge before saving again.', currentUpdatedAt })
+    }
     return sendJson(res, 200, { ok: true, scope, role: access.role, snapshot })
   } catch (error) {
     return appError(res, error)
