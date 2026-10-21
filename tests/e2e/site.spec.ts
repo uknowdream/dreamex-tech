@@ -1162,6 +1162,7 @@ test('desktop engineering navigation exposes grouped destinations and closes on 
 test('desktop platform menu closes on Escape and restores focus to its trigger', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('/')
+  test.skip(await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches), 'Touch-first devices use the responsive drawer instead of the desktop mega-menu')
   const summary = page.locator('.nav-platform > summary')
   await summary.focus()
   await page.keyboard.press('Enter')
@@ -1302,6 +1303,7 @@ test('clearing sidebar recents removes only its own local storage key', async ({
 test('desktop navigation keeps the mega-menu while mobile-only recents stay out of the desktop header', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/api-playground')
+  test.skip(await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches), 'Touch-first devices use the responsive drawer instead of the desktop mega-menu')
   const navigation = page.getByRole('navigation', { name: /Main navigation|Navigasi utama/i })
   await expect(navigation).toBeVisible()
   await expect(navigation.locator('.nav-recent-tools')).toBeHidden()
