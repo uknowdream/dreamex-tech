@@ -10,6 +10,8 @@ if (baseUrl.username || baseUrl.password || baseUrl.search || baseUrl.hash || ba
 
 const checks = [
   { path: '/', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/api/health', type: 'json', markers: ['"status":"ok"', '"integrations"'] },
+  { path: '/api/osv-scan', type: 'method-api', markers: ['"error":"method_not_allowed"'], expectedStatuses: [405] },
   { path: '/api-playground', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/github-ci', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/team-workspace', type: 'html', markers: ['id="root"', '<div'] },
@@ -117,7 +119,7 @@ const results = await Promise.all(checks.map(async check => {
       response = await fetch(url, {
         redirect: 'follow',
         signal: AbortSignal.timeout(12_000),
-        headers: { 'user-agent': 'DreamEx-Production-Smoke/1.0', accept: check.type === 'xml' ? 'application/xml,text/xml,*/*' : check.type === 'protected-api' || check.type === 'json' ? 'application/json,*/*' : 'text/html,*/*' },
+        headers: { 'user-agent': 'DreamEx-Production-Smoke/1.0', accept: check.type === 'xml' ? 'application/xml,text/xml,*/*' : check.type === 'protected-api' || check.type === 'json' || check.type === 'method-api' ? 'application/json,*/*' : 'text/html,*/*' },
       })
       if (response.status >= 500 && attempt < 2) {
         await response.body?.cancel()
@@ -159,7 +161,7 @@ const results = await Promise.all(checks.map(async check => {
   }
   if (check.type === 'html' && !contentType.toLowerCase().includes('text/html')) issues.push(`expected HTML content-type, received ${contentType || '(missing)'}`)
   if (check.type === 'xml' && !/(application|text)\/(xml|rss\+xml)/i.test(contentType)) issues.push(`expected XML content-type, received ${contentType || '(missing)'}`)
-  if (['json', 'protected-api'].includes(check.type) && !/(application\/(json|manifest\+json))/i.test(contentType)) issues.push(`expected JSON/manifest content-type, received ${contentType || '(missing)'}`)
+  if (['json', 'protected-api', 'method-api'].includes(check.type) && !/(application\/(json|manifest\+json))/i.test(contentType)) issues.push(`expected JSON/manifest content-type, received ${contentType || '(missing)'}`)
   if (check.type === 'text' && !contentType.toLowerCase().includes('text/plain')) issues.push(`expected plain-text content-type, received ${contentType || '(missing)'}`)
   for (const marker of check.markers) {
     if (!body.toLowerCase().includes(marker.toLowerCase())) issues.push(`missing expected marker ${JSON.stringify(marker)}`)
