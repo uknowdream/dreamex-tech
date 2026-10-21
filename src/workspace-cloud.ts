@@ -198,3 +198,130 @@ export async function loadControlPlaneChecklist(): Promise<CloudChecklistSnapsho
     updatedAt: typeof row.updated_at === 'string' ? row.updated_at : '',
   }
 }
+
+
+export type CloudTeam = { id: string; name: string; created_by: string; created_at: string }
+export type CloudTeamMember = { team_id: string; user_id: string; role: 'owner' | 'admin' | 'editor' | 'viewer'; created_at: string }
+export type CloudTeamRole = 'admin' | 'editor' | 'viewer'
+
+async function tableRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const session = await requireSession()
+  const { url, key } = configuration()
+  const response = await fetch(url + '/rest/v1/' + path, {
+    ...init,
+    headers: {
+      ...restHeaders(key, session.access_token),
+      ...(init.headers ?? {}),
+    },
+  })
+  if (!response.ok) throw await restError(response)
+  if (response.status === 204) return undefined as T
+  return await response.json() as T
+}
+
+export async function loadWorkspaceTeams(): Promise<CloudTeam[]> {
+  const rows = await tableRequest<unknown>('workspace_teams?select=id,name,created_by,created_at&order=created_at.asc')
+  if (!Array.isArray(rows)) return []
+  return rows.filter((row): row is CloudTeam => Boolean(row && typeof row === 'object'
+    && typeof (row as Record<string, unknown>).id === 'string'
+    && typeof (row as Record<string, unknown>).name === 'string'
+    && typeof (row as Record<string, unknown>).created_by === 'string'
+    && typeof (row as Record<string, unknown>).created_at === 'string'))
+}
+
+export async function createWorkspaceTeam(name: string): Promise<CloudTeam> {
+  const cleanName = name.trim()
+  if (cleanName.length < 2 || cleanName.length > 100) throw new Error('Team name must be between 2 and 100 characters.')
+  const session = await requireSession()
+  const rows = await tableRequest<unknown>('workspace_teams', {
+    method: 'POST',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({ name: cleanName, created_by: session.user.id }),
+  })
+  if (!Array.isArray(rows) || !rows[0] || typeof rows[0] !== 'object') throw new Error('The team was not returned by the database.')
+  return rows[0] as CloudTeam
+}
+
+export async function loadWorkspaceTeamMembers(teamId: string): Promise<CloudTeamMember[]> {
+  if (!/^[0-9a-f-]{36}$/i.test(teamId)) throw new Error('Invalid team ID.')
+  const params = new URLSearchParams({ select: 'team_id,user_id,role,created_at', team_id: 'eq.' + teamId, order: 'created_at.asc' })
+  const rows = await tableRequest<unknown>('workspace_team_members?' + params.toString())
+  if (!Array.isArray(rows)) return []
+  const roles = new Set(['owner', 'admin', 'editor', 'viewer'])
+  return rows.filter((row): row is CloudTeamMember => {
+    if (!row || typeof row !== 'object') return false
+    const value = row as Record<string, unknown>
+    return typeof value.team_id === 'string' && typeof value.user_id === 'string'
+      && typeof value.role === 'string' && roles.has(value.role) && typeof value.created_at === 'string'
+  })
+}
+
+export async function addWorkspaceTeamMember(teamId: string, userId: string, role: CloudTeamRole) {
+  if (!/^[0-9a-f-]{36}$/i.test(teamId) || !/^[0-9a-f-]{36}$/i.test(userId)) throw new Error('Enter a valid team ID and Supabase user UUID.')
+  const session = await requireSession()
+  const rows = await tableRequest<unknown>('workspace_team_members', {
+    method: 'POST',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({ team_id: teamId, user_id: userId, role, added_by: session.user.id }),
+  })
+  if (!Array.isArray(rows) || rows.length === 0) throw new Error('Membership was not created. Confirm the user exists and your team role is owner or admin.')
+}
+
+export async function updateWorkspaceTeamMemberRole(teamId: string, userId: string, role: CloudTeamRole) {
+  if (!/^[0-9a-f-]{36}$/i.test(teamId) || !/^[0-9a-f-]{36}$/i.test(userId)) throw new Error('Invalid team or user UUID.')
+  const params = new URLSearchParams({ team_id: 'eq.' + teamId, user_id: 'eq.' + userId })
+  const rows = await tableRequest<unknown>('workspace_team_members?' + params.toString(), {
+    method: 'PATCH',
+    headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({ role }),
+  })
+  if (!Array.isArray(rows) || rows.length === 0) throw new Error('Role was not updated. Only team owners/admins can change non-owner roles.')
+}
+
+export async function removeWorkspaceTeamMember(teamId: string, userId: string) {
+  if (!/^[0-9a-f-]{36}$/i.test(teamId) || !/^[0-9a-f-]{36}$/i.test(userId)) throw new Error('Invalid team or user UUID.')
+  const params = new URLSearchParams({ team_id: 'eq.' + teamId, user_id: 'eq.' + userId })
+  const rows = await tableRequest<unknown>('workspace_team_members?' + params.toString(), {
+    method: 'DELETE',
+    headers: { Prefer: 'return=representation' },
+  })
+  if (!Array.isArray(rows) || rows.length === 0) throw new Error('Member was not removed. Owners cannot be removed; check your team role.')
+}
+
+export async function saveTeamControlPlaneChecklist(teamId: string, checked: Record<string, boolean>): Promise<string> {
+  if (!/^[0-9a-f-]{36}$/i.test(teamId)) throw new Error('Invalid team ID.')
+  const session = await requireSession()
+  const rows = await tableRequest<unknown>('team_workspace_snapshots?on_conflict=team_id%2Cworkspace_key', {
+    method: 'POST',
+    headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
+    body: JSON.stringify({
+      team_id: teamId,
+      workspace_key: 'control-plane-checklist',
+      payload: { checked },
+      updated_by: session.user.id,
+      updated_at: new Date().toISOString(),
+    }),
+  })
+  if (!Array.isArray(rows) || !rows[0] || typeof rows[0] !== 'object') throw new Error('Team checklist was not saved. Viewers cannot write shared data.')
+  const row = rows[0] as Record<string, unknown>
+  return typeof row.updated_at === 'string' ? row.updated_at : new Date().toISOString()
+}
+
+export async function loadTeamControlPlaneChecklist(teamId: string): Promise<CloudChecklistSnapshot | null> {
+  if (!/^[0-9a-f-]{36}$/i.test(teamId)) throw new Error('Invalid team ID.')
+  const params = new URLSearchParams({
+    select: 'payload,updated_at',
+    team_id: 'eq.' + teamId,
+    workspace_key: 'eq.control-plane-checklist',
+    limit: '1',
+  })
+  const rows = await tableRequest<unknown>('team_workspace_snapshots?' + params.toString())
+  if (!Array.isArray(rows) || !rows.length) return null
+  const row = rows[0] as Record<string, unknown>
+  const payload = row.payload && typeof row.payload === 'object' ? row.payload as Record<string, unknown> : {}
+  const checked = payload.checked && typeof payload.checked === 'object' ? payload.checked as Record<string, unknown> : {}
+  return {
+    checked: Object.fromEntries(Object.entries(checked).filter((entry): entry is [string, boolean] => typeof entry[1] === 'boolean')),
+    updatedAt: typeof row.updated_at === 'string' ? row.updated_at : '',
+  }
+}
