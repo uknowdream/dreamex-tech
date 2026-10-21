@@ -22,6 +22,7 @@ if (!api.includes('revision_conflict') || !api.includes('CAS_SCRIPT')) errors.pu
 if (!api.includes('MEMBERS_KEY') || !api.includes('tokenHash') || !api.includes('read_only_role')) errors.push('Shared workspace must support server-enforced role-based access with hashed member tokens.')
 if (!api.includes("['admin', 'editor', 'viewer']") || !api.includes('actorCanChangeRole')) errors.push('Shared workspace must constrain role grants and prevent member privilege escalation.')
 if (!api.includes('randomBytes(32)') || !api.includes("createHash('sha256')")) errors.push('Member tokens must be cryptographically generated and stored only as hashes.')
+if (!api.includes('AUDIT_KEY') || !api.includes('recordAudit') || !api.includes("['LRANGE', AUDIT_KEY, 0, 49]")) errors.push('Workspace mutations must support a bounded, owner/admin-readable server-side audit feed.')
 const frontend = readFileSync('src/TeamWorkspace.tsx', 'utf8')
 if (/VITE_(?:KV_REST_API|UPSTASH_REDIS|DREAMEX_WORKSPACE_TOKEN)/.test(frontend)) errors.push('Server credentials must never be referenced from client-side VITE_ variables.')
 if (errors.length) {
