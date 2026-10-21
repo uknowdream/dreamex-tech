@@ -32,3 +32,7 @@ jobs:
         run: npm run verify:build
       - name: Verify bilingual content
         run: npm run verify:i18n
+      - name: Verify security headers and server-only secret boundaries
+        run: npm run verify:security
+      - name: Run shared-workspace API contract tests
+        run: npm run test:api

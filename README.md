@@ -37,10 +37,12 @@ DreamEx Tech combines editorial knowledge with practical, browser-first engineer
 - `/quality-intelligence` — local-first Playwright JSON and JUnit XML report analysis, pass-rate and duration summaries, retry-based flaky-test signals, failure clustering, report exports, and browser-local summary history.
 - `/supply-chain-intelligence` — local-first CycloneDX/SPDX JSON SBOM inventory, dependency and license metadata review, included vulnerability records, and JSON/CSV/Markdown evidence exports. It does not perform a live vulnerability scan.
 - `/security-center` — same-origin security-header review, visible document-quality signals, local-storage inventory, JSON/Markdown audit exports, and scoped deletion of DreamEx browser data.
+- `/github-ci` — live, read-only status of recent public GitHub Actions runs, sourced from GitHub's public API without a browser token.
+- `/team-workspace` — revision-checked shared JSON snapshots over an optional server-side Upstash Redis backend.
 
 Engineering Intelligence starts with clearly labelled example inventory records; replace them with real metadata before using catalog metrics. Catalog data stays in browser storage and can be exported as JSON. OpenAPI contract text is analyzed locally in the browser and is not automatically persisted or sent to a server. Contract comparison is heuristic and does not prove runtime compatibility.
 
-Most workspace state is stored in the user's browser. No account sync is implied. API Playground requests go directly from the browser to the target and are subject to CORS; do not enter production secrets. Performance snapshots are not a substitute for a full Lighthouse audit. The readiness and STRIDE worksheets are planning aids, not compliance certification or a complete security assessment.
+Most existing tool state is stored in the user's browser; no account sync is implied for those tools. The separate Team Workspace route supports an opt-in shared snapshot backend only after server-side Redis and access-token configuration. API Playground requests go directly from the browser to the target and are subject to CORS; do not enter production secrets. Performance snapshots are not a substitute for a full Lighthouse audit. The readiness and STRIDE worksheets are planning aids, not compliance certification or a complete security assessment.
 
 ## Validation
 
@@ -54,3 +56,13 @@ npm run test:e2e
 ```
 
 Release discipline: validate CI and desktop/mobile browser regression before treating a change as production-ready, then smoke-test critical routes, sitemap, and the human-readable RSS feed after deployment.
+
+## Shared team workspace setup
+
+The Team Workspace backend remains disabled until its server-side credentials are configured. Create an Upstash Redis REST database and add these variables to the **Vercel Production** environment (never prefix them with `VITE_`):
+
+- `KV_REST_API_URL` and `KV_REST_API_TOKEN` (or `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`).
+- `DREAMEX_WORKSPACE_TOKEN`: at least 32 random characters shared only with trusted collaborators.
+- Optional `DREAMEX_ALLOWED_ORIGINS`: comma-separated exact origins; defaults to `https://dreamex.tech,https://www.dreamex.tech`.
+
+Redeploy after changing environment variables. Each token holder has full read/write access to one shared snapshot (maximum 100 KB), so this is a trusted-collaborator MVP, not per-user authentication or role-based access control. Use it only for non-sensitive planning data. See [docs/TEAM-WORKSPACE.md](docs/TEAM-WORKSPACE.md).

@@ -90,6 +90,8 @@ const sitemapUrls = [
   { loc: `${siteUrl}/observatory`, changefreq: 'monthly', priority: '0.6' },
   { loc: `${siteUrl}/devtools`, changefreq: 'monthly', priority: '0.7' },
   { loc: `${siteUrl}/workspace`, changefreq: 'monthly', priority: '0.8' },
+  { loc: `${siteUrl}/github-ci`, changefreq: 'monthly', priority: '0.7' },
+  { loc: `${siteUrl}/team-workspace`, changefreq: 'monthly', priority: '0.7' },
   { loc: `${siteUrl}/engineering-intelligence`, changefreq: 'monthly', priority: '0.8' },
   { loc: `${siteUrl}/control-plane`, changefreq: 'weekly', priority: '0.8' },
   { loc: `${siteUrl}/command-center`, changefreq: 'weekly', priority: '0.8' },
