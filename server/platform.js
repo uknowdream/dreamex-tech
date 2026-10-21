@@ -163,7 +163,7 @@ async function kvCommand(command, key, value, ttlSeconds) {
   if (!cloudConfigured()) throw Object.assign(new Error('Cloud storage is not configured.'), { statusCode: 503, code: 'cloud_storage_not_configured' })
   const base = process.env.KV_REST_API_URL.replace(/\/+$/, '')
   let url = base + '/' + [command, key].map(encodeURIComponent).join('/')
-  if (command === 'set' && Number.isSafeInteger(ttlSeconds) && ttlSeconds > 0) url += '?EX=' + ttlSeconds
+  if (command === 'set' && Number.isSafeInteger(ttlSeconds) && ttlSeconds > 0) url += '/EX/' + ttlSeconds
   const response = await fetch(url, {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + process.env.KV_REST_API_TOKEN, 'Content-Type': 'text/plain; charset=utf-8' },
