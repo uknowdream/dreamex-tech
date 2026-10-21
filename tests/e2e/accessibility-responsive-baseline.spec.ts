@@ -275,7 +275,7 @@ test('footer columns stay balanced across mobile, tablet, and desktop widths', a
       return {
         viewport: document.documentElement.clientWidth,
         document: document.documentElement.scrollWidth,
-        trackCount: getComputedStyle(element).gridTemplateColumns.split(/\\s+/).filter(Boolean).length,
+        trackCount: getComputedStyle(element).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
         left: rect.left,
         right: rect.right,
         groups,
