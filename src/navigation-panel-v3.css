@@ -71,7 +71,6 @@
   html body #root .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] *::before,
   html body #root .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] *::after {
     box-sizing: border-box !important;
-    min-width: 0 !important;
   }
 
   html body #root .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-drawer-head {
@@ -89,7 +88,6 @@
 
   html body #root .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-drawer-head > div {
     display: grid !important;
-    min-width: 0 !important;
     gap: 5px !important;
   }
 
@@ -157,7 +155,6 @@
     gap: 8px !important;
     width: 100% !important;
     max-width: 100% !important;
-    min-width: 0 !important;
     min-height: 46px !important;
     margin: 0 !important;
     padding: 0 11px !important;
@@ -182,7 +179,6 @@
     flex: 1 1 auto !important;
     width: 100% !important;
     max-width: 100% !important;
-    min-width: 0 !important;
     min-height: 44px !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -275,7 +271,6 @@
     align-items: center !important;
     justify-content: space-between !important;
     gap: 8px !important;
-    min-width: 0 !important;
   }
 
   html body #root .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-recent-heading > span:first-child {
@@ -312,7 +307,6 @@
     align-items: center !important;
     gap: 9px !important;
     width: 100% !important;
-    min-width: 0 !important;
     padding: 9px !important;
     border: 1px solid rgba(130, 155, 197, .16) !important;
     border-radius: 10px !important;
@@ -333,7 +327,6 @@
   html body #root .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-recent-copy {
     display: grid !important;
     flex: 1 1 auto !important;
-    min-width: 0 !important;
     gap: 3px !important;
   }
 
@@ -362,7 +355,6 @@
     gap: 10px !important;
     width: 100% !important;
     max-width: 100% !important;
-    min-width: 0 !important;
     min-height: 48px !important;
     height: auto !important;
     margin: 0 !important;
@@ -394,7 +386,6 @@
   html body #root .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-mega-group > a > span:last-child {
     display: grid !important;
     flex: 1 1 auto !important;
-    min-width: 0 !important;
     gap: 3px !important;
     text-align: left !important;
     overflow-wrap: anywhere !important;
@@ -469,7 +460,6 @@
     gap: 10px !important;
     width: 100% !important;
     max-width: 100% !important;
-    min-width: 0 !important;
     height: auto !important;
     min-height: 0 !important;
     max-height: min(38dvh, 300px) !important;
@@ -494,7 +484,6 @@
     flex-direction: column !important;
     align-items: flex-start !important;
     gap: 8px !important;
-    min-width: 0 !important;
     padding: 12px !important;
     border: 1px solid rgba(130, 155, 197, .16) !important;
     border-radius: 10px !important;
@@ -538,7 +527,6 @@
     gap: 3px !important;
     width: 100% !important;
     max-width: 100% !important;
-    min-width: 0 !important;
     height: auto !important;
     min-height: 0 !important;
     padding: 5px 0 !important;
@@ -559,7 +547,6 @@
     align-items: center !important;
     width: 100% !important;
     max-width: 100% !important;
-    min-width: 0 !important;
     min-height: 44px !important;
     padding: 7px 8px !important;
     border-radius: 8px !important;
