@@ -193,7 +193,7 @@ export async function kvDelete(key) {
 
 async function kvDirect(command) {
   if (!cloudConfigured()) throw Object.assign(new Error('Cloud storage is not configured.'), { statusCode: 503, code: 'cloud_storage_not_configured' })
-  const response = await fetch(process.env.KV_REST_API_URL.replace(/\\/+$/, ''), {
+  const response = await fetch(process.env.KV_REST_API_URL.replace(/\/+$/, ''), {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + process.env.KV_REST_API_TOKEN, 'Content-Type': 'application/json' },
     body: JSON.stringify(command),
@@ -228,7 +228,7 @@ export async function kvCompareAndSet(key, expectedUpdatedAt, snapshot) {
     "end",
     "redis.call('SET', KEYS[1], ARGV[2])",
     "return 1",
-  ].join("\\n")
+  ].join("\n")
   const result = await kvDirect(['EVAL', script, '1', key, expectedUpdatedAt || '', JSON.stringify(snapshot)])
   return Number(result) === 1
 }
