@@ -191,6 +191,48 @@ export async function kvDelete(key) {
   return kvCommand('del', key)
 }
 
+async function kvDirect(command) {
+  if (!cloudConfigured()) throw Object.assign(new Error('Cloud storage is not configured.'), { statusCode: 503, code: 'cloud_storage_not_configured' })
+  const response = await fetch(process.env.KV_REST_API_URL.replace(/\\/+$/, ''), {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + process.env.KV_REST_API_TOKEN, 'Content-Type': 'application/json' },
+    body: JSON.stringify(command),
+    signal: AbortSignal.timeout(8000),
+  })
+  let data
+  try { data = await response.json() } catch { throw Object.assign(new Error('Cloud storage returned an invalid response.'), { statusCode: 502, code: 'cloud_storage_bad_response' }) }
+  if (!response.ok || data.error) throw Object.assign(new Error('Cloud storage atomic operation failed.'), { statusCode: 502, code: 'cloud_storage_request_failed' })
+  return data.result
+}
+
+function parseStoredValue(value) {
+  if (value === null || value === undefined) return null
+  if (typeof value !== 'string') return value
+  try { return JSON.parse(value) } catch { return value }
+}
+
+export async function kvGetDelete(key) {
+  return parseStoredValue(await kvDirect(['GETDEL', key]))
+}
+
+export async function kvCompareAndSet(key, expectedUpdatedAt, snapshot) {
+  const script = [
+    "local current = redis.call('GET', KEYS[1])",
+    "local expected = ARGV[1]",
+    "if not current then if expected ~= '' then return 0 end",
+    "else",
+    "  local ok, parsed = pcall(cjson.decode, current)",
+    "  if not ok then return redis.error_reply('INVALID_CURRENT_SNAPSHOT') end",
+    "  local actual = parsed['updatedAt'] or ''",
+    "  if actual ~= expected then return 0 end",
+    "end",
+    "redis.call('SET', KEYS[1], ARGV[2])",
+    "return 1",
+  ].join("\\n")
+  const result = await kvDirect(['EVAL', script, '1', key, expectedUpdatedAt || '', JSON.stringify(snapshot)])
+  return Number(result) === 1
+}
+
 export function configuredTeamAdmins() {
   return (process.env.WORKSPACE_ADMIN_GITHUB_IDS || '').split(',').map(value => value.trim()).filter(value => /^\d+$/.test(value))
 }
