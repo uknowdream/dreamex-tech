@@ -315,8 +315,9 @@ async function handleMemberResource(req, res, config, principal) {
     const member = { id: randomUUID(), label, role, createdAt: now, updatedAt: null, status: 'active' }
     const created = await redisCommand(config, ['EVAL', MEMBER_CREATE_SCRIPT, 1, MEMBERS_KEY, MAX_MEMBERS, hash, JSON.stringify(member)])
     if (Number(created) !== 1) return send(res, 409, { error: 'member_limit_reached', maxMembers: MAX_MEMBERS })
+    const auditLogged = await recordAudit(config, { actorRole: principal.role, action: 'member.created', targetId: member.id, role })
     // Return the opaque token exactly once. Only its SHA-256 hash is persisted in Redis.
-    return send(res, 201, { member: publicMember(member), token, tokenVisibleOnce: true })
+    return send(res, 201, { member: publicMember(member), token, tokenVisibleOnce: true, auditLogged })
   }
 
   const parsed = req.method === 'PATCH' ? bodyObject(req) : { value: { id: queryParam(req, 'id') } }
