@@ -2,6 +2,7 @@ name: Production smoke checks
 
 on:
   workflow_dispatch:
+  deployment_status:
   schedule:
     - cron: '17 3 * * *'
 
@@ -14,14 +15,17 @@ concurrency:
 
 jobs:
   smoke:
-    name: Production route and feed health
+    name: Production route, security-header, and feed health
+    if: ${{ github.event_name != 'deployment_status' || (github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
+    env:
+      SMOKE_BASE_URL: ${{ github.event_name == 'deployment_status' && github.event.deployment_status.environment_url || 'https://www.dreamex.tech' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
       - name: Check production routes and feeds
