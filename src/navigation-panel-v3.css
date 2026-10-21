@@ -71,6 +71,7 @@
   html body #root .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] *::before,
   html body #root .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] *::after {
     box-sizing: border-box !important;
+    min-width: 0 !important;
   }
 
   html body #root .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-drawer-head {
