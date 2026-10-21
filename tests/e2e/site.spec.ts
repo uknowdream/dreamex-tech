@@ -1187,7 +1187,8 @@ test('mobile sidebar quick-find filters routes, announces empty results, and res
   await expect(drawer.locator('a[href="/api-playground"]')).toBeVisible()
   await expect(drawer.locator('.nav-recent-tools')).toBeHidden()
   await expect(drawer.locator('.nav-recent-link[href="/reliability-center"]')).toBeHidden()
-  await expect(drawer.locator('a[href="/reliability-center"]').last()).toBeHidden()
+  // Target the top-level navigation item specifically; other matches may live in a closed mega-menu.
+  await expect(drawer.locator(':scope > a[href="/reliability-center"]')).toBeHidden()
   await expect(drawer.locator('.nav-search-empty')).toBeHidden()
   await expect(drawer.locator('.nav-search-count')).toContainText(/destinations? found|tujuan ditemukan/i)
   await expect(drawer.locator('.nav-search-count')).toBeVisible()
