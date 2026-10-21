@@ -1,0 +1,143 @@
+.control-plane-github,
+.control-plane-cloud {
+  min-width: 0;
+  margin-top: 22px;
+  padding: clamp(18px, 2.5vw, 25px);
+  border: 1px solid var(--eng-panel-line, rgba(132,159,196,.19));
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(17,27,44,.78), rgba(10,17,29,.82));
+  box-shadow: 0 10px 32px rgba(0,0,0,.12), inset 0 1px rgba(255,255,255,.018);
+}
+.control-plane-integration-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 17px;
+}
+.control-plane-integration-heading h2 {
+  margin: 8px 0;
+  font: 600 clamp(20px,2.4vw,25px)/1.2 var(--display, 'Space Grotesk', sans-serif);
+  letter-spacing: -.6px;
+}
+.control-plane-integration-heading p,
+.control-plane-cloud-copy,
+.control-plane-integration-note {
+  margin: 0;
+  color: var(--eng-muted, #9cacc1);
+  font-size: 12px;
+  line-height: 1.75;
+}
+.control-plane-integration-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.control-plane-integration-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid rgba(132,159,196,.25);
+  border-radius: 9px;
+  background: rgba(255,255,255,.035);
+  color: #e8ecf5;
+  font: 600 12px/1.3 var(--font, 'DM Sans', sans-serif);
+  cursor: pointer;
+}
+.control-plane-integration-button:hover:not(:disabled) {
+  border-color: rgba(140,228,220,.55);
+  background: rgba(140,228,220,.08);
+}
+.control-plane-integration-button:focus-visible,
+.control-plane-cloud input:focus-visible {
+  outline: 2px solid var(--focus-ring,#c5ff70);
+  outline-offset: 3px;
+}
+.control-plane-integration-button:disabled { cursor: wait; opacity: .65; }
+.control-plane-ci-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.control-plane-ci-row {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 13px;
+  border: 1px solid rgba(132,159,196,.13);
+  border-radius: 11px;
+  background: rgba(5,11,20,.33);
+}
+.control-plane-ci-run { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.control-plane-ci-run a {
+  width: fit-content;
+  max-width: 100%;
+  color: #e8ecf5;
+  font-size: 12px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.control-plane-ci-run a:hover { color: var(--eng-accent,#8ce4dc); text-decoration: underline; }
+.control-plane-ci-meta { display: flex; flex-wrap: wrap; gap: 6px 10px; color: #8d9db5; font-size: 11px; }
+.control-plane-ci-state {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  padding: 6px 9px;
+  border: 1px solid rgba(132,159,196,.18);
+  border-radius: 99px;
+  color: #c5d1e3;
+  font: 600 10px/1.2 var(--mono, monospace);
+}
+.control-plane-ci-state.is-success { color: #c5ff70; border-color: rgba(197,255,112,.32); background: rgba(197,255,112,.06); }
+.control-plane-ci-state.is-failure { color: #ff9a9f; border-color: rgba(255,154,159,.32); background: rgba(255,154,159,.06); }
+.control-plane-ci-state.is-running { color: #91d9ff; border-color: rgba(145,217,255,.32); background: rgba(145,217,255,.06); }
+.control-plane-ci-message,
+.control-plane-cloud-notice {
+  margin: 11px 0 0;
+  color: var(--eng-muted,#9cacc1);
+  font-size: 12px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.control-plane-cloud-grid {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+  gap: 13px;
+  align-items: end;
+}
+.control-plane-cloud-field { display: grid; gap: 6px; color: #b5c2d6; font-size: 11px; }
+.control-plane-cloud-field input {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 11px;
+  border: 1px solid rgba(132,159,196,.25);
+  border-radius: 9px;
+  background: rgba(5,11,20,.55);
+  color: #e8ecf5;
+  font: 13px var(--font, 'DM Sans', sans-serif);
+}
+.control-plane-cloud-account { color: #c5ff70; font-size: 12px; overflow-wrap: anywhere; }
+.control-plane-cloud-config { display: grid; gap: 9px; }
+.control-plane-cloud-config code { color: #c5ff70; overflow-wrap: anywhere; }
+.control-plane-cloud-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 13px; }
+.control-plane-cloud-danger { color: #ffacb0; }
+.control-plane-integration-empty {
+  padding: 17px;
+  border: 1px dashed rgba(132,159,196,.24);
+  border-radius: 11px;
+  color: var(--eng-muted,#9cacc1);
+  font-size: 12px;
+  line-height: 1.7;
+}
+@media(max-width:640px) {
+  .control-plane-integration-heading { flex-direction: column; }
+  .control-plane-ci-row { grid-template-columns: minmax(0,1fr); align-items: start; }
+  .control-plane-ci-state { justify-self: start; }
+  .control-plane-cloud-grid { grid-template-columns: minmax(0,1fr); }
+  .control-plane-integration-actions { width: 100%; }
+}
