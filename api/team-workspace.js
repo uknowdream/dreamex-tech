@@ -2,6 +2,8 @@ import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypt
 
 const WORKSPACE_KEY = 'dreamex:team-workspace:shared:v1'
 const MEMBERS_KEY = 'dreamex:team-workspace:members:v1'
+const AUDIT_KEY = 'dreamex:team-workspace:audit:v1'
+const MAX_AUDIT_ENTRIES = 200
 const MAX_BYTES = 100_000
 const MAX_MEMBERS = 100
 const DEFAULT_STATE = { project: 'DreamEx Tech', release: '', tasks: [], decisions: [], notes: '' }
@@ -190,6 +192,58 @@ async function readMembers(config) {
   return (await readMemberEntries(config)).map(entry => entry.member)
 }
 
+async function recordAudit(config, entry) {
+  const safeEntry = {
+    id: randomUUID(),
+    at: new Date().toISOString(),
+    actorRole: entry.actorRole,
+    action: entry.action,
+    targetId: entry.targetId || null,
+    role: entry.role || null,
+    revision: Number.isInteger(entry.revision) ? entry.revision : null,
+  }
+  try {
+    await redisCommand(config, ['LPUSH', AUDIT_KEY, JSON.stringify(safeEntry)])
+    // Keep the log bounded even if the list already contains historical records.
+    try { await redisCommand(config, ['LTRIM', AUDIT_KEY, 0, MAX_AUDIT_ENTRIES - 1]) } catch { /* The append remains useful; surface retention failures through server monitoring. */ }
+    return true
+  } catch {
+    return false
+  }
+}
+
+function parseAuditEntry(value) {
+  if (typeof value !== 'string') return null
+  try {
+    const entry = JSON.parse(value)
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry) ||
+        typeof entry.id !== 'string' || typeof entry.at !== 'string' ||
+        typeof entry.actorRole !== 'string' || typeof entry.action !== 'string') return null
+    return {
+      id: entry.id,
+      at: entry.at,
+      actorRole: entry.actorRole,
+      action: entry.action,
+      targetId: typeof entry.targetId === 'string' ? entry.targetId : null,
+      role: typeof entry.role === 'string' ? entry.role : null,
+      revision: Number.isInteger(entry.revision) ? entry.revision : null,
+    }
+  } catch {
+    return null
+  }
+}
+
+async function handleAuditResource(req, res, config, principal) {
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET, OPTIONS')
+    return send(res, 405, { error: 'method_not_allowed' })
+  }
+  if (!canManageMembers(principal.role)) return send(res, 403, { error: 'forbidden', requiredRole: ['owner', 'admin'] })
+  const values = await redisCommand(config, ['LRANGE', AUDIT_KEY, 0, 49])
+  const entries = Array.isArray(values) ? values.map(parseAuditEntry).filter(Boolean) : []
+  return send(res, 200, { entries, retentionLimit: MAX_AUDIT_ENTRIES })
+}
+
 function actorCanChangeRole(actorRole, targetRole, nextRole) {
   if (targetRole === 'owner' || nextRole === 'owner') return false
   if (actorRole === 'owner') return true
@@ -247,7 +301,8 @@ async function handleMemberResource(req, res, config, principal) {
     if (!hash) return send(res, 404, { error: 'member_not_found' })
     const updated = { ...target, role, updatedAt: new Date().toISOString() }
     await redisCommand(config, ['HSET', MEMBERS_KEY, hash, JSON.stringify(updated)])
-    return send(res, 200, { member: publicMember(updated) })
+    const auditLogged = await recordAudit(config, { actorRole: principal.role, action: 'member.role_changed', targetId: updated.id, role: updated.role })
+    return send(res, 200, { member: publicMember(updated), auditLogged })
   }
 
   if (req.method === 'DELETE') {
@@ -257,7 +312,8 @@ async function handleMemberResource(req, res, config, principal) {
     const hash = targetEntry?.hash
     if (!hash) return send(res, 404, { error: 'member_not_found' })
     await redisCommand(config, ['HDEL', MEMBERS_KEY, hash])
-    return send(res, 200, { removed: true, member: publicMember(target) })
+    const auditLogged = await recordAudit(config, { actorRole: principal.role, action: 'member.revoked', targetId: target.id, role: target.role })
+    return send(res, 200, { removed: true, member: publicMember(target), auditLogged })
   }
 
   return send(res, 405, { error: 'method_not_allowed' })
@@ -275,6 +331,7 @@ export default async function handler(req, res) {
   const resource = queryParam(req, 'resource')
   const allowedMethods = resource === 'members'
     ? ['GET', 'POST', 'PATCH', 'DELETE']
+    : resource === 'audit' ? ['GET']
     : resource === '' ? ['GET', 'PUT'] : []
   if (!allowedMethods.length) return send(res, 404, { error: 'unknown_resource' })
   if (!allowedMethods.includes(req.method)) {
@@ -299,6 +356,7 @@ export default async function handler(req, res) {
 
   try {
     if (resource === 'members') return await handleMemberResource(req, res, config, principal)
+    if (resource === 'audit') return await handleAuditResource(req, res, config, principal)
 
     if (req.method === 'GET') {
       const raw = await redisCommand(config, ['GET', WORKSPACE_KEY])
@@ -328,7 +386,8 @@ export default async function handler(req, res) {
       try { current = parseStored(result[1]) } catch { return send(res, 502, { error: 'stored_snapshot_invalid' }) }
       return send(res, 409, { error: 'revision_conflict', current: publicSnapshot(current, principal.role) })
     }
-    return send(res, 200, publicSnapshot(record, principal.role))
+    const auditLogged = await recordAudit(config, { actorRole: principal.role, action: 'snapshot.published', revision: record.revision })
+    return send(res, 200, { ...publicSnapshot(record, principal.role), auditLogged })
   } catch {
     return send(res, 502, { error: 'storage_unavailable', message: 'Shared storage is unavailable. No credentials or internal error details were returned.' })
   }
