@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent } from 'react'
-import { AlertTriangle, Check, CheckCircle2, Cloud, Copy, Download, FileJson, Link2, Plus, RefreshCw, Save, ShieldCheck, Trash2, Upload, Users } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Cloud, Copy, Download, FileJson, Link2, Plus, RefreshCw, Save, ShieldCheck, Trash2, Upload, Users } from 'lucide-react'
 import { useLanguage } from './i18n'
 import './github-integration.css'
 
@@ -133,6 +133,7 @@ export function TeamWorkspacePage() {
       const access = isJsonObject(payload.access) ? payload.access : {}
       const nextRole = ['owner', 'admin', 'editor', 'viewer'].includes(String(access.role)) ? access.role as WorkspaceRole : null
       setRole(nextRole)
+      setMemberRole(current => nextRole === 'admin' && current === 'admin' ? 'editor' : current)
       setIssuedToken('')
       setNotice({ kind: 'success', text: (en ? 'Connected as ' : 'Terhubung sebagai ') + (nextRole ?? (en ? 'unknown role' : 'role tidak diketahui')) + '. Shared snapshot revision ' + remote.revision + ' is loaded.' })
       if (nextRole === 'owner' || nextRole === 'admin') await loadMembers(accessToken)
@@ -416,7 +417,7 @@ export function TeamWorkspacePage() {
           <textarea id="team-workspace-json" spellCheck={false} autoCapitalize="off" autoCorrect="off" value={jsonText} onChange={event => setJsonText(event.target.value)} />
         </label>
         <div className="team-workspace-actions">
-          <button className="button button-primary" type="button" onClick={() => void saveRemote()} disabled={busy || !connected}><Save size={15} /> {busy ? (en ? 'Working…' : 'Memproses…') : (en ? 'Publish shared snapshot' : 'Publikasikan snapshot')}</button>
+          <button className="button button-primary" type="button" onClick={() => void saveRemote()} disabled={busy || !connected || role === 'viewer'}><Save size={15} /> {busy ? (en ? 'Working…' : 'Memproses…') : (en ? 'Publish shared snapshot' : 'Publikasikan snapshot')}</button>
           <button className="button button-ghost" type="button" onClick={saveLocal}><Save size={14} /> {en ? 'Save local draft' : 'Simpan draft lokal'}</button>
           <button className="button button-ghost" type="button" onClick={exportSnapshot}><Download size={14} /> {en ? 'Export JSON' : 'Ekspor JSON'}</button>
           <label className="button button-ghost" htmlFor="team-workspace-import"><Upload size={14} /> {en ? 'Import JSON' : 'Impor JSON'}<input id="team-workspace-import" className="team-workspace-hidden-file" type="file" accept="application/json,.json" onChange={event => void importSnapshot(event)} /></label>
