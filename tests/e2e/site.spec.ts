@@ -1174,6 +1174,9 @@ test('desktop platform menu closes on Escape and restores focus to its trigger',
 test('mobile sidebar quick-find filters routes, announces empty results, and restores the full menu', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
+  // Make the regression deterministic: a recent route duplicates the main navigation URL.
+  await page.evaluate(() => localStorage.setItem('dreamex.navigation.recent.v1', JSON.stringify(['/reliability-center'])))
+  await page.reload()
   await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
   const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
   await expect(drawer).toBeVisible()
@@ -1182,7 +1185,9 @@ test('mobile sidebar quick-find filters routes, announces empty results, and res
   await expect(search).toBeVisible()
   await search.fill('API Playground')
   await expect(drawer.locator('a[href="/api-playground"]')).toBeVisible()
-  await expect(drawer.locator('a[href="/reliability-center"]')).toBeHidden()
+  await expect(drawer.locator('.nav-recent-tools')).toBeHidden()
+  await expect(drawer.locator('.nav-recent-link[href="/reliability-center"]')).toBeHidden()
+  await expect(drawer.locator('a[href="/reliability-center"]').last()).toBeHidden()
   await expect(drawer.locator('.nav-search-empty')).toBeHidden()
   await expect(drawer.locator('.nav-search-count')).toContainText(/destinations? found|tujuan ditemukan/i)
   await expect(drawer.locator('.nav-search-count')).toBeVisible()
