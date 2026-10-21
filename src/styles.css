@@ -1281,10 +1281,12 @@ main, header, footer, section, .container {
 }
 .footer-main {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(130px, .7fr) minmax(180px, .9fr);
-  gap: clamp(26px, 5vw, 76px);
+  grid-template-columns: minmax(220px, 1.15fr) repeat(3, minmax(0, 1fr));
+  gap: clamp(22px, 2.5vw, 40px);
   padding-bottom: 38px;
 }
+.footer-main > * { min-width: 0; }
+.footer-column { overflow-wrap: anywhere; }
 .footer-brand { min-width: 0; }
 .footer .brand { width: fit-content; max-width: 100%; font-size: 19px; }
 .footer .brand-mark {
@@ -1384,12 +1386,31 @@ main, header, footer, section, .container {
 }
 .footer-top-link svg { color: var(--green); }
 .footer-top-link:hover { color: var(--green); }
+/* Tablet footer: keep the three navigation groups on one aligned row below the brand. */
+@media (min-width: 761px) and (max-width: 1100px) {
+  .footer-main {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 30px clamp(18px, 3vw, 32px);
+  }
+  .footer-brand { grid-column: 1 / -1; }
+  .footer-brand > p { max-width: 560px; }
+  .footer-column { gap: 12px; }
+}
+
+/* Compact layouts progressively reduce the footer's column count. */
 @media (max-width: 760px) {
-  .footer-main { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px 24px; }
+  .footer-main { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 24px; }
   .footer-brand { grid-column: 1 / -1; }
   .footer-brand > p { max-width: 420px; }
   .footer-bottom { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
   .footer-manifesto { grid-row: 2; grid-column: 1 / -1; text-align: left; }
+}
+@media (max-width: 560px) {
+  .footer-main { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .footer-brand { grid-column: auto; }
+  .footer-column { padding-top: 0; }
+  .footer-bottom { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .footer-manifesto { text-align: left; }
 }
 @media (max-width: 420px) {
   .footer::before { width: calc(100% - 34px); }
