@@ -245,11 +245,43 @@ test('tablet navigation drawer is centered with balanced side gutters', async ({
     const drawer = page.locator('#primary-navigation.nav-open[role="dialog"]')
     await expect(drawer).toBeVisible()
 
-    // Keep the centering assertion deterministic while the drawer's transform transition settles.
+    // Poll the stable geometry and include computed styles in the failure output.
     await expect.poll(async () => drawer.evaluate(element => {
       const rect = element.getBoundingClientRect()
-      return Math.abs(rect.left - (document.documentElement.clientWidth - rect.right))
-    }), { message: `Tablet drawer should settle centered at ${width}px`, timeout: 5000 }).toBeLessThanOrEqual(2)
+      const viewport = document.documentElement.clientWidth
+      const delta = Math.abs(rect.left - (viewport - rect.right))
+      if (delta <= 2) return 'centered'
+      const style = getComputedStyle(element)
+      const parent = element.parentElement
+      const parentRect = parent?.getBoundingClientRect()
+      const parentStyle = parent ? getComputedStyle(parent) : null
+      return JSON.stringify({
+        delta,
+        viewport,
+        innerWidth: window.innerWidth,
+        left: rect.left,
+        right: rect.right,
+        width: rect.width,
+        position: style.position,
+        cssLeft: style.left,
+        cssRight: style.right,
+        transform: style.transform,
+        translate: style.translate,
+        marginLeft: style.marginLeft,
+        marginRight: style.marginRight,
+        offsetParent: (element.offsetParent as HTMLElement | null)?.className ?? null,
+        parent: parentRect && parentStyle ? {
+          className: (parent as HTMLElement).className,
+          left: parentRect.left,
+          right: parentRect.right,
+          width: parentRect.width,
+          position: parentStyle.position,
+          paddingLeft: parentStyle.paddingLeft,
+          paddingRight: parentStyle.paddingRight,
+          transform: parentStyle.transform,
+        } : null,
+      })
+    }), { message: `Tablet drawer should settle centered at ${width}px; diagnostic JSON follows on failure`, timeout: 5000 }).toBe('centered')
 
     const bounds = await drawer.evaluate(element => {
       const rect = element.getBoundingClientRect()
