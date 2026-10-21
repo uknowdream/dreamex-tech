@@ -1281,10 +1281,12 @@ main, header, footer, section, .container {
 }
 .footer-main {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(130px, .7fr) minmax(180px, .9fr);
-  gap: clamp(26px, 5vw, 76px);
+  grid-template-columns: minmax(220px, 1.15fr) repeat(3, minmax(0, 1fr));
+  gap: clamp(22px, 2.5vw, 40px);
   padding-bottom: 38px;
 }
+.footer-main > * { min-width: 0; }
+.footer-column { overflow-wrap: anywhere; }
 .footer-brand { min-width: 0; }
 .footer .brand { width: fit-content; max-width: 100%; font-size: 19px; }
 .footer .brand-mark {
@@ -1384,12 +1386,31 @@ main, header, footer, section, .container {
 }
 .footer-top-link svg { color: var(--green); }
 .footer-top-link:hover { color: var(--green); }
+/* Tablet footer: keep the three navigation groups on one aligned row below the brand. */
+@media (min-width: 761px) and (max-width: 1100px) {
+  .footer-main {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 30px clamp(18px, 3vw, 32px);
+  }
+  .footer-brand { grid-column: 1 / -1; }
+  .footer-brand > p { max-width: 560px; }
+  .footer-column { gap: 12px; }
+}
+
+/* Compact layouts progressively reduce the footer's column count. */
 @media (max-width: 760px) {
-  .footer-main { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px 24px; }
+  .footer-main { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 24px; }
   .footer-brand { grid-column: 1 / -1; }
   .footer-brand > p { max-width: 420px; }
   .footer-bottom { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
   .footer-manifesto { grid-row: 2; grid-column: 1 / -1; text-align: left; }
+}
+@media (max-width: 560px) {
+  .footer-main { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .footer-brand { grid-column: auto; }
+  .footer-column { padding-top: 0; }
+  .footer-bottom { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .footer-manifesto { text-align: left; }
 }
 @media (max-width: 420px) {
   .footer::before { width: calc(100% - 34px); }
@@ -2480,11 +2501,18 @@ main, header, footer, section, .container {
 .footer-manifesto { justify-self: center; line-height: 1.6; }
 .footer-top-link { justify-self: end; white-space: nowrap; }
 @media (max-width: 1100px) {
-  .footer-main { grid-template-columns: minmax(190px, .9fr) repeat(2, minmax(0, 1fr)); gap: 30px 26px; }
+  /* Keep the three navigation groups on one balanced row after the brand. */
+  .footer-main { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 24px; }
   .footer-brand { grid-column: 1 / -1; }
   .footer-brand > p { max-width: 460px; }
-  .footer-column:last-child { grid-column: 2 / 4; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; column-gap: 24px; }
-  .footer-column:last-child .footer-heading { grid-column: 1 / -1; }
+  .footer-column:last-child {
+    grid-column: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 0;
+  }
   .footer-bottom { grid-template-columns: minmax(0, 1fr) auto; }
   .footer-manifesto { grid-column: 1 / 2; grid-row: 2; justify-self: start; text-align: left; }
   .footer-top-link { grid-column: 2; grid-row: 1; }
@@ -2492,7 +2520,14 @@ main, header, footer, section, .container {
 @media (max-width: 700px) {
   .footer-main { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 27px 20px; }
   .footer-brand { grid-column: 1 / -1; }
-  .footer-column:last-child { grid-column: 1 / -1; }
+  .footer-column:last-child {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
+    gap: 12px 18px;
+  }
+  .footer-column:last-child .footer-heading { grid-column: 1 / -1; }
 }
 @media (max-width: 560px) {
   .footer-inner { padding-top: 30px; }
@@ -3439,80 +3474,5 @@ main, header, footer, section, .container {
     color: #8e9fb8 !important;
     font-size: 10px !important;
     line-height: 1.45 !important;
-  }
-}
-
-/* Navigation drawer regression fix (2026-10): content-led sheet and native hidden semantics.
-   Keep this final override after legacy responsive rules so stale !important declarations
-   cannot force filtered links back into layout or stretch the drawer across the viewport. */
-html body #primary-navigation[role="dialog"] [hidden] {
-  display: none !important;
-}
-
-@media (max-width: 1050px), (pointer: coarse) {
-  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] {
-    box-sizing: border-box !important;
-    position: fixed !important;
-    inset: max(72px, calc(env(safe-area-inset-top) + 12px)) max(10px, env(safe-area-inset-right)) auto auto !important;
-    width: min(440px, calc(100vw - 20px)) !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: min(78dvh, calc(100dvh - 96px)) !important;
-    padding: 16px 14px max(14px, env(safe-area-inset-bottom)) !important;
-    gap: 6px !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
-    overscroll-behavior: contain !important;
-    scrollbar-gutter: stable;
-    border-radius: 18px !important;
-    box-shadow: 0 24px 70px rgba(0,0,0,.48), 0 0 0 1px rgba(255,255,255,.025) !important;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] > a,
-  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-platform,
-  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-platform > summary {
-    box-sizing: border-box !important;
-    flex: 0 0 auto !important;
-    min-width: 0 !important;
-  }
-
-  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-mega-panel {
-    max-height: min(36dvh, 320px) !important;
-    overflow: auto !important;
-    overscroll-behavior: contain !important;
-  }
-}
-
-@media (max-width: 640px) {
-  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] {
-    inset: max(68px, calc(env(safe-area-inset-top) + 8px)) max(8px, env(safe-area-inset-right)) auto max(8px, env(safe-area-inset-left)) !important;
-    width: auto !important;
-    max-height: min(78dvh, calc(100dvh - 84px)) !important;
-    padding: 14px 12px max(12px, env(safe-area-inset-bottom)) !important;
-    border-radius: 16px !important;
-  }
-
-  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-drawer-head {
-    margin-bottom: 8px !important;
-    padding-bottom: 12px !important;
-  }
-
-  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-drawer-head strong {
-    font-size: clamp(19px, 5vw, 23px) !important;
-  }
-
-  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] > a,
-  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] .nav-platform > summary {
-    min-height: 52px !important;
-    padding: 8px 10px !important;
-    gap: 10px !important;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html body .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] {
-    scroll-behavior: auto !important;
-    transition: none !important;
   }
 }

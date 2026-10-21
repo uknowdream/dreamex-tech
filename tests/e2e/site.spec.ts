@@ -1146,6 +1146,7 @@ test('mobile navigation backdrop closes the drawer and language selection remain
 test('desktop engineering navigation exposes grouped destinations and closes on route selection', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('/')
+  test.skip(await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches), 'Touch-first devices use the responsive drawer instead of the desktop mega-menu')
   const platform = page.locator('.nav-platform')
   await platform.locator('summary').click()
   const panel = platform.locator('.nav-mega-panel')
@@ -1161,6 +1162,7 @@ test('desktop engineering navigation exposes grouped destinations and closes on 
 test('desktop platform menu closes on Escape and restores focus to its trigger', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('/')
+  test.skip(await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches), 'Touch-first devices use the responsive drawer instead of the desktop mega-menu')
   const summary = page.locator('.nav-platform > summary')
   await summary.focus()
   await page.keyboard.press('Enter')
@@ -1174,6 +1176,9 @@ test('desktop platform menu closes on Escape and restores focus to its trigger',
 test('mobile sidebar quick-find filters routes, announces empty results, and restores the full menu', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
+  // Make the regression deterministic: a recent route duplicates the main navigation URL.
+  await page.evaluate(() => localStorage.setItem('dreamex.navigation.recent.v1', JSON.stringify(['/reliability-center'])))
+  await page.reload()
   await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
   const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
   await expect(drawer).toBeVisible()
@@ -1182,7 +1187,10 @@ test('mobile sidebar quick-find filters routes, announces empty results, and res
   await expect(search).toBeVisible()
   await search.fill('API Playground')
   await expect(drawer.locator('a[href="/api-playground"]')).toBeVisible()
-  await expect(drawer.locator('a[href="/reliability-center"]')).toBeHidden()
+  await expect(drawer.locator('.nav-recent-tools')).toBeHidden()
+  await expect(drawer.locator('.nav-recent-link[href="/reliability-center"]')).toBeHidden()
+  // The main Reliability Center destination lives inside the platform mega-menu, not as a direct drawer child.
+  await expect(drawer.locator('.nav-mega-group a[href="/reliability-center"]')).toBeHidden()
   await expect(drawer.locator('.nav-search-empty')).toBeHidden()
   await expect(drawer.locator('.nav-search-count')).toContainText(/destinations? found|tujuan ditemukan/i)
   await expect(drawer.locator('.nav-search-count')).toBeVisible()
@@ -1196,7 +1204,8 @@ test('mobile sidebar quick-find filters routes, announces empty results, and res
   await drawer.getByRole('button', { name: /Clear navigation search|Hapus pencarian navigasi/i }).click()
   await expect(search).toBeFocused()
   await expect(drawer.locator('a[href="/api-playground"]')).toBeVisible()
-  await expect(drawer.locator('a[href="/reliability-center"]')).toBeVisible()
+  await expect(drawer.locator('.nav-recent-link[href="/reliability-center"]')).toBeVisible()
+  await expect(drawer.locator('.nav-mega-group a[href="/reliability-center"]')).toBeVisible()
 
   await search.fill('Knowledge Graph')
   await drawer.locator('a[href="/knowledge-graph"]').click()
@@ -1295,6 +1304,7 @@ test('clearing sidebar recents removes only its own local storage key', async ({
 test('desktop navigation keeps the mega-menu while mobile-only recents stay out of the desktop header', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/api-playground')
+  test.skip(await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches), 'Touch-first devices use the responsive drawer instead of the desktop mega-menu')
   const navigation = page.getByRole('navigation', { name: /Main navigation|Navigasi utama/i })
   await expect(navigation).toBeVisible()
   await expect(navigation.locator('.nav-recent-tools')).toBeHidden()
