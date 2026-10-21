@@ -29,6 +29,7 @@
     background: linear-gradient(155deg, rgba(16, 28, 48, .99), rgba(7, 13, 24, .995)) !important;
     box-shadow: 0 24px 72px rgba(0, 0, 0, .56), 0 0 0 1px rgba(255, 255, 255, .025) !important;
     transform: none !important;
+    translate: none !important;
     animation: none !important;
     visibility: visible !important;
     opacity: 1 !important;
