@@ -1,4 +1,4 @@
-import { appError, cloudConfigured, getSession, hashInvite, kvDelete, kvGetDelete, kvSet, requireSameOrigin, sendJson, sendMethodNotAllowed, readJsonBody } from '../../../server/platform.js'
+import { appError, cloudConfigured, getSession, hashInvite, kvGetDelete, kvSet, requireSameOrigin, sendJson, sendMethodNotAllowed, readJsonBody } from '../../../server/platform.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return sendMethodNotAllowed(res, ['POST'])
@@ -18,7 +18,6 @@ export default async function handler(req, res) {
     }
 
     await kvSet('dreamex_member_shared_' + user.id, { role: invite.role, invitedAt: new Date().toISOString(), invitedBy: invite.createdBy }, 365 * 24 * 60 * 60)
-    await kvDelete(key)
     return sendJson(res, 200, { ok: true, role: invite.role, message: 'You now have access to the shared engineering workspace.' })
   } catch (error) {
     return appError(res, error)
