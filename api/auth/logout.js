@@ -1,4 +1,4 @@
-import { clearSessionCookie, requireSameOrigin, sendJson } from '../_lib/platform.js'
+import { clearSessionCookie, requireSameOrigin, sendJson } from '../../server/platform.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
