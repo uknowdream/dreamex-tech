@@ -1146,6 +1146,7 @@ test('mobile navigation backdrop closes the drawer and language selection remain
 test('desktop engineering navigation exposes grouped destinations and closes on route selection', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('/')
+  test.skip(await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches), 'Touch-first devices use the responsive drawer instead of the desktop mega-menu')
   const platform = page.locator('.nav-platform')
   await platform.locator('summary').click()
   const panel = platform.locator('.nav-mega-panel')
