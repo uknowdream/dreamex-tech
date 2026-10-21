@@ -32,7 +32,7 @@ function queryForPackage(item) {
   const purl = typeof item.purl === 'string' ? item.purl.trim() : ''
   const version = typeof item.version === 'string' ? item.version.trim() : ''
   if (!id || id.length > 300 || /[\u0000-\u001f\u007f]/.test(id)) return null
-  if (!purl || purl.length > MAX_PURL_LENGTH || !/^pkg:[a-z0-9.+-]+\/[^\\s<>"']+$/i.test(purl)) return null
+  if (!purl || purl.length > MAX_PURL_LENGTH || !purl.toLowerCase().startsWith('pkg:') || !purl.includes('/') || /[<>"']/.test(purl) || purl.split('').some(character => character.charCodeAt(0) <= 32 || character.charCodeAt(0) === 127)) return null
   const path = purl.split(/[?#]/, 1)[0]
   const lastSlash = path.lastIndexOf('/')
   const lastAt = path.lastIndexOf('@')
