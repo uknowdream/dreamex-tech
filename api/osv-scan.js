@@ -1,7 +1,7 @@
 const MAX_PACKAGES = 100
 const MAX_BODY_BYTES = 64 * 1024
 const MAX_PURL_LENGTH = 512
-const MAX_ADVISORIES = 150
+const MAX_ADVISORIES = 50
 const OSV_API = 'https://api.osv.dev'
 
 function send(res, status, payload) {
@@ -106,7 +106,7 @@ async function loadAdvisory(id) {
 export default async function handler(req, res) {
   res.setHeader('Vary', 'Origin')
   if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST, OPTIONS')
+    res.setHeader('Allow', 'POST')
     return send(res, 405, { error: 'method_not_allowed' })
   }
 
