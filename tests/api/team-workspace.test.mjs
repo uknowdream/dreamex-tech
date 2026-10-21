@@ -352,3 +352,19 @@ test('audit endpoint rejects write methods and unknown role data is not returned
     assert.match(result.headers.allow, /GET/)
   } finally { clearConfigured() }
 })
+
+
+test('member registry enforces its 100-token cap atomically under concurrent requests', async () => {
+  setConfigured()
+  try {
+    const results = await Promise.all(Array.from({ length: 101 }, (_, index) => invoke('POST', {
+      url: '/api/team-workspace?resource=members',
+      headers: auth(),
+      body: { label: 'Viewer ' + index, role: 'viewer' },
+    })))
+    assert.equal(results.filter(result => result.status === 201).length, 100)
+    assert.equal(results.filter(result => result.status === 409 && result.body.error === 'member_limit_reached').length, 1)
+    assert.equal(memberRecords.size, 100)
+    assert.ok(auditRecords.length <= 200)
+  } finally { clearConfigured() }
+})
