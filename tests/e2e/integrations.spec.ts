@@ -103,6 +103,7 @@ test('workspace owner can issue, change, and revoke per-member access tokens', a
   await expect(page.getByText('Release reviewer')).toBeVisible()
   await page.getByRole('combobox', { name: /Role for Release reviewer|Role untuk Release reviewer/i }).selectOption('editor')
   await expect.poll(() => members[0]?.role).toBe('editor')
+  page.on('dialog', dialog => dialog.accept())
   await page.getByRole('button', { name: /Revoke|Cabut/i }).click()
   await expect(page.getByText('Release reviewer')).toHaveCount(0)
   expect(members).toHaveLength(0)
