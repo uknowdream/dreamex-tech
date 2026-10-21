@@ -16,7 +16,7 @@ The policy is enforced at Vercel's edge; it is no longer only a Report-Only head
 
 ## 2. Automatic production smoke tests
 
-The Production smoke workflow is triggered by successful GitHub deployment-status events whose environment is Production. It checks critical route responses, prerendered canonical/SEO metadata, RSS, sitemap, manifest and security headers. A manual workflow dispatch can check an approved DreamEx or Vercel production hostname.
+The Production smoke workflow is triggered by successful GitHub deployment-status events whose environment is Production. It checks critical route responses, prerendered canonical/SEO metadata, RSS, sitemap, manifest and security headers, then opens critical routes in Chromium to detect uncaught page errors and enforced CSP violations. Automated deployment checks use the public `https://www.dreamex.tech` hostname (not the SSO-protected deployment URL). A manual workflow dispatch can check an approved DreamEx or Vercel hostname when that hostname is publicly reachable.
 
 Open GitHub Actions → Production smoke after a deployment. The deployment can be READY while the smoke workflow is still running; treat both statuses as separate release signals. The workflow failure does not automatically roll back the deployment.
 
