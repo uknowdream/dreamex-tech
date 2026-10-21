@@ -52,10 +52,13 @@ npm run lint
 npm run build
 npm run verify:build
 npm run verify:i18n
+npm run verify:security
+npm run test:api
 npm run test:e2e
+npm run test:a11y
 ```
 
-Release discipline: validate CI and desktop/mobile browser regression before treating a change as production-ready, then smoke-test critical routes, sitemap, and the human-readable RSS feed after deployment.
+Release discipline: review CI, desktop/mobile browser regression, axe-core findings, and Lighthouse reports before release. The `Production smoke checks` workflow verifies key routes, feeds, security headers, and protected API behavior after production deployment and on a daily schedule. See [docs/QUALITY-GATES.md](docs/QUALITY-GATES.md) for release evidence and remaining manual checks.
 
 ## Shared team workspace setup
 
