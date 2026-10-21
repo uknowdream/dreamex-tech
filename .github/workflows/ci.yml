@@ -24,6 +24,10 @@ jobs:
         run: npm install
       - name: TypeScript checks
         run: npm run typecheck
+      - name: API security boundary tests
+        run: npm run test:unit
+      - name: Production dependency audit
+        run: npm audit --omit=dev --audit-level=high
       - name: ESLint
         run: npm run lint
       - name: Production build
