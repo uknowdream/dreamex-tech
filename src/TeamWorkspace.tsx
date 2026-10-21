@@ -1,10 +1,13 @@
 import { useState, type ChangeEvent } from 'react'
-import { AlertTriangle, CheckCircle2, Cloud, Download, FileJson, Link2, RefreshCw, Save, ShieldCheck, Upload } from 'lucide-react'
+import { AlertTriangle, Check, CheckCircle2, Cloud, Copy, Download, FileJson, Link2, Plus, RefreshCw, Save, ShieldCheck, Trash2, Upload, Users } from 'lucide-react'
 import { useLanguage } from './i18n'
 import './github-integration.css'
 
 type JsonObject = Record<string, unknown>
+type WorkspaceRole = 'owner' | 'admin' | 'editor' | 'viewer'
+type AssignableRole = Exclude<WorkspaceRole, 'owner'>
 type RemoteSnapshot = { revision: number; updatedAt: string | null; state: JsonObject }
+type WorkspaceMember = { id: string; label: string; role: WorkspaceRole; createdAt: string; updatedAt?: string | null }
 type NoticeKind = 'success' | 'warning' | 'error' | 'info'
 
 const TOKEN_KEY = 'dreamex-team-workspace-token-v1'
@@ -48,6 +51,44 @@ export function TeamWorkspacePage() {
   const [busy, setBusy] = useState(false)
   const [showToken, setShowToken] = useState(false)
   const [notice, setNotice] = useState<{ kind: NoticeKind; text: string } | null>(null)
+  const [role, setRole] = useState<WorkspaceRole | null>(null)
+  const [members, setMembers] = useState<WorkspaceMember[]>([])
+  const [memberLabel, setMemberLabel] = useState('')
+  const [memberRole, setMemberRole] = useState<AssignableRole>('editor')
+  const [issuedToken, setIssuedToken] = useState('')
+
+  const loadMembers = async (accessToken = token) => {
+    try {
+      const response = await fetch('/api/team-workspace?resource=members', {
+        method: 'GET',
+        cache: 'no-store',
+        headers: { Authorization: 'Bearer ' + accessToken.trim(), Accept: 'application/json' },
+      })
+      const payload = await readPayload(response)
+      if (!response.ok || !Array.isArray(payload.members)) {
+        if (response.status === 401 || response.status === 403) setMembers([])
+        if (!response.ok) setNotice({
+          kind: 'error',
+          text: typeof payload.error === 'string'
+            ? (en ? 'Member management failed: ' + payload.error : 'Pengelolaan anggota gagal: ' + payload.error)
+            : (en ? 'Could not load team members.' : 'Tidak dapat memuat anggota tim.'),
+        })
+        return false
+      }
+      const next = payload.members.filter((value): value is WorkspaceMember => Boolean(
+        value && typeof value === 'object'
+          && typeof (value as Record<string, unknown>).id === 'string'
+          && typeof (value as Record<string, unknown>).label === 'string'
+          && ['owner', 'admin', 'editor', 'viewer'].includes(String((value as Record<string, unknown>).role))
+          && typeof (value as Record<string, unknown>).createdAt === 'string'
+      ))
+      setMembers(next)
+      return true
+    } catch {
+      setNotice({ kind: 'error', text: en ? 'Could not reach team member management.' : 'Pengelolaan anggota tim tidak dapat dijangkau.' })
+      return false
+    }
+  }
 
   const loadRemote = async (accessToken = token) => {
     if (!accessToken.trim()) {
@@ -65,16 +106,22 @@ export function TeamWorkspacePage() {
       const payload = await readPayload(response)
       if (response.status === 503) {
         setConnected(false)
+        setRole(null)
+        setMembers([])
         setNotice({ kind: 'warning', text: en ? 'The shared backend is not configured yet. The site owner must set the Upstash Redis REST and workspace-token environment variables in Vercel. Your local draft is still available.' : 'Backend bersama belum dikonfigurasi. Pemilik situs harus mengatur environment variable Upstash Redis REST dan token workspace di Vercel. Draft lokal Anda tetap tersedia.' })
         return
       }
       if (response.status === 401) {
         setConnected(false)
+        setRole(null)
+        setMembers([])
         setNotice({ kind: 'error', text: en ? 'The access token is invalid. Check the token with the workspace owner.' : 'Token akses tidak valid. Periksa token dengan pemilik workspace.' })
         return
       }
       if (!response.ok || !isJsonObject(payload.state) || typeof payload.revision !== 'number') {
         setConnected(false)
+        setRole(null)
+        setMembers([])
         setNotice({ kind: 'error', text: typeof payload.error === 'string' ? payload.error : (en ? 'The shared workspace could not be loaded.' : 'Workspace bersama tidak dapat dimuat.') })
         return
       }
@@ -83,9 +130,16 @@ export function TeamWorkspacePage() {
       setRevision(remote.revision)
       setUpdatedAt(remote.updatedAt)
       setConnected(true)
-      setNotice({ kind: 'success', text: en ? 'Connected. Shared snapshot revision ' + remote.revision + ' is loaded.' : 'Terhubung. Snapshot bersama revisi ' + remote.revision + ' berhasil dimuat.' })
+      const access = isJsonObject(payload.access) ? payload.access : {}
+      const nextRole = ['owner', 'admin', 'editor', 'viewer'].includes(String(access.role)) ? access.role as WorkspaceRole : null
+      setRole(nextRole)
+      setIssuedToken('')
+      setNotice({ kind: 'success', text: (en ? 'Connected as ' : 'Terhubung sebagai ') + (nextRole ?? (en ? 'unknown role' : 'role tidak diketahui')) + '. Shared snapshot revision ' + remote.revision + ' is loaded.' })
+      if (nextRole === 'owner' || nextRole === 'admin') await loadMembers(accessToken)
     } catch {
       setConnected(false)
+      setRole(null)
+      setMembers([])
       setNotice({ kind: 'error', text: en ? 'Could not reach the workspace API. Check network access and Vercel function logs.' : 'API workspace tidak dapat dijangkau. Periksa jaringan dan log function Vercel.' })
     } finally {
       setBusy(false)
@@ -153,6 +207,85 @@ export function TeamWorkspacePage() {
     }
   }
 
+  const addMember = async () => {
+    const label = memberLabel.trim()
+    if (label.length < 2 || label.length > 80) {
+      setNotice({ kind: 'warning', text: en ? 'Member label must be between 2 and 80 characters.' : 'Label anggota harus berisi 2–80 karakter.' })
+      return
+    }
+    setBusy(true)
+    setNotice(null)
+    try {
+      const response = await fetch('/api/team-workspace?resource=members', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + token.trim(), 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ label, role: memberRole }),
+      })
+      const payload = await readPayload(response)
+      if (!response.ok || typeof payload.token !== 'string' || !isJsonObject(payload.member)) {
+        setNotice({ kind: 'error', text: typeof payload.error === 'string' ? (en ? 'Could not issue member token: ' + payload.error : 'Token anggota gagal dibuat: ' + payload.error) : (en ? 'Could not issue a member token.' : 'Token anggota tidak dapat dibuat.') })
+        return
+      }
+      setIssuedToken(payload.token)
+      setMemberLabel('')
+      setNotice({ kind: 'success', text: en ? 'Member access created. Copy the token now; it is shown only once.' : 'Akses anggota dibuat. Salin token sekarang; token hanya ditampilkan satu kali.' })
+      await loadMembers(token)
+    } catch {
+      setNotice({ kind: 'error', text: en ? 'Network error while creating member access.' : 'Kesalahan jaringan saat membuat akses anggota.' })
+    } finally { setBusy(false) }
+  }
+
+  const changeMemberRole = async (member: WorkspaceMember, nextRole: AssignableRole) => {
+    setBusy(true)
+    setNotice(null)
+    try {
+      const response = await fetch('/api/team-workspace?resource=members', {
+        method: 'PATCH',
+        headers: { Authorization: 'Bearer ' + token.trim(), 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ id: member.id, role: nextRole }),
+      })
+      const payload = await readPayload(response)
+      if (!response.ok) {
+        setNotice({ kind: 'error', text: typeof payload.error === 'string' ? (en ? 'Role update failed: ' + payload.error : 'Perubahan role gagal: ' + payload.error) : (en ? 'Role update failed.' : 'Perubahan role gagal.') })
+        return
+      }
+      setNotice({ kind: 'success', text: en ? 'Member role updated.' : 'Role anggota diperbarui.' })
+      await loadMembers(token)
+    } catch {
+      setNotice({ kind: 'error', text: en ? 'Network error while changing the member role.' : 'Kesalahan jaringan saat mengubah role anggota.' })
+    } finally { setBusy(false) }
+  }
+
+  const revokeMember = async (member: WorkspaceMember) => {
+    if (!window.confirm(en ? 'Revoke access for ' + member.label + '?' : 'Cabut akses untuk ' + member.label + '?')) return
+    setBusy(true)
+    setNotice(null)
+    try {
+      const response = await fetch('/api/team-workspace?resource=members&id=' + encodeURIComponent(member.id), {
+        method: 'DELETE',
+        headers: { Authorization: 'Bearer ' + token.trim(), Accept: 'application/json' },
+      })
+      const payload = await readPayload(response)
+      if (!response.ok) {
+        setNotice({ kind: 'error', text: typeof payload.error === 'string' ? (en ? 'Access revocation failed: ' + payload.error : 'Pencabutan akses gagal: ' + payload.error) : (en ? 'Access revocation failed.' : 'Pencabutan akses gagal.') })
+        return
+      }
+      setNotice({ kind: 'success', text: en ? 'Member access revoked.' : 'Akses anggota dicabut.' })
+      await loadMembers(token)
+    } catch {
+      setNotice({ kind: 'error', text: en ? 'Network error while revoking member access.' : 'Kesalahan jaringan saat mencabut akses anggota.' })
+    } finally { setBusy(false) }
+  }
+
+  const copyIssuedToken = async () => {
+    try {
+      await navigator.clipboard.writeText(issuedToken)
+      setNotice({ kind: 'success', text: en ? 'New member token copied. Share it through a trusted channel.' : 'Token anggota disalin. Bagikan melalui saluran tepercaya.' })
+    } catch {
+      setNotice({ kind: 'warning', text: en ? 'Clipboard access was blocked. Select and copy the token manually.' : 'Akses clipboard diblokir. Pilih dan salin token secara manual.' })
+    }
+  }
+
   const saveLocal = () => {
     try {
       const value: unknown = JSON.parse(jsonText)
@@ -204,6 +337,9 @@ export function TeamWorkspacePage() {
     try { sessionStorage.removeItem(TOKEN_KEY) } catch { /* The control remains usable without storage. */ }
     setToken('')
     setConnected(false)
+    setRole(null)
+    setMembers([])
+    setIssuedToken('')
     setNotice({ kind: 'info', text: en ? 'Token cleared from this browser tab session.' : 'Token dihapus dari sesi tab browser ini.' })
   }
 
@@ -230,8 +366,48 @@ export function TeamWorkspacePage() {
           <button type="button" className="button button-ghost" onClick={() => void loadRemote()} disabled={busy || !token.trim()}><RefreshCw size={14} /> {en ? 'Load latest' : 'Muat terbaru'}</button>
         </div>
         {notice && <div className="team-workspace-status" data-kind={notice.kind} role={notice.kind === 'error' ? 'alert' : 'status'}>{notice.kind === 'success' ? <CheckCircle2 size={17} /> : notice.kind === 'error' || notice.kind === 'warning' ? <AlertTriangle size={17} /> : <ShieldCheck size={17} />}<span>{notice.text}</span></div>}
-        <div className="team-workspace-warning">{en ? 'Shared access model: every holder of this single workspace token can read and overwrite the shared snapshot. Use a long random token, distribute it only to trusted collaborators, and do not store personal, confidential, or credential data.' : 'Model akses bersama: setiap pemegang token workspace ini dapat membaca dan menimpa snapshot bersama. Gunakan token acak yang panjang, bagikan hanya kepada kolaborator tepercaya, dan jangan menyimpan data pribadi, rahasia, atau kredensial.'}</div>
+        <div className="team-workspace-warning">{en ? 'Role-based access: owner/admin manage members, editors can publish snapshots, and viewers have read-only access. Tokens are stored as SHA-256 hashes on the server and are shown only once when issued. Do not put confidential incident data or secrets in this shared snapshot.' : 'Akses berbasis role: owner/admin mengelola anggota, editor dapat mempublikasikan snapshot, dan viewer hanya dapat membaca. Token disimpan sebagai hash SHA-256 di server dan hanya ditampilkan sekali saat dibuat. Jangan masukkan data insiden rahasia atau kredensial ke snapshot bersama.'}</div>
       </section>
+
+      {connected && role && (role === 'owner' || role === 'admin') && <section className="team-workspace-panel team-workspace-members" aria-labelledby="team-workspace-members-title">
+        <div className="team-workspace-panel-head"><div><span className="section-kicker">{en ? '02 / TEAM ACCESS' : '02 / AKSES TIM'}</span><h2 id="team-workspace-members-title">{en ? 'Member access & roles' : 'Akses anggota & role'}</h2></div><Users size={20} /></div>
+        <p className="team-workspace-connection-state">{en ? 'Connected as ' + role + '. The owner can issue admin/editor/viewer tokens. Admins can issue editor/viewer tokens and manage non-admin members.' : 'Terhubung sebagai ' + role + '. Owner dapat membuat token admin/editor/viewer. Admin dapat membuat token editor/viewer dan mengelola anggota non-admin.'}</p>
+        <div className="team-workspace-member-create">
+          <label className="team-workspace-field" htmlFor="team-member-label">{en ? 'Member label' : 'Label anggota'}<input id="team-member-label" value={memberLabel} onChange={event => setMemberLabel(event.target.value)} maxLength={80} placeholder={en ? 'QA engineer — release review' : 'QA engineer — review rilis'} /></label>
+          <label className="team-workspace-field" htmlFor="team-member-role">{en ? 'Access role' : 'Role akses'}
+            <select id="team-member-role" value={memberRole} onChange={event => setMemberRole(event.target.value as AssignableRole)}>
+              {role === 'owner' && <option value="admin">admin — manage members</option>}
+              <option value="editor">editor — read and publish</option>
+              <option value="viewer">viewer — read only</option>
+            </select>
+          </label>
+          <button className="button button-primary" type="button" onClick={() => void addMember()} disabled={busy || memberLabel.trim().length < 2}><Plus size={15} /> {en ? 'Issue member token' : 'Buat token anggota'}</button>
+        </div>
+        {issuedToken && <div className="team-workspace-issued-token">
+          <strong>{en ? 'New token — shown once' : 'Token baru — hanya ditampilkan sekali'}</strong>
+          <code>{issuedToken}</code>
+          <div className="team-workspace-actions"><button className="button button-ghost" type="button" onClick={() => void copyIssuedToken()}><Copy size={14} /> {en ? 'Copy token' : 'Salin token'}</button><button className="button button-ghost" type="button" onClick={() => setIssuedToken('')}>{en ? 'Hide token' : 'Sembunyikan token'}</button></div>
+        </div>}
+        <div className="team-workspace-member-list-head"><strong>{en ? 'Active access tokens' : 'Token akses aktif'} ({members.length})</strong><button className="button button-ghost" type="button" onClick={() => void loadMembers()} disabled={busy}><RefreshCw size={13} /> {en ? 'Refresh' : 'Muat ulang'}</button></div>
+        {members.length === 0 && <p className="team-workspace-footnote">{en ? 'No member tokens have been issued yet. Your owner token is managed separately in Vercel.' : 'Belum ada token anggota. Token owner dikelola terpisah di Vercel.'}</p>}
+        <ul className="team-workspace-member-list">
+          {members.map(member => <li key={member.id} className="team-workspace-member-row">
+            <div className="team-workspace-member-details"><strong>{member.label}</strong><code>{member.id}</code><span>{en ? 'Issued ' : 'Dibuat '}{new Date(member.createdAt).toLocaleString(en ? 'en-GB' : 'id-ID')}</span></div>
+            <span className={'team-workspace-role team-workspace-role-' + member.role}>{member.role}</span>
+            <div className="team-workspace-member-actions">
+              {!(role === 'admin' && member.role === 'admin') && <label className="team-workspace-member-role-select">
+                <span>{en ? 'Role' : 'Role'}</span>
+                <select aria-label={(en ? 'Role for ' : 'Role untuk ') + member.label} value={member.role as AssignableRole} disabled={busy} onChange={event => void changeMemberRole(member, event.target.value as AssignableRole)}>
+                  {role === 'owner' && <option value="admin">admin</option>}
+                  <option value="editor">editor</option><option value="viewer">viewer</option>
+                </select>
+              </label>}
+              {!(role === 'admin' && member.role === 'admin') && <button className="button button-ghost" type="button" disabled={busy} onClick={() => void revokeMember(member)}><Trash2 size={13} /> {en ? 'Revoke' : 'Cabut'}</button>}
+            </div>
+          </li>)}
+        </ul>
+        <p className="team-workspace-footnote">{en ? 'A revoked token stops authenticating immediately. Share a newly issued token through a trusted channel and never commit tokens into Git.' : 'Token yang dicabut langsung berhenti mengautentikasi. Bagikan token baru melalui saluran tepercaya dan jangan pernah commit token ke Git.'}</p>
+      </section>}
 
       <section className="team-workspace-panel" aria-labelledby="team-workspace-editor-title">
         <div className="team-workspace-panel-head"><div><span className="section-kicker">{en ? '02 / SNAPSHOT' : '02 / SNAPSHOT'}</span><h2 id="team-workspace-editor-title">{en ? 'Workspace JSON' : 'JSON workspace'}</h2></div><FileJson size={20} /></div>
