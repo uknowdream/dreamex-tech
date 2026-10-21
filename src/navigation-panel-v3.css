@@ -602,6 +602,19 @@
 
 /* Android desktop mode / touch devices with a wide emulated CSS viewport. */
 @media (pointer: coarse) and (min-width: 1101px) {
+  /* Android "Desktop site" may report a desktop viewport while retaining touch input. */
+  html body #root .site-header .menu-toggle {
+    display: flex !important;
+  }
+
+  html body #root .site-header #primary-navigation.nav-links {
+    display: none !important;
+  }
+
+  html body #root .site-header.navigation-open #primary-navigation.nav-links.nav-open[role="dialog"] {
+    display: flex !important;
+  }
+
   html body #root .site-header.navigation-open #primary-navigation.nav-open[role="dialog"] {
     position: fixed !important;
     top: max(76px, calc(env(safe-area-inset-top) + 12px)) !important;
