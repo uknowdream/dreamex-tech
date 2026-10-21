@@ -8,6 +8,17 @@ if (baseUrl.username || baseUrl.password || baseUrl.search || baseUrl.hash || ba
   throw new Error('SMOKE_BASE_URL must be a clean origin without credentials, path, query, or fragment.')
 }
 
+const approvedHost = new Set([
+  'dreamex.tech',
+  'www.dreamex.tech',
+  'dreamex-tech.vercel.app',
+  'dreamex-tech-uknowdreams-projects.vercel.app',
+  'dreamex-tech-git-main-uknowdreams-projects.vercel.app',
+]).has(baseUrl.hostname) || /^dreamex-tech-[a-z0-9-]+-uknowdreams-projects\.vercel\.app$/.test(baseUrl.hostname)
+if (!approvedHost && process.env.ALLOW_INSECURE_SMOKE !== '1') {
+  throw new Error('SMOKE_BASE_URL must use a DreamEx production domain or its Vercel deployment hostname.')
+}
+
 const checks = [
   { path: '/', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/api-playground', type: 'html', markers: ['id="root"', '<div'] },
