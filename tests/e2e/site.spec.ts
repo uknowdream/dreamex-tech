@@ -1204,7 +1204,8 @@ test('mobile sidebar quick-find filters routes, announces empty results, and res
   await drawer.getByRole('button', { name: /Clear navigation search|Hapus pencarian navigasi/i }).click()
   await expect(search).toBeFocused()
   await expect(drawer.locator('a[href="/api-playground"]')).toBeVisible()
-  await expect(drawer.locator('a[href="/reliability-center"]')).toBeVisible()
+  await expect(drawer.locator('.nav-recent-link[href="/reliability-center"]')).toBeVisible()
+  await expect(drawer.locator(':scope > a[href="/reliability-center"]')).toBeVisible()
 
   await search.fill('Knowledge Graph')
   await drawer.locator('a[href="/knowledge-graph"]').click()
