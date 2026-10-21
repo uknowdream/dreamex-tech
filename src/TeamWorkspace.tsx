@@ -55,6 +55,7 @@ export function TeamWorkspacePage() {
   const [role, setRole] = useState<WorkspaceRole | null>(null)
   const [members, setMembers] = useState<WorkspaceMember[]>([])
   const [auditEntries, setAuditEntries] = useState<WorkspaceAuditEntry[]>([])
+  const [auditError, setAuditError] = useState('')
   const [memberLabel, setMemberLabel] = useState('')
   const [memberRole, setMemberRole] = useState<AssignableRole>('editor')
   const [issuedToken, setIssuedToken] = useState('')
@@ -69,6 +70,7 @@ export function TeamWorkspacePage() {
       const payload = await readPayload(response)
       if (!response.ok || !Array.isArray(payload.entries)) {
         setAuditEntries([])
+        setAuditError(en ? 'Audit history is currently unavailable.' : 'Riwayat audit sedang tidak tersedia.')
         return
       }
       const next = payload.entries.filter((value): value is WorkspaceAuditEntry => Boolean(
@@ -80,8 +82,10 @@ export function TeamWorkspacePage() {
           && Number.isFinite(Date.parse(String((value as Record<string, unknown>).at)))
       ))
       setAuditEntries(next)
+      setAuditError('')
     } catch {
       setAuditEntries([])
+      setAuditError(en ? 'Could not reach the audit endpoint.' : 'Endpoint audit tidak dapat dijangkau.')
     }
   }
 
@@ -138,6 +142,7 @@ export function TeamWorkspacePage() {
         setRole(null)
         setMembers([])
         setAuditEntries([])
+        setAuditError('')
         setNotice({ kind: 'warning', text: en ? 'The shared backend is not configured yet. The site owner must set the Upstash Redis REST and workspace-token environment variables in Vercel. Your local draft is still available.' : 'Backend bersama belum dikonfigurasi. Pemilik situs harus mengatur environment variable Upstash Redis REST dan token workspace di Vercel. Draft lokal Anda tetap tersedia.' })
         return
       }
@@ -146,6 +151,7 @@ export function TeamWorkspacePage() {
         setRole(null)
         setMembers([])
         setAuditEntries([])
+        setAuditError('')
         setNotice({ kind: 'error', text: en ? 'The access token is invalid. Check the token with the workspace owner.' : 'Token akses tidak valid. Periksa token dengan pemilik workspace.' })
         return
       }
@@ -154,6 +160,7 @@ export function TeamWorkspacePage() {
         setRole(null)
         setMembers([])
         setAuditEntries([])
+        setAuditError('')
         setNotice({ kind: 'error', text: typeof payload.error === 'string' ? payload.error : (en ? 'The shared workspace could not be loaded.' : 'Workspace bersama tidak dapat dimuat.') })
         return
       }
@@ -174,6 +181,7 @@ export function TeamWorkspacePage() {
       setRole(null)
       setMembers([])
       setAuditEntries([])
+      setAuditError('')
       setNotice({ kind: 'error', text: en ? 'Could not reach the workspace API. Check network access and Vercel function logs.' : 'API workspace tidak dapat dijangkau. Periksa jaringan dan log function Vercel.' })
     } finally {
       setBusy(false)
@@ -448,7 +456,7 @@ export function TeamWorkspacePage() {
         <section className="team-workspace-audit" aria-labelledby="team-workspace-audit-title">
           <div className="team-workspace-member-list-head"><strong id="team-workspace-audit-title">{en ? 'Server-side action audit' : 'Audit aksi sisi server'} ({auditEntries.length})</strong><button className="button button-ghost" type="button" onClick={() => void loadAudit()} disabled={busy}><RefreshCw size={13} /> {en ? 'Refresh log' : 'Muat ulang log'}</button></div>
           <p className="team-workspace-footnote">{en ? 'Recent successful snapshot publishes, member grants, role changes and revocations. Raw tokens and snapshot contents are never logged. Retention is limited to 200 events.' : 'Aktivitas sukses berupa publikasi snapshot, pemberian akses, perubahan role, dan pencabutan akses. Token mentah dan isi snapshot tidak pernah dicatat. Retensi dibatasi 200 kejadian.'}</p>
-          {auditEntries.length > 0 ? <ul className="team-workspace-audit-list">
+          {auditError ? <p className="team-workspace-footnote" role="status">{auditError}</p> : auditEntries.length > 0 ? <ul className="team-workspace-audit-list">
             {auditEntries.map(entry => <li key={entry.id} className="team-workspace-audit-row">
               <span className="team-workspace-audit-action">{entry.action}</span>
               <span className="team-workspace-audit-meta">{en ? 'Actor role: ' : 'Role pelaku: '}{entry.actorRole}{entry.role ? ' · ' + (en ? 'Target role: ' : 'Role target: ') + entry.role : ''}{entry.revision !== null ? ' · Revision ' + entry.revision : ''}</span>
