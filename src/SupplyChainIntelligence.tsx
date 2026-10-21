@@ -218,7 +218,7 @@ export function SupplyChainIntelligencePage() {
       setError(en ? 'No components have a supported Package URL and version for live lookup.' : 'Tidak ada komponen dengan Package URL dan versi yang didukung untuk pemeriksaan langsung.')
       return
     }
-    const packages = eligible.slice(0, 500)
+    const packages = eligible.slice(0, 100)
     setScanLoading(true)
     try {
       const results: OsvScanResult[] = []
