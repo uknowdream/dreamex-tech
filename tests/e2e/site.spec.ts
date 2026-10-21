@@ -1189,8 +1189,8 @@ test('mobile sidebar quick-find filters routes, announces empty results, and res
   await expect(drawer.locator('a[href="/api-playground"]')).toBeVisible()
   await expect(drawer.locator('.nav-recent-tools')).toBeHidden()
   await expect(drawer.locator('.nav-recent-link[href="/reliability-center"]')).toBeHidden()
-  // Target the top-level navigation item specifically; other matches may live in a closed mega-menu.
-  await expect(drawer.locator(':scope > a[href="/reliability-center"]')).toBeHidden()
+  // The main Reliability Center destination lives inside the platform mega-menu, not as a direct drawer child.
+  await expect(drawer.locator('.nav-mega-group a[href="/reliability-center"]')).toBeHidden()
   await expect(drawer.locator('.nav-search-empty')).toBeHidden()
   await expect(drawer.locator('.nav-search-count')).toContainText(/destinations? found|tujuan ditemukan/i)
   await expect(drawer.locator('.nav-search-count')).toBeVisible()
@@ -1205,7 +1205,7 @@ test('mobile sidebar quick-find filters routes, announces empty results, and res
   await expect(search).toBeFocused()
   await expect(drawer.locator('a[href="/api-playground"]')).toBeVisible()
   await expect(drawer.locator('.nav-recent-link[href="/reliability-center"]')).toBeVisible()
-  await expect(drawer.locator(':scope > a[href="/reliability-center"]')).toBeVisible()
+  await expect(drawer.locator('.nav-mega-group a[href="/reliability-center"]')).toBeVisible()
 
   await search.fill('Knowledge Graph')
   await drawer.locator('a[href="/knowledge-graph"]').click()
