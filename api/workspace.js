@@ -68,6 +68,14 @@ export default async function handler(req, res) {
       return sendJson(res, 403, { error: 'workspace_read_only', message: 'Your shared workspace role is read-only.' })
     }
     const body = await readJsonBody(req)
+    if (!Object.prototype.hasOwnProperty.call(body, 'expectedUpdatedAt')) {
+      return sendJson(res, 400, { error: 'expected_snapshot_version_required', message: 'Load the current snapshot before saving so concurrent edits are not silently overwritten.' })
+    }
+    const current = await kvGet(access.key)
+    const currentUpdatedAt = current && typeof current === 'object' && typeof current.updatedAt === 'string' ? current.updatedAt : null
+    if ((body.expectedUpdatedAt ?? null) !== currentUpdatedAt) {
+      return sendJson(res, 409, { error: 'workspace_snapshot_conflict', message: 'This cloud snapshot changed since it was loaded. Load the latest snapshot and merge before saving again.', currentUpdatedAt })
+    }
     const entries = cleanEntries(body.entries, scope)
     const snapshot = {
       format: 'dreamex-cloud-workspace',
