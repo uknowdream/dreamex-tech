@@ -265,7 +265,7 @@ export function CloudWorkspacePanel() {
     </div> : <div className="cloud-workspace-signin">
       <div><h3>{en ? 'Connect your GitHub identity' : 'Hubungkan identitas GitHub'}</h3><p>{en ? 'OAuth requests read:user only. This integration does not request repository write access or access to private repositories.' : 'OAuth hanya meminta read:user. Integrasi ini tidak meminta akses tulis repositori atau akses ke repositori privat.'}</p></div>
       {account.configured
-        ? <a className="button button-primary" href="/api/auth/github?action=start"><Github size={16} />{en ? 'Sign in with GitHub' : 'Login dengan GitHub'}</a>
+        ? <a className="button button-primary" href="/api/auth/github?action=start" onClick={() => { if (inviteCode) { try { window.sessionStorage.setItem('dreamex_pending_invite_v1', inviteCode) } catch { /* OAuth can still proceed without preserving the invite. */ } } }}><Github size={16} />{en ? 'Sign in with GitHub' : 'Login dengan GitHub'}</a>
         : <button className="button button-secondary" disabled title={en ? 'OAuth environment variables are not configured.' : 'Variabel lingkungan OAuth belum dikonfigurasi.'}><Github size={16} />{en ? 'GitHub sign-in not configured' : 'Login GitHub belum dikonfigurasi'}</button>}
     </div>}
 
