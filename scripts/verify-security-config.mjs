@@ -19,6 +19,9 @@ for (const name of ['Strict-Transport-Security', 'X-Content-Type-Options', 'X-Fr
 const api = readFileSync('api/team-workspace.js', 'utf8')
 if (!api.includes('DREAMEX_WORKSPACE_TOKEN') || !api.includes('timingSafeEqual')) errors.push('Shared workspace must validate its server-only token using timing-safe comparison.')
 if (!api.includes('revision_conflict') || !api.includes('CAS_SCRIPT')) errors.push('Shared workspace must reject stale revisions rather than silently overwriting them.')
+if (!api.includes('MEMBERS_KEY') || !api.includes('tokenHash') || !api.includes('read_only_role')) errors.push('Shared workspace must support server-enforced role-based access with hashed member tokens.')
+if (!api.includes("['admin', 'editor', 'viewer']") || !api.includes('actorCanChangeRole')) errors.push('Shared workspace must constrain role grants and prevent member privilege escalation.')
+if (!api.includes('randomBytes(32)') || !api.includes("createHash('sha256')")) errors.push('Member tokens must be cryptographically generated and stored only as hashes.')
 const frontend = readFileSync('src/TeamWorkspace.tsx', 'utf8')
 if (/VITE_(?:KV_REST_API|UPSTASH_REDIS|DREAMEX_WORKSPACE_TOKEN)/.test(frontend)) errors.push('Server credentials must never be referenced from client-side VITE_ variables.')
 if (errors.length) {
