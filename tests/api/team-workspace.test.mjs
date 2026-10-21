@@ -8,6 +8,7 @@ const redisToken = 'unit-test-redis-token'
 const originalFetch = globalThis.fetch
 let storedSnapshot
 let memberRecords
+let auditRecords
 
 function hashToken(token) {
   return createHash('sha256').update(token, 'utf8').digest('hex')
@@ -37,6 +38,7 @@ function setConfigured() {
   process.env.NODE_ENV = 'test'
   storedSnapshot = null
   memberRecords = new Map()
+  auditRecords = []
   globalThis.fetch = async (_url, options = {}) => {
     const command = JSON.parse(options.body)
     const op = command[0]
@@ -69,6 +71,14 @@ function setConfigured() {
       result = 1
     } else if (op === 'HDEL') {
       result = memberRecords.delete(String(command[1])) ? 1 : 0
+    } else if (op === 'LPUSH') {
+      auditRecords.unshift(String(command[2]))
+      result = auditRecords.length
+    } else if (op === 'LTRIM') {
+      auditRecords = auditRecords.slice(Number(command[2]), Number(command[3]) + 1)
+      result = 'OK'
+    } else if (op === 'LRANGE') {
+      result = auditRecords.slice(Number(command[2]), Number(command[3]) + 1)
     } else {
       throw new Error('Unexpected Redis command: ' + op)
     }
@@ -213,6 +223,9 @@ test('viewer can read snapshots but cannot update them or manage membership', as
     const roster = await invoke('GET', { url: '/api/team-workspace?resource=members', headers })
     assert.equal(roster.status, 403)
     assert.equal(roster.body.error, 'forbidden')
+    const audit = await invoke('GET', { url: '/api/team-workspace?resource=audit', headers })
+    assert.equal(audit.status, 403)
+    assert.equal(audit.body.error, 'forbidden')
     assert.equal(storedSnapshot, null)
   } finally { clearConfigured() }
 })
@@ -280,5 +293,37 @@ test('admin can manage editor/viewer members but cannot grant a new admin', asyn
     assert.equal(deleted.status, 200)
     const revoked = await invoke('GET', { headers: auth(editor.token) })
     assert.equal(revoked.status, 401)
+  } finally { clearConfigured() }
+})
+
+
+test('owner audit trail records successful mutations without tokens or snapshot contents', async () => {
+  setConfigured()
+  try {
+    const editor = await createMember('editor', 'Release editor')
+    const secretLookingValue = 'DO-NOT-LOG-this-example-payload'
+    const save = await invoke('PUT', {
+      headers: auth(editor.token),
+      body: { revision: 0, state: { release: secretLookingValue } },
+    })
+    assert.equal(save.status, 200)
+    assert.equal(save.body.auditLogged, true)
+    const result = await invoke('GET', { url: '/api/team-workspace?resource=audit', headers: auth() })
+    assert.equal(result.status, 200)
+    assert.ok(result.body.entries.some(entry => entry.action === 'member.created' && entry.targetId === editor.member.id))
+    assert.ok(result.body.entries.some(entry => entry.action === 'snapshot.published' && entry.revision === 1))
+    const serialized = JSON.stringify(result.body)
+    assert.equal(serialized.includes(editor.token), false)
+    assert.equal(serialized.includes(secretLookingValue), false)
+    assert.equal(serialized.includes('state'), false)
+  } finally { clearConfigured() }
+})
+
+test('audit endpoint rejects write methods and unknown role data is not returned', async () => {
+  setConfigured()
+  try {
+    const result = await invoke('POST', { url: '/api/team-workspace?resource=audit', headers: auth(), body: {} })
+    assert.equal(result.status, 405)
+    assert.match(result.headers.allow, /GET/)
   } finally { clearConfigured() }
 })
