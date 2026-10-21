@@ -41,3 +41,9 @@ jobs:
         env:
           SMOKE_BASE_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.smoke_base_url || 'https://www.dreamex.tech' }}
         run: npm run smoke:production
+      - name: Install Chromium for policy-enforced browser smoke
+        run: npx playwright install --with-deps chromium
+      - name: Smoke-test critical routes in Chromium
+        env:
+          SMOKE_BASE_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.smoke_base_url || 'https://www.dreamex.tech' }}
+        run: npm run smoke:browser
