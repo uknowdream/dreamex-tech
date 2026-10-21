@@ -1,4 +1,4 @@
-import { authConfigured, cloudConfigured, getSession, getTeamRole, noStore, sendJson } from '../_lib/platform.js'
+import { authConfigured, cloudConfigured, getSession, getTeamRole, noStore, sendJson } from '../../server/platform.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
