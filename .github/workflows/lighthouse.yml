@@ -33,7 +33,7 @@ jobs:
       - name: Install Chromium for Lighthouse
         run: npx playwright install --with-deps chromium
       - name: Configure Chrome executable
-        run: echo "CHROME_PATH=$(node --input-type=module -e "import { chromium } from '@playwright/test'; console.log(chromium.executablePath())")" >> "$GITHUB_ENV"
+        run: echo "CHROME_PATH=$(node --input-type=module -e 'import { chromium } from "@playwright/test"; console.log(chromium.executablePath())')" >> "$GITHUB_ENV"
       - name: Audit representative routes
         run: npx --yes @lhci/cli@0.15.1 autorun --config=.lighthouserc.json
       - name: Upload Lighthouse reports
