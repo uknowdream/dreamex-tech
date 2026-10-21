@@ -683,7 +683,9 @@
     left: max(10px, env(safe-area-inset-left)) !important;
     width: auto !important;
     max-width: none !important;
-    max-height: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: calc(100dvh - max(68px, calc(env(safe-area-inset-top) + 8px)) - max(10px, env(safe-area-inset-bottom))) !important;
     padding: 14px 12px max(12px, env(safe-area-inset-bottom)) !important;
     border-radius: 16px !important;
     transform: none !important;
