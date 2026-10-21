@@ -250,7 +250,7 @@ async function handleMemberResource(req, res, config, principal) {
     if (!actorCanChangeRole(principal.role, target.role, target.role)) {
       return send(res, 403, { error: 'member_removal_forbidden', message: 'Owner/admin roles cannot be removed by member tokens; only the owner can remove an admin.' })
     }
-    const hash = tokenHashForMember(members, target.id)
+    const hash = targetEntry?.hash
     if (!hash) return send(res, 404, { error: 'member_not_found' })
     await redisCommand(config, ['HDEL', MEMBERS_KEY, hash])
     return send(res, 200, { removed: true, member: publicMember(target) })
