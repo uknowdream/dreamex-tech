@@ -1,4 +1,4 @@
-import { appError, cloudConfigured, getSession, hashInvite, kvDelete, kvGet, kvSet, requireSameOrigin, sendJson, sendMethodNotAllowed, readJsonBody } from '../../_lib/platform.js'
+import { appError, cloudConfigured, getSession, hashInvite, kvDelete, kvGetDelete, kvSet, requireSameOrigin, sendJson, sendMethodNotAllowed, readJsonBody } from '../../../server/platform.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return sendMethodNotAllowed(res, ['POST'])
@@ -12,9 +12,8 @@ export default async function handler(req, res) {
     const code = typeof body.code === 'string' ? body.code.trim() : ''
     if (!/^[A-Za-z0-9_-]{24,80}$/.test(code)) return sendJson(res, 400, { error: 'invalid_invite_code', message: 'Enter a valid invite code or open the invitation link.' })
     const key = 'dreamex_invite_' + hashInvite(code)
-    const invite = await kvGet(key)
+    const invite = await kvGetDelete(key)
     if (!invite || !['editor', 'viewer'].includes(invite.role) || typeof invite.expiresAt !== 'string' || Date.parse(invite.expiresAt) <= Date.now()) {
-      await kvDelete(key)
       return sendJson(res, 410, { error: 'invite_expired_or_used', message: 'This invitation has expired or has already been used. Ask an admin for a new link.' })
     }
 
