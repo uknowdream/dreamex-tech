@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/generate-rss.mjs && tsc -b && vite build && node scripts/prerender-routes.mjs",
-    "verify:build": "node scripts/verify-build.mjs && node scripts/verify-routes.mjs && node scripts/verify-performance-budget.mjs && node scripts/verify-seo.mjs && node scripts/verify-prerender.mjs && node scripts/verify-security-config.mjs && node --check server/platform.js && node --check api/auth/github.js && node --check api/auth/me.js && node --check api/auth/logout.js && node --check api/integrations/github.js && node --check api/workspace.js && node --check api/workspace/invites.js && node --check api/workspace/invites/redeem.js && node --check scripts/smoke-production.mjs && node --check scripts/prerender-routes.mjs",
+    "verify:build": "node scripts/verify-build.mjs && node scripts/verify-routes.mjs && node scripts/verify-performance-budget.mjs && node scripts/verify-seo.mjs && node scripts/verify-prerender.mjs && node scripts/verify-security-config.mjs && node --check server/platform.js && node --check api/auth/github.js && node --check api/auth/me.js && node --check api/auth/logout.js && node --check api/integrations/github.js && node --check api/workspace.js && node --check api/workspace/invites.js && node --check api/workspace/invites/redeem.js && node --check scripts/smoke-production.mjs && node --check scripts/smoke-browser-production.mjs && node --check scripts/prerender-routes.mjs",
     "verify:i18n": "node scripts/verify-i18n.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -14,7 +14,8 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "smoke:production": "node scripts/smoke-production.mjs",
-    "test:unit": "node --test tests/unit/*.test.js"
+    "test:unit": "node --test tests/unit/*.test.js",
+    "smoke:browser": "node scripts/smoke-browser-production.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
