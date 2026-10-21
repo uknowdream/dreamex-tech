@@ -169,15 +169,19 @@ async function authenticate(config, candidate, expectedToken) {
   return { role: member.role, memberId: member.id, tokenHash: hash, isOwner: false }
 }
 
-async function readMembers(config) {
+async function readMemberEntries(config) {
   const result = await redisCommand(config, ['HGETALL', MEMBERS_KEY])
   if (!Array.isArray(result)) return []
   const values = []
-  for (let i = 1; i < result.length; i += 2) {
-    const member = parseMember(result[i])
-    if (member && member.status !== 'revoked') values.push(member)
+  for (let i = 0; i + 1 < result.length; i += 2) {
+    const member = parseMember(result[i + 1])
+    if (member && member.status !== 'revoked' && typeof result[i] === 'string') values.push({ hash: result[i], member })
   }
-  return values.sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.label.localeCompare(b.label))
+  return values.sort((a, b) => a.member.createdAt.localeCompare(b.member.createdAt) || a.member.label.localeCompare(b.member.label))
+}
+
+async function readMembers(config) {
+  return (await readMemberEntries(config)).map(entry => entry.member)
 }
 
 function actorCanChangeRole(actorRole, targetRole, nextRole) {
@@ -224,8 +228,9 @@ async function handleMemberResource(req, res, config, principal) {
   const body = parsed.value
   const id = body && typeof body.id === 'string' ? body.id : ''
   if (!/^[0-9a-f-]{36}$/i.test(id)) return send(res, 400, { error: 'invalid_member_id' })
-  const members = await readMembers(config)
-  const target = members.find(member => member.id === id)
+  const entries = await readMemberEntries(config)
+  const targetEntry = entries.find(entry => entry.member.id === id)
+  const target = targetEntry?.member
   if (!target) return send(res, 404, { error: 'member_not_found' })
 
   if (req.method === 'PATCH') {
@@ -234,7 +239,7 @@ async function handleMemberResource(req, res, config, principal) {
     if (!actorCanChangeRole(principal.role, target.role, role)) {
       return send(res, 403, { error: 'role_change_forbidden', message: 'Only the owner can grant admin; owner and admin access cannot be changed by member tokens.' })
     }
-    const hash = tokenHashForMember(members, target.id)
+    const hash = targetEntry?.hash
     if (!hash) return send(res, 404, { error: 'member_not_found' })
     const updated = { ...target, role, updatedAt: new Date().toISOString() }
     await redisCommand(config, ['HSET', MEMBERS_KEY, hash, JSON.stringify(updated)])
@@ -252,13 +257,6 @@ async function handleMemberResource(req, res, config, principal) {
   }
 
   return send(res, 405, { error: 'method_not_allowed' })
-}
-
-function tokenHashForMember(members, id) {
-  // The hash is deliberately derived by Redis' HGETALL map key, never returned to the client.
-  const encoded = MEMBERS_KEY
-  void encoded
-  return members.__unusedHashMap?.get(id) || ''
 }
 
 export default async function handler(req, res) {
