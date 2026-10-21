@@ -1,0 +1,32 @@
+name: Security and dependency audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '23 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-audit:
+    name: Dependency vulnerability audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Fail on high or critical dependency advisories
+        run: npm audit --audit-level=high
+      - name: Test shared workspace server API
+        run: npm run test:api
