@@ -20,6 +20,7 @@ if (!approvedHost && process.env.ALLOW_INSECURE_SMOKE !== '1') {
 }
 
 const checks = [
+  { path: '/api/auth/me', type: 'json', markers: ['"configured"', '"authenticated"', '"cloudSyncReady"'] },
   { path: '/', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/api-playground', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/qa-studio', type: 'html', markers: ['id="root"', '<div'] },
