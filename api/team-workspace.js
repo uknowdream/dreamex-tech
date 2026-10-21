@@ -11,7 +11,7 @@ const MEMBER_CREATE_SCRIPT = [
   'if count >= tonumber(ARGV[1]) then return 0 end',
   'redis.call("HSET", KEYS[1], ARGV[2], ARGV[3])',
   'return 1',
-].join('\\n')
+].join('\n')
 const CAS_SCRIPT = [
   'local current = redis.call("GET", KEYS[1])',
   'local currentRevision = 0',
