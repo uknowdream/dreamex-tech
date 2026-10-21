@@ -35,7 +35,7 @@ function restore() {
 test('OSV scan endpoint rejects methods other than JSON POST', async () => {
   const result = await invoke('GET')
   assert.equal(result.status, 405)
-  assert.equal(result.headers.allow, 'POST, OPTIONS')
+  assert.equal(result.headers.allow, 'POST')
   assert.equal(result.headers['cache-control'], 'no-store, max-age=0')
 })
 
