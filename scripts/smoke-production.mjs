@@ -11,6 +11,8 @@ if (baseUrl.username || baseUrl.password || baseUrl.search || baseUrl.hash || ba
 const checks = [
   { path: '/', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/api-playground', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/github-ci', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/team-workspace', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/qa-studio', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/quality-intelligence', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/supply-chain-intelligence', type: 'html', markers: ['id="root"', '<div'] },
@@ -99,6 +101,7 @@ const requiredSecurityHeaders = [
   ['referrer-policy', /^strict-origin-when-cross-origin$/i],
   ['permissions-policy', /camera=.*microphone=.*geolocation=/i],
 ]
+const enforcedDirectives = ["default-src 'self'", "script-src 'self'", "object-src 'none'", "frame-ancestors 'none'", "upgrade-insecure-requests"]
 const reportOnlyDirectives = ["default-src 'self'", "object-src 'none'", "frame-ancestors 'none'"]
 
 const failures = []
@@ -139,8 +142,16 @@ const results = await Promise.all(checks.map(async check => {
       const value = response.headers.get(header) || ''
       if (!pattern.test(value)) issues.push(`security header ${header} is missing or does not meet the baseline (${value || 'missing'})`)
     }
+    const enforced = response.headers.get('content-security-policy') || ''
+    if (!enforced) issues.push('Enforcing Content-Security-Policy is missing')
+    else {
+      const normalizedPolicy = enforced.toLowerCase()
+      for (const directive of enforcedDirectives) if (!normalizedPolicy.includes(directive)) issues.push('Content-Security-Policy is missing a required directive: ' + directive)
+      const scriptDirective = normalizedPolicy.split(';').map(part => part.trim()).find(part => part.startsWith('script-src '))
+      if (scriptDirective?.includes("'unsafe-inline'")) issues.push("Content-Security-Policy script-src must not include 'unsafe-inline'.")
+    }
     const reportOnly = response.headers.get('content-security-policy-report-only') || ''
-    if (!reportOnly) issues.push('Content-Security-Policy-Report-Only is missing')
+    if (!reportOnly) issues.push('Content-Security-Policy-Report-Only is missing during staged policy monitoring')
     else for (const directive of reportOnlyDirectives) if (!reportOnly.toLowerCase().includes(directive)) issues.push('Content-Security-Policy-Report-Only is missing a required baseline directive: ' + directive)
   }
   if (check.type === 'html' && !contentType.toLowerCase().includes('text/html')) issues.push(`expected HTML content-type, received ${contentType || '(missing)'}`)
