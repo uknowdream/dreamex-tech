@@ -75,8 +75,9 @@ export function TeamWorkspacePage() {
         value && typeof value === 'object'
           && typeof (value as Record<string, unknown>).id === 'string'
           && typeof (value as Record<string, unknown>).at === 'string'
-          && typeof (value as Record<string, unknown>).actorRole === 'string'
+          && ['owner', 'admin', 'editor', 'viewer'].includes(String((value as Record<string, unknown>).actorRole))
           && typeof (value as Record<string, unknown>).action === 'string'
+          && Number.isFinite(Date.parse(String((value as Record<string, unknown>).at)))
       ))
       setAuditEntries(next)
     } catch {
@@ -172,6 +173,7 @@ export function TeamWorkspacePage() {
       setConnected(false)
       setRole(null)
       setMembers([])
+      setAuditEntries([])
       setNotice({ kind: 'error', text: en ? 'Could not reach the workspace API. Check network access and Vercel function logs.' : 'API workspace tidak dapat dijangkau. Periksa jaringan dan log function Vercel.' })
     } finally {
       setBusy(false)
@@ -231,7 +233,11 @@ export function TeamWorkspacePage() {
       setRevision(payload.revision)
       setUpdatedAt(typeof payload.updatedAt === 'string' ? payload.updatedAt : null)
       setConnected(true)
-      setNotice({ kind: 'success', text: en ? 'Shared snapshot saved as revision ' + payload.revision + '.' : 'Snapshot bersama disimpan sebagai revisi ' + payload.revision + '.' })
+      if (payload.auditLogged === false) {
+        setNotice({ kind: 'warning', text: en ? 'Snapshot revision ' + payload.revision + ' was saved, but its audit event could not be fully confirmed. Check the storage service.' : 'Snapshot revisi ' + payload.revision + ' berhasil disimpan, tetapi pencatatan audit belum dapat dikonfirmasi sepenuhnya. Periksa layanan storage.' })
+      } else {
+        setNotice({ kind: 'success', text: en ? 'Shared snapshot saved as revision ' + payload.revision + '.' : 'Snapshot bersama disimpan sebagai revisi ' + payload.revision + '.' })
+      }
     } catch {
       setNotice({ kind: 'error', text: en ? 'Network error while saving. Your editor content was preserved.' : 'Kesalahan jaringan saat menyimpan. Isi editor Anda tetap dipertahankan.' })
     } finally {
@@ -260,7 +266,7 @@ export function TeamWorkspacePage() {
       }
       setIssuedToken(payload.token)
       setMemberLabel('')
-      setNotice({ kind: 'success', text: en ? 'Member access created. Copy the token now; it is shown only once.' : 'Akses anggota dibuat. Salin token sekarang; token hanya ditampilkan satu kali.' })
+      setNotice({ kind: payload.auditLogged === false ? 'warning' : 'success', text: payload.auditLogged === false ? (en ? 'Member access was created and the token is available once, but audit retention could not be confirmed. Copy the token before leaving.' : 'Akses anggota berhasil dibuat dan token hanya tersedia sekali, tetapi retensi audit belum dapat dikonfirmasi. Salin token sebelum meninggalkan halaman.') : (en ? 'Member access created. Copy the token now; it is shown only once.' : 'Akses anggota dibuat. Salin token sekarang; token hanya ditampilkan satu kali.') })
       await loadMembers(token)
     } catch {
       setNotice({ kind: 'error', text: en ? 'Network error while creating member access.' : 'Kesalahan jaringan saat membuat akses anggota.' })
@@ -281,7 +287,7 @@ export function TeamWorkspacePage() {
         setNotice({ kind: 'error', text: typeof payload.error === 'string' ? (en ? 'Role update failed: ' + payload.error : 'Perubahan role gagal: ' + payload.error) : (en ? 'Role update failed.' : 'Perubahan role gagal.') })
         return
       }
-      setNotice({ kind: 'success', text: en ? 'Member role updated.' : 'Role anggota diperbarui.' })
+      setNotice({ kind: payload.auditLogged === false ? 'warning' : 'success', text: payload.auditLogged === false ? (en ? 'Member role updated, but audit retention could not be confirmed.' : 'Role anggota diperbarui, tetapi retensi audit belum dapat dikonfirmasi.') : (en ? 'Member role updated.' : 'Role anggota diperbarui.') })
       await loadMembers(token)
     } catch {
       setNotice({ kind: 'error', text: en ? 'Network error while changing the member role.' : 'Kesalahan jaringan saat mengubah role anggota.' })
@@ -302,7 +308,7 @@ export function TeamWorkspacePage() {
         setNotice({ kind: 'error', text: typeof payload.error === 'string' ? (en ? 'Access revocation failed: ' + payload.error : 'Pencabutan akses gagal: ' + payload.error) : (en ? 'Access revocation failed.' : 'Pencabutan akses gagal.') })
         return
       }
-      setNotice({ kind: 'success', text: en ? 'Member access revoked.' : 'Akses anggota dicabut.' })
+      setNotice({ kind: payload.auditLogged === false ? 'warning' : 'success', text: payload.auditLogged === false ? (en ? 'Member access was revoked, but audit retention could not be confirmed.' : 'Akses anggota dicabut, tetapi retensi audit belum dapat dikonfirmasi.') : (en ? 'Member access revoked.' : 'Akses anggota dicabut.') })
       await loadMembers(token)
     } catch {
       setNotice({ kind: 'error', text: en ? 'Network error while revoking member access.' : 'Kesalahan jaringan saat mencabut akses anggota.' })
@@ -454,7 +460,7 @@ export function TeamWorkspacePage() {
       </section>}
 
       <section className="team-workspace-panel" aria-labelledby="team-workspace-editor-title">
-        <div className="team-workspace-panel-head"><div><span className="section-kicker">{en ? '02 / SNAPSHOT' : '02 / SNAPSHOT'}</span><h2 id="team-workspace-editor-title">{en ? 'Workspace JSON' : 'JSON workspace'}</h2></div><FileJson size={20} /></div>
+        <div className="team-workspace-panel-head"><div><span className="section-kicker">{en ? '03 / SNAPSHOT' : '03 / SNAPSHOT'}</span><h2 id="team-workspace-editor-title">{en ? 'Workspace JSON' : 'JSON workspace'}</h2></div><FileJson size={20} /></div>
         <p className="team-workspace-connection-state">{en ? 'Revision ' + revision + (updatedAt ? ' · Updated ' + new Date(updatedAt).toLocaleString('en-GB') : ' · No remote save recorded in this session') + (connected ? ' · Connected' : ' · Local editing mode') : 'Revisi ' + revision + (updatedAt ? ' · Diperbarui ' + new Date(updatedAt).toLocaleString('id-ID') : ' · Belum ada penyimpanan remote yang tercatat di sesi ini') + (connected ? ' · Terhubung' : ' · Mode edit lokal')}</p>
         <label className="team-workspace-field team-workspace-editor" htmlFor="team-workspace-json">{en ? 'Editable JSON object (maximum 100 KB)' : 'Objek JSON yang dapat diedit (maksimum 100 KB)'}
           <textarea id="team-workspace-json" spellCheck={false} autoCapitalize="off" autoCorrect="off" value={jsonText} onChange={event => setJsonText(event.target.value)} />
