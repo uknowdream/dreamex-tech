@@ -161,3 +161,27 @@
   .team-workspace-member-role-select { flex: 1 1 130px; }
   .team-workspace-member-actions .button { align-self: end; }
 }
+
+.team-workspace-audit {
+  margin-top: 22px;
+  padding-top: 19px;
+  border-top: 1px solid rgba(132,159,196,.15);
+}
+.team-workspace-audit-list { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.team-workspace-audit-row {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  gap: 6px 12px;
+  padding: 12px;
+  border: 1px solid rgba(132,159,196,.14);
+  border-radius: 9px;
+  background: rgba(5,11,20,.22);
+}
+.team-workspace-audit-action { color: #dbe7f6; font: 600 11px/1.45 var(--mono,monospace); overflow-wrap: anywhere; }
+.team-workspace-audit-meta { grid-column: 1 / -1; color: #8f9eb6; font-size: 10px; line-height: 1.6; overflow-wrap: anywhere; }
+.team-workspace-audit-row code { color: #768ba9; font-size: 9px; overflow-wrap: anywhere; }
+.team-workspace-audit-row time { justify-self: end; color: #8f9eb6; font-size: 10px; text-align: right; }
+@media(max-width:560px) {
+  .team-workspace-audit-row { grid-template-columns: minmax(0,1fr); }
+  .team-workspace-audit-row time { justify-self: start; text-align: left; }
+}
