@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Activity, AlertTriangle, ArrowRight, Boxes, Check, CheckCircle2, ClipboardCheck, Clock3, Code2, Download, ExternalLink, Gauge, Github, Network, RefreshCw, Search, ShieldCheck, Sparkles, Workflow } from 'lucide-react'
 import { useLanguage } from './i18n'
-import { isWorkspaceCloudConfigured, loadControlPlaneChecklist, readWorkspaceCloudSession, saveControlPlaneChecklist, signInWorkspaceCloud, signOutWorkspaceCloud, signUpWorkspaceCloud, type CloudSession } from './workspace-cloud'
+import { addWorkspaceTeamMember, createWorkspaceTeam, isWorkspaceCloudConfigured, loadControlPlaneChecklist, loadTeamControlPlaneChecklist, loadWorkspaceTeamMembers, loadWorkspaceTeams, readWorkspaceCloudSession, removeWorkspaceTeamMember, saveControlPlaneChecklist, saveTeamControlPlaneChecklist, signInWorkspaceCloud, signOutWorkspaceCloud, signUpWorkspaceCloud, updateWorkspaceTeamMemberRole, type CloudSession, type CloudTeam, type CloudTeamMember, type CloudTeamRole } from './workspace-cloud'
 
 const CHECKLIST_KEY = 'dreamex-control-plane-checklist-v1'
 
@@ -171,6 +171,14 @@ function CloudChecklistSync({ checked, onRestore }: { checked: CheckState; onRes
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState('')
   const [noticeIsError, setNoticeIsError] = useState(false)
+  const [teams, setTeams] = useState<CloudTeam[]>([])
+  const [selectedTeamId, setSelectedTeamId] = useState('')
+  const [teamName, setTeamName] = useState('')
+  const [teamLoading, setTeamLoading] = useState(false)
+  const [memberUserId, setMemberUserId] = useState('')
+  const [memberRole, setMemberRole] = useState<CloudTeamRole>('editor')
+  const [members, setMembers] = useState<CloudTeamMember[]>([])
+  const [memberRevision, setMemberRevision] = useState(0)
 
   const setResult = (message: string, isError = false) => {
     setNotice(message)
@@ -237,17 +245,137 @@ function CloudChecklistSync({ checked, onRestore }: { checked: CheckState; onRes
       if (/session expired|sign in/i.test(error instanceof Error ? error.message : '')) setSession(readWorkspaceCloudSession())
     } finally { setBusy(false) }
   }
-  const signOut = async () => {
-    setBusy(true)
+  const refreshTeams = async () => {
+    if (!configured || !session) return
+    setTeamLoading(true)
     try {
-      await signOutWorkspaceCloud()
-      setSession(null)
-      setPassword('')
-      setResult(en ? 'Signed out. Local checklist is unchanged.' : 'Berhasil keluar. Checklist lokal tidak berubah.')
+      const next = await loadWorkspaceTeams()
+      setTeams(next)
+      setSelectedTeamId(current => next.some(team => team.id === current) ? current : (next[0]?.id ?? ''))
+      setResult(en ? 'Team list refreshed.' : 'Daftar tim diperbarui.')
     } catch (error) {
-      setResult(error instanceof Error ? error.message : (en ? 'Could not finish sign-out.' : 'Gagal menyelesaikan proses keluar.'), true)
-    } finally { setBusy(false) }
+      setResult(error instanceof Error ? error.message : (en ? 'Could not load teams.' : 'Tidak dapat memuat tim.'), true)
+    } finally { setTeamLoading(false) }
   }
+  const createTeam = async () => {
+    if (!teamName.trim()) return
+    setTeamLoading(true)
+    try {
+      const created = await createWorkspaceTeam(teamName)
+      setTeams(current => [...current.filter(team => team.id !== created.id), created])
+      setSelectedTeamId(created.id)
+      setTeamName('')
+      setMemberRevision(value => value + 1)
+      setResult(en ? 'Team created. Your account is its owner.' : 'Tim dibuat. Akun Anda menjadi pemilik tim.')
+    } catch (error) {
+      setResult(error instanceof Error ? error.message : (en ? 'Could not create team.' : 'Tidak dapat membuat tim.'), true)
+    } finally { setTeamLoading(false) }
+  }
+  const addMember = async () => {
+    if (!selectedTeamId || !memberUserId.trim()) return
+    setTeamLoading(true)
+    try {
+      await addWorkspaceTeamMember(selectedTeamId, memberUserId.trim(), memberRole)
+      setMemberUserId('')
+      setMemberRevision(value => value + 1)
+      setResult(en ? 'Team member added with the selected role.' : 'Anggota tim ditambahkan dengan role yang dipilih.')
+    } catch (error) {
+      setResult(error instanceof Error ? error.message : (en ? 'Could not add team member.' : 'Tidak dapat menambahkan anggota tim.'), true)
+    } finally { setTeamLoading(false) }
+  }
+  const changeMemberRole = async (userId: string, role: CloudTeamRole) => {
+    if (!selectedTeamId) return
+    setTeamLoading(true)
+    try {
+      await updateWorkspaceTeamMemberRole(selectedTeamId, userId, role)
+      setMemberRevision(value => value + 1)
+      setResult(en ? 'Member role updated.' : 'Role anggota diperbarui.')
+    } catch (error) {
+      setResult(error instanceof Error ? error.message : (en ? 'Could not change member role.' : 'Tidak dapat mengubah role anggota.'), true)
+    } finally { setTeamLoading(false) }
+  }
+  const removeMember = async (userId: string) => {
+    if (!selectedTeamId || !window.confirm(en ? 'Remove this member from the team?' : 'Hapus anggota ini dari tim?')) return
+    setTeamLoading(true)
+    try {
+      await removeWorkspaceTeamMember(selectedTeamId, userId)
+      setMemberRevision(value => value + 1)
+      setResult(en ? 'Member removed.' : 'Anggota dihapus.')
+    } catch (error) {
+      setResult(error instanceof Error ? error.message : (en ? 'Could not remove member.' : 'Tidak dapat menghapus anggota.'), true)
+    } finally { setTeamLoading(false) }
+  }
+  const saveTeamChecklist = async () => {
+    if (!selectedTeamId) return
+    setTeamLoading(true)
+    try {
+      const savedAt = await saveTeamControlPlaneChecklist(selectedTeamId, checked)
+      setResult((en ? 'Shared checklist saved at ' : 'Checklist bersama disimpan pada ') + new Intl.DateTimeFormat(en ? 'en-US' : 'id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(savedAt)))
+    } catch (error) {
+      setResult(error instanceof Error ? error.message : (en ? 'Team save failed.' : 'Gagal menyimpan checklist tim.'), true)
+    } finally { setTeamLoading(false) }
+  }
+  const restoreTeamChecklist = async () => {
+    if (!selectedTeamId) return
+    setTeamLoading(true)
+    try {
+      const snapshot = await loadTeamControlPlaneChecklist(selectedTeamId)
+      if (!snapshot) {
+        setResult(en ? 'No shared checklist exists for this team yet.' : 'Checklist bersama belum tersedia untuk tim ini.')
+      } else {
+        const allowed = new Set(checks.map(item => item.id))
+        onRestore(Object.fromEntries(Object.entries(snapshot.checked).filter(([key, value]) => allowed.has(key as typeof checks[number]['id']) && typeof value === 'boolean')) as CheckState)
+        setResult((en ? 'Shared checklist restored, updated ' : 'Checklist bersama dipulihkan, diperbarui ') + (snapshot.updatedAt ? new Intl.DateTimeFormat(en ? 'en-US' : 'id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(snapshot.updatedAt)) : (en ? 'at an unknown time.' : 'pada waktu yang tidak diketahui.')))
+      }
+    } catch (error) {
+      setResult(error instanceof Error ? error.message : (en ? 'Could not restore shared checklist.' : 'Tidak dapat memulihkan checklist bersama.'), true)
+    } finally { setTeamLoading(false) }
+  }
+  const selectedTeam = teams.find(team => team.id === selectedTeamId)
+  const currentMembership = members.find(member => member.user_id === session?.user.id)
+  const canManageTeam = currentMembership?.role === 'owner' || currentMembership?.role === 'admin'
+  const canWriteTeam = canManageTeam || currentMembership?.role === 'editor'
+
+  useEffect(() => {
+    if (!configured || !session) {
+      setTeams([])
+      setMembers([])
+      setSelectedTeamId('')
+      return
+    }
+    let active = true
+    setTeamLoading(true)
+    void loadWorkspaceTeams().then(next => {
+      if (!active) return
+      setTeams(next)
+      setSelectedTeamId(current => next.some(team => team.id === current) ? current : (next[0]?.id ?? ''))
+      setNotice('')
+      setNoticeIsError(false)
+    }).catch(error => {
+      if (active) {
+        setNotice(error instanceof Error ? error.message : (en ? 'Could not load teams.' : 'Tidak dapat memuat tim.'))
+        setNoticeIsError(true)
+      }
+    }).finally(() => { if (active) setTeamLoading(false) })
+    return () => { active = false }
+  }, [configured, session?.user.id, en])
+
+  useEffect(() => {
+    if (!configured || !session || !selectedTeamId) {
+      setMembers([])
+      return
+    }
+    let active = true
+    void loadWorkspaceTeamMembers(selectedTeamId).then(next => {
+      if (active) setMembers(next)
+    }).catch(error => {
+      if (active) {
+        setNotice(error instanceof Error ? error.message : (en ? 'Could not load team members.' : 'Tidak dapat memuat anggota tim.'))
+        setNoticeIsError(true)
+      }
+    })
+    return () => { active = false }
+  }, [configured, session?.user.id, selectedTeamId, memberRevision, en])
 
   return <section className="control-plane-cloud" aria-labelledby="control-plane-cloud-title">
     <div className="control-plane-integration-heading">
@@ -282,7 +410,57 @@ function CloudChecklistSync({ checked, onRestore }: { checked: CheckState; onRes
       </div>
     </>}
     {notice && <p className={'control-plane-cloud-notice' + (noticeIsError ? ' control-plane-cloud-danger' : '')} role="status">{notice}</p>}
-    <p className="control-plane-integration-note">{en ? 'Cloud payloads are scoped per user. The migration also provides RLS-enforced team roles; team invitation UI and sync for other tools are not yet activated.' : 'Data cloud dibatasi per pengguna. Migrasi juga menyediakan role tim dengan RLS; UI undangan tim dan sinkronisasi tool lain belum diaktifkan.'}</p>
+    {configured && session && <section className="control-plane-team" aria-labelledby="control-plane-team-title">
+      <div className="control-plane-integration-heading">
+        <div>
+          <span className="section-kicker">{en ? 'TEAM WORKSPACE / ROLE-BASED ACCESS' : 'WORKSPACE TIM / AKSES BERBASIS ROLE'}</span>
+          <h3 id="control-plane-team-title">{en ? 'Shared team checklist' : 'Checklist bersama tim'}</h3>
+          <p>{en ? 'Owners/admins manage membership, editors can save shared checklists, and viewers are read-only. Database row-level security is the authorization boundary.' : 'Owner/admin mengelola anggota, editor dapat menyimpan checklist bersama, dan viewer hanya membaca. Row-level security database menjadi batas otorisasi.'}</p>
+        </div>
+        <button type="button" className="control-plane-integration-button" onClick={() => void refreshTeams()} disabled={teamLoading}><RefreshCw size={13} /> {en ? 'Refresh teams' : 'Muat ulang tim'}</button>
+      </div>
+      <div className="control-plane-cloud-grid control-plane-team-create">
+        <label className="control-plane-cloud-field">{en ? 'New team name' : 'Nama tim baru'}<input value={teamName} onChange={event => setTeamName(event.target.value)} maxLength={100} placeholder={en ? 'Platform Engineering' : 'Platform Engineering'} /></label>
+        <button type="button" className="control-plane-integration-button" onClick={() => void createTeam()} disabled={teamLoading || teamName.trim().length < 2}>{en ? 'Create team' : 'Buat tim'}</button>
+      </div>
+      <div className="control-plane-cloud-grid control-plane-team-select">
+        <label className="control-plane-cloud-field">{en ? 'Team' : 'Tim'}<select value={selectedTeamId} onChange={event => setSelectedTeamId(event.target.value)} disabled={!teams.length || teamLoading}><option value="">{en ? 'Select a team' : 'Pilih tim'}</option>{teams.map(team => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
+        {selectedTeam && <div className="control-plane-team-id"><span>{en ? 'Team ID (for reference)' : 'ID tim (referensi)'}</span><code>{selectedTeam.id}</code></div>}
+      </div>
+      {configured && session && teams.length === 0 && !teamLoading && <p className="control-plane-integration-empty">{en ? 'No teams found yet. Create a team to get the owner role.' : 'Belum ada tim. Buat tim untuk mendapatkan role owner.'}</p>}
+      {selectedTeam && <>
+        <div className="control-plane-team-roster-heading"><strong>{en ? 'Members' : 'Anggota'} ({members.length})</strong><span>{en ? 'Your role: ' : 'Role Anda: '}{currentMembership?.role ?? (teamLoading ? (en ? 'loading' : 'memuat') : (en ? 'not a member' : 'bukan anggota'))}</span></div>
+        <ul className="control-plane-team-roster">
+          {members.map(member => <li key={member.user_id} className="control-plane-team-member">
+            <div className="control-plane-team-member-identity"><strong>{member.user_id === session.user.id ? (en ? 'You' : 'Anda') : (en ? 'Member UUID' : 'UUID anggota')}</strong><code>{member.user_id}</code></div>
+            <span className={'control-plane-team-role is-' + member.role}>{member.role}</span>
+            {canManageTeam && member.role !== 'owner' && <div className="control-plane-team-member-actions">
+              <label className="control-plane-visually-hidden" htmlFor={'team-role-' + member.user_id}>{en ? 'Member role' : 'Role anggota'}</label>
+              <select id={'team-role-' + member.user_id} value={member.role} disabled={teamLoading} onChange={event => void changeMemberRole(member.user_id, event.target.value as CloudTeamRole)}>
+                <option value="admin">admin</option><option value="editor">editor</option><option value="viewer">viewer</option>
+              </select>
+              <button type="button" className="control-plane-integration-button" disabled={teamLoading} onClick={() => void removeMember(member.user_id)}>{en ? 'Remove' : 'Hapus'}</button>
+            </div>}
+          </li>)}
+        </ul>
+        {canManageTeam && <div className="control-plane-team-invite">
+          <div className="control-plane-team-roster-heading"><strong>{en ? 'Add an existing Supabase user' : 'Tambahkan pengguna Supabase yang sudah terdaftar'}</strong></div>
+          <p className="control-plane-cloud-copy">{en ? 'Ask the teammate to sign up first and share their user UUID. Membership changes are authorized by database policy; a client cannot grant itself a role.' : 'Minta rekan mendaftar terlebih dahulu dan membagikan UUID pengguna. Perubahan keanggotaan diotorisasi oleh kebijakan database; client tidak dapat menaikkan role sendiri.'}</p>
+          <div className="control-plane-cloud-grid">
+            <label className="control-plane-cloud-field">{en ? 'Teammate user UUID' : 'UUID pengguna rekan'}<input value={memberUserId} onChange={event => setMemberUserId(event.target.value)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autoComplete="off" /></label>
+            <label className="control-plane-cloud-field">{en ? 'Role' : 'Role'}<select value={memberRole} onChange={event => setMemberRole(event.target.value as CloudTeamRole)}><option value="viewer">viewer — read only</option><option value="editor">editor — edit checklist</option><option value="admin">admin — manage members</option></select></label>
+          </div>
+          <div className="control-plane-cloud-actions"><button type="button" className="control-plane-integration-button" onClick={() => void addMember()} disabled={teamLoading || !/^[0-9a-f-]{36}$/i.test(memberUserId.trim())}>{en ? 'Add member' : 'Tambah anggota'}</button></div>
+        </div>}
+        <div className="control-plane-cloud-actions control-plane-team-actions">
+          <button type="button" className="control-plane-integration-button" onClick={() => void saveTeamChecklist()} disabled={teamLoading || !canWriteTeam}><CheckCircle2 size={14} /> {en ? 'Save shared checklist' : 'Simpan checklist bersama'}</button>
+          <button type="button" className="control-plane-integration-button" onClick={() => void restoreTeamChecklist()} disabled={teamLoading}><Download size={14} /> {en ? 'Restore team checklist' : 'Pulihkan checklist tim'}</button>
+        </div>
+        {!canWriteTeam && <p className="control-plane-integration-note">{en ? 'The selected team role is read-only. Ask an owner/admin for edit access.' : 'Role tim terpilih hanya dapat membaca. Minta akses edit dari owner/admin.'}</p>}
+      </>}
+      <p className="control-plane-integration-note">{en ? 'Team membership requires an existing authenticated user UUID. Owners cannot be removed or demoted through this UI; team deletion/ownership transfer remains an administrator operation.' : 'Keanggotaan tim memerlukan UUID pengguna yang sudah terautentikasi. Owner tidak dapat dihapus atau diturunkan melalui UI ini; penghapusan tim/perpindahan kepemilikan tetap merupakan operasi administrator.'}</p>
+    </section>}
+    <p className="control-plane-integration-note">{en ? 'Personal cloud snapshots are isolated per user. Cloud sync does not automatically migrate the local data of other tools.' : 'Snapshot cloud pribadi terisolasi per pengguna. Sinkronisasi cloud tidak otomatis memindahkan data lokal tool lain.'}</p>
   </section>
 }
 
