@@ -205,7 +205,7 @@ async function recordAudit(config, entry) {
   try {
     await redisCommand(config, ['LPUSH', AUDIT_KEY, JSON.stringify(safeEntry)])
     // Keep the log bounded even if the list already contains historical records.
-    try { await redisCommand(config, ['LTRIM', AUDIT_KEY, 0, MAX_AUDIT_ENTRIES - 1]) } catch { /* The append remains useful; surface retention failures through server monitoring. */ }
+    await redisCommand(config, ['LTRIM', AUDIT_KEY, 0, MAX_AUDIT_ENTRIES - 1])
     return true
   } catch {
     return false
