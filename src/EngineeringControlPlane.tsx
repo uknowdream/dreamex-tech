@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Activity, ArrowRight, Boxes, Check, CheckCircle2, ClipboardCheck, Code2, Download, Gauge, Network, Search, ShieldCheck, Sparkles, Workflow } from 'lucide-react'
+import { Activity, AlertTriangle, ArrowRight, Boxes, Check, CheckCircle2, ClipboardCheck, Clock3, Code2, Download, ExternalLink, Gauge, Github, Network, RefreshCw, Search, ShieldCheck, Sparkles, Workflow } from 'lucide-react'
 import { useLanguage } from './i18n'
+import { isWorkspaceCloudConfigured, loadControlPlaneChecklist, readWorkspaceCloudSession, saveControlPlaneChecklist, signInWorkspaceCloud, signOutWorkspaceCloud, signUpWorkspaceCloud, type CloudSession } from './workspace-cloud'
 
 const CHECKLIST_KEY = 'dreamex-control-plane-checklist-v1'
 
@@ -44,6 +45,238 @@ function getBrowserSignals(): BrowserSignals {
     height: typeof window === 'undefined' ? 0 : window.innerHeight,
   }
 }
+
+
+type GitHubWorkflowRun = {
+  id: number
+  name: string
+  display_title: string
+  run_number: number
+  status: string
+  conclusion: string | null
+  html_url: string
+  created_at: string
+  head_branch: string
+}
+
+function LiveGitHubActions() {
+  const { language } = useLanguage()
+  const en = language === 'en'
+  const [runs, setRuns] = useState<GitHubWorkflowRun[]>([])
+  const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [message, setMessage] = useState('')
+  const [updatedAt, setUpdatedAt] = useState('')
+  const [reloadKey, setReloadKey] = useState(0)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    let active = true
+    const load = async () => {
+      setState('loading')
+      setMessage('')
+      try {
+        const response = await fetch('https://api.github.com/repos/uknowdream/dreamex-tech/actions/runs?per_page=8', {
+          headers: { Accept: 'application/vnd.github+json' },
+          signal: controller.signal,
+        })
+        if (!response.ok) {
+          if (response.status === 403) throw new Error(en ? 'GitHub API rate limit reached. Retry shortly.' : 'Batas permintaan GitHub API tercapai. Coba lagi sebentar.')
+          throw new Error(en ? 'GitHub Actions could not be loaded (HTTP ' + response.status + ').' : 'Data GitHub Actions tidak dapat dimuat (HTTP ' + response.status + ').')
+        }
+        const payload = await response.json() as { workflow_runs?: unknown }
+        const values = Array.isArray(payload.workflow_runs) ? payload.workflow_runs as GitHubWorkflowRun[] : []
+        const valid = values.filter(run => Number.isInteger(run.id) && typeof run.name === 'string' && typeof run.html_url === 'string' && typeof run.status === 'string')
+          .filter(run => run.html_url.startsWith('https://github.com/uknowdream/dreamex-tech/actions/runs/'))
+          .slice(0, 8)
+        if (active) {
+          setRuns(valid)
+          setState('ready')
+          setUpdatedAt(new Date().toISOString())
+          if (valid.length === 0) setMessage(en ? 'No workflow runs were returned by GitHub.' : 'GitHub tidak mengembalikan data workflow.')
+        }
+      } catch (error) {
+        if (!active || (error instanceof DOMException && error.name === 'AbortError')) return
+        setState('error')
+        setMessage(error instanceof Error ? error.message : (en ? 'Unknown GitHub API error.' : 'Kesalahan GitHub API yang tidak diketahui.'))
+      }
+    }
+    void load()
+    return () => { active = false; controller.abort() }
+  }, [reloadKey, en])
+
+  const stateLabel = (run: GitHubWorkflowRun) => {
+    if (run.status !== 'completed') return en ? 'In progress' : 'Berjalan'
+    if (run.conclusion === 'success') return en ? 'Passed' : 'Lulus'
+    if (run.conclusion === 'failure') return en ? 'Failed' : 'Gagal'
+    if (run.conclusion === 'cancelled') return en ? 'Cancelled' : 'Dibatalkan'
+    if (run.conclusion === 'skipped') return en ? 'Skipped' : 'Dilewati'
+    return run.conclusion || (en ? 'Completed' : 'Selesai')
+  }
+  const stateClass = (run: GitHubWorkflowRun) => run.status !== 'completed'
+    ? 'is-running'
+    : run.conclusion === 'success' ? 'is-success' : run.conclusion === 'failure' ? 'is-failure' : ''
+
+  return <section className="control-plane-github" aria-labelledby="control-plane-github-title">
+    <div className="control-plane-integration-heading">
+      <div>
+        <span className="section-kicker"><Github size={14} /> {en ? 'LIVE INTEGRATION / GITHUB ACTIONS' : 'INTEGRASI LANGSUNG / GITHUB ACTIONS'}</span>
+        <h2 id="control-plane-github-title">{en ? 'CI evidence from the repository' : 'Bukti CI dari repositori'}</h2>
+        <p>{en ? 'Latest workflow runs fetched directly from the public GitHub Actions API. Open a run for full logs and artifacts.' : 'Workflow terbaru diambil langsung dari GitHub Actions API publik. Buka run untuk melihat log dan artefak lengkap.'}</p>
+      </div>
+      <div className="control-plane-integration-actions">
+        <button className="control-plane-integration-button" type="button" onClick={() => setReloadKey(value => value + 1)} disabled={state === 'loading'}>
+          <RefreshCw size={14} /> {en ? 'Refresh' : 'Muat ulang'}
+        </button>
+        <a className="control-plane-integration-button" href="https://github.com/uknowdream/dreamex-tech/actions" target="_blank" rel="noreferrer">
+          {en ? 'All workflows' : 'Semua workflow'} <ExternalLink size={13} />
+        </a>
+      </div>
+    </div>
+    {state === 'loading' && <p className="control-plane-integration-empty" role="status">{en ? 'Loading live GitHub workflow evidence…' : 'Memuat bukti workflow GitHub secara langsung…'}</p>}
+    {state === 'error' && <div className="control-plane-integration-empty" role="status"><AlertTriangle size={15} /> {message} <a href="https://github.com/uknowdream/dreamex-tech/actions" target="_blank" rel="noreferrer">{en ? 'Open GitHub Actions' : 'Buka GitHub Actions'}</a></div>}
+    {state === 'ready' && runs.length > 0 && <ul className="control-plane-ci-list">
+      {runs.map(run => <li className="control-plane-ci-row" key={run.id}>
+        <div className="control-plane-ci-run">
+          <a href={run.html_url} target="_blank" rel="noreferrer">{run.name}: {run.display_title || ('Run #' + run.run_number)} <ExternalLink size={12} /></a>
+          <div className="control-plane-ci-meta">
+            <span>{en ? 'Branch' : 'Branch'}: {run.head_branch}</span>
+            <span>#{run.run_number}</span>
+            <span><Clock3 size={11} /> {Number.isFinite(Date.parse(run.created_at)) ? new Intl.DateTimeFormat(en ? 'en-US' : 'id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(run.created_at)) : run.created_at}</span>
+          </div>
+        </div>
+        <span className={'control-plane-ci-state ' + stateClass(run)}>{run.status !== 'completed' ? <Activity size={12} /> : run.conclusion === 'success' ? <CheckCircle2 size={12} /> : run.conclusion === 'failure' ? <AlertTriangle size={12} /> : null}{stateLabel(run)}</span>
+      </li>)}
+    </ul>}
+    {state === 'ready' && updatedAt && <p className="control-plane-integration-note">{en ? 'Fetched ' : 'Diambil '}{new Intl.DateTimeFormat(en ? 'en-US' : 'id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(updatedAt))}{en ? '. Public GitHub API; refresh is manual to respect rate limits.' : '. API GitHub publik; pemuatan ulang manual untuk menjaga batas permintaan.'}</p>}
+    {state === 'ready' && runs.length === 0 && <p className="control-plane-integration-empty">{message}</p>}
+  </section>
+}
+
+function CloudChecklistSync({ checked, onRestore }: { checked: CheckState; onRestore: (value: CheckState) => void }) {
+  const { language } = useLanguage()
+  const en = language === 'en'
+  const configured = isWorkspaceCloudConfigured()
+  const [session, setSession] = useState<CloudSession | null>(() => readWorkspaceCloudSession())
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [notice, setNotice] = useState('')
+  const [noticeIsError, setNoticeIsError] = useState(false)
+
+  const setResult = (message: string, isError = false) => {
+    setNotice(message)
+    setNoticeIsError(isError)
+  }
+  const signIn = async () => {
+    setBusy(true)
+    setResult('')
+    try {
+      const next = await signInWorkspaceCloud(email, password)
+      setSession(next)
+      setPassword('')
+      setResult(en ? 'Signed in. Your personal cloud workspace is ready.' : 'Berhasil masuk. Workspace cloud pribadi siap digunakan.')
+    } catch (error) {
+      setResult(error instanceof Error ? error.message : (en ? 'Sign-in failed.' : 'Gagal masuk.'), true)
+    } finally { setBusy(false) }
+  }
+  const signUp = async () => {
+    if (password.length < 10) {
+      setResult(en ? 'Use a password with at least 10 characters.' : 'Gunakan kata sandi minimal 10 karakter.', true)
+      return
+    }
+    setBusy(true)
+    setResult('')
+    try {
+      const result = await signUpWorkspaceCloud(email, password)
+      setPassword('')
+      if (result.session) {
+        setSession(result.session)
+        setResult(en ? 'Account created and signed in.' : 'Akun berhasil dibuat dan Anda sudah masuk.')
+      } else {
+        setResult(en ? 'Account request created. Confirm your email, then sign in here.' : 'Permintaan akun dibuat. Konfirmasi email, lalu masuk di sini.')
+      }
+    } catch (error) {
+      setResult(error instanceof Error ? error.message : (en ? 'Account creation failed.' : 'Gagal membuat akun.'), true)
+    } finally { setBusy(false) }
+  }
+  const save = async () => {
+    setBusy(true)
+    setResult('')
+    try {
+      const savedAt = await saveControlPlaneChecklist(checked)
+      setSession(readWorkspaceCloudSession())
+      setResult((en ? 'Checklist synced to your account at ' : 'Checklist tersinkron ke akun pada ') + new Intl.DateTimeFormat(en ? 'en-US' : 'id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(savedAt)))
+    } catch (error) {
+      setResult(error instanceof Error ? error.message : (en ? 'Cloud save failed.' : 'Penyimpanan cloud gagal.'), true)
+      if (/session expired|sign in/i.test(error instanceof Error ? error.message : '')) setSession(readWorkspaceCloudSession())
+    } finally { setBusy(false) }
+  }
+  const restore = async () => {
+    setBusy(true)
+    setResult('')
+    try {
+      const snapshot = await loadControlPlaneChecklist()
+      if (!snapshot) {
+        setResult(en ? 'No cloud checklist was found yet. Save this checklist first.' : 'Checklist cloud belum ditemukan. Simpan checklist ini terlebih dahulu.')
+      } else {
+        const allowed = new Set(checks.map(item => item.id))
+        onRestore(Object.fromEntries(Object.entries(snapshot.checked).filter(([key, value]) => allowed.has(key as typeof checks[number]['id']) && typeof value === 'boolean')) as CheckState)
+        setResult((en ? 'Checklist restored from cloud, updated ' : 'Checklist dipulihkan dari cloud, diperbarui ') + (snapshot.updatedAt ? new Intl.DateTimeFormat(en ? 'en-US' : 'id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(snapshot.updatedAt)) : (en ? 'at an unknown time.' : 'pada waktu yang tidak diketahui.')))
+      }
+    } catch (error) {
+      setResult(error instanceof Error ? error.message : (en ? 'Cloud restore failed.' : 'Pemulihan cloud gagal.'), true)
+      if (/session expired|sign in/i.test(error instanceof Error ? error.message : '')) setSession(readWorkspaceCloudSession())
+    } finally { setBusy(false) }
+  }
+  const signOut = async () => {
+    setBusy(true)
+    try {
+      await signOutWorkspaceCloud()
+      setSession(null)
+      setPassword('')
+      setResult(en ? 'Signed out. Local checklist is unchanged.' : 'Berhasil keluar. Checklist lokal tidak berubah.')
+    } catch (error) {
+      setResult(error instanceof Error ? error.message : (en ? 'Could not finish sign-out.' : 'Gagal menyelesaikan proses keluar.'), true)
+    } finally { setBusy(false) }
+  }
+
+  return <section className="control-plane-cloud" aria-labelledby="control-plane-cloud-title">
+    <div className="control-plane-integration-heading">
+      <div>
+        <span className="section-kicker"><ShieldCheck size={14} /> {en ? 'OPTIONAL BACKEND / AUTHENTICATED STORAGE' : 'BACKEND OPSIONAL / PENYIMPANAN TERAUTENTIKASI'}</span>
+        <h2 id="control-plane-cloud-title">{en ? 'Cloud workspace sync' : 'Sinkronisasi workspace cloud'}</h2>
+        <p>{en ? 'Save and restore the release checklist across devices using Supabase Auth and row-level security. Local mode remains available.' : 'Simpan dan pulihkan checklist rilis lintas perangkat dengan Supabase Auth dan row-level security. Mode lokal tetap tersedia.'}</p>
+      </div>
+    </div>
+    {!configured && <div className="control-plane-cloud-config">
+      <p className="control-plane-integration-empty">{en ? 'Cloud sync is not configured on this deployment yet. No credentials are embedded in the source.' : 'Sinkronisasi cloud belum dikonfigurasi pada deployment ini. Tidak ada kredensial yang ditanam di source code.'}</p>
+      <p className="control-plane-cloud-copy">{en ? 'Setup: create a Supabase project, apply the documented SQL migration, then configure these Vercel build variables:' : 'Penyiapan: buat proyek Supabase, jalankan migrasi SQL yang tersedia, lalu atur variabel build Vercel berikut:'}</p>
+      <code>VITE_SUPABASE_URL</code><code>VITE_SUPABASE_ANON_KEY</code>
+      <p className="control-plane-cloud-copy"><a href="https://github.com/uknowdream/dreamex-tech/blob/main/docs/cloud-workspace-setup.md" target="_blank" rel="noreferrer">{en ? 'Open configuration and RLS guide' : 'Buka panduan konfigurasi dan RLS'} <ExternalLink size={12} /></a></p>
+    </div>}
+    {configured && !session && <>
+      <div className="control-plane-cloud-grid">
+        <label className="control-plane-cloud-field">{en ? 'Email' : 'Email'}<input type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} required placeholder="you@example.com" /></label>
+        <label className="control-plane-cloud-field">{en ? 'Password (10+ characters for sign-up)' : 'Kata sandi (10+ karakter untuk daftar)'}<input type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} required minLength={8} /></label>
+      </div>
+      <div className="control-plane-cloud-actions">
+        <button type="button" className="control-plane-integration-button" onClick={() => void signIn()} disabled={busy || !email.trim() || !password}>{busy ? (en ? 'Please wait…' : 'Tunggu…') : (en ? 'Sign in' : 'Masuk')}</button>
+        <button type="button" className="control-plane-integration-button" onClick={() => void signUp()} disabled={busy || !email.trim() || password.length < 10}>{en ? 'Create account' : 'Buat akun'}</button>
+      </div>
+    </>}
+    {configured && session && <>
+      <p className="control-plane-cloud-account">{en ? 'Signed in as ' : 'Masuk sebagai '}{session.user.email || session.user.id}</p>
+      <div className="control-plane-cloud-actions">
+        <button type="button" className="control-plane-integration-button" onClick={() => void save()} disabled={busy}><CheckCircle2 size={14} /> {en ? 'Save to cloud' : 'Simpan ke cloud'}</button>
+        <button type="button" className="control-plane-integration-button" onClick={() => void restore()} disabled={busy}><Download size={14} /> {en ? 'Restore from cloud' : 'Pulihkan dari cloud'}</button>
+        <button type="button" className="control-plane-integration-button" onClick={() => void signOut()} disabled={busy}>{en ? 'Sign out' : 'Keluar'}</button>
+      </div>
+    </>}
+    {notice && <p className={'control-plane-cloud-notice' + (noticeIsError ? ' control-plane-cloud-danger' : '')} role="status">{notice}</p>}
+    <p className="control-plane-integration-note">{en ? 'Cloud payloads are scoped per user. The migration also provides RLS-enforced team roles; team invitation UI and sync for other tools are not yet activated.' : 'Data cloud dibatasi per pengguna. Migrasi juga menyediakan role tim dengan RLS; UI undangan tim dan sinkronisasi tool lain belum diaktifkan.'}</p>
+  </section>
+}
+
 
 export function EngineeringControlPlanePage() {
   const { language } = useLanguage()
@@ -131,6 +364,9 @@ export function EngineeringControlPlanePage() {
       <div className="control-plane-grid">{filteredWorkflows.map((item, index) => { const Icon = item.icon; return <Link key={item.id} to={item.route} className="control-plane-card"><div className="control-plane-card-top"><span className="control-plane-icon"><Icon size={19} /></span><span>{String(index + 1).padStart(2, '0')}</span></div><small>{item.category}</small><h3>{item.title}</h3><p>{item.description}</p><span className="control-plane-card-link">{en ? 'Open workflow' : 'Buka workflow'} <ArrowRight size={15} /></span></Link> })}</div>
       {filteredWorkflows.length === 0 && <p className="control-plane-empty">{en ? 'No workflows match that search. Try another keyword.' : 'Tidak ada workflow yang cocok. Coba kata kunci lain.'}</p>}
     </section>
+
+    <LiveGitHubActions />
+    <CloudChecklistSync checked={checked} onRestore={value => setChecked(value)} />
 
     <section className="control-plane-checklist">
       <div className="control-plane-section-heading"><div><span className="section-kicker">{en ? 'DELIVERY DISCIPLINE' : 'DISIPLIN DELIVERY'}</span><h2>{en ? 'Release readiness checklist' : 'Checklist kesiapan rilis'}</h2><p>{en ? 'A lightweight, editable checklist saved in this browser. Use it as a reminder, not as an automated quality gate.' : 'Checklist ringan yang bisa diedit dan disimpan di browser ini. Gunakan sebagai pengingat, bukan quality gate otomatis.'}</p></div><span className="control-plane-check-count"><CheckCircle2 size={16} /> {completed}/{checks.length}</span></div>
