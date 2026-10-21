@@ -230,6 +230,7 @@ test('navigation drawer close returns keyboard focus to the menu toggle', async 
   await expect(drawer).toBeVisible()
   const closeButton = drawer.locator('.nav-drawer-close, button[aria-label*="Close"], button[aria-label*="Tutup"]')
   await expect(closeButton.first()).toBeVisible()
+  await expect(closeButton.first(), 'Opening the drawer should move keyboard focus into the dialog').toBeFocused()
   await closeButton.first().click()
   await expect(page.locator('#primary-navigation.nav-open')).toHaveCount(0)
   await expect(toggle).toBeFocused()
