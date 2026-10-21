@@ -6,6 +6,12 @@ const MAX_BYTES = 100_000
 const MAX_MEMBERS = 100
 const DEFAULT_STATE = { project: 'DreamEx Tech', release: '', tasks: [], decisions: [], notes: '' }
 const VALID_ROLES = new Set(['owner', 'admin', 'editor', 'viewer'])
+const MEMBER_CREATE_SCRIPT = [
+  'local count = redis.call("HLEN", KEYS[1])',
+  'if count >= tonumber(ARGV[1]) then return 0 end',
+  'redis.call("HSET", KEYS[1], ARGV[2], ARGV[3])',
+  'return 1',
+].join('\\n')
 const CAS_SCRIPT = [
   'local current = redis.call("GET", KEYS[1])',
   'local currentRevision = 0',
@@ -132,7 +138,7 @@ function parseMember(raw) {
     if (!row || typeof row !== 'object' || Array.isArray(row) ||
         typeof row.id !== 'string' || typeof row.label !== 'string' ||
         typeof row.role !== 'string' || !validRole(row.role) ||
-        typeof row.createdAt !== 'string') return null
+        typeof row.createdAt !== 'string' || row.status !== 'active') return null
     return row
   } catch {
     return null
@@ -165,7 +171,7 @@ async function authenticate(config, candidate, expectedToken) {
   const hash = tokenHash(candidate)
   const raw = await redisCommand(config, ['HGET', MEMBERS_KEY, hash])
   const member = parseMember(raw)
-  if (!member || member.status === 'revoked') return null
+  if (!member) return null
   return { role: member.role, memberId: member.id, tokenHash: hash, isOwner: false }
 }
 
@@ -175,7 +181,7 @@ async function readMemberEntries(config) {
   const values = []
   for (let i = 0; i + 1 < result.length; i += 2) {
     const member = parseMember(result[i + 1])
-    if (member && member.status !== 'revoked' && typeof result[i] === 'string') values.push({ hash: result[i], member })
+    if (member && typeof result[i] === 'string') values.push({ hash: result[i], member })
   }
   return values.sort((a, b) => a.member.createdAt.localeCompare(b.member.createdAt) || a.member.label.localeCompare(b.member.label))
 }
@@ -211,14 +217,12 @@ async function handleMemberResource(req, res, config, principal) {
     if (label.length < 2 || label.length > 80) return send(res, 400, { error: 'invalid_label', message: 'Label must be between 2 and 80 characters.' })
     if (!['admin', 'editor', 'viewer'].includes(role)) return send(res, 400, { error: 'invalid_role' })
     if (principal.role === 'admin' && role === 'admin') return send(res, 403, { error: 'role_escalation_forbidden', message: 'Only the workspace owner can grant the admin role.' })
-    const count = await redisCommand(config, ['HLEN', MEMBERS_KEY])
-    if (!Number.isFinite(Number(count)) || Number(count) >= MAX_MEMBERS) return send(res, 409, { error: 'member_limit_reached', maxMembers: MAX_MEMBERS })
-
     const token = randomBytes(32).toString('base64url')
     const hash = tokenHash(token)
     const now = new Date().toISOString()
     const member = { id: randomUUID(), label, role, createdAt: now, updatedAt: null, status: 'active' }
-    await redisCommand(config, ['HSET', MEMBERS_KEY, hash, JSON.stringify(member)])
+    const created = await redisCommand(config, ['EVAL', MEMBER_CREATE_SCRIPT, 1, MEMBERS_KEY, MAX_MEMBERS, hash, JSON.stringify(member)])
+    if (Number(created) !== 1) return send(res, 409, { error: 'member_limit_reached', maxMembers: MAX_MEMBERS })
     // Return the opaque token exactly once. Only its SHA-256 hash is persisted in Redis.
     return send(res, 201, { member: publicMember(member), token, tokenVisibleOnce: true })
   }
