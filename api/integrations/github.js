@@ -6,10 +6,13 @@ export default async function handler(req, res) {
     return sendJson(res, 405, { error: 'method_not_allowed' })
   }
   const user = getSession(req)
-  if (!user) return sendJson(res, 401, { error: 'authentication_required', message: 'Sign in with GitHub first.' })
+  const owner = user?.login || (process.env.GITHUB_PUBLIC_OWNER || 'uknowdream').trim()
+  if (!/^[A-Za-z0-9-]{1,39}$/.test(owner)) {
+    return sendJson(res, 500, { error: 'github_public_owner_invalid', message: 'GITHUB_PUBLIC_OWNER must be a GitHub username.' })
+  }
 
   try {
-    const repositoriesResponse = await fetch('https://api.github.com/users/' + encodeURIComponent(user.login) + '/repos?type=owner&sort=updated&per_page=8', {
+    const repositoriesResponse = await fetch('https://api.github.com/users/' + encodeURIComponent(owner) + '/repos?type=owner&sort=updated&per_page=8', {
       headers: { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'DreamEx-Tech' },
       signal: AbortSignal.timeout(8000),
     })
@@ -49,10 +52,12 @@ export default async function handler(req, res) {
     }))
     const workflows = new Map(workflowResults.map(result => [result.fullName, result]))
     return sendJson(res, 200, {
-      username: user.login,
+      username: owner,
+      authenticated: Boolean(user),
+      accountPersonalized: Boolean(user),
       fetchedAt: new Date().toISOString(),
       source: 'GitHub public repository and Actions APIs',
-      limitations: 'Only public repositories are queried. Private repository data and private Actions runs are not requested.',
+      limitations: user ? 'Only public repositories are queried. Private repository data and private Actions runs are not requested.' : 'Showing public repositories for the configured GITHUB_PUBLIC_OWNER (defaults to uknowdream). Sign in to switch to your GitHub username. Private repositories and private workflow runs are never queried.',
       repositories: repositories.map(repo => ({
         name: repo.name,
         fullName: repo.full_name,
