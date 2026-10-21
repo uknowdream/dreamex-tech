@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test('GitHub CI dashboard renders real workflow-run data from its public API response', async ({ page }) => {
-  await page.route('https://api.github.com/repos/uknowdream/dreamex-tech/actions/runs?per_page=15', route => route.fulfill({
+  await page.route(/^https:\/\/api\.github\.com\/repos\/uknowdream\/dreamex-tech\/actions\/runs\?per_page=15$/, route => route.fulfill({
     status: 200,
     contentType: 'application/json',
     body: JSON.stringify({ workflow_runs: [
@@ -19,7 +19,7 @@ test('GitHub CI dashboard renders real workflow-run data from its public API res
 })
 
 test('GitHub CI dashboard reports API rate limiting without inventing workflow state', async ({ page }) => {
-  await page.route('https://api.github.com/repos/uknowdream/dreamex-tech/actions/runs?per_page=15', route => route.fulfill({
+  await page.route(/^https:\/\/api\.github\.com\/repos\/uknowdream\/dreamex-tech\/actions\/runs\?per_page=15$/, route => route.fulfill({
     status: 403,
     contentType: 'application/json',
     body: JSON.stringify({ message: 'rate limit exceeded' }),
