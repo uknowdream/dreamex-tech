@@ -50,6 +50,10 @@ test('workspace owner can issue, change, and revoke per-member access tokens', a
     const url = new URL(request.url())
     const resource = url.searchParams.get('resource')
     const method = request.method()
+    if (resource === 'audit') {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ entries: [], retentionLimit: 200 }) })
+      return
+    }
     if (resource !== 'members') {
       if (method === 'GET') {
         await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
