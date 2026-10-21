@@ -108,7 +108,7 @@ for (const slug of articleSlugs) {
 }
 const indexableRoutes = [
   '/', '/about', '/lab', '/observatory', '/devtools', '/workspace',
-  '/engineering-intelligence', '/control-plane', '/command-center',
+  '/engineering-intelligence', '/control-plane', '/command-center', '/github-ci', '/team-workspace',
   '/quality-intelligence', '/reliability-center', '/supply-chain-intelligence',
   '/roadmap', '/qa-studio', '/security-center', '/api-playground',
   '/performance', '/knowledge-graph', '/learn', '/rss',
