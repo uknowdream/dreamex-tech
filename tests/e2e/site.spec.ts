@@ -750,6 +750,46 @@ test('API Contract Studio analyzes OpenAPI and flags removed operations against 
 })
 
 
+test('Engineering Control Plane displays live GitHub Actions evidence from the API', async ({ page }) => {
+  let requestCount = 0
+  await page.route('**/repos/uknowdream/dreamex-tech/actions/runs**', async route => {
+    requestCount += 1
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        workflow_runs: [{
+          id: 991,
+          name: 'CI',
+          display_title: 'Live release quality gates',
+          run_number: 620,
+          status: 'completed',
+          conclusion: 'success',
+          html_url: 'https://github.com/uknowdream/dreamex-tech/actions/runs/991',
+          created_at: '2026-10-22T00:00:00Z',
+          head_branch: 'main',
+        }],
+      }),
+    })
+  })
+  await page.goto('/control-plane')
+  await expect(page.getByRole('heading', { name: /CI evidence from the repository/i })).toBeVisible()
+  await expect(page.getByRole('link', { name: /CI: Live release quality gates/i })).toHaveAttribute('href', 'https://github.com/uknowdream/dreamex-tech/actions/runs/991')
+  await expect(page.getByText('Passed', { exact: true })).toBeVisible()
+  expect(requestCount).toBe(1)
+  await page.getByRole('button', { name: /refresh/i }).click()
+  await expect.poll(() => requestCount).toBe(2)
+})
+
+test('Engineering Control Plane explains the unconfigured cloud-sync state without blocking local checklists', async ({ page }) => {
+  await page.goto('/control-plane')
+  await expect(page.getByRole('heading', { name: /cloud workspace sync/i })).toBeVisible()
+  await expect(page.getByText(/cloud sync is not configured on this deployment yet/i)).toBeVisible()
+  const firstCheck = page.getByRole('checkbox', { name: /define change scope/i })
+  await firstCheck.check()
+  await expect(firstCheck).toBeChecked()
+})
+
 test('Engineering Control Plane unifies workflows and browser-session signals', async ({ page }) => {
   await page.goto('/control-plane')
   await expect(page.getByRole('heading', { name: /Engineering, in control/i })).toBeVisible()
