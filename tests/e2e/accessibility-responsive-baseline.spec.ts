@@ -310,25 +310,30 @@ test('footer columns stay balanced across mobile, tablet, and desktop widths', a
         const groupRect = group.getBoundingClientRect()
         return { left: groupRect.left, right: groupRect.right, top: groupRect.top, width: groupRect.width }
       })
+      const brand = element.querySelector<HTMLElement>(':scope > .footer-brand')
       return {
         viewport: document.documentElement.clientWidth,
         innerWidth: window.innerWidth,
         document: document.documentElement.scrollWidth,
         gridColumns: getComputedStyle(element).gridTemplateColumns,
         trackCount: getComputedStyle(element).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
+        brandGridColumn: brand ? getComputedStyle(brand).gridColumn : 'missing',
         left: rect.left,
         right: rect.right,
         groups,
       }
     })
 
-    const expectedTracks = width <= 560 ? 1 : width <= 700 ? 2 : width <= 1100 ? 3 : 4
+    const expectedTracks = width <= 560 ? 1 : width <= 760 ? 2 : width <= 1100 ? 3 : 4
     expect(layout.viewport, `CSS viewport should match requested width ${width}px: ${JSON.stringify(layout)}`).toBe(width)
     expect(layout.trackCount, `Footer grid track count at ${width}px: ${JSON.stringify(layout)}`).toBe(expectedTracks)
     expect(layout.document, `Footer document overflow at ${width}px`).toBeLessThanOrEqual(layout.viewport + 1)
     expect(layout.left, `Footer left edge at ${width}px`).toBeGreaterThanOrEqual(-1)
     expect(layout.right, `Footer right edge at ${width}px`).toBeLessThanOrEqual(layout.viewport + 1)
     expect(layout.groups).toHaveLength(3)
+    if (width > 560 && width <= 1100) {
+      expect(layout.brandGridColumn, `Footer brand should span the tablet/mobile navigation row at ${width}px`).toBe('1 / -1')
+    }
     for (const group of layout.groups) {
       expect(group.width, `Footer group width at ${width}px`).toBeGreaterThan(0)
       expect(group.left, `Footer group left edge at ${width}px`).toBeGreaterThanOrEqual(-1)
@@ -336,7 +341,9 @@ test('footer columns stay balanced across mobile, tablet, and desktop widths', a
     }
     if (width > 700) {
       const groupTops = layout.groups.map(group => group.top)
+      const groupWidths = layout.groups.map(group => group.width)
       expect(Math.max(...groupTops) - Math.min(...groupTops), `Footer navigation groups should align at ${width}px`).toBeLessThanOrEqual(2)
+      expect(Math.max(...groupWidths) - Math.min(...groupWidths), `Footer navigation groups should have balanced widths at ${width}px`).toBeLessThanOrEqual(2)
     }
   }
 })
