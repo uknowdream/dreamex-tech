@@ -1,28 +1,43 @@
-name: Production smoke checks
+name: Production smoke
 
 on:
+  deployment_status:
   workflow_dispatch:
-  schedule:
-    - cron: '17 3 * * *'
+    inputs:
+      smoke_base_url:
+        description: Approved DreamEx production or Vercel deployment URL
+        required: true
+        default: https://www.dreamex.tech
+        type: string
 
 permissions:
   contents: read
 
-concurrency:
-  group: production-smoke
-  cancel-in-progress: false
-
 jobs:
   smoke:
-    name: Production route and feed health
+    name: Verify deployed production routes and security headers
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+      github.event.deployment.environment == 'Production')
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Checkout deployed source revision
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.deployment.sha || github.sha }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
         with:
           node-version: 22
-      - name: Check production routes and feeds
-        run: node scripts/smoke-production.mjs
+      - name: Install dependencies
+        run: npm install
+      - name: Build and verify source metadata
+        run: |
+          npm run build
+          npm run verify:build
+          npm run verify:i18n
+      - name: Smoke-test the deployed origin
+        env:
+          SMOKE_BASE_URL: ${{ github.event_name == 'workflow_dispatch' && inputs.smoke_base_url || github.event.deployment_status.target_url }}
+        run: npm run smoke:production
