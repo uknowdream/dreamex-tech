@@ -36,7 +36,7 @@ DreamEx Tech combines editorial knowledge with practical, browser-first engineer
 - `/qa-studio` — editable test-case tables, BDD/Gherkin scenarios, bug reports, and test plans; supports local draft snapshots and Markdown export.
 - `/quality-intelligence` — local-first Playwright JSON and JUnit XML report analysis, pass-rate and duration summaries, retry-based flaky-test signals, failure clustering, report exports, and browser-local summary history.
 - `/supply-chain-intelligence` — local-first CycloneDX/SPDX JSON SBOM inventory, dependency and license metadata review, included vulnerability records, and JSON/CSV/Markdown evidence exports. It does not perform a live vulnerability scan.
-- `/security-center` — same-origin security-header review, visible document-quality signals, local-storage inventory, JSON/Markdown audit exports, and scoped deletion of DreamEx browser data.
+- `/security-center` — same-origin security-header review, visible document-quality signals, local-storage inventory, JSON/Markdown audit exports, and scoped deletion of DreamEx browser data.\n- Control Plane account panel — optional GitHub OAuth, public repository/Actions status, private per-user cloud snapshots, and role-scoped shared-team snapshots backed by Vercel KV/Upstash when configured.
 
 Engineering Intelligence starts with clearly labelled example inventory records; replace them with real metadata before using catalog metrics. Catalog data stays in browser storage and can be exported as JSON. OpenAPI contract text is analyzed locally in the browser and is not automatically persisted or sent to a server. Contract comparison is heuristic and does not prove runtime compatibility.
 
@@ -53,4 +53,4 @@ npm run verify:i18n
 npm run test:e2e
 ```
 
-Release discipline: validate CI and desktop/mobile browser regression before treating a change as production-ready, then smoke-test critical routes, sitemap, and the human-readable RSS feed after deployment.
+Release discipline: validate CI and desktop/mobile browser regression before treating a change as production-ready, then smoke-test critical routes, sitemap, and the human-readable RSS feed after deployment.\n## Production integrations\n\nSee [docs/OPERATIONS.md](docs/OPERATIONS.md) for enforced CSP verification, post-deploy smoke tests, GitHub OAuth, Vercel KV environment setup, snapshot privacy controls, and team invitations. Cloud authentication and persistence are deliberately disabled until the required Vercel environment variables are configured.\n

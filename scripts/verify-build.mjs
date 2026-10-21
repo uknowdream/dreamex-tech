@@ -6,9 +6,21 @@ const dist = join(root, 'dist')
 const errors = []
 const vercelConfig = JSON.parse(readFileSync(join(root, 'vercel.json'), 'utf8'))
 const globalHeaders = vercelConfig.headers?.find(entry => entry.source === '/(.*)')?.headers ?? []
-const cspReportOnly = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline'; connect-src 'self' https: wss:"
-for (const [key, expected] of [['X-Content-Type-Options', 'nosniff'], ['Referrer-Policy', 'strict-origin-when-cross-origin'], ['X-Frame-Options', 'DENY'], ['Permissions-Policy', 'camera=(), microphone=(), geolocation=()'], ['Strict-Transport-Security', 'max-age=31536000'], ['Content-Security-Policy-Report-Only', cspReportOnly]]) {
+const enforcedCsp = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self'; connect-src 'self' https: wss:; upgrade-insecure-requests"
+for (const [key, expected] of [
+  ['X-Content-Type-Options', 'nosniff'],
+  ['Referrer-Policy', 'strict-origin-when-cross-origin'],
+  ['X-Frame-Options', 'DENY'],
+  ['Permissions-Policy', 'camera=(), microphone=(), geolocation=()'],
+  ['Strict-Transport-Security', 'max-age=31536000'],
+  ['Content-Security-Policy', enforcedCsp],
+  ['Cross-Origin-Opener-Policy', 'same-origin'],
+  ['X-Permitted-Cross-Domain-Policies', 'none'],
+]) {
   if (!globalHeaders.some(header => header.key.toLowerCase() === key.toLowerCase() && header.value === expected)) errors.push('Missing or incorrect production security header: ' + key)
+}
+if (globalHeaders.some(header => header.key.toLowerCase() === 'content-security-policy-report-only')) {
+  errors.push('Enforcing Content-Security-Policy must replace the previous Report-Only-only configuration.')
 }
 
 function requireFile(path, label = path) {

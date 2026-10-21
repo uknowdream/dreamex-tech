@@ -22,16 +22,18 @@ function saveJson(name: string, value: unknown) { saveTextFile(name, JSON.string
 function headerFindings(url: string, headers: Record<string, string>, error?: string): Finding[] {
   const has = (key: string) => Boolean(headers[key])
   const secure = url.startsWith('https://')
+  const activeCsp = headers['content-security-policy'] || ''
   const reportOnly = headers['content-security-policy-report-only'] || ''
   const reportOnlyValid = reportOnly.includes("default-src 'self'") && reportOnly.includes("object-src 'none'") && reportOnly.includes("frame-ancestors 'none'")
+  const enforcedCspValid = activeCsp.includes("default-src 'self'") && activeCsp.includes("object-src 'none'") && activeCsp.includes("frame-ancestors 'none'")
   const reducedMotion = [...document.styleSheets].some(sheet => { try { return [...sheet.cssRules].some(rule => rule.cssText.includes('prefers-reduced-motion')) } catch { return false } })
   const meta = Boolean(document.querySelector('meta[name="description"]') && document.querySelector('link[rel="canonical"]'))
   const frame = has('x-frame-options') || (headers['content-security-policy'] || '').includes('frame-ancestors')
   const findings: Finding[] = [
     { id:'https', title:'HTTPS transport', detail:secure?'The inspected origin uses HTTPS.':'The inspected origin is not HTTPS. Use TLS for production traffic.', status:secure?'pass':'fail' },
     { id:'hsts', title:'Strict-Transport-Security', detail:has('strict-transport-security')?'HSTS response header is present.':'HSTS was not observed. Verify edge configuration and subdomain implications before enabling preload.', status:has('strict-transport-security')?'pass':'warn' },
-    { id:'csp', title:'Content-Security-Policy', detail:has('content-security-policy')?'An enforcing CSP response header is present.':'No enforcing CSP response header was observed. Report-Only is monitored separately and does not block content.', status:has('content-security-policy')?'pass':'warn' },
-    { id:'csp-report-only', title:'Content-Security-Policy-Report-Only', detail:reportOnlyValid?'A non-enforcing CSP policy with baseline directives is present. Review browser-console violations before considering enforcement; no reporting endpoint is configured.':'No valid CSP Report-Only policy was observed. Add the header at the edge and review violations before considering enforcement.', status:reportOnlyValid?'pass':'warn' },
+    { id:'csp', title:'Content-Security-Policy', detail:enforcedCspValid?'An enforcing CSP with default-src, object-src and frame-ancestors restrictions is present.':'No complete enforcing CSP baseline was observed. Report-Only does not block content.', status:enforcedCspValid?'pass':'warn' },
+    { id:'csp-report-only', title:'Content-Security-Policy-Report-Only', detail:reportOnlyValid?'An additional non-enforcing policy is present for observation.':'An additional Report-Only policy is optional; the enforced CSP is the security boundary.', status:reportOnlyValid || enforcedCspValid?'pass':'warn' },
     { id:'frame', title:'Frame protection', detail:frame?'A frame restriction was observed.':'Neither X-Frame-Options nor CSP frame-ancestors was observed.', status:frame?'pass':'warn' },
     { id:'nosniff', title:'X-Content-Type-Options', detail:has('x-content-type-options')?'MIME sniffing protection is present.':'Consider X-Content-Type-Options: nosniff.', status:has('x-content-type-options')?'pass':'warn' },
     { id:'referrer', title:'Referrer-Policy', detail:has('referrer-policy')?'A referrer policy is present.':'Set a deliberate Referrer-Policy, for example strict-origin-when-cross-origin.', status:has('referrer-policy')?'pass':'warn' },
