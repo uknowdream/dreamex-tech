@@ -99,7 +99,7 @@ const requiredSecurityHeaders = [
   ['referrer-policy', /^strict-origin-when-cross-origin$/i],
   ['permissions-policy', /camera=.*microphone=.*geolocation=/i],
 ]
-const reportOnlyDirectives = ["default-src 'self'", "object-src 'none'", "frame-ancestors 'none'"]
+const enforcedCspDirectives = ["default-src 'self'", "base-uri 'self'", "object-src 'none'", "frame-ancestors 'none'", "form-action 'self'", "script-src 'self'", "worker-src 'self'"]
 
 const failures = []
 const results = await Promise.all(checks.map(async check => {
@@ -139,9 +139,12 @@ const results = await Promise.all(checks.map(async check => {
       const value = response.headers.get(header) || ''
       if (!pattern.test(value)) issues.push(`security header ${header} is missing or does not meet the baseline (${value || 'missing'})`)
     }
-    const reportOnly = response.headers.get('content-security-policy-report-only') || ''
-    if (!reportOnly) issues.push('Content-Security-Policy-Report-Only is missing')
-    else for (const directive of reportOnlyDirectives) if (!reportOnly.toLowerCase().includes(directive)) issues.push('Content-Security-Policy-Report-Only is missing a required baseline directive: ' + directive)
+    const csp = response.headers.get('content-security-policy') || ''
+    if (!csp) issues.push('Enforcing Content-Security-Policy header is missing')
+    else {
+      for (const directive of enforcedCspDirectives) if (!csp.toLowerCase().includes(directive)) issues.push('Enforcing Content-Security-Policy is missing a required directive: ' + directive)
+      if (response.headers.get('content-security-policy-report-only')) issues.push('Remove the duplicate report-only policy after enforcement is validated, or document its distinct reporting policy')
+    }
   }
   if (check.type === 'html' && !contentType.toLowerCase().includes('text/html')) issues.push(`expected HTML content-type, received ${contentType || '(missing)'}`)
   if (check.type === 'xml' && !/(application|text)\/(xml|rss\+xml)/i.test(contentType)) issues.push(`expected XML content-type, received ${contentType || '(missing)'}`)
