@@ -196,9 +196,13 @@ export function CloudWorkspacePanel() {
       })
       const snapshot = payload.snapshot as Snapshot
       setRemote(snapshot)
+      const serverRedacted = typeof payload.redactedValues === 'number' && Number.isInteger(payload.redactedValues) ? payload.redactedValues : 0
+      const redactionNote = serverRedacted > 0
+        ? (en ? ' The server also redacted ' + serverRedacted + ' sensitive value(s).' : ' Server juga menyamarkan ' + serverRedacted + ' nilai sensitif.')
+        : ''
       setNotice(en
-        ? 'Cloud snapshot saved (' + Object.keys(local.entries).length + ' keys, ' + Math.ceil(local.bytes / 1024) + ' KiB). ' + local.skipped + ' sensitive or out-of-scope keys were excluded.'
-        : 'Snapshot cloud tersimpan (' + Object.keys(local.entries).length + ' key, ' + Math.ceil(local.bytes / 1024) + ' KiB). ' + local.skipped + ' key sensitif atau di luar cakupan tidak disertakan.')
+        ? 'Cloud snapshot saved (' + Object.keys(local.entries).length + ' keys, ' + Math.ceil(local.bytes / 1024) + ' KiB). ' + local.skipped + ' sensitive or out-of-scope keys were excluded.' + redactionNote
+        : 'Snapshot cloud tersimpan (' + Object.keys(local.entries).length + ' key, ' + Math.ceil(local.bytes / 1024) + ' KiB). ' + local.skipped + ' key sensitif atau di luar cakupan tidak disertakan.' + redactionNote)
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Cloud save failed.') }
     finally { setBusy(false) }
   }
