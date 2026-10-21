@@ -317,6 +317,21 @@ function Header() {
     return () => window.cancelAnimationFrame(frame)
   }, [menuOpen])
 
+  // Focus the close control after React opens the drawer. Do not depend on
+  // transitionend: reduced-motion settings and the drawer's fixed geometry may
+  // intentionally disable CSS transitions.
+  useEffect(() => {
+    if (!menuOpen) return
+    const frame = window.requestAnimationFrame(() => {
+      const nav = navRef.current
+      const closeButton = nav?.querySelector<HTMLButtonElement>('.nav-drawer-close')
+      if (nav && closeButton && !nav.contains(document.activeElement)) {
+        closeButton.focus({ preventScroll: true })
+      }
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [menuOpen])
+
   const closeDrawer = () => {
     setDrawerOpen(false)
     window.requestAnimationFrame(() => menuButtonRef.current?.focus())
