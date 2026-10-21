@@ -13,6 +13,7 @@ const checks = [
   { path: '/api-playground', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/github-ci', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/team-workspace', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/api/team-workspace', type: 'protected-api', markers: ['"error"'], expectedStatuses: [401, 503] },
   { path: '/qa-studio', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/quality-intelligence', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/supply-chain-intelligence', type: 'html', markers: ['id="root"', '<div'] },
@@ -114,7 +115,7 @@ const results = await Promise.all(checks.map(async check => {
       response = await fetch(url, {
         redirect: 'follow',
         signal: AbortSignal.timeout(12_000),
-        headers: { 'user-agent': 'DreamEx-Production-Smoke/1.0', accept: check.type === 'xml' ? 'application/xml,text/xml,*/*' : 'text/html,*/*' },
+        headers: { 'user-agent': 'DreamEx-Production-Smoke/1.0', accept: check.type === 'xml' ? 'application/xml,text/xml,*/*' : check.type === 'protected-api' || check.type === 'json' ? 'application/json,*/*' : 'text/html,*/*' },
       })
       if (response.status >= 500 && attempt < 2) {
         await response.body?.cancel()
@@ -136,7 +137,7 @@ const results = await Promise.all(checks.map(async check => {
   const contentType = response.headers.get('content-type') || ''
   const body = await response.text()
   const issues = []
-  if (!response.ok) issues.push(`HTTP ${response.status}`)
+  if (check.expectedStatuses ? !check.expectedStatuses.includes(response.status) : !response.ok) issues.push(`unexpected HTTP status ${response.status}`)
   if (check.type === 'html') {
     for (const [header, pattern] of requiredSecurityHeaders) {
       const value = response.headers.get(header) || ''
@@ -156,7 +157,7 @@ const results = await Promise.all(checks.map(async check => {
   }
   if (check.type === 'html' && !contentType.toLowerCase().includes('text/html')) issues.push(`expected HTML content-type, received ${contentType || '(missing)'}`)
   if (check.type === 'xml' && !/(application|text)\/(xml|rss\+xml)/i.test(contentType)) issues.push(`expected XML content-type, received ${contentType || '(missing)'}`)
-  if (check.type === 'json' && !/(application\/(json|manifest\+json))/i.test(contentType)) issues.push(`expected JSON/manifest content-type, received ${contentType || '(missing)'}`)
+  if (['json', 'protected-api'].includes(check.type) && !/(application\/(json|manifest\+json))/i.test(contentType)) issues.push(`expected JSON/manifest content-type, received ${contentType || '(missing)'}`)
   if (check.type === 'text' && !contentType.toLowerCase().includes('text/plain')) issues.push(`expected plain-text content-type, received ${contentType || '(missing)'}`)
   for (const marker of check.markers) {
     if (!body.toLowerCase().includes(marker.toLowerCase())) issues.push(`missing expected marker ${JSON.stringify(marker)}`)
