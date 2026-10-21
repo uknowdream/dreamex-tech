@@ -41,7 +41,7 @@ Configure the following Production environment variables in Vercel Project → S
 | Variable | Value |
 |---|---|
 | APP_ORIGIN | https://dreamex.tech (canonical HTTPS origin, without a path) |
-| GITHUB_CLIENT_ID | OAuth App client ID |
+| GITHUB_PUBLIC_OWNER | Optional public GitHub username for the signed-out public data panel; defaults to `uknowdream` |\n| GITHUB_CLIENT_ID | OAuth App client ID |
 | GITHUB_CLIENT_SECRET | OAuth App client secret; keep secret |
 | SESSION_SECRET | High-entropy random secret, at least 32 characters |
 | WORKSPACE_ADMIN_GITHUB_IDS | Comma-separated numeric GitHub user IDs allowed to administer team invitations |
@@ -52,7 +52,7 @@ Generate a session secret in a trusted terminal, then enter it directly into Ver
 openssl rand -base64 48
 ~~~
 
-The GitHub integration reads public repositories and recent public GitHub Actions runs only. Private repositories and private workflow results are intentionally out of scope. GitHub's public API has rate limits, which are surfaced to the user.
+The GitHub integration reads public repositories and recent public GitHub Actions runs only. Before a user signs in, it reads the configured public owner (environment variable GITHUB_PUBLIC_OWNER; defaults to uknowdream). After sign-in, it reads the signed-in username. Private repositories and private workflow results are intentionally out of scope. GitHub's public API has rate limits, which are surfaced to the user.
 
 To find a numeric GitHub user ID, open https://api.github.com/users/YOUR_GITHUB_LOGIN and read the integer id property. Do not use a Vercel user ID.
 
