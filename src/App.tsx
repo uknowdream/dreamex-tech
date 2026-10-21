@@ -307,6 +307,16 @@ function Header() {
     }
   }, [menuOpen, setDrawerOpen])
 
+  useEffect(() => {
+    if (!menuOpen) return
+    const frame = window.requestAnimationFrame(() => {
+      const nav = navRef.current
+      if (!nav?.classList.contains('nav-open') || nav.contains(document.activeElement)) return
+      nav.querySelector<HTMLElement>('.nav-drawer-close')?.focus({ preventScroll: true })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [menuOpen])
+
   const closeDrawer = () => {
     setDrawerOpen(false)
     window.requestAnimationFrame(() => menuButtonRef.current?.focus())
