@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Activity, ArrowRight, Boxes, Check, CheckCircle2, ClipboardCheck, Code2, Download, Gauge, Network, Search, ShieldCheck, Sparkles, Workflow } from 'lucide-react'
 import { useLanguage } from './i18n'
+import { CloudWorkspacePanel } from './CloudWorkspacePanel'
 
 const CHECKLIST_KEY = 'dreamex-control-plane-checklist-v1'
 
@@ -125,6 +126,8 @@ export function EngineeringControlPlanePage() {
       <div className="control-plane-signal"><span className="signal-dot is-neutral" /><div><small>{en ? 'Viewport' : 'Viewport'}</small><strong>{signals.width} × {signals.height}</strong></div></div>
       <p>{en ? 'Signals describe this browser session only. They do not query Vercel, CI, APIs, or production services.' : 'Sinyal hanya menjelaskan sesi browser ini. Tidak mengakses Vercel, CI, API, atau layanan produksi.'}</p>
     </section>
+
+    <CloudWorkspacePanel />
 
     <section className="control-plane-workflows">
       <div className="control-plane-section-heading"><div><span className="section-kicker">{en ? 'ENGINEERING TOOLCHAIN' : 'TOOLCHAIN ENGINEERING'}</span><h2>{en ? 'Choose your next workflow' : 'Pilih workflow berikutnya'}</h2><p>{en ? 'Search across the core capabilities and jump straight into a focused tool.' : 'Cari kemampuan utama dan langsung buka tool yang dibutuhkan.'}</p></div><label className="control-plane-search"><Search size={17} /><input type="search" aria-label={en ? 'Search engineering workflows' : 'Cari workflow engineering'} placeholder={en ? 'Search tools and workflows…' : 'Cari tools dan workflow…'} value={query} onChange={event => setQuery(event.target.value)} /><kbd>/</kbd></label></div>
