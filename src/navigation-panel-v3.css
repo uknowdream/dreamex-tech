@@ -709,3 +709,14 @@ html body #root .site-header.navigation-open #primary-navigation.nav-open[role="
     scroll-behavior: auto !important;
   }
 }
+
+
+/* Final cascade guard: legacy link declarations use !important and can defeat [hidden].
+   Keep the drawer filter authoritative for top-level, mega-menu, and recent links. */
+html body #root .site-header #primary-navigation.nav-open[role="dialog"] > a[hidden],
+html body #root .site-header #primary-navigation.nav-open[role="dialog"] .nav-mega-group > a[hidden],
+html body #root .site-header #primary-navigation.nav-open[role="dialog"] .nav-recent-link[hidden] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
