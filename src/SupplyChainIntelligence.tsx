@@ -296,11 +296,11 @@ export function SupplyChainIntelligencePage() {
           .filter(item => item.source === 'OSV.dev' && component.vulnerabilities.includes(item.id))
           .map(item => item.severity)
         const nextRisks = newIds.map(id => findingsById.get(id)?.severity ?? 'review')
-        const risksWithoutPreviousOsvFlags = [...component.risks]
-        previousOsvSeverities.forEach(severity => {
-          const index = risksWithoutPreviousOsvFlags.indexOf(severity)
-          if (index >= 0) risksWithoutPreviousOsvFlags.splice(index, 1)
-        })
+        const risksWithoutPreviousOsvFlags = component.risks.filter(risk =>
+          !previousOsvSeverities.includes(risk) || inventory.vulnerabilities.some(item =>
+            item.source !== 'OSV.dev' && component.vulnerabilities.includes(item.id) && item.severity === risk
+          )
+        )
         return {
           ...component,
           vulnerabilities: unique([...component.vulnerabilities.filter(id => !previousOsvIds.has(id)), ...newIds]),
