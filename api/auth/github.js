@@ -1,4 +1,4 @@
-import { authConfigured, APP_ORIGIN, clearOAuthStateCookie, createSessionToken, newOAuthState, readCookie, sendJson, sessionCookie } from '../_lib/platform.js'
+import { authConfigured, APP_ORIGIN, clearOAuthStateCookie, createSessionToken, newOAuthState, readCookie, sendJson, sessionCookie } from '../../server/platform.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
