@@ -1,4 +1,4 @@
-import { appError, cloudConfigured, getSession, getTeamRole, hashInvite, kvSet, newInviteCode, requireSameOrigin, sendJson, sendMethodNotAllowed, readJsonBody, APP_ORIGIN } from '../_lib/platform.js'
+import { appError, cloudConfigured, getSession, getTeamRole, hashInvite, kvSet, newInviteCode, requireSameOrigin, sendJson, sendMethodNotAllowed, readJsonBody, APP_ORIGIN } from '../../server/platform.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return sendMethodNotAllowed(res, ['POST'])
