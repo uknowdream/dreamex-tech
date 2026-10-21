@@ -299,6 +299,35 @@ test('tablet navigation drawer is centered with balanced side gutters', async ({
   }
 })
 
+test('touch desktop-mode navigation drawer stays within the wide viewport', async ({ page }) => {
+  const hasCoarsePointer = await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches)
+  test.skip(!hasCoarsePointer, 'This regression specifically covers touch devices using a desktop-width viewport')
+
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/')
+  const menuButton = page.locator('.menu-toggle')
+  await expect(menuButton).toBeVisible()
+  await menuButton.click()
+
+  const drawer = page.locator('#primary-navigation.nav-open[role="dialog"]')
+  await expect(drawer).toBeVisible()
+  const bounds = await drawer.evaluate(element => {
+    const rect = element.getBoundingClientRect()
+    return {
+      left: rect.left,
+      right: rect.right,
+      width: rect.width,
+      viewport: document.documentElement.clientWidth,
+    }
+  })
+
+  expect(bounds.left, `Touch desktop-mode drawer left edge: ${JSON.stringify(bounds)}`).toBeGreaterThanOrEqual(0)
+  expect(bounds.right, `Touch desktop-mode drawer right edge: ${JSON.stringify(bounds)}`).toBeLessThanOrEqual(bounds.viewport + 1)
+  expect(bounds.viewport - bounds.right, `Touch desktop-mode drawer should preserve a right gutter: ${JSON.stringify(bounds)}`).toBeGreaterThanOrEqual(8)
+  expect(bounds.width, `Touch desktop-mode drawer width: ${JSON.stringify(bounds)}`).toBeGreaterThanOrEqual(520)
+  expect(bounds.width, `Touch desktop-mode drawer must not exceed viewport width: ${JSON.stringify(bounds)}`).toBeLessThanOrEqual(bounds.viewport - 48)
+})
+
 test('footer columns stay balanced across mobile, tablet, and desktop widths', async ({ page }) => {
   for (const width of [390, 640, 768, 1024, 1280, 1440]) {
     await page.setViewportSize({ width, height: 900 })
