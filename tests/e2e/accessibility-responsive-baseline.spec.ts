@@ -245,6 +245,12 @@ test('tablet navigation drawer is centered with balanced side gutters', async ({
     const drawer = page.locator('#primary-navigation.nav-open[role="dialog"]')
     await expect(drawer).toBeVisible()
 
+    // Keep the centering assertion deterministic while the drawer's transform transition settles.
+    await expect.poll(async () => drawer.evaluate(element => {
+      const rect = element.getBoundingClientRect()
+      return Math.abs(rect.left - (document.documentElement.clientWidth - rect.right))
+    }), { message: `Tablet drawer should settle centered at ${width}px`, timeout: 5000 }).toBeLessThanOrEqual(2)
+
     const bounds = await drawer.evaluate(element => {
       const rect = element.getBoundingClientRect()
       return {
