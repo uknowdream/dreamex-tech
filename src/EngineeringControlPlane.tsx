@@ -84,10 +84,19 @@ function LiveGitHubActions() {
           throw new Error(en ? 'GitHub Actions could not be loaded (HTTP ' + response.status + ').' : 'Data GitHub Actions tidak dapat dimuat (HTTP ' + response.status + ').')
         }
         const payload = await response.json() as { workflow_runs?: unknown }
-        const values = Array.isArray(payload.workflow_runs) ? payload.workflow_runs as GitHubWorkflowRun[] : []
-        const valid = values.filter(run => Number.isInteger(run.id) && typeof run.name === 'string' && typeof run.html_url === 'string' && typeof run.status === 'string')
-          .filter(run => run.html_url.startsWith('https://github.com/uknowdream/dreamex-tech/actions/runs/'))
-          .slice(0, 8)
+        const values: unknown[] = Array.isArray(payload.workflow_runs) ? payload.workflow_runs : []
+        const valid = values.filter((value): value is GitHubWorkflowRun => {
+          if (!value || typeof value !== 'object') return false
+          const run = value as Record<string, unknown>
+          return Number.isInteger(run.id)
+            && typeof run.name === 'string'
+            && typeof run.html_url === 'string'
+            && run.html_url.startsWith('https://github.com/uknowdream/dreamex-tech/actions/runs/')
+            && typeof run.status === 'string'
+            && typeof run.created_at === 'string'
+            && typeof run.head_branch === 'string'
+            && typeof run.run_number === 'number'
+        }).slice(0, 8)
         if (active) {
           setRuns(valid)
           setState('ready')
