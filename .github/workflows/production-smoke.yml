@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   smoke:
-    if: github.event_name != 'deployment_status' || (github.event.deployment_status.state == 'success' && contains(github.event.deployment_status.environment, 'Production'))
+    if: github.event_name != 'deployment_status' || (github.event.deployment_status.state == 'success' && contains(github.event.deployment.environment, 'Production'))
     name: Production route, feed, and security health
     runs-on: ubuntu-latest
     timeout-minutes: 5
