@@ -7,11 +7,11 @@ const MAX_SNAPSHOT_BYTES = 400 * 1024
 const SENSITIVE_KEY = /api-playground|authorization|cookie|password|secret|token|credential|private-key|access-key/i
 const SENSITIVE_FIELD = /^(?:authorization|cookie|password|passwd|secret|token|api[_ -]?key|client[_ -]?secret|access[_ -]?token|refresh[_ -]?token|credential|private[_ -]?key)$/i
 const SECRET_TEXT_PATTERNS = [
-  /\\bBearer\\s+[A-Za-z0-9._~+/-]+=*/gi,
-  /\\b(?:gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,})\\b/g,
-  /\\bAKIA[0-9A-Z]{16}\\b/g,
-  /-----BEGIN (?:RSA |OPENSSH |EC )?PRIVATE KEY-----[\\s\\S]*?-----END (?:RSA |OPENSSH |EC )?PRIVATE KEY-----/g,
-  /\\b(?:password|passwd|client_secret|access_token|refresh_token|api[_ -]?key|secret|token|credential)\\s*[:=]\\s*(?:"[^"]*"|'[^']*'|[^\\s,;]+)/gi,
+  /\bBearer\s+[A-Za-z0-9._~+/-]+=*/gi,
+  /\b(?:gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,})\b/g,
+  /\bAKIA[0-9A-Z]{16}\b/g,
+  /-----BEGIN (?:RSA |OPENSSH |EC )?PRIVATE KEY-----[\s\S]*?-----END (?:RSA |OPENSSH |EC )?PRIVATE KEY-----/g,
+  /\b(?:password|passwd|client_secret|access_token|refresh_token|api[_ -]?key|secret|token|credential)\s*[:=]\s*(?:"[^"]*"|'[^']*'|[^\s,;]+)/gi,
 ]
 
 function scrubText(value, state) {
