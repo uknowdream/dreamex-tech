@@ -40,7 +40,7 @@ DreamEx Tech combines editorial knowledge with practical, browser-first engineer
 
 Engineering Intelligence starts with clearly labelled example inventory records; replace them with real metadata before using catalog metrics. Catalog data stays in browser storage and can be exported as JSON. OpenAPI contract text is analyzed locally in the browser and is not automatically persisted or sent to a server. Contract comparison is heuristic and does not prove runtime compatibility.
 
-Most workspace state is stored in the user's browser. No account sync is implied. API Playground requests go directly from the browser to the target and are subject to CORS; do not enter production secrets. Performance snapshots are not a substitute for a full Lighthouse audit. The readiness and STRIDE worksheets are planning aids, not compliance certification or a complete security assessment.
+Most workspace state stays in the user's browser by default. The Engineering Control Plane has an optional authenticated cloud-sync path for its release checklist; enable it only after applying the Supabase migration and configuring `VITE_SUPABASE_URL` plus `VITE_SUPABASE_ANON_KEY` in the deployment environment. See [Cloud Workspace setup](docs/cloud-workspace-setup.md). A live GitHub Actions panel reads public workflow-run evidence for this repository and gracefully handles API rate limits. API Playground requests go directly from the browser to the target and are subject to CORS; do not enter production secrets. Performance snapshots are not a substitute for a full Lighthouse audit. The readiness and STRIDE worksheets are planning aids, not compliance certification or a complete security assessment.
 
 ## Validation
 
@@ -53,4 +53,4 @@ npm run verify:i18n
 npm run test:e2e
 ```
 
-Release discipline: validate CI and desktop/mobile browser regression before treating a change as production-ready, then smoke-test critical routes, sitemap, and the human-readable RSS feed after deployment.
+Release discipline: validate CI and desktop/mobile browser regression before treating a change as production-ready. Production smoke checks run on the schedule/manual trigger and after successful production deployment events, validating critical routes, sitemap, RSS feed, and enforced security headers.
