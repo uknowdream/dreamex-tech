@@ -6,9 +6,12 @@ const dist = join(root, 'dist')
 const errors = []
 const vercelConfig = JSON.parse(readFileSync(join(root, 'vercel.json'), 'utf8'))
 const globalHeaders = vercelConfig.headers?.find(entry => entry.source === '/(.*)')?.headers ?? []
-const cspReportOnly = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline'; connect-src 'self' https: wss:"
-for (const [key, expected] of [['X-Content-Type-Options', 'nosniff'], ['Referrer-Policy', 'strict-origin-when-cross-origin'], ['X-Frame-Options', 'DENY'], ['Permissions-Policy', 'camera=(), microphone=(), geolocation=()'], ['Strict-Transport-Security', 'max-age=31536000'], ['Content-Security-Policy-Report-Only', cspReportOnly]]) {
+const cspEnforced = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self'; connect-src 'self' https: wss:; manifest-src 'self'; worker-src 'self' blob:; upgrade-insecure-requests"
+for (const [key, expected] of [['X-Content-Type-Options', 'nosniff'], ['Referrer-Policy', 'strict-origin-when-cross-origin'], ['X-Frame-Options', 'DENY'], ['Permissions-Policy', 'camera=(), microphone=(), geolocation=()'], ['Strict-Transport-Security', 'max-age=31536000'], ['Content-Security-Policy', cspEnforced]]) {
   if (!globalHeaders.some(header => header.key.toLowerCase() === key.toLowerCase() && header.value === expected)) errors.push('Missing or incorrect production security header: ' + key)
+}
+if (globalHeaders.some(header => header.key.toLowerCase() === 'content-security-policy-report-only')) {
+  errors.push('Remove Content-Security-Policy-Report-Only when the enforcing policy is the declared production baseline.')
 }
 
 function requireFile(path, label = path) {
