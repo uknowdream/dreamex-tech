@@ -14,6 +14,30 @@ const MEMBER_CREATE_SCRIPT = [
   'redis.call("HSET", KEYS[1], ARGV[2], ARGV[3])',
   'return 1',
 ].join('\n')
+const MEMBER_UPDATE_SCRIPT = [
+  '-- dreamex_workspace_member_update',
+  'local raw = redis.call("HGET", KEYS[1], ARGV[1])',
+  'if not raw then return -1 end',
+  'local member = cjson.decode(raw)',
+  'if member.status ~= "active" or member.role == "owner" or ARGV[3] == "owner" then return -2 end',
+  'local actorRole = ARGV[2]',
+  'if actorRole ~= "owner" and actorRole ~= "admin" then return -3 end',
+  'if actorRole == "admin" and (member.role == "admin" or ARGV[3] == "admin") then return -4 end',
+  'redis.call("HSET", KEYS[1], ARGV[1], ARGV[4])',
+  'return 1',
+].join('\n')
+const MEMBER_DELETE_SCRIPT = [
+  '-- dreamex_workspace_member_delete',
+  'local raw = redis.call("HGET", KEYS[1], ARGV[1])',
+  'if not raw then return -1 end',
+  'local member = cjson.decode(raw)',
+  'if member.status ~= "active" or member.role == "owner" then return -2 end',
+  'local actorRole = ARGV[2]',
+  'if actorRole ~= "owner" and actorRole ~= "admin" then return -3 end',
+  'if actorRole == "admin" and member.role == "admin" then return -4 end',
+  'redis.call("HDEL", KEYS[1], ARGV[1])',
+  'return 1',
+].join('\n')
 const CAS_SCRIPT = [
   'local current = redis.call("GET", KEYS[1])',
   'local currentRevision = 0',
@@ -300,7 +324,9 @@ async function handleMemberResource(req, res, config, principal) {
     const hash = targetEntry?.hash
     if (!hash) return send(res, 404, { error: 'member_not_found' })
     const updated = { ...target, role, updatedAt: new Date().toISOString() }
-    await redisCommand(config, ['HSET', MEMBERS_KEY, hash, JSON.stringify(updated)])
+    const changed = Number(await redisCommand(config, ['EVAL', MEMBER_UPDATE_SCRIPT, 1, MEMBERS_KEY, hash, principal.role, role, JSON.stringify(updated)]))
+    if (changed === -1) return send(res, 404, { error: 'member_not_found' })
+    if (changed !== 1) return send(res, 403, { error: 'role_change_forbidden', message: 'The current member role or actor permissions prohibit this change.' })
     const auditLogged = await recordAudit(config, { actorRole: principal.role, action: 'member.role_changed', targetId: updated.id, role: updated.role })
     return send(res, 200, { member: publicMember(updated), auditLogged })
   }
@@ -311,7 +337,9 @@ async function handleMemberResource(req, res, config, principal) {
     }
     const hash = targetEntry?.hash
     if (!hash) return send(res, 404, { error: 'member_not_found' })
-    await redisCommand(config, ['HDEL', MEMBERS_KEY, hash])
+    const removed = Number(await redisCommand(config, ['EVAL', MEMBER_DELETE_SCRIPT, 1, MEMBERS_KEY, hash, principal.role]))
+    if (removed === -1) return send(res, 404, { error: 'member_not_found' })
+    if (removed !== 1) return send(res, 403, { error: 'member_removal_forbidden', message: 'The current member role or actor permissions prohibit removal.' })
     const auditLogged = await recordAudit(config, { actorRole: principal.role, action: 'member.revoked', targetId: target.id, role: target.role })
     return send(res, 200, { removed: true, member: publicMember(target), auditLogged })
   }
