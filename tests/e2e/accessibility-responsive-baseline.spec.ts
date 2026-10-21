@@ -256,7 +256,7 @@ test('tablet navigation drawer is centered with balanced side gutters', async ({
     })
     expect(bounds.left, `Tablet drawer left gutter at ${width}px`).toBeGreaterThanOrEqual(0)
     expect(bounds.right, `Tablet drawer right edge at ${width}px`).toBeLessThanOrEqual(width + 1)
-    expect(Math.abs(bounds.left - (bounds.viewport - bounds.right)), `Tablet drawer should be centered at ${width}px`).toBeLessThanOrEqual(2)
+    expect(Math.abs(bounds.left - (bounds.viewport - bounds.right)), `Tablet drawer should be centered at ${width}px: ${JSON.stringify(bounds)}`).toBeLessThanOrEqual(2)
     expect(bounds.width, `Tablet drawer should not collapse into a narrow column at ${width}px`).toBeGreaterThanOrEqual(Math.min(520, width - 48))
   }
 })
@@ -274,7 +274,9 @@ test('footer columns stay balanced across mobile, tablet, and desktop widths', a
       })
       return {
         viewport: document.documentElement.clientWidth,
+        innerWidth: window.innerWidth,
         document: document.documentElement.scrollWidth,
+        gridColumns: getComputedStyle(element).gridTemplateColumns,
         trackCount: getComputedStyle(element).gridTemplateColumns.split(/\s+/).filter(Boolean).length,
         left: rect.left,
         right: rect.right,
@@ -283,7 +285,8 @@ test('footer columns stay balanced across mobile, tablet, and desktop widths', a
     })
 
     const expectedTracks = width <= 560 ? 1 : width <= 700 ? 2 : width <= 1100 ? 3 : 4
-    expect(layout.trackCount, `Footer grid track count at ${width}px`).toBe(expectedTracks)
+    expect(layout.viewport, `CSS viewport should match requested width ${width}px: ${JSON.stringify(layout)}`).toBe(width)
+    expect(layout.trackCount, `Footer grid track count at ${width}px: ${JSON.stringify(layout)}`).toBe(expectedTracks)
     expect(layout.document, `Footer document overflow at ${width}px`).toBeLessThanOrEqual(layout.viewport + 1)
     expect(layout.left, `Footer left edge at ${width}px`).toBeGreaterThanOrEqual(-1)
     expect(layout.right, `Footer right edge at ${width}px`).toBeLessThanOrEqual(layout.viewport + 1)
@@ -315,6 +318,9 @@ test('Quick Find preserves visible focus and consistent clear-button styling on 
     const clearButton = drawer.getByRole('button', { name: /Clear navigation search|Hapus pencarian navigasi/i })
     await expect(clearButton).toBeVisible()
     await search.focus()
+    const searchControl = drawer.locator('.nav-drawer-search-control')
+    // Wait for the focus transition to settle before inspecting computed styles.
+    await expect(searchControl).toHaveCSS('border-top-color', 'rgb(197, 255, 112)')
 
     const styling = await search.evaluate(element => {
       const control = element.closest<HTMLElement>('.nav-drawer-search-control')
