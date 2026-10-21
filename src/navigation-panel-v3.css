@@ -701,13 +701,9 @@
   }
 }
 
-/* Final tablet geometry: anchor the drawer to the centered header container. */
+/* Final tablet geometry: override legacy drawer rules by targeting the open nav itself. */
 @media (min-width: 761px) and (max-width: 1100px) {
-  html body .site-header.navigation-open .nav-wrap {
-    position: relative !important;
-  }
-
-  html body .site-header.navigation-open .nav-wrap > #primary-navigation.nav-open[role="dialog"] {
+  html body #root .site-header #primary-navigation.nav-open[role="dialog"] {
     position: absolute !important;
     top: calc(100% + 10px) !important;
     right: 0 !important;
