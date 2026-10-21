@@ -260,3 +260,83 @@ test('tablet navigation drawer is centered with balanced side gutters', async ({
     expect(bounds.width, `Tablet drawer should not collapse into a narrow column at ${width}px`).toBeGreaterThanOrEqual(Math.min(520, width - 48))
   }
 })
+
+test('footer columns stay balanced across mobile, tablet, and desktop widths', async ({ page }) => {
+  for (const width of [390, 640, 768, 1024, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/')
+
+    const layout = await page.locator('footer.footer .footer-main').evaluate(element => {
+      const rect = element.getBoundingClientRect()
+      const groups = Array.from(element.querySelectorAll<HTMLElement>(':scope > .footer-column')).map(group => {
+        const groupRect = group.getBoundingClientRect()
+        return { left: groupRect.left, right: groupRect.right, top: groupRect.top, width: groupRect.width }
+      })
+      return {
+        viewport: document.documentElement.clientWidth,
+        document: document.documentElement.scrollWidth,
+        trackCount: getComputedStyle(element).gridTemplateColumns.split(/\\s+/).filter(Boolean).length,
+        left: rect.left,
+        right: rect.right,
+        groups,
+      }
+    })
+
+    const expectedTracks = width <= 560 ? 1 : width <= 700 ? 2 : width <= 1100 ? 3 : 4
+    expect(layout.trackCount, `Footer grid track count at ${width}px`).toBe(expectedTracks)
+    expect(layout.document, `Footer document overflow at ${width}px`).toBeLessThanOrEqual(layout.viewport + 1)
+    expect(layout.left, `Footer left edge at ${width}px`).toBeGreaterThanOrEqual(-1)
+    expect(layout.right, `Footer right edge at ${width}px`).toBeLessThanOrEqual(layout.viewport + 1)
+    expect(layout.groups).toHaveLength(3)
+    for (const group of layout.groups) {
+      expect(group.width, `Footer group width at ${width}px`).toBeGreaterThan(0)
+      expect(group.left, `Footer group left edge at ${width}px`).toBeGreaterThanOrEqual(-1)
+      expect(group.right, `Footer group right edge at ${width}px`).toBeLessThanOrEqual(layout.viewport + 1)
+    }
+    if (width > 700) {
+      const groupTops = layout.groups.map(group => group.top)
+      expect(Math.max(...groupTops) - Math.min(...groupTops), `Footer navigation groups should align at ${width}px`).toBeLessThanOrEqual(2)
+    }
+  }
+})
+
+test('Quick Find preserves visible focus and consistent clear-button styling on touch-sized layouts', async ({ page }) => {
+  for (const width of [390, 768, 1024]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/')
+    const menuButton = page.locator('.menu-toggle')
+    await expect(menuButton).toBeVisible()
+    await menuButton.click()
+
+    const drawer = page.locator('#primary-navigation.nav-open[role="dialog"]')
+    const search = drawer.locator('#nav-drawer-search-input')
+    await expect(search).toBeVisible()
+    await search.fill('qa')
+    const clearButton = drawer.getByRole('button', { name: /Clear navigation search|Hapus pencarian navigasi/i })
+    await expect(clearButton).toBeVisible()
+    await search.focus()
+
+    const styling = await search.evaluate(element => {
+      const control = element.closest<HTMLElement>('.nav-drawer-search-control')
+      const button = control?.querySelector<HTMLElement>('button')
+      if (!control || !button) return null
+      const controlStyle = getComputedStyle(control)
+      const inputStyle = getComputedStyle(element)
+      const buttonRect = button.getBoundingClientRect()
+      return {
+        fontSize: Number.parseFloat(inputStyle.fontSize),
+        focusBorderColor: controlStyle.borderTopColor,
+        focusShadow: controlStyle.boxShadow,
+        clearWidth: buttonRect.width,
+        clearHeight: buttonRect.height,
+      }
+    })
+
+    expect(styling).not.toBeNull()
+    expect(styling!.fontSize, `Quick Find font size at ${width}px`).toBeGreaterThanOrEqual(16)
+    expect(styling!.focusBorderColor, `Quick Find focus border at ${width}px`).toBe('rgb(197, 255, 112)')
+    expect(styling!.focusShadow, `Quick Find focus ring at ${width}px`).not.toBe('none')
+    expect(styling!.clearWidth, `Quick Find clear-button width at ${width}px`).toBeGreaterThanOrEqual(28)
+    expect(styling!.clearHeight, `Quick Find clear-button height at ${width}px`).toBeGreaterThanOrEqual(28)
+  }
+})
