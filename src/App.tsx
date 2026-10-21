@@ -170,6 +170,7 @@ function Header() {
     if (!nav) return
     const query = menuOpen ? navQuery.trim().toLocaleLowerCase() : ''
     const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('a[href]:not(.nav-recent-link)'))
+    const recentLinks = Array.from(nav.querySelectorAll<HTMLAnchorElement>('a.nav-recent-link'))
     const platform = nav.querySelector<HTMLDetailsElement>('.nav-platform')
     const summary = platform?.querySelector<HTMLElement>('summary')
     const intro = platform?.querySelector<HTMLElement>('.nav-mega-intro')
@@ -179,6 +180,7 @@ function Header() {
 
     if (!query) {
       links.forEach(link => { link.hidden = false })
+      recentLinks.forEach(link => { link.hidden = false })
       groups.forEach(group => { group.hidden = false })
       if (intro) intro.hidden = false
       if (summary) summary.hidden = false
@@ -190,6 +192,9 @@ function Header() {
     }
 
     links.forEach(link => { link.hidden = !link.textContent?.toLocaleLowerCase().includes(query) })
+    // Recent tools are intentionally excluded from Quick Find results; hide each link
+    // as well as the section so legacy display rules cannot expose stale destinations.
+    recentLinks.forEach(link => { link.hidden = true })
     groups.forEach(group => {
       group.hidden = !Array.from(group.querySelectorAll<HTMLAnchorElement>('a[href]')).some(link => !link.hidden)
     })
