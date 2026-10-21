@@ -69,6 +69,26 @@ alter table public.workspace_teams enable row level security;
 alter table public.workspace_team_members enable row level security;
 alter table public.team_workspace_snapshots enable row level security;
 
+-- SECURITY DEFINER helpers avoid recursive RLS policy evaluation on membership lookups.
+create or replace function public.is_workspace_team_member(p_team_id uuid, p_roles text[] default null)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $
+  select exists (
+    select 1
+    from public.workspace_team_members m
+    where m.team_id = p_team_id
+      and m.user_id = (select auth.uid())
+      and (p_roles is null or m.role = any(p_roles))
+  );
+$;
+
+revoke all on function public.is_workspace_team_member(uuid, text[]) from public, anon;
+grant execute on function public.is_workspace_team_member(uuid, text[]) to authenticated;
+
 -- Team creators automatically receive the owner role. The trigger runs with a fixed search_path.
 create or replace function public.add_workspace_team_owner()
 returns trigger
@@ -92,6 +112,9 @@ create trigger workspace_team_owner_after_insert
 drop policy if exists "Team members can read teams" on public.workspace_teams;
 create policy "Team members can read teams"
   on public.workspace_teams for select
+  to authenticated using (public.is_workspace_team_member(id));
+create policy "Team members can read teams"
+  on public.workspace_teams for select
   to authenticated using (
     exists (
       select 1 from public.workspace_team_members m
@@ -105,6 +128,10 @@ create policy "Authenticated users can create their own teams"
   to authenticated with check (created_by = (select auth.uid()));
 
 drop policy if exists "Team owners and admins can update teams" on public.workspace_teams;
+create policy "Team owners and admins can update teams"
+  on public.workspace_teams for update
+  to authenticated using (public.is_workspace_team_member(id, array['owner', 'admin']))
+  with check (public.is_workspace_team_member(id, array['owner', 'admin']));
 create policy "Team owners and admins can update teams"
   on public.workspace_teams for update
   to authenticated using (
@@ -122,6 +149,9 @@ create policy "Team owners and admins can update teams"
 drop policy if exists "Team owners and admins can delete teams" on public.workspace_teams;
 create policy "Team owners and admins can delete teams"
   on public.workspace_teams for delete
+  to authenticated using (public.is_workspace_team_member(id, array['owner', 'admin']));
+create policy "Team owners and admins can delete teams"
+  on public.workspace_teams for delete
   to authenticated using (
     exists (
       select 1 from public.workspace_team_members m
@@ -130,6 +160,9 @@ create policy "Team owners and admins can delete teams"
   );
 
 drop policy if exists "Team members can read membership" on public.workspace_team_members;
+create policy "Team members can read membership"
+  on public.workspace_team_members for select
+  to authenticated using (public.is_workspace_team_member(team_id));
 create policy "Team members can read membership"
   on public.workspace_team_members for select
   to authenticated using (
@@ -144,6 +177,13 @@ create policy "Team owners and admins manage membership"
   on public.workspace_team_members for insert
   to authenticated with check (
     added_by = (select auth.uid())
+    and role <> 'owner'
+    and public.is_workspace_team_member(team_id, array['owner', 'admin'])
+  );
+create policy "Team owners and admins manage membership"
+  on public.workspace_team_members for insert
+  to authenticated with check (
+    added_by = (select auth.uid())
     and exists (
       select 1 from public.workspace_team_members manager
       where manager.team_id = team_id and manager.user_id = (select auth.uid()) and manager.role in ('owner', 'admin')
@@ -152,6 +192,15 @@ create policy "Team owners and admins manage membership"
   );
 
 drop policy if exists "Team owners and admins change non-owner membership" on public.workspace_team_members;
+create policy "Team owners and admins change non-owner membership"
+  on public.workspace_team_members for update
+  to authenticated using (
+    role <> 'owner'
+    and public.is_workspace_team_member(team_id, array['owner', 'admin'])
+  ) with check (
+    role <> 'owner'
+    and public.is_workspace_team_member(team_id, array['owner', 'admin'])
+  );
 create policy "Team owners and admins change non-owner membership"
   on public.workspace_team_members for update
   to authenticated using (
@@ -173,6 +222,12 @@ create policy "Team owners and admins remove non-owner membership"
   on public.workspace_team_members for delete
   to authenticated using (
     role <> 'owner'
+    and public.is_workspace_team_member(team_id, array['owner', 'admin'])
+  );
+create policy "Team owners and admins remove non-owner membership"
+  on public.workspace_team_members for delete
+  to authenticated using (
+    role <> 'owner'
     and exists (
       select 1 from public.workspace_team_members manager
       where manager.team_id = team_id and manager.user_id = (select auth.uid()) and manager.role in ('owner', 'admin')
@@ -180,6 +235,9 @@ create policy "Team owners and admins remove non-owner membership"
   );
 
 drop policy if exists "Team members can read shared workspace snapshots" on public.team_workspace_snapshots;
+create policy "Team members can read shared workspace snapshots"
+  on public.team_workspace_snapshots for select
+  to authenticated using (public.is_workspace_team_member(team_id));
 create policy "Team members can read shared workspace snapshots"
   on public.team_workspace_snapshots for select
   to authenticated using (
@@ -194,6 +252,12 @@ create policy "Team editors can create shared workspace snapshots"
   on public.team_workspace_snapshots for insert
   to authenticated with check (
     updated_by = (select auth.uid())
+    and public.is_workspace_team_member(team_id, array['owner', 'admin', 'editor'])
+  );
+create policy "Team editors can create shared workspace snapshots"
+  on public.team_workspace_snapshots for insert
+  to authenticated with check (
+    updated_by = (select auth.uid())
     and exists (
       select 1 from public.workspace_team_members m
       where m.team_id = team_id and m.user_id = (select auth.uid()) and m.role in ('owner', 'admin', 'editor')
@@ -201,6 +265,13 @@ create policy "Team editors can create shared workspace snapshots"
   );
 
 drop policy if exists "Team editors can update shared workspace snapshots" on public.team_workspace_snapshots;
+create policy "Team editors can update shared workspace snapshots"
+  on public.team_workspace_snapshots for update
+  to authenticated using (public.is_workspace_team_member(team_id, array['owner', 'admin', 'editor']))
+  with check (
+    updated_by = (select auth.uid())
+    and public.is_workspace_team_member(team_id, array['owner', 'admin', 'editor'])
+  );
 create policy "Team editors can update shared workspace snapshots"
   on public.team_workspace_snapshots for update
   to authenticated using (
@@ -217,6 +288,9 @@ create policy "Team editors can update shared workspace snapshots"
   );
 
 drop policy if exists "Team owners and admins delete shared workspace snapshots" on public.team_workspace_snapshots;
+create policy "Team owners and admins delete shared workspace snapshots"
+  on public.team_workspace_snapshots for delete
+  to authenticated using (public.is_workspace_team_member(team_id, array['owner', 'admin']));
 create policy "Team owners and admins delete shared workspace snapshots"
   on public.team_workspace_snapshots for delete
   to authenticated using (
