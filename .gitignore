@@ -5,3 +5,7 @@ dist
 !.env.example
 .DS_Store
 *.tsbuildinfo
+
+.lighthouseci/
+playwright-report/
+test-results/
