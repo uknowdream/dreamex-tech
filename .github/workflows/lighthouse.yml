@@ -1,0 +1,46 @@
+name: Lighthouse quality audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lighthouse-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse:
+    name: Lighthouse performance, accessibility, SEO
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Build the production site
+        run: npm run build
+      - name: Install Chromium for Lighthouse
+        run: npx playwright install --with-deps chromium
+      - name: Configure Chrome executable
+        run: echo "CHROME_PATH=$(node --input-type=module -e "import { chromium } from '@playwright/test'; console.log(chromium.executablePath())")" >> "$GITHUB_ENV"
+      - name: Audit representative routes
+        run: npx --yes @lhci/cli@0.15.1 autorun --config=.lighthouserc.json
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/
+          if-no-files-found: ignore
+          retention-days: 14
