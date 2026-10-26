@@ -72,3 +72,15 @@ test('engineering routes expose a primary heading and main content landmark', as
     await expect(page.locator('main#main-content h1'), `Expected one primary heading on ${route}`).toHaveCount(1)
   }
 })
+
+test('engineering routes do not throw uncaught browser exceptions on initial load', async ({ page }) => {
+  const failures: string[] = []
+  page.on('pageerror', error => failures.push(error.message))
+
+  for (const route of auditedRoutes) {
+    failures.length = 0
+    await page.goto(route)
+    await expect(page.locator('body')).toBeVisible()
+    expect(failures, `Uncaught browser exceptions on ${route}`).toEqual([])
+  }
+})
