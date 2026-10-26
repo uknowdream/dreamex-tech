@@ -52,8 +52,12 @@ npm run lint
 npm run build
 npm run verify:build
 npm run verify:i18n
+npm run verify:security
+npm run test:api
 npm run test:e2e
 ```
+
+Responsive regression coverage checks the documented engineering routes at 320, 390, 768, 1024, and 1440 CSS pixels, with a denser viewport sweep for the homepage. See [docs/rea-assisted-investigation.md](docs/rea-assisted-investigation.md) for a safe, optional workflow using REA to gather browser evidence and convert confirmed findings into tests.
 
 Release discipline: validate CI and desktop/mobile browser regression before treating a change as production-ready, then smoke-test critical routes, sitemap, and the human-readable RSS feed after deployment.
 
