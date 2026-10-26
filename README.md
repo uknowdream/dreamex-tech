@@ -30,6 +30,7 @@ DreamEx Tech combines editorial knowledge with practical, browser-first engineer
 - `/lab` — QA utilities, API test matrices, contract review, release scorecards, and incident postmortems.
 - `/api-playground` — browser-based HTTP request inspection with local collections and sensitive-header redaction.
 - `/observatory` and `/performance` — heuristic page-quality checks and browser timing snapshots.
+- `/site-audit` — local-only page health audit for metadata, headings, accessibility names, in-page anchors, duplicate IDs, new-tab link safety, and responsive overflow, with filterable findings and JSON export.
 - `/learn` and `/knowledge-graph` — learning paths, glossary, and curated relationships between concepts and tools.
 - `/roadmap` — product roadmap, persistent local progress, release-readiness scorecard, ADR builder, and STRIDE threat-model worksheet.
 - `/command-center` — local work queue, incident register, architecture decision records, and release checklist.
