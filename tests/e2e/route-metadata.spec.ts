@@ -4,6 +4,7 @@ const routeCases = [
   { path: '/', title: /Think deeper\. Build smarter\.|Think deeper, build smarter/i },
   { path: '/api-playground', title: /API Playground & Contract Studio/i },
   { path: '/security-center', title: /Security & Privacy Center/i },
+  { path: '/site-audit', title: /Page Health Audit/i },
   { path: '/reliability-center', title: /Reliability & Incident Center/i },
   { path: '/about', title: /About DreamEx Tech/i },
   { path: '/blog/playwright-test-architecture', title: /DreamEx Tech/i },
