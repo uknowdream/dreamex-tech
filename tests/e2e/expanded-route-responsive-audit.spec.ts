@@ -23,7 +23,8 @@ const auditedRoutes = [
   '/team-workspace',
 ]
 
-const viewportWidths = [320, 360, 390, 430, 768, 1024, 1280, 1440]
+const viewportWidths = [320, 390, 768, 1024, 1440]
+const homepageViewportWidths = [320, 360, 390, 430, 640, 768, 1024, 1280, 1440]
 
 test('engineering routes do not overflow horizontally across mobile, tablet, and desktop widths', async ({ page }) => {
   for (const route of auditedRoutes) {
@@ -47,6 +48,20 @@ test('engineering routes do not overflow horizontally across mobile, tablet, and
         `Body horizontal overflow on ${route} at ${width}px: ${JSON.stringify(dimensions)}`,
       ).toBeLessThanOrEqual(dimensions.viewport + 1)
     }
+  }
+})
+
+test('homepage stays within the viewport at common mobile, tablet, and desktop widths', async ({ page }) => {
+  for (const width of homepageViewportWidths) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/')
+    const dimensions = await page.evaluate(() => ({
+      viewport: document.documentElement.clientWidth,
+      document: document.documentElement.scrollWidth,
+      body: document.body.scrollWidth,
+    }))
+    expect(dimensions.document, `Homepage document overflow at ${width}px: ${JSON.stringify(dimensions)}`).toBeLessThanOrEqual(dimensions.viewport + 1)
+    expect(dimensions.body, `Homepage body overflow at ${width}px: ${JSON.stringify(dimensions)}`).toBeLessThanOrEqual(dimensions.viewport + 1)
   }
 })
 
