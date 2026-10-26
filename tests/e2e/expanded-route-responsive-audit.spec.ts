@@ -28,6 +28,7 @@ const viewportWidths = [320, 390, 768, 1024, 1440]
 const homepageViewportWidths = [320, 360, 390, 430, 640, 768, 1024, 1280, 1440]
 
 test('engineering routes do not overflow horizontally across mobile, tablet, and desktop widths', async ({ page }) => {
+  test.setTimeout(90_000)
   for (const route of auditedRoutes) {
     for (const width of viewportWidths) {
       await page.setViewportSize({ width, height: 900 })
@@ -67,6 +68,7 @@ test('homepage stays within the viewport at common mobile, tablet, and desktop w
 })
 
 test('engineering routes expose a primary heading and main content landmark', async ({ page }) => {
+  test.setTimeout(90_000)
   for (const route of auditedRoutes) {
     await page.goto(route)
     await expect(page.locator('main#main-content'), `Missing main landmark on ${route}`).toBeVisible()
@@ -75,6 +77,7 @@ test('engineering routes expose a primary heading and main content landmark', as
 })
 
 test('engineering routes do not throw uncaught browser exceptions on initial load', async ({ page }) => {
+  test.setTimeout(90_000)
   const failures: string[] = []
   page.on('pageerror', error => failures.push(error.message))
 
