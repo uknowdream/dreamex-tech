@@ -21,6 +21,7 @@ const auditedRoutes = [
   '/security-center',
   '/github-ci',
   '/team-workspace',
+  '/site-audit',
 ]
 
 const viewportWidths = [320, 390, 768, 1024, 1440]
