@@ -39,7 +39,11 @@ function inspectCurrentPage(): AuditResult {
   check()
   if (unnamedButtons.length) add({ severity: 'warning', category: 'Accessibility', title: 'Buttons without an accessible name', detail: `Found ${unnamedButtons.length} buttons without text, aria-label, or title.`, selector: unnamedButtons.slice(0, 5).map(button => button.outerHTML.slice(0, 180)).join('\n') })
   const allIds = new Set(Array.from(document.querySelectorAll('[id]')).map(element => element.id))
-  const brokenAnchors = Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')).filter(link => { const target = link.getAttribute('href')?.slice(1); return Boolean(target && !allIds.has(decodeURIComponent(target))) })
+  const brokenAnchors = Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')).filter(link => {
+    const target = link.getAttribute('href')?.slice(1)
+    if (!target) return false
+    try { return !allIds.has(decodeURIComponent(target)) } catch { return true }
+  })
   check()
   if (brokenAnchors.length) add({ severity: 'warning', category: 'Navigation', title: 'In-page links have missing targets', detail: `Found ${brokenAnchors.length} same-page links pointing to IDs that do not exist.`, selector: brokenAnchors.slice(0, 5).map(link => link.getAttribute('href') || '').join('\n') })
   const width = document.documentElement.clientWidth
@@ -73,7 +77,7 @@ export function SiteAuditPage() {
     anchor.href = url
     anchor.download = `dreamex-page-audit-${new Date().toISOString().slice(0, 10)}.json`
     anchor.click()
-    URL.revokeObjectURL(url)
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
   return <main id="main-content" className="container site-audit-page">
     <header className="site-audit-hero">
