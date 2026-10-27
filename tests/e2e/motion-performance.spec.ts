@@ -30,6 +30,7 @@ test('homepage uses a small motion budget and honors reduced-motion preferences'
       ['.hero', '::before'],
       ['.hero', '::after'],
       ['.hero-gridlines', undefined],
+      ['.orbit-two', undefined],
       ['.terminal', '::after'],
       ['.terminal-bar', '::after'],
       ['.terminal-content p:not(.terminal-comment)', undefined],
