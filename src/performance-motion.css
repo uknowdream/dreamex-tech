@@ -122,20 +122,6 @@
     animation: dreamex-status-pulse 2.8s ease-in-out infinite;
   }
 
-  @media (min-width: 768px) and (hover: hover) and (pointer: fine) {
-    .terminal {
-      animation: dreamex-terminal-drift 12s ease-in-out infinite;
-    }
-    .chip-top {
-      animation: dreamex-chip-drift 9.5s ease-in-out infinite;
-    }
-    .chip-bottom {
-      animation: dreamex-chip-drift 11s ease-in-out -5.5s infinite;
-    }
-    .orbit-one {
-      animation: dreamex-orbit-breathe 14s ease-in-out infinite;
-    }
-  }
 }
 
 @keyframes dreamex-header-enter {
@@ -165,6 +151,22 @@
 @keyframes dreamex-status-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: .62; }
+}
+
+/* Ambient motion is desktop-only: slow transforms on the terminal/chips and opacity on one orbit. */
+@media (prefers-reduced-motion: no-preference) and (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  .terminal {
+    animation: dreamex-terminal-drift 12s ease-in-out infinite;
+  }
+  .chip-top {
+    animation: dreamex-chip-drift 9.5s ease-in-out infinite;
+  }
+  .chip-bottom {
+    animation: dreamex-chip-drift 11s ease-in-out -5.5s infinite;
+  }
+  .orbit-one {
+    animation: dreamex-orbit-breathe 14s ease-in-out infinite;
+  }
 }
 
 /* On touch screens keep the one-shot intro and tiny status pulse, not ambient bobbing. */
