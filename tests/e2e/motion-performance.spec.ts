@@ -92,6 +92,29 @@ test('homepage uses a small motion budget and honors reduced-motion preferences'
   }
 })
 
+test('touch-sized homepage keeps entrance motion but disables continuous ambient movement', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/')
+  await expect(page.locator('.hero h1')).toBeVisible()
+
+  const mobile = await page.evaluate(() => ({
+    headingAnimation: getComputedStyle(document.querySelector('.hero h1')!).animationName,
+    terminalAnimation: getComputedStyle(document.querySelector('.terminal')!).animationName,
+    chipAnimation: getComputedStyle(document.querySelector('.chip-top')!).animationName,
+    statusAnimation: getComputedStyle(document.querySelector('.eyebrow-dot')!).animationName,
+  }))
+  expect(mobile.headingAnimation).toBe('dreamex-hero-enter')
+  expect(mobile.terminalAnimation).toBe('none')
+  expect(mobile.chipAnimation).toBe('none')
+  expect(mobile.statusAnimation).toBe('dreamex-status-pulse')
+
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.reload()
+  const reduced = await page.locator('.hero h1').evaluate(element => getComputedStyle(element).animationName)
+  expect(reduced).toBe('none')
+})
+
 test('homepage scroll path avoids per-element reveal work and updates progress without React state', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')
