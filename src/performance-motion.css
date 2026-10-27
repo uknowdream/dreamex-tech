@@ -43,11 +43,13 @@
   transform: translateY(22px);
 }
 
-.topic-card.motion-reveal.is-visible:hover,
-.article-card.motion-reveal.is-visible:hover,
-.topic-card:hover:not(.motion-reveal),
-.article-card:hover:not(.motion-reveal) {
-  transform: translateY(-4px);
+@media (hover: hover) and (pointer: fine) {
+  .topic-card.motion-reveal.is-visible:hover,
+  .article-card.motion-reveal.is-visible:hover,
+  .topic-card:hover:not(.motion-reveal),
+  .article-card:hover:not(.motion-reveal) {
+    transform: translateY(-4px);
+  }
 }
 
 @media (max-width: 640px) {
