@@ -2120,7 +2120,7 @@ function ScrollProgress() {
     }
   }, [])
 
-  return <div ref={progressRef} className="site-scroll-progress" role="progressbar" aria-label="Page scroll progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={0}><span ref={fillRef} /></div>
+  return <div ref={progressRef} className="site-scroll-progress" role="progressbar" aria-label="Page scroll progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={0}><span ref={fillRef} style={{ transform: 'scaleX(0)' }} /></div>
 }
 
 
