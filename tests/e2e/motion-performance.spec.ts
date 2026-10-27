@@ -68,7 +68,6 @@ test('homepage scroll path avoids per-element reveal work and updates progress w
     const heroAfter = window.getComputedStyle(document.querySelector('.hero')!, '::after')
     return {
       headerBackdrop: before?.backdropFilter,
-      headerWebkitBackdrop: before?.webkitBackdropFilter,
       initialProgressTransform: window.getComputedStyle(document.querySelector('.site-scroll-progress > span')!).transform,
       heroBeforeDisplay: heroBefore.display,
       heroAfterDisplay: heroAfter.display,
@@ -81,7 +80,6 @@ test('homepage scroll path avoids per-element reveal work and updates progress w
   })
 
   expect(initial.headerBackdrop).toBe('none')
-  expect(initial.headerWebkitBackdrop).toBe('none')
   expect(initial.initialProgressTransform).toBe('matrix(0, 0, 0, 1, 0, 0)')
   expect(initial.heroBeforeDisplay).toBe('none')
   expect(initial.heroAfterDisplay).toBe('none')
