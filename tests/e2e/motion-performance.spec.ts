@@ -89,10 +89,12 @@ test('homepage uses lightweight motion on normal-motion devices', async ({ page 
   expect(result.trustAfterAnimation).toBe('none')
   expect(result.featuredArtAnimation).toBe('dx-symbol-drift')
 
-  // The wrapper floats independently so terminal hover transform remains available.
-  await page.locator('.terminal').hover()
-  const hoverTransform = await page.locator('.terminal').evaluate(element => getComputedStyle(element).transform)
-  expect(hoverTransform).not.toBe(result.terminalTransform)
+  // Desktop fine pointers get the terminal's hover lift; touch pointers intentionally do not.
+  if (await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches)) {
+    await page.locator('.terminal').hover()
+    const hoverTransform = await page.locator('.terminal').evaluate(element => getComputedStyle(element).transform)
+    expect(hoverTransform).not.toBe(result.terminalTransform)
+  }
 })
 
 test('reduced-motion preference disables continuous and entrance motion', async ({ page }) => {
@@ -108,6 +110,7 @@ test('reduced-motion preference disables continuous and entrance motion', async 
       '.hero-visual',
       '.terminal',
       '.terminal-float-shell',
+      '.terminal-live i',
       '.terminal-status > span:first-child',
       '.art-grid',
       '.eyebrow-dot',
