@@ -54,29 +54,53 @@ test('homepage avoids perpetual decorative animation while preserving entrance m
   expect(result.heroHeadingAnimation).not.toBe('none')
 })
 
-test('scroll reveal reinitializes on in-app navigation and reduced motion stays accessible', async ({ page }) => {
+test('homepage scroll path avoids per-element reveal work and updates progress without React state', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')
-  const articleLink = page.locator('a[href="/blog/qa-automation-foundations"]').first()
-  await expect(articleLink).toBeVisible()
-  await articleLink.click()
-  await expect(page).toHaveURL(new RegExp('blog/qa-automation-foundations$'))
+  await expect(page.locator('main#main-content')).toBeVisible()
 
-  const articleHeader = page.locator('.article-header')
-  await expect(articleHeader).toHaveClass(/motion-reveal/)
-  await articleHeader.scrollIntoViewIfNeeded()
-  await expect(articleHeader).toHaveClass(/is-visible/)
+  const initial = await page.evaluate(() => {
+    const header = document.querySelector<HTMLElement>('.site-header')
+    const articleCard = document.querySelector<HTMLElement>('.article-card')
+    const launchpadCard = document.querySelector<HTMLElement>('.launchpad-card')
+    const before = header ? window.getComputedStyle(header) : null
+    const heroBefore = window.getComputedStyle(document.querySelector('.hero')!, '::before')
+    const heroAfter = window.getComputedStyle(document.querySelector('.hero')!, '::after')
+    return {
+      headerBackdrop: before?.backdropFilter,
+      headerWebkitBackdrop: before?.webkitBackdropFilter,
+      heroBeforeDisplay: heroBefore.display,
+      heroAfterDisplay: heroAfter.display,
+      articleAnimation: articleCard ? window.getComputedStyle(articleCard).animationName : null,
+      launchpadAnimation: launchpadCard ? window.getComputedStyle(launchpadCard).animationName : null,
+      revealCount: document.querySelectorAll('.motion-reveal').length,
+      hasContentVisibility: ['.topics-section', '.launchpad-section', '.featured-section', '.articles-section', '.newsletter']
+        .every(selector => window.getComputedStyle(document.querySelector(selector)!).contentVisibility === 'auto'),
+    }
+  })
+
+  expect(initial.headerBackdrop).toBe('none')
+  expect(initial.headerWebkitBackdrop).toBe('none')
+  expect(initial.heroBeforeDisplay).toBe('none')
+  expect(initial.heroAfterDisplay).toBe('none')
+  expect(initial.articleAnimation).toBe('none')
+  expect(initial.launchpadAnimation).toBe('none')
+  expect(initial.revealCount).toBe(0)
+  expect(initial.hasContentVisibility).toBe(true)
+
+  await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }))
+  await expect(page.locator('.footer-inner')).toBeVisible()
+  await expect(page.locator('.site-scroll-progress')).toHaveAttribute('aria-valuenow', '100')
+  await expect(page.locator('.newsletter')).toBeVisible()
+
+  const afterScroll = await page.evaluate(() => ({
+    revealCount: document.querySelectorAll('.motion-reveal').length,
+    progressTransform: getComputedStyle(document.querySelector('.site-scroll-progress > span')!).transform,
+  }))
+  expect(afterScroll.revealCount).toBe(0)
+  expect(afterScroll.progressTransform).toBe('matrix(1, 0, 0, 1, 0, 0)')
 
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await page.goto('/')
-  await expect(page.locator('.motion-reveal').first()).toBeAttached()
-  const reducedMotion = await page.evaluate(() => {
-    const element = document.querySelector<HTMLElement>('.motion-reveal')
-    if (!element) return null
-    const style = window.getComputedStyle(element)
-    return { opacity: style.opacity, transform: style.transform, animationName: style.animationName }
-  })
-  expect(reducedMotion).not.toBeNull()
-  expect(reducedMotion?.opacity).toBe('1')
-  expect(reducedMotion?.transform).toBe('none')
-  expect(reducedMotion?.animationName).toBe('none')
+  const heroHeadingAnimation = await page.locator('.hero h1').evaluate(element => getComputedStyle(element).animationName)
+  expect(heroHeadingAnimation).toBe('none')
 })
