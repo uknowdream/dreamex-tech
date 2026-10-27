@@ -60,8 +60,9 @@
   }
 
   /* Featured artwork below the fold gets a restrained, transform-only sway. */
-  .art-symbol {
-    animation: dx-symbol-sway 12s ease-in-out infinite;
+  .featured-art .art-symbol {
+    /* Match the existing, more-specific featured-art selector. */
+    animation: dx-symbol-sway 12s ease-in-out infinite !important;
     transform-origin: 50% 50%;
   }
 
@@ -149,11 +150,24 @@
   }
 
   .button,
+  .button:hover,
+  .button:active,
   .topic-card,
+  .topic-card:hover,
   .article-card,
+  .article-card:hover,
   .launchpad-card,
+  .launchpad-card:hover,
   .topic-arrow,
-  .read-link svg {
+  .topic-card:hover .topic-arrow,
+  .read-link svg,
+  .read-link:hover svg,
+  .launchpad-open svg,
+  .launchpad-card:hover .launchpad-open svg,
+  .back-to-top,
+  .back-to-top:hover,
+  .back-to-top:active {
     transition: none !important;
+    transform: none !important;
   }
 }
