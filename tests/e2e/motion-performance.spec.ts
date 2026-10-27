@@ -1,60 +1,155 @@
 import { expect, test } from '@playwright/test'
 
-test('homepage avoids perpetual decorative animation while preserving entrance motion', async ({ page }) => {
+test('homepage uses lightweight motion on normal-motion devices', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.goto('/')
   await expect(page.locator('.hero h1')).toBeVisible()
 
   const result = await page.evaluate(() => {
-    const selectors = [
-      { selector: '.hero', pseudo: '::before' },
-      { selector: '.hero', pseudo: '::after' },
-      { selector: '.hero-gridlines' },
-      { selector: '.visual-orbit' },
-      { selector: '.terminal' },
-      { selector: '.terminal', pseudo: '::after' },
-      { selector: '.terminal-bar', pseudo: '::after' },
-      { selector: '.terminal-live i' },
-      { selector: '.eyebrow-dot' },
-      { selector: '.floating-chip' },
-      { selector: '.terminal-content p:not(.terminal-comment)' },
-      { selector: '.art-grid' },
-      { selector: '.art-symbol' },
-      { selector: '.trust-strip', pseudo: '::before' },
-    ]
+    const hero = document.querySelector<HTMLElement>('.hero')!
+    const terminal = document.querySelector<HTMLElement>('.terminal')!
+    const terminalFloatShell = document.querySelector<HTMLElement>('.terminal-float-shell')!
+    const header = document.querySelector<HTMLElement>('.site-header')!
+    const style = (element: Element, pseudo?: string) =>
+      window.getComputedStyle(element, pseudo)
 
-    const missingSelectors = selectors
-      .filter(({ selector }) => !document.querySelector(selector))
-      .map(({ selector, pseudo }) => selector + (pseudo ?? ''))
+    const orbitAnimations = Array.from(document.querySelectorAll('.visual-orbit'))
+      .map(element => style(element).animationName)
+    const chipAnimations = Array.from(document.querySelectorAll('.floating-chip'))
+      .map(element => style(element).animationName)
+    const statusAnimations = [
+      ...Array.from(document.querySelectorAll('.terminal-live i')),
+      ...Array.from(document.querySelectorAll('.terminal-status > span:first-child')),
+      ...Array.from(document.querySelectorAll('.eyebrow-dot')),
+      ...Array.from(document.querySelectorAll('.terminal-bar')).map(element => element),
+    ].map(element => {
+      if (element.matches('.terminal-bar')) return style(element, '::after').animationName
+      return style(element).animationName
+    })
+    const codeLineAnimations = Array.from(document.querySelectorAll('.terminal-content p:not(.terminal-comment)'))
+      .map(element => style(element).animationName)
+    const card = document.querySelector<HTMLElement>('.article-card')!
+    const cardStyle = style(card)
 
     return {
-      missingSelectors,
-      expectedSelectorCount: selectors.length,
-      animationNames: selectors.flatMap(({ selector, pseudo }) => {
-        const elements = Array.from(document.querySelectorAll(selector))
-        return elements.map((element, index) => {
-          const style = pseudo
-            ? window.getComputedStyle(element, pseudo)
-            : window.getComputedStyle(element)
-          return {
-            selector: selector + (pseudo ?? '') + (elements.length > 1 ? '[' + index + ']' : ''),
-            animationName: style.animationName,
-          }
-        })
-      }),
-      heroHeadingAnimation: window.getComputedStyle(document.querySelector('.hero h1')!).animationName,
+      heroHeadingAnimation: style(document.querySelector('.hero h1')!).animationName,
+      heroVisualAnimation: style(document.querySelector('.hero-visual')!).animationName,
+      ambientAnimation: style(hero, '::before').animationName,
+      ambientFilter: style(hero, '::before').filter,
+      staticGlowAnimation: style(hero, '::after').animationName,
+      staticGlowFilter: style(hero, '::after').filter,
+      orbitAnimations,
+      terminalAnimation: style(terminal).animationName,
+      terminalFloatAnimation: style(terminalFloatShell).animationName,
+      terminalTransform: style(terminal).transform,
+      terminalFilter: style(terminal).filter,
+      scanAnimation: style(terminal, '::after').animationName,
+      scanFilter: style(terminal, '::after').filter,
+      statusAnimations,
+      chipAnimations,
+      codeLineAnimations,
+      cardTransitionProperty: cardStyle.transitionProperty,
+      cardTransitionDuration: cardStyle.transitionDuration,
+      headerBackdropFilter: style(header).backdropFilter,
+      heroGridAnimation: style(document.querySelector('.hero-gridlines')!).animationName,
+      artGridAnimation: style(document.querySelector('.art-grid')!).animationName,
+      trustBeforeAnimation: style(document.querySelector('.trust-strip')!, '::before').animationName,
+      trustAfterAnimation: style(document.querySelector('.trust-strip')!, '::after').animationName,
+      featuredArtAnimation: style(document.querySelector('.featured-art .art-symbol')!).animationName,
     }
   })
 
-  expect(result.missingSelectors).toEqual([])
-  expect(result.animationNames.length).toBeGreaterThanOrEqual(result.expectedSelectorCount)
-  for (const item of result.animationNames) {
-    expect(item.animationName, item.selector).toBe('none')
-  }
   expect(result.heroHeadingAnimation).not.toBe('none')
+  expect(result.heroVisualAnimation).toBe('dx-visual-in')
+  expect(result.ambientAnimation).toBe('dx-ambient-drift')
+  expect(result.ambientFilter).toBe('none')
+  expect(result.staticGlowAnimation).toBe('none')
+  expect(result.staticGlowFilter).toBe('none')
+  expect(result.orbitAnimations.length).toBeGreaterThanOrEqual(1)
+  expect(result.orbitAnimations.every(name => name === 'dx-orbit-spin')).toBe(true)
+  expect(result.terminalAnimation).toBe('none')
+  expect(result.terminalFloatAnimation).toBe('dx-terminal-float')
+  expect(result.terminalFilter).toBe('none')
+  expect(result.scanAnimation).toBe('dx-terminal-scan')
+  expect(result.scanFilter).toBe('none')
+  expect(result.statusAnimations.length).toBeGreaterThan(0)
+  expect(result.statusAnimations.every(name => name === 'dx-status-breathe')).toBe(true)
+  expect(result.chipAnimations.length).toBeGreaterThanOrEqual(1)
+  expect(result.chipAnimations.every(name => name === 'dx-chip-drift')).toBe(true)
+  expect(result.codeLineAnimations.every(name => name === 'none')).toBe(true)
+  expect(result.cardTransitionProperty).toContain('transform')
+  expect(result.cardTransitionProperty).not.toContain('box-shadow')
+  expect(result.cardTransitionProperty).not.toContain('background')
+  expect(result.cardTransitionDuration).toContain('0.18s')
+  expect(result.headerBackdropFilter).toBe('none')
+  expect(result.heroGridAnimation).toBe('none')
+  expect(result.artGridAnimation).toBe('none')
+  expect(result.trustBeforeAnimation).toBe('none')
+  expect(result.trustAfterAnimation).toBe('none')
+  expect(result.featuredArtAnimation).toBe('dx-symbol-drift')
+
+  // Desktop fine pointers get the terminal's hover lift; touch pointers intentionally do not.
+  if (await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches)) {
+    // Freeze the parent float only in the test so Playwright can position the pointer
+    // on a stable target; the terminal's hover transform remains enabled.
+    await page.addStyleTag({ content: '.terminal-float-shell { animation: none !important; }' })
+    await page.locator('.terminal').hover()
+    const hoverTransform = await page.locator('.terminal').evaluate(element => getComputedStyle(element).transform)
+    expect(hoverTransform).not.toBe(result.terminalTransform)
+  }
 })
 
-test('homepage scroll path avoids per-element reveal work and updates progress without React state', async ({ page }) => {
+test('reduced-motion preference disables continuous and entrance motion', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/')
+  await expect(page.locator('.hero h1')).toBeVisible()
+
+  const animations = await page.evaluate(() => {
+    const hero = document.querySelector<HTMLElement>('.hero')!
+    const terminal = document.querySelector<HTMLElement>('.terminal')!
+    const selectors = [
+      '.hero h1',
+      '.hero-visual',
+      '.terminal',
+      '.terminal-float-shell',
+      '.terminal-live i',
+      '.terminal-status > span:first-child',
+      '.art-grid',
+      '.eyebrow-dot',
+      '.floating-chip',
+      '.visual-orbit',
+      '.featured-art .art-symbol',
+    ]
+    const regular = selectors.flatMap(selector =>
+      Array.from(document.querySelectorAll(selector)).map((element, index) => ({
+        selector: selector + (index ? '[' + index + ']' : ''),
+        name: getComputedStyle(element).animationName,
+      })),
+    )
+    return [
+      ...regular,
+      { selector: '.hero::before', name: getComputedStyle(hero, '::before').animationName },
+      { selector: '.hero::after', name: getComputedStyle(hero, '::after').animationName },
+      { selector: '.terminal::after', name: getComputedStyle(terminal, '::after').animationName },
+      { selector: '.terminal-bar::after', name: getComputedStyle(document.querySelector('.terminal-bar')!, '::after').animationName },
+    ]
+  })
+
+  expect(animations.length).toBeGreaterThan(8)
+  for (const item of animations) {
+    expect(item.name, item.selector).toBe('none')
+  }
+  await expect(page.locator('.hero h1')).toBeVisible()
+
+  // Reduced motion stops decorative animation, not the functional reading-position indicator.
+  await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight / 2, behavior: 'instant' }))
+  await expect(page.locator('.site-scroll-progress')).not.toHaveAttribute('aria-valuenow', '0')
+  const progressTransform = await page.locator('.site-scroll-progress > span').evaluate(element => getComputedStyle(element).transform)
+  expect(progressTransform).not.toBe('none')
+})
+
+test('homepage scroll path stays light and scroll progress updates without React state', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')
   await expect(page.locator('main#main-content')).toBeVisible()
@@ -71,6 +166,8 @@ test('homepage scroll path avoids per-element reveal work and updates progress w
       initialProgressTransform: window.getComputedStyle(document.querySelector('.site-scroll-progress > span')!).transform,
       heroBeforeDisplay: heroBefore.display,
       heroAfterDisplay: heroAfter.display,
+      heroBeforeFilter: heroBefore.filter,
+      heroAfterFilter: heroAfter.filter,
       articleAnimation: articleCard ? window.getComputedStyle(articleCard).animationName : null,
       launchpadAnimation: launchpadCard ? window.getComputedStyle(launchpadCard).animationName : null,
       revealCount: document.querySelectorAll('.motion-reveal').length,
@@ -81,8 +178,10 @@ test('homepage scroll path avoids per-element reveal work and updates progress w
 
   expect(initial.headerBackdrop).toBe('none')
   expect(initial.initialProgressTransform).toBe('matrix(0, 0, 0, 1, 0, 0)')
-  expect(initial.heroBeforeDisplay).toBe('none')
-  expect(initial.heroAfterDisplay).toBe('none')
+  expect(initial.heroBeforeDisplay).toBe('block')
+  expect(initial.heroAfterDisplay).toBe('block')
+  expect(initial.heroBeforeFilter).toBe('none')
+  expect(initial.heroAfterFilter).toBe('none')
   expect(initial.articleAnimation).toBe('none')
   expect(initial.launchpadAnimation).toBe('none')
   expect(initial.revealCount).toBe(0)
@@ -99,8 +198,4 @@ test('homepage scroll path avoids per-element reveal work and updates progress w
   }))
   expect(afterScroll.revealCount).toBe(0)
   expect(afterScroll.progressTransform).toBe('matrix(1, 0, 0, 1, 0, 0)')
-
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  const heroHeadingAnimation = await page.locator('.hero h1').evaluate(element => getComputedStyle(element).animationName)
-  expect(heroHeadingAnimation).toBe('none')
 })
