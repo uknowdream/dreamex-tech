@@ -1,0 +1,105 @@
+/*
+ * Scroll-performance budget for DreamEx Tech.
+ *
+ * The brand keeps its dark gradient and short hero entrance, but large blurred layers,
+ * translucent sticky surfaces, perpetual loops, and per-card scroll-reveal transitions
+ * are deliberately removed. They add paint/compositing work without helping reading.
+ */
+.hero::before,
+.hero::after {
+  display: none !important;
+  content: none !important;
+  filter: none !important;
+  animation: none !important;
+}
+
+/* Keep only an opaque sticky header; avoid repainting content through a backdrop blur. */
+.site-header {
+  background: #080d19 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 2px 18px #00000020 !important;
+}
+.site-header.navigation-open {
+  background: #080d19 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Remove glass blur from decorative surfaces that move with the document. */
+.floating-chip,
+.category-pill,
+.back-to-top,
+.command-trigger {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Disable all perpetual/decorative animations and card entrance loops. */
+.hero-gridlines,
+.visual-orbit,
+.terminal,
+.terminal::after,
+.terminal-bar::after,
+.terminal-live i,
+.eyebrow-dot,
+.terminal-status > span:first-child,
+.floating-chip,
+.terminal-content p:not(.terminal-comment),
+.art-grid,
+.art-symbol,
+.trust-strip::before,
+.trust-strip::after,
+.topic-card,
+.article-card,
+.launchpad-card {
+  animation: none !important;
+}
+
+/* Scroll no longer assigns transform/opacity transitions to dozens of elements. */
+.topic-card,
+.article-card,
+.launchpad-card {
+  will-change: auto !important;
+  transition-property: transform, border-color, background, box-shadow, color !important;
+  transition-duration: 180ms !important;
+}
+
+/*
+ * Let Chromium defer paint/layout work for offscreen homepage sections.
+ * Intrinsic sizes keep the scroll range stable until each section is rendered.
+ */
+.topics-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 430px;
+}
+.launchpad-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 820px;
+}
+.featured-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 380px;
+}
+.articles-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 820px;
+}
+.newsletter {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
+}
+
+/* Preserve reduced-motion accessibility; no hidden content depends on an observer. */
+@media (prefers-reduced-motion: reduce) {
+  .topic-card,
+  .article-card,
+  .launchpad-card,
+  .hero-copy > *,
+  .hero-visual {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

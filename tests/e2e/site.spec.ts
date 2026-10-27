@@ -84,7 +84,7 @@ test('search filters articles and clear-search restores results', async ({ page 
 
 test('articles can be saved to and removed from the personal reading list', async ({ page }) => {
   const firstArticle = page.locator('.article-card').first()
-  const articleTitle = (await firstArticle.locator('h3 a').innerText()).trim()
+  const articleTitle = (await firstArticle.locator('h3 a').textContent() ?? '').trim()
   await firstArticle.getByRole('button', { name: /save article|simpan artikel/i }).click()
   await expect(firstArticle.getByRole('button', { name: /remove saved article|hapus artikel tersimpan/i })).toHaveAttribute('aria-pressed', 'true')
   await openMobileNavigation(page)

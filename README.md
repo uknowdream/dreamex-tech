@@ -30,6 +30,7 @@ DreamEx Tech combines editorial knowledge with practical, browser-first engineer
 - `/lab` — QA utilities, API test matrices, contract review, release scorecards, and incident postmortems.
 - `/api-playground` — browser-based HTTP request inspection with local collections and sensitive-header redaction.
 - `/observatory` and `/performance` — heuristic page-quality checks and browser timing snapshots.
+- `/site-audit` — local-only page health audit for metadata, headings, accessibility names, in-page anchors, duplicate IDs, new-tab link safety, and responsive overflow, with filterable findings and JSON export.
 - `/learn` and `/knowledge-graph` — learning paths, glossary, and curated relationships between concepts and tools.
 - `/roadmap` — product roadmap, persistent local progress, release-readiness scorecard, ADR builder, and STRIDE threat-model worksheet.
 - `/command-center` — local work queue, incident register, architecture decision records, and release checklist.
@@ -52,8 +53,12 @@ npm run lint
 npm run build
 npm run verify:build
 npm run verify:i18n
+npm run verify:security
+npm run test:api
 npm run test:e2e
 ```
+
+Responsive regression coverage checks the documented engineering routes at 320, 390, 768, 1024, and 1440 CSS pixels, with a denser viewport sweep for the homepage. See [docs/rea-assisted-investigation.md](docs/rea-assisted-investigation.md) for a safe, optional workflow using REA to gather browser evidence and convert confirmed findings into tests.
 
 Release discipline: validate CI and desktop/mobile browser regression before treating a change as production-ready, then smoke-test critical routes, sitemap, and the human-readable RSS feed after deployment.
 
