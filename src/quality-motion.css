@@ -166,8 +166,14 @@
   .launchpad-card:hover .launchpad-open svg,
   .back-to-top,
   .back-to-top:hover,
-  .back-to-top:active {
+  .back-to-top:active,
+  .topic-card::before,
+  .topic-card:hover::before,
+  .launchpad-card::before,
+  .launchpad-card:hover::before {
+    animation: none !important;
     transition: none !important;
     transform: none !important;
+    opacity: 0 !important;
   }
 }
