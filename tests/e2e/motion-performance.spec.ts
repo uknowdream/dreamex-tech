@@ -12,7 +12,7 @@ test('homepage uses a small motion budget and honors reduced-motion preferences'
       return element ? window.getComputedStyle(element, pseudo) : null
     }
     const seconds = (value: string | undefined) => {
-      const match = value?.trim().match(/^([\\d.]+)(ms|s)$/)
+      const match = value?.trim().match(/^([\d.]+)(ms|s)$/)
       if (!match) return 0
       return Number.parseFloat(match[1]) * (match[2] === 'ms' ? 0.001 : 1)
     }
@@ -110,22 +110,28 @@ test('homepage uses a small motion budget and honors reduced-motion preferences'
   }
 })
 
-test('touch-sized homepage keeps entrance motion but disables continuous ambient movement', async ({ page }) => {
+test('narrow homepage keeps entrance motion and limits ambient movement by pointer capability', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.goto('/')
   await expect(page.locator('.hero h1')).toBeVisible()
 
-  const mobile = await page.evaluate(() => ({
+  const motion = await page.evaluate(() => ({
+    hasFinePointer: matchMedia('(hover: hover) and (pointer: fine)').matches,
     headingAnimation: getComputedStyle(document.querySelector('.hero h1')!).animationName,
     terminalAnimation: getComputedStyle(document.querySelector('.terminal')!).animationName,
     chipAnimation: getComputedStyle(document.querySelector('.chip-top')!).animationName,
     statusAnimation: getComputedStyle(document.querySelector('.eyebrow-dot')!).animationName,
   }))
-  expect(mobile.headingAnimation).toBe('dreamex-hero-enter')
-  expect(mobile.terminalAnimation).toBe('none')
-  expect(mobile.chipAnimation).toBe('none')
-  expect(mobile.statusAnimation).toBe('dreamex-status-pulse')
+  expect(motion.headingAnimation).toBe('dreamex-hero-enter')
+  expect(motion.statusAnimation).toBe('dreamex-status-pulse')
+  if (motion.hasFinePointer) {
+    expect(motion.terminalAnimation).toBe('dreamex-terminal-drift')
+    expect(motion.chipAnimation).toBe('dreamex-chip-drift')
+  } else {
+    expect(motion.terminalAnimation).toBe('none')
+    expect(motion.chipAnimation).toBe('none')
+  }
 
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.reload()
