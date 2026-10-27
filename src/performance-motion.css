@@ -112,6 +112,7 @@
 .topic-card,
 .article-card,
 .launchpad-card {
+  animation: none !important;
   will-change: auto !important;
   transition-property: transform, border-color, color !important;
   transition-duration: 180ms !important;
