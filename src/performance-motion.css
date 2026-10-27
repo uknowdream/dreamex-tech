@@ -54,7 +54,10 @@
 }
 
 /* Animate only a few small compositor-friendly hero elements. */
-.hero-gridlines {
+.hero-gridlines,
+.art-grid,
+.trust-strip::before,
+.trust-strip::after {
   animation: none !important;
 }
 
@@ -66,9 +69,15 @@
   animation-direction: reverse !important;
 }
 
-.terminal {
+.terminal-float-shell {
   animation: dx-terminal-float 8s ease-in-out infinite !important;
   transform-origin: center;
+}
+.terminal {
+  animation: none !important;
+  transform: rotate(0deg);
+  transform-origin: center;
+  transition: border-color .35s ease, box-shadow .35s ease, transform .35s ease;
 }
 .terminal::after {
   filter: none !important;
@@ -77,6 +86,7 @@
 }
 .terminal-bar::after,
 .terminal-live i,
+.terminal-status > span:first-child,
 .eyebrow-dot {
   animation: dx-status-breathe 2.8s ease-in-out infinite !important;
 }
@@ -178,6 +188,28 @@
   50% { transform: translate3d(0, -3px, 0) rotate(-1deg); }
 }
 
+/* Keep mobile motion quieter and preserve the existing touch-safe inline chip layout. */
+@media (max-width: 640px) {
+  .hero::before {
+    animation-duration: 28s !important;
+  }
+  .terminal-float-shell {
+    width: 100%;
+    min-width: 0;
+    order: 1;
+    animation-duration: 9s !important;
+  }
+  .terminal-float-shell > .terminal {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .terminal::after,
+  .hero-visual > .floating-chip {
+    animation: none !important;
+  }
+}
+
 /* Accessible by default: no continuous or entrance motion when reduced motion is requested. */
 @media (prefers-reduced-motion: reduce) {
   .hero::before,
@@ -186,12 +218,17 @@
   .hero-visual,
   .hero-gridlines,
   .visual-orbit,
+  .terminal-float-shell,
   .terminal,
   .terminal::after,
   .terminal-bar::after,
   .terminal-live i,
+  .terminal-status > span:first-child,
   .eyebrow-dot,
   .floating-chip,
+  .art-grid,
+  .trust-strip::before,
+  .trust-strip::after,
   .featured-art .art-symbol {
     animation: none !important;
   }
@@ -201,10 +238,10 @@
   .launchpad-card,
   .hero-copy > *,
   .hero-visual,
+  .terminal-float-shell,
   .terminal,
   .floating-chip,
-  .topic-icon,
-  .site-scroll-progress > span {
+  .topic-icon {
     transition: none !important;
     transform: none !important;
   }
