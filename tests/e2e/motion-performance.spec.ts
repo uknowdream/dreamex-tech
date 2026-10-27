@@ -43,9 +43,12 @@ test('homepage uses a small motion budget and honors reduced-motion preferences'
     })
     return {
       ambient,
+      hasFinePointer: window.matchMedia('(hover: hover) and (pointer: fine)').matches,
       disabled,
       headingAnimation: style('.hero h1')?.animationName,
+      headingDurationSeconds: seconds(style('.hero h1')?.animationDuration.replace('s', '')),
       visualAnimation: style('.hero-visual')?.animationName,
+      statusPulseAnimation: style('.eyebrow-dot')?.animationName,
       persistentWillChange: style('.hero h1')?.willChange,
       terminalFilter: style('.terminal')?.filter,
       terminalBackdrop: style('.terminal')?.backdropFilter,
@@ -53,16 +56,26 @@ test('homepage uses a small motion budget and honors reduced-motion preferences'
     }
   })
 
-  expect(initial.ambient.length).toBe(5)
-  for (const item of initial.ambient) {
-    expect(item.actualName, item.selector).toBe(item.expected)
-    expect(item.durationSeconds).toBeGreaterThan(1)
-    expect(item.durationSeconds).toBeLessThanOrEqual(item.maxSeconds)
+  const ambientTargets = initial.ambient.filter(item => item.selector !== '.eyebrow-dot')
+  const statusPulse = initial.ambient.find(item => item.selector === '.eyebrow-dot')
+  expect(statusPulse?.actualName).toBe('dreamex-status-pulse')
+  if (initial.hasFinePointer) {
+    for (const item of ambientTargets) {
+      expect(item.actualName, item.selector).toBe(item.expected)
+      expect(item.durationSeconds).toBeGreaterThan(1)
+      expect(item.durationSeconds).toBeLessThanOrEqual(item.maxSeconds)
+    }
+  } else {
+    for (const item of ambientTargets) {
+      expect(item.actualName, item.selector).toBe('none')
+    }
   }
   for (const item of initial.disabled) {
     expect(item.animationName, item.selector).toBe('none')
   }
   expect(initial.headingAnimation).toBe('dreamex-hero-enter')
+  expect(initial.headingDurationSeconds).toBeGreaterThan(0)
+  expect(initial.headingDurationSeconds).toBeLessThanOrEqual(0.6)
   expect(initial.visualAnimation).toBe('dreamex-visual-enter')
   expect(initial.persistentWillChange).toBe('auto')
   expect(initial.terminalFilter).toBe('none')
