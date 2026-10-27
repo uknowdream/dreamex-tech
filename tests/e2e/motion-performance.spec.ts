@@ -9,6 +9,7 @@ test('homepage uses lightweight motion on normal-motion devices', async ({ page 
   const result = await page.evaluate(() => {
     const hero = document.querySelector<HTMLElement>('.hero')!
     const terminal = document.querySelector<HTMLElement>('.terminal')!
+    const terminalFloatShell = document.querySelector<HTMLElement>('.terminal-float-shell')!
     const header = document.querySelector<HTMLElement>('.site-header')!
     const style = (element: Element, pseudo?: string) =>
       window.getComputedStyle(element, pseudo)
@@ -19,6 +20,7 @@ test('homepage uses lightweight motion on normal-motion devices', async ({ page 
       .map(element => style(element).animationName)
     const statusAnimations = [
       ...Array.from(document.querySelectorAll('.terminal-live i')),
+      ...Array.from(document.querySelectorAll('.terminal-status > span:first-child')),
       ...Array.from(document.querySelectorAll('.eyebrow-dot')),
       ...Array.from(document.querySelectorAll('.terminal-bar')).map(element => element),
     ].map(element => {
@@ -39,6 +41,8 @@ test('homepage uses lightweight motion on normal-motion devices', async ({ page 
       staticGlowFilter: style(hero, '::after').filter,
       orbitAnimations,
       terminalAnimation: style(terminal).animationName,
+      terminalFloatAnimation: style(terminalFloatShell).animationName,
+      terminalTransform: style(terminal).transform,
       terminalFilter: style(terminal).filter,
       scanAnimation: style(terminal, '::after').animationName,
       scanFilter: style(terminal, '::after').filter,
@@ -49,6 +53,10 @@ test('homepage uses lightweight motion on normal-motion devices', async ({ page 
       cardTransitionDuration: cardStyle.transitionDuration,
       headerBackdropFilter: style(header).backdropFilter,
       heroGridAnimation: style(document.querySelector('.hero-gridlines')!).animationName,
+      artGridAnimation: style(document.querySelector('.art-grid')!).animationName,
+      trustBeforeAnimation: style(document.querySelector('.trust-strip')!, '::before').animationName,
+      trustAfterAnimation: style(document.querySelector('.trust-strip')!, '::after').animationName,
+      featuredArtAnimation: style(document.querySelector('.featured-art .art-symbol')!).animationName,
     }
   })
 
@@ -60,7 +68,8 @@ test('homepage uses lightweight motion on normal-motion devices', async ({ page 
   expect(result.staticGlowFilter).toBe('none')
   expect(result.orbitAnimations.length).toBeGreaterThanOrEqual(1)
   expect(result.orbitAnimations.every(name => name === 'dx-orbit-spin')).toBe(true)
-  expect(result.terminalAnimation).toBe('dx-terminal-float')
+  expect(result.terminalAnimation).toBe('none')
+  expect(result.terminalFloatAnimation).toBe('dx-terminal-float')
   expect(result.terminalFilter).toBe('none')
   expect(result.scanAnimation).toBe('dx-terminal-scan')
   expect(result.scanFilter).toBe('none')
@@ -75,6 +84,15 @@ test('homepage uses lightweight motion on normal-motion devices', async ({ page 
   expect(result.cardTransitionDuration).toContain('0.18s')
   expect(result.headerBackdropFilter).toBe('none')
   expect(result.heroGridAnimation).toBe('none')
+  expect(result.artGridAnimation).toBe('none')
+  expect(result.trustBeforeAnimation).toBe('none')
+  expect(result.trustAfterAnimation).toBe('none')
+  expect(result.featuredArtAnimation).toBe('dx-symbol-drift')
+
+  // The wrapper floats independently so terminal hover transform remains available.
+  await page.locator('.terminal').hover()
+  const hoverTransform = await page.locator('.terminal').evaluate(element => getComputedStyle(element).transform)
+  expect(hoverTransform).not.toBe(result.terminalTransform)
 })
 
 test('reduced-motion preference disables continuous and entrance motion', async ({ page }) => {
@@ -89,6 +107,9 @@ test('reduced-motion preference disables continuous and entrance motion', async 
       '.hero h1',
       '.hero-visual',
       '.terminal',
+      '.terminal-float-shell',
+      '.terminal-status > span:first-child',
+      '.art-grid',
       '.eyebrow-dot',
       '.floating-chip',
       '.visual-orbit',
