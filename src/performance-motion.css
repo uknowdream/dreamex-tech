@@ -37,17 +37,11 @@
 
 /* Disable all perpetual/decorative animations and card entrance loops. */
 .hero-gridlines,
-.visual-orbit,
 .terminal,
 .terminal::after,
 .terminal-bar::after,
-.terminal-live i,
-.eyebrow-dot,
-.terminal-status > span:first-child,
-.floating-chip,
 .terminal-content p:not(.terminal-comment),
 .art-grid,
-.art-symbol,
 .trust-strip::before,
 .trust-strip::after,
 .topic-card,
