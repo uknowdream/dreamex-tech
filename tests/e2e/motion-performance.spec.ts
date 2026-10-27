@@ -61,7 +61,7 @@ test('homepage uses lightweight motion on normal-motion devices', async ({ page 
   })
 
   expect(result.heroHeadingAnimation).not.toBe('none')
-  expect(result.heroVisualAnimation).toBe('visual-enter')
+  expect(result.heroVisualAnimation).toBe('dx-visual-in')
   expect(result.ambientAnimation).toBe('dx-ambient-drift')
   expect(result.ambientFilter).toBe('none')
   expect(result.staticGlowAnimation).toBe('none')
