@@ -26,6 +26,7 @@ const checks = [
   { path: '/roadmap', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/workspace', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/observatory', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/site-audit', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/devtools', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/engineering-intelligence', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/performance', type: 'html', markers: ['id="root"', '<div'] },
