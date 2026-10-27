@@ -59,7 +59,7 @@ test('scroll reveal reinitializes on in-app navigation and reduced motion stays 
   const articleLink = page.locator('a[href="/blog/qa-automation-foundations"]').first()
   await expect(articleLink).toBeVisible()
   await articleLink.click()
-  await expect(page).toHaveURL(/\\/blog\\/qa-automation-foundations$/)
+  await expect(page).toHaveURL(new RegExp('blog/qa-automation-foundations$'))
 
   const articleHeader = page.locator('.article-header')
   await expect(articleHeader).toHaveClass(/motion-reveal/)
