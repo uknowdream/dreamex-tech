@@ -104,6 +104,18 @@
     will-change: auto !important;
     animation: dreamex-hero-enter 540ms cubic-bezier(.2, .75, .25, 1) both;
   }
+  /* Match the existing, more-specific per-element rules in styles.css. */
+  .hero-copy > .eyebrow,
+  .hero-copy > h1,
+  .hero-copy > .hero-description,
+  .hero-copy > .hero-actions,
+  .hero-copy > .hero-stats {
+    will-change: auto !important;
+    animation-name: dreamex-hero-enter;
+    animation-duration: 540ms;
+    animation-timing-function: cubic-bezier(.2, .75, .25, 1);
+    animation-fill-mode: both;
+  }
   .hero-copy > :nth-child(1) { animation-delay: 35ms; }
   .hero-copy > :nth-child(2) { animation-delay: 85ms; }
   .hero-copy > :nth-child(3) { animation-delay: 135ms; }
