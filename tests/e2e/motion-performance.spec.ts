@@ -94,6 +94,25 @@ test('reduced-motion disables animated movement and keeps hero content visible',
   await primaryAction.hover()
   const hoverTransform = await primaryAction.evaluate(element => getComputedStyle(element).transform)
   expect(hoverTransform).toBe('none')
+
+  const pseudoStyles = await page.evaluate(() => {
+    const topic = document.querySelector('.topic-card')
+    const launchpad = document.querySelector('.launchpad-card')
+    const read = (element: Element | null) => {
+      if (!element) return null
+      const style = getComputedStyle(element, '::before')
+      return { opacity: style.opacity, transitionDuration: style.transitionDuration, transform: style.transform }
+    }
+    return { topic: read(topic), launchpad: read(launchpad) }
+  })
+  expect(pseudoStyles.topic).not.toBeNull()
+  expect(pseudoStyles.launchpad).not.toBeNull()
+  expect(pseudoStyles.topic?.opacity).toBe('0')
+  expect(pseudoStyles.launchpad?.opacity).toBe('0')
+  expect(pseudoStyles.topic?.transitionDuration).toBe('0s')
+  expect(pseudoStyles.launchpad?.transitionDuration).toBe('0s')
+  expect(pseudoStyles.topic?.transform).toBe('none')
+  expect(pseudoStyles.launchpad?.transform).toBe('none')
 })
 
 test('homepage scroll path avoids per-element reveal work and updates progress without React state', async ({ page }) => {
