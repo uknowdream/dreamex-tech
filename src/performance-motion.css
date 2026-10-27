@@ -1,0 +1,82 @@
+/*
+ * DreamEx Tech motion budget
+ * Keep one-shot entrance/reveal and hover feedback, but avoid perpetual effects that
+ * continuously repaint large blurred surfaces or text lines on lower-powered devices.
+ */
+.hero::before,
+.hero::after,
+.hero-gridlines,
+.visual-orbit,
+.terminal,
+.terminal::after,
+.terminal-bar::after,
+.terminal-live i,
+.eyebrow-dot,
+.terminal-status > span:first-child,
+.floating-chip,
+.terminal-content p:not(.terminal-comment),
+.art-grid,
+.art-symbol,
+.trust-strip::before,
+.trust-strip::after {
+  animation: none !important;
+}
+
+/* Do not allocate persistent compositor layers to every decorative/card element. */
+.hero-copy > *,
+.hero-visual,
+.motion-reveal,
+.topic-card,
+.article-card,
+.floating-chip {
+  will-change: auto !important;
+}
+
+.topic-card,
+.article-card {
+  transform: none;
+}
+
+/* Keep scroll reveals and hover elevation after removing the old translateZ(0) layer hack. */
+.topic-card.motion-reveal:not(.is-visible),
+.article-card.motion-reveal:not(.is-visible) {
+  transform: translateY(22px);
+}
+
+.topic-card.motion-reveal.is-visible:hover,
+.article-card.motion-reveal.is-visible:hover,
+.topic-card:hover:not(.motion-reveal),
+.article-card:hover:not(.motion-reveal) {
+  transform: translateY(-4px);
+}
+
+@media (max-width: 640px) {
+  .topic-card.motion-reveal:not(.is-visible),
+  .article-card.motion-reveal:not(.is-visible) {
+    transform: translateY(14px);
+  }
+}
+
+/* The sticky full-width header only needs a light separation from content behind it. */
+.site-header {
+  -webkit-backdrop-filter: blur(8px) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.site-header.navigation-open {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Respect reduced-motion preferences completely; reveal content must never remain hidden. */
+@media (prefers-reduced-motion: reduce) {
+  .motion-reveal,
+  .motion-reveal.is-visible,
+  .topic-card,
+  .article-card {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
