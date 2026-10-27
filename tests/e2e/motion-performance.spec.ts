@@ -11,7 +11,11 @@ test('homepage uses a small motion budget and honors reduced-motion preferences'
       const element = document.querySelector(selector)
       return element ? window.getComputedStyle(element, pseudo) : null
     }
-    const seconds = (value: string | undefined) => Number.parseFloat(value ?? '0')
+    const seconds = (value: string | undefined) => {
+      const match = value?.trim().match(/^([\\d.]+)(ms|s)$/)
+      if (!match) return 0
+      return Number.parseFloat(match[1]) * (match[2] === 'ms' ? 0.001 : 1)
+    }
     const ambient = [
       { selector: '.terminal', expected: 'dreamex-terminal-drift', maxSeconds: 13 },
       { selector: '.chip-top', expected: 'dreamex-chip-drift', maxSeconds: 10 },
@@ -23,7 +27,7 @@ test('homepage uses a small motion budget and honors reduced-motion preferences'
       return {
         ...item,
         actualName: computed?.animationName,
-        durationSeconds: seconds(computed?.animationDuration.replace('s', '')),
+        durationSeconds: seconds(computed?.animationDuration),
       }
     })
     const disabled = [
@@ -46,7 +50,7 @@ test('homepage uses a small motion budget and honors reduced-motion preferences'
       hasFinePointer: window.matchMedia('(hover: hover) and (pointer: fine)').matches,
       disabled,
       headingAnimation: style('.hero h1')?.animationName,
-      headingDurationSeconds: seconds(style('.hero h1')?.animationDuration.replace('s', '')),
+      headingDurationSeconds: seconds(style('.hero h1')?.animationDuration),
       visualAnimation: style('.hero-visual')?.animationName,
       statusPulseAnimation: style('.eyebrow-dot')?.animationName,
       persistentWillChange: style('.hero h1')?.willChange,
