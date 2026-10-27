@@ -209,8 +209,6 @@
   .terminal,
   .chip-top,
   .chip-bottom,
-  .orbit-one,
-  .orbit-two,
   .eyebrow-dot,
   .terminal-live i,
   .terminal-status > span:first-child,
@@ -225,6 +223,15 @@
     will-change: auto !important;
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  /* Orbit transforms center the rings; stop animation without removing that positioning transform. */
+  .visual-orbit.orbit-one,
+  .visual-orbit.orbit-two {
+    animation: none !important;
+    transition: none !important;
+    will-change: auto !important;
+    opacity: 1 !important;
   }
 
   .terminal,
