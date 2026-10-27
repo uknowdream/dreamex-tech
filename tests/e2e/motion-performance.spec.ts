@@ -89,6 +89,11 @@ test('reduced-motion disables animated movement and keeps hero content visible',
   }
   await expect(page.locator('.hero h1')).toBeVisible()
   await expect(page.locator('.hero .hero-actions')).toBeVisible()
+
+  const primaryAction = page.locator('.hero .hero-actions .button').first()
+  await primaryAction.hover()
+  const hoverTransform = await primaryAction.evaluate(element => getComputedStyle(element).transform)
+  expect(hoverTransform).toBe('none')
 })
 
 test('homepage scroll path avoids per-element reveal work and updates progress without React state', async ({ page }) => {
