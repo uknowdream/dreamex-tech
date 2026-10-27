@@ -2074,77 +2074,6 @@ function ScrollToTop() {
   return null
 }
 
-function MotionOnScroll() {
-  const { pathname } = useLocation()
-
-  useEffect(() => {
-    const selector = '.topics-heading, .topic-card, .featured-card, .section-heading, .newsletter-inner, .article-card, .trust-inner span, .featured-art, .article-header, .article-body > p, .article-note, .article-next, .footer-inner'
-    const observed = new WeakSet<Element>()
-    const pendingNodes = new Set<Element>()
-    let scheduledFrame = 0
-    let discoveryIndex = 0
-
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-visible')
-          observer.unobserve(entry.target)
-        }
-      })
-    }, { threshold: 0.12, rootMargin: '0px 0px -35px 0px' })
-
-    const observeCandidate = (element: Element) => {
-      if (observed.has(element) || !element.matches(selector)) return
-      observed.add(element)
-      element.classList.add('motion-reveal')
-      const htmlElement = element as HTMLElement
-      htmlElement.style.setProperty('--reveal-delay', `${Math.min(discoveryIndex % 3, 2) * 90}ms`)
-      discoveryIndex += 1
-      observer.observe(element)
-    }
-
-    const scanSubtree = (root: Element) => {
-      observeCandidate(root)
-      root.querySelectorAll(selector).forEach(observeCandidate)
-    }
-
-    // Scan the current route once. Later React updates are handled incrementally below.
-    document.querySelectorAll(selector).forEach(observeCandidate)
-
-    const mutationObserver = new MutationObserver(records => {
-      let hasElementAdditions = false
-
-      records.forEach(record => {
-        record.addedNodes.forEach(node => {
-          if (node instanceof Element) {
-            pendingNodes.add(node)
-            hasElementAdditions = true
-          }
-        })
-      })
-
-      // Ignore text-only updates (for example, search input/status changes) and batch
-      // actual DOM insertions into one frame instead of rescanning the entire document.
-      if (!hasElementAdditions || scheduledFrame) return
-      scheduledFrame = window.requestAnimationFrame(() => {
-        scheduledFrame = 0
-        pendingNodes.forEach(scanSubtree)
-        pendingNodes.clear()
-      })
-    })
-
-    mutationObserver.observe(document.body, { childList: true, subtree: true })
-
-    return () => {
-      observer.disconnect()
-      mutationObserver.disconnect()
-      if (scheduledFrame) window.cancelAnimationFrame(scheduledFrame)
-      pendingNodes.clear()
-    }
-  }, [pathname])
-
-  return null
-}
 
 function OfflineNotice() {
   const { language } = useLanguage()
@@ -2163,27 +2092,35 @@ function OfflineNotice() {
 }
 
 function ScrollProgress() {
-  const [progress, setProgress] = useState(0)
+  const progressRef = useRef<HTMLDivElement>(null)
+  const fillRef = useRef<HTMLSpanElement>(null)
+
   useEffect(() => {
     let frame = 0
     const update = () => {
-      if (frame) cancelAnimationFrame(frame)
-      frame = requestAnimationFrame(() => {
+      // Coalesce scroll events into a single frame and update the tiny indicator directly.
+      // Avoid scheduling a React render for every wheel/trackpad frame.
+      if (frame) return
+      frame = window.requestAnimationFrame(() => {
+        frame = 0
         const scrollable = document.documentElement.scrollHeight - window.innerHeight
-        const next = scrollable > 0 ? (window.scrollY / scrollable) * 100 : 0
-        setProgress(Math.min(100, Math.max(0, next)))
+        const next = scrollable > 0 ? Math.min(100, Math.max(0, (window.scrollY / scrollable) * 100)) : 0
+        fillRef.current?.style.setProperty('transform', `scaleX(${next / 100})`)
+        progressRef.current?.setAttribute('aria-valuenow', String(Math.round(next)))
       })
     }
+
     update()
     window.addEventListener('scroll', update, { passive: true })
-    window.addEventListener('resize', update)
+    window.addEventListener('resize', update, { passive: true })
     return () => {
-      if (frame) cancelAnimationFrame(frame)
+      if (frame) window.cancelAnimationFrame(frame)
       window.removeEventListener('scroll', update)
       window.removeEventListener('resize', update)
     }
   }, [])
-  return <div className="site-scroll-progress" role="progressbar" aria-label="Page scroll progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}><span style={{ transform: `scaleX(${progress / 100})` }} /></div>
+
+  return <div ref={progressRef} className="site-scroll-progress" role="progressbar" aria-label="Page scroll progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={0}><span ref={fillRef} /></div>
 }
 
 
@@ -2304,5 +2241,5 @@ function ToolRouteBreadcrumbs() {
 
 export default function App() {
   const { t } = useLanguage()
-  return <><a className="skip-link" href="#main-content">{t('skip')}</a><OfflineNotice /><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><ToolRouteBreadcrumbs /><Routes><Route path="/" element={<Home />} /><Route path="/github-ci" element={<Suspense fallback={<div className="container route-loading" role="status">Loading GitHub CI Activity…</div>}><GitHubIntegrationPage /></Suspense>} /><Route path="/team-workspace" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Shared Team Workspace…</div>}><TeamWorkspacePage /></Suspense>} /><Route path="/observatory" element={<WebQualityObservatoryPage />} /><Route path="/site-audit" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Page Health Audit…</div>}><SiteAuditPage /></Suspense>} /> <Route path="/devtools" element={<DeveloperUtilitiesPage />} /> <Route path="/workspace" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Workspace…</div>}><EngineeringWorkspacePage /></Suspense>} /><Route path="/control-plane" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Control Plane…</div>}><EngineeringControlPlanePage /></Suspense>} /><Route path="/engineering-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Intelligence…</div>}><EngineeringIntelligencePage /></Suspense>} /><Route path="/command-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Command Center…</div>}><EngineeringCommandCenterPage /></Suspense>} /><Route path="/qa-studio" element={<Suspense fallback={<div className="container route-loading" role="status">Loading QA Automation Studio…</div>}><QAAutomationStudioPage /></Suspense>} /><Route path="/quality-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Quality Intelligence…</div>}><QualityIntelligencePage /></Suspense>} /><Route path="/reliability-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Reliability Center…</div>}><ReliabilityCenterPage /></Suspense>} /><Route path="/supply-chain-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Supply Chain Intelligence…</div>}><SupplyChainIntelligencePage /></Suspense>} /><Route path="/security-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Security Center…</div>}><SecurityCenterPage /></Suspense>} /><Route path="/api-playground" element={<Suspense fallback={<div className="container route-loading" role="status">Loading API Playground…</div>}><ApiPlaygroundPage /></Suspense>} /><Route path="/performance" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Performance Observatory…</div>}><PerformanceObservatoryPage /></Suspense>} /><Route path="/knowledge-graph" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Knowledge Graph…</div>}><EngineeringKnowledgeGraphPage /></Suspense>} /><Route path="/roadmap" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Product Roadmap…</div>}><EngineeringRoadmapPage /></Suspense>} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><Footer /><RouteMetadata /></>
+  return <><a className="skip-link" href="#main-content">{t('skip')}</a><OfflineNotice /><ScrollProgress /><CommandPalette /><ScrollToTop /><Header /><ToolRouteBreadcrumbs /><Routes><Route path="/" element={<Home />} /><Route path="/github-ci" element={<Suspense fallback={<div className="container route-loading" role="status">Loading GitHub CI Activity…</div>}><GitHubIntegrationPage /></Suspense>} /><Route path="/team-workspace" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Shared Team Workspace…</div>}><TeamWorkspacePage /></Suspense>} /><Route path="/observatory" element={<WebQualityObservatoryPage />} /><Route path="/site-audit" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Page Health Audit…</div>}><SiteAuditPage /></Suspense>} /> <Route path="/devtools" element={<DeveloperUtilitiesPage />} /> <Route path="/workspace" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Workspace…</div>}><EngineeringWorkspacePage /></Suspense>} /><Route path="/control-plane" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Control Plane…</div>}><EngineeringControlPlanePage /></Suspense>} /><Route path="/engineering-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Intelligence…</div>}><EngineeringIntelligencePage /></Suspense>} /><Route path="/command-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Command Center…</div>}><EngineeringCommandCenterPage /></Suspense>} /><Route path="/qa-studio" element={<Suspense fallback={<div className="container route-loading" role="status">Loading QA Automation Studio…</div>}><QAAutomationStudioPage /></Suspense>} /><Route path="/quality-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Quality Intelligence…</div>}><QualityIntelligencePage /></Suspense>} /><Route path="/reliability-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Reliability Center…</div>}><ReliabilityCenterPage /></Suspense>} /><Route path="/supply-chain-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Supply Chain Intelligence…</div>}><SupplyChainIntelligencePage /></Suspense>} /><Route path="/security-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Security Center…</div>}><SecurityCenterPage /></Suspense>} /><Route path="/api-playground" element={<Suspense fallback={<div className="container route-loading" role="status">Loading API Playground…</div>}><ApiPlaygroundPage /></Suspense>} /><Route path="/performance" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Performance Observatory…</div>}><PerformanceObservatoryPage /></Suspense>} /><Route path="/knowledge-graph" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Knowledge Graph…</div>}><EngineeringKnowledgeGraphPage /></Suspense>} /><Route path="/roadmap" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Product Roadmap…</div>}><EngineeringRoadmapPage /></Suspense>} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><Footer /><RouteMetadata /></>
 }
