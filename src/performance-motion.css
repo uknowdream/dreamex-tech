@@ -35,6 +35,9 @@
 
 /* Keep decorative effects that repaint pixels disabled. */
 .hero-gridlines,
+.terminal,
+.floating-chip,
+.orbit-one,
 .orbit-two,
 .terminal::after,
 .terminal-bar::after,
@@ -168,16 +171,16 @@
 /* Ambient motion is desktop-only: slow transforms on the terminal/chips and opacity on one orbit. */
 @media (prefers-reduced-motion: no-preference) and (min-width: 768px) and (hover: hover) and (pointer: fine) {
   .terminal {
-    animation: dreamex-terminal-drift 12s ease-in-out infinite;
+    animation: dreamex-terminal-drift 12s ease-in-out infinite !important;
   }
-  .chip-top {
-    animation: dreamex-chip-drift 9.5s ease-in-out infinite;
+  .floating-chip.chip-top {
+    animation: dreamex-chip-drift 9.5s ease-in-out infinite !important;
   }
-  .chip-bottom {
-    animation: dreamex-chip-drift 11s ease-in-out -5.5s infinite;
+  .floating-chip.chip-bottom {
+    animation: dreamex-chip-drift 11s ease-in-out -5.5s infinite !important;
   }
   .visual-orbit.orbit-one {
-    animation: dreamex-orbit-breathe 14s ease-in-out infinite;
+    animation: dreamex-orbit-breathe 14s ease-in-out infinite !important;
   }
 }
 
