@@ -114,6 +114,12 @@ test('reduced-motion preference disables continuous and entrance motion', async 
     expect(item.name, item.selector).toBe('none')
   }
   await expect(page.locator('.hero h1')).toBeVisible()
+
+  // Reduced motion stops decorative animation, not the functional reading-position indicator.
+  await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight / 2, behavior: 'instant' }))
+  await expect(page.locator('.site-scroll-progress')).not.toHaveAttribute('aria-valuenow', '0')
+  const progressTransform = await page.locator('.site-scroll-progress > span').evaluate(element => getComputedStyle(element).transform)
+  expect(progressTransform).not.toBe('none')
 })
 
 test('homepage scroll path stays light and scroll progress updates without React state', async ({ page }) => {
