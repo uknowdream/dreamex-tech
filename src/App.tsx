@@ -2075,9 +2075,15 @@ function ScrollToTop() {
 }
 
 function MotionOnScroll() {
+  const { pathname } = useLocation()
+
   useEffect(() => {
     const selector = '.topics-heading, .topic-card, .featured-card, .section-heading, .newsletter-inner, .article-card, .trust-inner span, .featured-art, .article-header, .article-body > p, .article-note, .article-next, .footer-inner'
     const observed = new WeakSet<Element>()
+    const pendingNodes = new Set<Element>()
+    let scheduledFrame = 0
+    let discoveryIndex = 0
+
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -2086,23 +2092,56 @@ function MotionOnScroll() {
         }
       })
     }, { threshold: 0.12, rootMargin: '0px 0px -35px 0px' })
-    const reveal = () => {
-      document.querySelectorAll(selector).forEach((element, index) => {
-        if (observed.has(element)) return
-        observed.add(element)
-        element.classList.add('motion-reveal')
-        element.setAttribute('style', `${element.getAttribute('style') ?? ''};--reveal-delay:${Math.min(index % 3, 2) * 90}ms`)
-        observer.observe(element)
-      })
+
+    const observeCandidate = (element: Element) => {
+      if (observed.has(element) || !element.matches(selector)) return
+      observed.add(element)
+      element.classList.add('motion-reveal')
+      element.style.setProperty('--reveal-delay', `${Math.min(discoveryIndex % 3, 2) * 90}ms`)
+      discoveryIndex += 1
+      observer.observe(element)
     }
-    reveal()
-    const mutationObserver = new MutationObserver(reveal)
+
+    const scanSubtree = (root: Element) => {
+      observeCandidate(root)
+      root.querySelectorAll(selector).forEach(observeCandidate)
+    }
+
+    // Scan the current route once. Later React updates are handled incrementally below.
+    document.querySelectorAll(selector).forEach(observeCandidate)
+
+    const mutationObserver = new MutationObserver(records => {
+      let hasElementAdditions = false
+
+      records.forEach(record => {
+        record.addedNodes.forEach(node => {
+          if (node instanceof Element) {
+            pendingNodes.add(node)
+            hasElementAdditions = true
+          }
+        })
+      })
+
+      // Ignore text-only updates (for example, search input/status changes) and batch
+      // actual DOM insertions into one frame instead of rescanning the entire document.
+      if (!hasElementAdditions || scheduledFrame) return
+      scheduledFrame = window.requestAnimationFrame(() => {
+        scheduledFrame = 0
+        pendingNodes.forEach(scanSubtree)
+        pendingNodes.clear()
+      })
+    })
+
     mutationObserver.observe(document.body, { childList: true, subtree: true })
+
     return () => {
       observer.disconnect()
       mutationObserver.disconnect()
+      if (scheduledFrame) window.cancelAnimationFrame(scheduledFrame)
+      pendingNodes.clear()
     }
-  }, [])
+  }, [pathname])
+
   return null
 }
 
