@@ -91,6 +91,9 @@ test('homepage uses lightweight motion on normal-motion devices', async ({ page 
 
   // Desktop fine pointers get the terminal's hover lift; touch pointers intentionally do not.
   if (await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches)) {
+    // Freeze the parent float only in the test so Playwright can position the pointer
+    // on a stable target; the terminal's hover transform remains enabled.
+    await page.addStyleTag({ content: '.terminal-float-shell { animation: none !important; }' })
     await page.locator('.terminal').hover()
     const hoverTransform = await page.locator('.terminal').evaluate(element => getComputedStyle(element).transform)
     expect(hoverTransform).not.toBe(result.terminalTransform)
