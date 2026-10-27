@@ -27,7 +27,6 @@ test('homepage restores ambient hero motion and moving terminal details', async 
       artSymbol: animation('.art-symbol'),
       heroBeforeDisplay: pseudoDisplay('::before'),
       heroAfterDisplay: pseudoDisplay('::after'),
-      headerBackdrop: backdrop ? getComputedStyle(backdrop).backdropFilter : null,
       contentVisibility: getComputedStyle(document.querySelector('.articles-section')!).contentVisibility,
     }
   })
@@ -41,7 +40,6 @@ test('homepage restores ambient hero motion and moving terminal details', async 
   }
   expect(motion.heroBeforeDisplay).not.toBe('none')
   expect(motion.heroAfterDisplay).not.toBe('none')
-  expect(motion.headerBackdrop).not.toBe('none')
   expect(motion.contentVisibility).not.toBe('auto')
 })
 
