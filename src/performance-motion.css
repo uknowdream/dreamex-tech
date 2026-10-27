@@ -1,19 +1,37 @@
 /*
- * Scroll-performance budget for DreamEx Tech.
+ * DreamEx Tech lightweight motion system.
  *
- * The brand keeps its dark gradient and short hero entrance, but large blurred layers,
- * translucent sticky surfaces, perpetual loops, and per-card scroll-reveal transitions
- * are deliberately removed. They add paint/compositing work without helping reading.
+ * Keep the interface expressive without animating layout, blur, filters, shadows,
+ * or large background-position changes. Continuous motion is limited to small
+ * transform/opacity layers; all movement is disabled for reduced-motion users.
  */
 .hero::before,
 .hero::after {
-  display: none !important;
-  content: none !important;
+  display: block !important;
+  content: "" !important;
   filter: none !important;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.hero::before {
+  position: absolute;
+  width: min(48vw, 560px);
+  aspect-ratio: 1;
+  right: -4%;
+  top: -12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #7365da1d 0%, #8bdcff0b 40%, transparent 72%);
+  opacity: 0.7;
+  animation: dx-ambient-drift 22s ease-in-out infinite alternate !important;
+}
+
+.hero::after {
+  background: radial-gradient(ellipse at center, #8c7bff0c 0%, #8bdcff07 42%, transparent 72%) !important;
   animation: none !important;
 }
 
-/* Keep only an opaque sticky header; avoid repainting content through a backdrop blur. */
+/* Stay visually separated from content without a backdrop-filter repaint on scroll. */
 .site-header {
   background: #080d19 !important;
   -webkit-backdrop-filter: none !important;
@@ -26,7 +44,7 @@
   backdrop-filter: none !important;
 }
 
-/* Remove glass blur from decorative surfaces that move with the document. */
+/* Small floating surfaces never need glass blur. */
 .floating-chip,
 .category-pill,
 .back-to-top,
@@ -35,39 +53,64 @@
   backdrop-filter: none !important;
 }
 
-/* Disable all perpetual/decorative animations and card entrance loops. */
-.hero-gridlines,
-.visual-orbit,
-.terminal,
-.terminal::after,
-.terminal-bar::after,
-.terminal-live i,
-.eyebrow-dot,
-.terminal-status > span:first-child,
-.floating-chip,
-.terminal-content p:not(.terminal-comment),
-.art-grid,
-.art-symbol,
-.trust-strip::before,
-.trust-strip::after,
-.topic-card,
-.article-card,
-.launchpad-card {
+/* Animate only a few small compositor-friendly hero elements. */
+.hero-gridlines {
   animation: none !important;
 }
 
-/* Scroll no longer assigns transform/opacity transitions to dozens of elements. */
+.visual-orbit {
+  animation: dx-orbit-spin 48s linear infinite !important;
+}
+.orbit-two {
+  animation-duration: 68s !important;
+  animation-direction: reverse !important;
+}
+
+.terminal {
+  animation: dx-terminal-float 8s ease-in-out infinite !important;
+  transform-origin: center;
+}
+.terminal::after {
+  filter: none !important;
+  animation: dx-terminal-scan 8s ease-in-out infinite !important;
+  pointer-events: none;
+}
+.terminal-bar::after,
+.terminal-live i,
+.eyebrow-dot {
+  animation: dx-status-breathe 2.8s ease-in-out infinite !important;
+}
+.terminal-content p:not(.terminal-comment) {
+  animation: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+.floating-chip {
+  animation: dx-chip-drift 7.2s ease-in-out infinite !important;
+}
+.chip-bottom {
+  animation-delay: -3.1s !important;
+  animation-duration: 8.4s !important;
+}
+
+.featured-art .art-symbol {
+  animation: dx-symbol-drift 10s ease-in-out infinite !important;
+}
+
+/* Avoid allocating persistent compositor layers to whole lists of cards. */
 .topic-card,
 .article-card,
 .launchpad-card {
   will-change: auto !important;
-  transition-property: transform, border-color, background, box-shadow, color !important;
+  transition-property: transform, border-color, color !important;
   transition-duration: 180ms !important;
+  transition-timing-function: cubic-bezier(.2,.7,.2,1) !important;
 }
 
 /*
- * Let Chromium defer paint/layout work for offscreen homepage sections.
- * Intrinsic sizes keep the scroll range stable until each section is rendered.
+ * Defer rendering of offscreen sections; intrinsic sizes preserve the scroll range
+ * until Chromium lays each section out. Keep this independent of animation behavior.
  */
 .topics-section {
   content-visibility: auto;
@@ -90,16 +133,89 @@
   contain-intrinsic-size: auto 220px;
 }
 
-/* Preserve reduced-motion accessibility; no hidden content depends on an observer. */
+/* Low-cost motion: transform and opacity only; no animated filters or shadows. */
+@keyframes dx-ambient-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(.98);
+    opacity: .52;
+  }
+  50% { opacity: .72; }
+  100% {
+    transform: translate3d(-1.5%, 1.5%, 0) scale(1.025);
+    opacity: .62;
+  }
+}
+@keyframes dx-orbit-spin {
+  from { rotate: 0deg; }
+  to { rotate: 360deg; }
+}
+@keyframes dx-terminal-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(.45deg); }
+  50% { transform: translate3d(0, -4px, 0) rotate(0deg); }
+}
+@keyframes dx-terminal-scan {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+  12% { opacity: .68; }
+  82% { opacity: .48; }
+  94% {
+    transform: translate3d(0, 560%, 0);
+    opacity: .15;
+  }
+}
+@keyframes dx-status-breathe {
+  0%, 100% { opacity: .8; }
+  50% { opacity: 1; }
+}
+@keyframes dx-chip-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -4px, 0); }
+}
+@keyframes dx-symbol-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-3deg); }
+  50% { transform: translate3d(0, -3px, 0) rotate(-1deg); }
+}
+
+/* Accessible by default: no continuous or entrance motion when reduced motion is requested. */
 @media (prefers-reduced-motion: reduce) {
+  .hero::before,
+  .hero::after,
+  .hero-copy > *,
+  .hero-visual,
+  .hero-gridlines,
+  .visual-orbit,
+  .terminal,
+  .terminal::after,
+  .terminal-bar::after,
+  .terminal-live i,
+  .eyebrow-dot,
+  .floating-chip,
+  .featured-art .art-symbol {
+    animation: none !important;
+  }
+
   .topic-card,
   .article-card,
   .launchpad-card,
   .hero-copy > *,
-  .hero-visual {
-    animation: none !important;
+  .hero-visual,
+  .terminal,
+  .floating-chip,
+  .topic-icon,
+  .site-scroll-progress > span {
     transition: none !important;
-    opacity: 1 !important;
     transform: none !important;
+  }
+
+  .topic-card,
+  .article-card,
+  .launchpad-card,
+  .hero-copy > *,
+  .hero-visual,
+  .terminal,
+  .floating-chip {
+    opacity: 1 !important;
   }
 }
