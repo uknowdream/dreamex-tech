@@ -23,33 +23,52 @@ test('homepage avoids perpetual decorative animation while preserving entrance m
       { selector: '.trust-strip', pseudo: '::before' },
     ]
 
+    const missingSelectors = selectors
+      .filter(({ selector }) => !document.querySelector(selector))
+      .map(({ selector, pseudo }) => selector + (pseudo ?? ''))
+
     return {
+      missingSelectors,
+      expectedSelectorCount: selectors.length,
       animationNames: selectors.flatMap(({ selector, pseudo }) => {
-        const element = document.querySelector(selector)
-        if (!element) return []
-        const style = pseudo
-          ? window.getComputedStyle(element, pseudo)
-          : window.getComputedStyle(element)
-        return [{ selector: selector + (pseudo ?? ''), animationName: style.animationName }]
+        const elements = Array.from(document.querySelectorAll(selector))
+        return elements.map((element, index) => {
+          const style = pseudo
+            ? window.getComputedStyle(element, pseudo)
+            : window.getComputedStyle(element)
+          return {
+            selector: selector + (pseudo ?? '') + (elements.length > 1 ? '[' + index + ']' : ''),
+            animationName: style.animationName,
+          }
+        })
       }),
       heroHeadingAnimation: window.getComputedStyle(document.querySelector('.hero h1')!).animationName,
     }
   })
 
-  expect(result.animationNames.length).toBeGreaterThanOrEqual(8)
+  expect(result.missingSelectors).toEqual([])
+  expect(result.animationNames.length).toBeGreaterThanOrEqual(result.expectedSelectorCount)
   for (const item of result.animationNames) {
     expect(item.animationName, item.selector).toBe('none')
   }
   expect(result.heroHeadingAnimation).not.toBe('none')
 })
 
-test('scroll reveal still completes after navigating and reduced motion stays accessible', async ({ page }) => {
+test('scroll reveal reinitializes on in-app navigation and reduced motion stays accessible', async ({ page }) => {
   await page.goto('/')
-  await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }))
-  await expect(page.locator('.footer-inner')).toHaveClass(/is-visible/)
+  const articleLink = page.locator('a[href="/blog/qa-automation-foundations"]').first()
+  await expect(articleLink).toBeVisible()
+  await articleLink.click()
+  await expect(page).toHaveURL(/\\/blog\\/qa-automation-foundations$/)
+
+  const articleHeader = page.locator('.article-header')
+  await expect(articleHeader).toHaveClass(/motion-reveal/)
+  await articleHeader.scrollIntoViewIfNeeded()
+  await expect(articleHeader).toHaveClass(/is-visible/)
 
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
+  await expect(page.locator('.motion-reveal').first()).toBeAttached()
   const reducedMotion = await page.evaluate(() => {
     const element = document.querySelector<HTMLElement>('.motion-reveal')
     if (!element) return null
