@@ -118,6 +118,7 @@ test('narrow homepage keeps entrance motion and limits ambient movement by point
 
   const motion = await page.evaluate(() => ({
     hasFinePointer: matchMedia('(hover: hover) and (pointer: fine)').matches,
+    hasAmbientViewport: matchMedia('(min-width: 768px)').matches,
     headingAnimation: getComputedStyle(document.querySelector('.hero h1')!).animationName,
     terminalAnimation: getComputedStyle(document.querySelector('.terminal')!).animationName,
     chipAnimation: getComputedStyle(document.querySelector('.chip-top')!).animationName,
@@ -125,7 +126,7 @@ test('narrow homepage keeps entrance motion and limits ambient movement by point
   }))
   expect(motion.headingAnimation).toBe('dreamex-hero-enter')
   expect(motion.statusAnimation).toBe('dreamex-status-pulse')
-  if (motion.hasFinePointer) {
+  if (motion.hasFinePointer && motion.hasAmbientViewport) {
     expect(motion.terminalAnimation).toBe('dreamex-terminal-drift')
     expect(motion.chipAnimation).toBe('dreamex-chip-drift')
   } else {
