@@ -57,22 +57,12 @@
 }
 
 /* Scroll no longer assigns transform/opacity transitions to dozens of elements. */
-.motion-reveal,
-.motion-reveal.is-visible,
 .topic-card,
 .article-card,
 .launchpad-card {
   will-change: auto !important;
-  transition-property: border-color, box-shadow, color !important;
+  transition-property: transform, border-color, background, box-shadow, color !important;
   transition-duration: 180ms !important;
-}
-.motion-reveal,
-.motion-reveal.is-visible,
-.topic-card.motion-reveal,
-.article-card.motion-reveal,
-.launchpad-card.motion-reveal {
-  opacity: 1 !important;
-  transform: none !important;
 }
 
 /*
@@ -102,8 +92,6 @@
 
 /* Preserve reduced-motion accessibility; no hidden content depends on an observer. */
 @media (prefers-reduced-motion: reduce) {
-  .motion-reveal,
-  .motion-reveal.is-visible,
   .topic-card,
   .article-card,
   .launchpad-card,
