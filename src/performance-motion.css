@@ -1,9 +1,9 @@
 /*
- * Scroll-performance budget for DreamEx Tech.
- *
- * The brand keeps its dark gradient and short hero entrance, but large blurred layers,
- * translucent sticky surfaces, perpetual loops, and per-card scroll-reveal transitions
- * are deliberately removed. They add paint/compositing work without helping reading.
+ * DreamEx Tech motion budget
+ * - Entrance motion is short and runs once.
+ * - Ambient motion is limited to a handful of small/compositor-friendly elements.
+ * - No animated blur, animated shadows, background-position loops, or per-card scroll observers.
+ * - Reduced-motion preferences always take precedence.
  */
 .hero::before,
 .hero::after {
@@ -13,7 +13,7 @@
   animation: none !important;
 }
 
-/* Keep only an opaque sticky header; avoid repainting content through a backdrop blur. */
+/* Avoid paint work from translucent fixed/sticky surfaces while scrolling. */
 .site-header {
   background: #080d19 !important;
   -webkit-backdrop-filter: none !important;
@@ -25,8 +25,6 @@
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
-
-/* Remove glass blur from decorative surfaces that move with the document. */
 .floating-chip,
 .category-pill,
 .back-to-top,
@@ -35,16 +33,11 @@
   backdrop-filter: none !important;
 }
 
-/* Disable all perpetual/decorative animations and card entrance loops. */
+/* Permanently disable paint-heavy decorative effects, code scans, and per-card loops. */
 .hero-gridlines,
-.visual-orbit,
-.terminal,
+.orbit-two,
 .terminal::after,
 .terminal-bar::after,
-.terminal-live i,
-.eyebrow-dot,
-.terminal-status > span:first-child,
-.floating-chip,
 .terminal-content p:not(.terminal-comment),
 .art-grid,
 .art-symbol,
@@ -56,19 +49,34 @@
   animation: none !important;
 }
 
-/* Scroll no longer assigns transform/opacity transitions to dozens of elements. */
+/* Ambient objects stay still by default; only the desktop motion-budget block enables them. */
+.terminal,
+.floating-chip,
+.orbit-one {
+  animation: none !important;
+}
+
+/* Never pin lots of elements to their own compositing layers. */
+.hero-copy > *,
+.hero-visual,
+.terminal,
+.floating-chip,
 .topic-card,
 .article-card,
 .launchpad-card {
   will-change: auto !important;
-  transition-property: transform, border-color, background, box-shadow, color !important;
-  transition-duration: 180ms !important;
 }
 
-/*
- * Let Chromium defer paint/layout work for offscreen homepage sections.
- * Intrinsic sizes keep the scroll range stable until each section is rendered.
- */
+/* Hover feedback remains brief, and does not animate expensive shadow blur. */
+.topic-card,
+.article-card,
+.launchpad-card {
+  transition-property: transform, border-color, background-color, color !important;
+  transition-duration: 180ms !important;
+  transition-timing-function: cubic-bezier(.2, .75, .25, 1) !important;
+}
+
+/* Defer offscreen sections; intrinsic sizes keep the scroll range stable. */
 .topics-section {
   content-visibility: auto;
   contain-intrinsic-size: auto 430px;
@@ -90,16 +98,147 @@
   contain-intrinsic-size: auto 220px;
 }
 
-/* Preserve reduced-motion accessibility; no hidden content depends on an observer. */
+/*
+ * Normal-motion experience: a staggered intro and restrained ambient motion.
+ * Only transform/opacity animate. The ambient loops are slow and limited to the hero.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .site-header {
+    animation: dreamex-header-enter 420ms cubic-bezier(.2, .75, .25, 1) both;
+  }
+
+  .hero-copy > * {
+    will-change: auto !important;
+    animation: dreamex-hero-enter 540ms cubic-bezier(.2, .75, .25, 1) both;
+  }
+  /* Equal specificity to the per-element rules in styles.css; this file is imported last in main.tsx. */
+  .hero-copy > .eyebrow,
+  .hero-copy > h1,
+  .hero-copy > .hero-description,
+  .hero-copy > .hero-actions,
+  .hero-copy > .hero-stats {
+    will-change: auto !important;
+    animation-name: dreamex-hero-enter;
+    animation-duration: 540ms;
+    animation-timing-function: cubic-bezier(.2, .75, .25, 1);
+    animation-fill-mode: both;
+  }
+  .hero-copy > :nth-child(1) { animation-delay: 35ms; }
+  .hero-copy > :nth-child(2) { animation-delay: 85ms; }
+  .hero-copy > :nth-child(3) { animation-delay: 135ms; }
+  .hero-copy > :nth-child(4) { animation-delay: 185ms; }
+  .hero-copy > :nth-child(5) { animation-delay: 235ms; }
+
+  .hero-visual {
+    animation: dreamex-visual-enter 680ms 100ms cubic-bezier(.2, .75, .25, 1) both;
+    will-change: auto !important;
+  }
+
+  /* Tiny state indicators only pulse opacity; the shadow itself stays static. */
+  .eyebrow-dot,
+  .terminal-live i,
+  .terminal-status > span:first-child {
+    animation: dreamex-status-pulse 2.8s ease-in-out infinite;
+  }
+
+}
+
+@keyframes dreamex-header-enter {
+  from { opacity: 0; translate: 0 -6px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes dreamex-hero-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes dreamex-visual-enter {
+  from { opacity: 0; transform: translateY(12px) scale(.992); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes dreamex-terminal-drift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@keyframes dreamex-chip-drift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+@keyframes dreamex-orbit-breathe {
+  0%, 100% { opacity: .28; }
+  50% { opacity: .48; }
+}
+@keyframes dreamex-status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .62; }
+}
+
+/* Ambient motion is desktop-only: slow transforms on the terminal/chips and opacity on one orbit. */
+@media (prefers-reduced-motion: no-preference) and (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  .terminal {
+    animation: dreamex-terminal-drift 12s ease-in-out infinite !important;
+  }
+  .floating-chip.chip-top {
+    animation: dreamex-chip-drift 9.5s ease-in-out infinite !important;
+  }
+  .floating-chip.chip-bottom {
+    animation: dreamex-chip-drift 11s ease-in-out -5.5s infinite !important;
+  }
+  .visual-orbit.orbit-one {
+    animation: dreamex-orbit-breathe 14s ease-in-out infinite !important;
+  }
+}
+
+/* On touch screens keep the one-shot intro and tiny status pulse, not ambient bobbing. */
+@media (hover: none), (pointer: coarse) {
+  .terminal,
+  .floating-chip,
+  .orbit-one {
+    animation: none !important;
+  }
+}
+
+/* Reduced motion remains a hard override, including hover/touch feedback. */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  .site-header,
+  .hero-copy > *,
+  .hero-visual,
+  .terminal,
+  .chip-top,
+  .chip-bottom,
+  .eyebrow-dot,
+  .terminal-live i,
+  .terminal-status > span:first-child,
   .topic-card,
   .article-card,
   .launchpad-card,
-  .hero-copy > *,
-  .hero-visual {
+  .featured-art .art-symbol,
+  .button::after,
+  .nav-links a::after {
     animation: none !important;
     transition: none !important;
+    will-change: auto !important;
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  /* Orbit transforms center the rings; stop animation without removing that positioning transform. */
+  .visual-orbit.orbit-one,
+  .visual-orbit.orbit-two {
+    animation: none !important;
+    transition: none !important;
+    will-change: auto !important;
+    opacity: 1 !important;
+  }
+
+  .terminal,
+  .floating-chip,
+  .topic-card,
+  .article-card,
+  .launchpad-card {
+    box-shadow: none !important;
   }
 }

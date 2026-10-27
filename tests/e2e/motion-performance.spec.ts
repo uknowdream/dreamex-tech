@@ -1,57 +1,149 @@
 import { expect, test } from '@playwright/test'
 
-test('homepage avoids perpetual decorative animation while preserving entrance motion', async ({ page }) => {
+test('homepage uses a small motion budget and honors reduced-motion preferences', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.goto('/')
   await expect(page.locator('.hero h1')).toBeVisible()
 
-  const result = await page.evaluate(() => {
-    const selectors = [
-      { selector: '.hero', pseudo: '::before' },
-      { selector: '.hero', pseudo: '::after' },
-      { selector: '.hero-gridlines' },
-      { selector: '.visual-orbit' },
-      { selector: '.terminal' },
-      { selector: '.terminal', pseudo: '::after' },
-      { selector: '.terminal-bar', pseudo: '::after' },
-      { selector: '.terminal-live i' },
-      { selector: '.eyebrow-dot' },
-      { selector: '.floating-chip' },
-      { selector: '.terminal-content p:not(.terminal-comment)' },
-      { selector: '.art-grid' },
-      { selector: '.art-symbol' },
-      { selector: '.trust-strip', pseudo: '::before' },
-    ]
-
-    const missingSelectors = selectors
-      .filter(({ selector }) => !document.querySelector(selector))
-      .map(({ selector, pseudo }) => selector + (pseudo ?? ''))
-
+  const initial = await page.evaluate(() => {
+    const style = (selector: string, pseudo?: string) => {
+      const element = document.querySelector(selector)
+      return element ? window.getComputedStyle(element, pseudo) : null
+    }
+    const seconds = (value: string | undefined) => {
+      const match = value?.trim().match(/^([\d.]+)(ms|s)$/)
+      if (!match) return 0
+      return Number.parseFloat(match[1]) * (match[2] === 'ms' ? 0.001 : 1)
+    }
+    const ambient = [
+      { selector: '.terminal', expected: 'dreamex-terminal-drift', maxSeconds: 13 },
+      { selector: '.chip-top', expected: 'dreamex-chip-drift', maxSeconds: 10 },
+      { selector: '.chip-bottom', expected: 'dreamex-chip-drift', maxSeconds: 12 },
+      { selector: '.orbit-one', expected: 'dreamex-orbit-breathe', maxSeconds: 15 },
+      { selector: '.eyebrow-dot', expected: 'dreamex-status-pulse', maxSeconds: 3 },
+    ].map(item => {
+      const computed = style(item.selector)
+      return {
+        ...item,
+        actualName: computed?.animationName,
+        durationSeconds: seconds(computed?.animationDuration),
+      }
+    })
+    const disabled = [
+      ['.hero', '::before'],
+      ['.hero', '::after'],
+      ['.hero-gridlines', undefined],
+      ['.orbit-two', undefined],
+      ['.terminal', '::after'],
+      ['.terminal-bar', '::after'],
+      ['.terminal-content p:not(.terminal-comment)', undefined],
+      ['.art-grid', undefined],
+      ['.art-symbol', undefined],
+      ['.trust-strip', '::before'],
+    ].map(([selector, pseudo]) => {
+      const computed = style(selector as string, pseudo as string | undefined)
+      return { selector, animationName: computed?.animationName, display: computed?.display }
+    })
     return {
-      missingSelectors,
-      expectedSelectorCount: selectors.length,
-      animationNames: selectors.flatMap(({ selector, pseudo }) => {
-        const elements = Array.from(document.querySelectorAll(selector))
-        return elements.map((element, index) => {
-          const style = pseudo
-            ? window.getComputedStyle(element, pseudo)
-            : window.getComputedStyle(element)
-          return {
-            selector: selector + (pseudo ?? '') + (elements.length > 1 ? '[' + index + ']' : ''),
-            animationName: style.animationName,
-          }
-        })
-      }),
-      heroHeadingAnimation: window.getComputedStyle(document.querySelector('.hero h1')!).animationName,
+      ambient,
+      hasFinePointer: window.matchMedia('(hover: hover) and (pointer: fine)').matches,
+      disabled,
+      headingAnimation: style('.hero h1')?.animationName,
+      headingDurationSeconds: seconds(style('.hero h1')?.animationDuration),
+      visualAnimation: style('.hero-visual')?.animationName,
+      statusPulseAnimation: style('.eyebrow-dot')?.animationName,
+      persistentWillChange: style('.hero h1')?.willChange,
+      terminalFilter: style('.terminal')?.filter,
+      terminalBackdrop: style('.terminal')?.backdropFilter,
+      headerBackdrop: style('.site-header')?.backdropFilter,
     }
   })
 
-  expect(result.missingSelectors).toEqual([])
-  expect(result.animationNames.length).toBeGreaterThanOrEqual(result.expectedSelectorCount)
-  for (const item of result.animationNames) {
+  const ambientTargets = initial.ambient.filter(item => item.selector !== '.eyebrow-dot')
+  const statusPulse = initial.ambient.find(item => item.selector === '.eyebrow-dot')
+  expect(statusPulse?.actualName).toBe('dreamex-status-pulse')
+  if (initial.hasFinePointer) {
+    for (const item of ambientTargets) {
+      expect(item.actualName, item.selector).toBe(item.expected)
+      expect(item.durationSeconds).toBeGreaterThan(1)
+      expect(item.durationSeconds).toBeLessThanOrEqual(item.maxSeconds)
+    }
+  } else {
+    for (const item of ambientTargets) {
+      expect(item.actualName, item.selector).toBe('none')
+    }
+  }
+  for (const item of initial.disabled) {
     expect(item.animationName, item.selector).toBe('none')
   }
-  expect(result.heroHeadingAnimation).not.toBe('none')
+  expect(initial.headingAnimation).toBe('dreamex-hero-enter')
+  expect(initial.headingDurationSeconds).toBeGreaterThan(0)
+  expect(initial.headingDurationSeconds).toBeLessThanOrEqual(0.6)
+  expect(initial.visualAnimation).toBe('dreamex-visual-enter')
+  expect(initial.persistentWillChange).toBe('auto')
+  expect(initial.terminalFilter).toBe('none')
+  expect(initial.terminalBackdrop).toBe('none')
+  expect(initial.headerBackdrop).toBe('none')
+
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  const reduced = await page.evaluate(() => {
+    const read = (selector: string) => {
+      const element = document.querySelector(selector)
+      if (!element) return null
+      const style = getComputedStyle(element)
+      return { animationName: style.animationName, opacity: style.opacity, transform: style.transform }
+    }
+    return {
+      heading: read('.hero h1'),
+      visual: read('.hero-visual'),
+      terminal: read('.terminal'),
+      chip: read('.chip-top'),
+      orbit: read('.orbit-one'),
+      status: read('.eyebrow-dot'),
+    }
+  })
+  for (const [key, value] of Object.entries(reduced)) {
+    expect(value, key).not.toBeNull()
+    expect(value?.animationName, key).toBe('none')
+    expect(value?.opacity, key).toBe('1')
+    if (key === 'orbit') {
+      // Its translateX(-50%) is layout positioning, not motion; reduced motion should preserve centering.
+      expect(value?.transform, key).not.toBe('none')
+    } else {
+      expect(value?.transform, key).toBe('none')
+    }
+  }
+})
+
+test('narrow homepage keeps entrance motion and limits ambient movement by pointer capability', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/')
+  await expect(page.locator('.hero h1')).toBeVisible()
+
+  const motion = await page.evaluate(() => ({
+    hasFinePointer: matchMedia('(hover: hover) and (pointer: fine)').matches,
+    hasAmbientViewport: matchMedia('(min-width: 768px)').matches,
+    headingAnimation: getComputedStyle(document.querySelector('.hero h1')!).animationName,
+    terminalAnimation: getComputedStyle(document.querySelector('.terminal')!).animationName,
+    chipAnimation: getComputedStyle(document.querySelector('.chip-top')!).animationName,
+    statusAnimation: getComputedStyle(document.querySelector('.eyebrow-dot')!).animationName,
+  }))
+  expect(motion.headingAnimation).toBe('dreamex-hero-enter')
+  expect(motion.statusAnimation).toBe('dreamex-status-pulse')
+  if (motion.hasFinePointer && motion.hasAmbientViewport) {
+    expect(motion.terminalAnimation).toBe('dreamex-terminal-drift')
+    expect(motion.chipAnimation).toBe('dreamex-chip-drift')
+  } else {
+    expect(motion.terminalAnimation).toBe('none')
+    expect(motion.chipAnimation).toBe('none')
+  }
+
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.reload()
+  const reduced = await page.locator('.hero h1').evaluate(element => getComputedStyle(element).animationName)
+  expect(reduced).toBe('none')
 })
 
 test('homepage scroll path avoids per-element reveal work and updates progress without React state', async ({ page }) => {
@@ -99,8 +191,4 @@ test('homepage scroll path avoids per-element reveal work and updates progress w
   }))
   expect(afterScroll.revealCount).toBe(0)
   expect(afterScroll.progressTransform).toBe('matrix(1, 0, 0, 1, 0, 0)')
-
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  const heroHeadingAnimation = await page.locator('.hero h1').evaluate(element => getComputedStyle(element).animationName)
-  expect(heroHeadingAnimation).toBe('none')
 })
