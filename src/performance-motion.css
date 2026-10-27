@@ -176,7 +176,7 @@
   .chip-bottom {
     animation: dreamex-chip-drift 11s ease-in-out -5.5s infinite;
   }
-  .orbit-one {
+  .visual-orbit.orbit-one {
     animation: dreamex-orbit-breathe 14s ease-in-out infinite;
   }
 }
