@@ -12,7 +12,6 @@ test('homepage restores ambient hero motion and moving terminal details', async 
       return element ? getComputedStyle(element, pseudo).animationName : null
     }
     const pseudoDisplay = (pseudo: string) => getComputedStyle(document.querySelector('.hero')!, pseudo).display
-    const backdrop = document.querySelector('.site-header')
     return {
       heading: animation('.hero h1'),
       heroVisual: animation('.hero-visual'),
