@@ -1,0 +1,179 @@
+/*
+ * DreamEx Tech motion system
+ * Goal: retain a calm, premium sense of motion without scroll observers, large filters,
+ * layout animation, or per-card entrance effects. Continuous movement is limited to a
+ * few existing hero/featured elements and uses transform/opacity only.
+ */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Short, one-time entrance. The content remains in normal document flow. */
+  .hero .eyebrow {
+    animation: dx-enter 420ms cubic-bezier(.2, .7, .2, 1) both;
+  }
+
+  .hero h1 {
+    animation: dx-enter 520ms 55ms cubic-bezier(.2, .7, .2, 1) both;
+  }
+
+  .hero .hero-description {
+    animation: dx-enter 460ms 120ms cubic-bezier(.2, .7, .2, 1) both;
+  }
+
+  .hero .hero-actions {
+    animation: dx-enter 460ms 175ms cubic-bezier(.2, .7, .2, 1) both;
+  }
+
+  .hero .hero-stats {
+    animation: dx-enter 460ms 230ms cubic-bezier(.2, .7, .2, 1) both;
+  }
+
+  /* The hero illustration floats by a few pixels; only transform changes per frame. */
+  .hero-visual {
+    animation: dx-hero-float 10s 650ms ease-in-out infinite;
+  }
+
+  /* Slow orbit movement is isolated to two thin decorative rings. */
+  .visual-orbit.orbit-one {
+    transform-origin: 50% 50%;
+    animation: dx-orbit-spin 56s linear infinite;
+  }
+
+  .visual-orbit.orbit-two {
+    transform-origin: 50% 50%;
+    animation: dx-orbit-spin-reverse 74s linear infinite;
+  }
+
+  /* Chips have very small independent movement instead of blur/glow animation. */
+  .floating-chip.chip-top {
+    animation: dx-chip-float 8s 400ms ease-in-out infinite;
+  }
+
+  .floating-chip.chip-bottom {
+    animation: dx-chip-float 9s 1s ease-in-out infinite reverse;
+  }
+
+  /* One subtle opacity pulse; shadows remain static to avoid repeated paint work. */
+  .eyebrow-dot,
+  .terminal-live i,
+  .terminal-status > span:first-child {
+    animation: dx-status-pulse 2.8s ease-in-out infinite;
+  }
+
+  /* Featured artwork below the fold gets a restrained, transform-only sway. */
+  .featured-art .art-symbol {
+    /* Match the existing, more-specific featured-art selector. */
+    animation: dx-symbol-sway 12s ease-in-out infinite !important;
+    transform-origin: 50% 50%;
+  }
+
+  /* Keep interactive feedback crisp and limited to user interaction. */
+  .button,
+  .topic-card,
+  .article-card,
+  .launchpad-card,
+  .topic-arrow,
+  .read-link svg {
+    transition-timing-function: cubic-bezier(.2, .7, .2, 1) !important;
+  }
+}
+
+@keyframes dx-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 9px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes dx-hero-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -5px, 0); }
+}
+
+@keyframes dx-orbit-spin {
+  from { transform: translateX(-50%) rotate(0deg); }
+  to { transform: translateX(-50%) rotate(360deg); }
+}
+
+@keyframes dx-orbit-spin-reverse {
+  from { transform: translateX(-50%) rotate(360deg); }
+  to { transform: translateX(-50%) rotate(0deg); }
+}
+
+@keyframes dx-chip-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -3px, 0); }
+}
+
+@keyframes dx-status-pulse {
+  0%, 100% { opacity: .72; }
+  50% { opacity: 1; }
+}
+
+@keyframes dx-symbol-sway {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-8deg); }
+  50% { transform: translate3d(0, -3px, 0) rotate(-5deg); }
+}
+
+/*
+ * Reduced motion is a first-class mode: no delayed/infinite animation, no transitions,
+ * and no content hidden behind animation fill states. Static composition remains intact.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .hero .eyebrow,
+  .hero h1,
+  .hero .hero-description,
+  .hero .hero-actions,
+  .hero .hero-stats,
+  .hero-visual,
+  .visual-orbit,
+  .floating-chip,
+  .eyebrow-dot,
+  .terminal-live i,
+  .terminal-status > span:first-child,
+  .art-symbol {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+  }
+
+  .hero .eyebrow,
+  .hero h1,
+  .hero .hero-description,
+  .hero .hero-actions,
+  .hero .hero-stats,
+  .hero-visual {
+    transform: none !important;
+  }
+
+  .button,
+  .button:hover,
+  .button:active,
+  .topic-card,
+  .topic-card:hover,
+  .article-card,
+  .article-card:hover,
+  .launchpad-card,
+  .launchpad-card:hover,
+  .topic-arrow,
+  .topic-card:hover .topic-arrow,
+  .read-link svg,
+  .read-link:hover svg,
+  .launchpad-open svg,
+  .launchpad-card:hover .launchpad-open svg,
+  .back-to-top,
+  .back-to-top:hover,
+  .back-to-top:active,
+  .topic-card::before,
+  .topic-card:hover::before,
+  .launchpad-card::before,
+  .launchpad-card:hover::before {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 0 !important;
+  }
+}

@@ -1,57 +1,118 @@
 import { expect, test } from '@playwright/test'
 
-test('homepage avoids perpetual decorative animation while preserving entrance motion', async ({ page }) => {
+test('homepage uses lightweight transform/opacity motion without expensive blur loops', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/')
+  await expect(page.locator('.hero h1')).toBeVisible()
+
+  const motion = await page.evaluate(() => {
+    const animationName = (selector: string) => {
+      const element = document.querySelector(selector)
+      return element ? getComputedStyle(element).animationName : null
+    }
+    const pseudo = (selector: string, type: string) => {
+      const element = document.querySelector(selector)
+      return element ? getComputedStyle(element, type).display : null
+    }
+    const header = document.querySelector('.site-header')
+    return {
+      intro: {
+        heading: animationName('.hero h1'),
+        visual: animationName('.hero-visual'),
+        orbit: animationName('.visual-orbit.orbit-one'),
+        secondOrbit: animationName('.visual-orbit.orbit-two'),
+        topChip: animationName('.floating-chip.chip-top'),
+        bottomChip: animationName('.floating-chip.chip-bottom'),
+        statusPulse: animationName('.eyebrow-dot'),
+        featureSway: animationName('.art-symbol'),
+      },
+      staticElements: {
+        terminal: animationName('.terminal'),
+        articleCard: animationName('.article-card'),
+        launchpadCard: animationName('.launchpad-card'),
+        gridlines: animationName('.hero-gridlines'),
+      },
+      heroPseudoBefore: pseudo('.hero', '::before'),
+      heroPseudoAfter: pseudo('.hero', '::after'),
+      headerBackdrop: header ? getComputedStyle(header).backdropFilter : null,
+    }
+  })
+
+  expect(motion.intro.heading).toBe('dx-enter')
+  expect(motion.intro.visual).toBe('dx-hero-float')
+  expect(motion.intro.orbit).toBe('dx-orbit-spin')
+  expect(motion.intro.secondOrbit).toBe('dx-orbit-spin-reverse')
+  expect(motion.intro.topChip).toBe('dx-chip-float')
+  expect(motion.intro.bottomChip).toBe('dx-chip-float')
+  expect(motion.intro.statusPulse).toBe('dx-status-pulse')
+  expect(motion.intro.featureSway).toBe('dx-symbol-sway')
+
+  expect(motion.staticElements.terminal).toBe('none')
+  expect(motion.staticElements.articleCard).toBe('none')
+  expect(motion.staticElements.launchpadCard).toBe('none')
+  expect(motion.staticElements.gridlines).toBe('none')
+  expect(motion.heroPseudoBefore).toBe('none')
+  expect(motion.heroPseudoAfter).toBe('none')
+  expect(motion.headerBackdrop).toBe('none')
+})
+
+test('reduced-motion disables animated movement and keeps hero content visible', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   await expect(page.locator('.hero h1')).toBeVisible()
 
   const result = await page.evaluate(() => {
     const selectors = [
-      { selector: '.hero', pseudo: '::before' },
-      { selector: '.hero', pseudo: '::after' },
-      { selector: '.hero-gridlines' },
-      { selector: '.visual-orbit' },
-      { selector: '.terminal' },
-      { selector: '.terminal', pseudo: '::after' },
-      { selector: '.terminal-bar', pseudo: '::after' },
-      { selector: '.terminal-live i' },
-      { selector: '.eyebrow-dot' },
-      { selector: '.floating-chip' },
-      { selector: '.terminal-content p:not(.terminal-comment)' },
-      { selector: '.art-grid' },
-      { selector: '.art-symbol' },
-      { selector: '.trust-strip', pseudo: '::before' },
+      '.hero .eyebrow',
+      '.hero h1',
+      '.hero .hero-description',
+      '.hero .hero-actions',
+      '.hero .hero-stats',
+      '.hero-visual',
+      '.visual-orbit',
+      '.floating-chip',
+      '.eyebrow-dot',
+      '.terminal-live i',
+      '.art-symbol',
     ]
-
-    const missingSelectors = selectors
-      .filter(({ selector }) => !document.querySelector(selector))
-      .map(({ selector, pseudo }) => selector + (pseudo ?? ''))
-
-    return {
-      missingSelectors,
-      expectedSelectorCount: selectors.length,
-      animationNames: selectors.flatMap(({ selector, pseudo }) => {
-        const elements = Array.from(document.querySelectorAll(selector))
-        return elements.map((element, index) => {
-          const style = pseudo
-            ? window.getComputedStyle(element, pseudo)
-            : window.getComputedStyle(element)
-          return {
-            selector: selector + (pseudo ?? '') + (elements.length > 1 ? '[' + index + ']' : ''),
-            animationName: style.animationName,
-          }
-        })
-      }),
-      heroHeadingAnimation: window.getComputedStyle(document.querySelector('.hero h1')!).animationName,
-    }
+    return selectors.flatMap(selector => Array.from(document.querySelectorAll<HTMLElement>(selector)).map(element => {
+      const style = getComputedStyle(element)
+      return { selector, animationName: style.animationName, opacity: style.opacity }
+    }))
   })
 
-  expect(result.missingSelectors).toEqual([])
-  expect(result.animationNames.length).toBeGreaterThanOrEqual(result.expectedSelectorCount)
-  for (const item of result.animationNames) {
+  expect(result.length).toBeGreaterThanOrEqual(11)
+  for (const item of result) {
     expect(item.animationName, item.selector).toBe('none')
+    expect(item.opacity, item.selector).toBe('1')
   }
-  expect(result.heroHeadingAnimation).not.toBe('none')
+  await expect(page.locator('.hero h1')).toBeVisible()
+  await expect(page.locator('.hero .hero-actions')).toBeVisible()
+
+  const primaryAction = page.locator('.hero .hero-actions .button').first()
+  await primaryAction.hover()
+  const hoverTransform = await primaryAction.evaluate(element => getComputedStyle(element).transform)
+  expect(hoverTransform).toBe('none')
+
+  const pseudoStyles = await page.evaluate(() => {
+    const topic = document.querySelector('.topic-card')
+    const launchpad = document.querySelector('.launchpad-card')
+    const read = (element: Element | null) => {
+      if (!element) return null
+      const style = getComputedStyle(element, '::before')
+      return { opacity: style.opacity, transitionDuration: style.transitionDuration, transform: style.transform }
+    }
+    return { topic: read(topic), launchpad: read(launchpad) }
+  })
+  expect(pseudoStyles.topic).not.toBeNull()
+  expect(pseudoStyles.launchpad).not.toBeNull()
+  expect(pseudoStyles.topic?.opacity).toBe('0')
+  expect(pseudoStyles.launchpad?.opacity).toBe('0')
+  expect(pseudoStyles.topic?.transitionDuration).toBe('0s')
+  expect(pseudoStyles.launchpad?.transitionDuration).toBe('0s')
+  expect(pseudoStyles.topic?.transform).toBe('none')
+  expect(pseudoStyles.launchpad?.transform).toBe('none')
 })
 
 test('homepage scroll path avoids per-element reveal work and updates progress without React state', async ({ page }) => {
@@ -99,8 +160,4 @@ test('homepage scroll path avoids per-element reveal work and updates progress w
   }))
   expect(afterScroll.revealCount).toBe(0)
   expect(afterScroll.progressTransform).toBe('matrix(1, 0, 0, 1, 0, 0)')
-
-  await page.emulateMedia({ reducedMotion: 'reduce' })
-  const heroHeadingAnimation = await page.locator('.hero h1').evaluate(element => getComputedStyle(element).animationName)
-  expect(heroHeadingAnimation).toBe('none')
 })
