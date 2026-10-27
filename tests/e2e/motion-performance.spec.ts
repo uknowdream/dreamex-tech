@@ -99,6 +99,7 @@ test('homepage uses a small motion budget and honors reduced-motion preferences'
       visual: read('.hero-visual'),
       terminal: read('.terminal'),
       chip: read('.chip-top'),
+      orbit: read('.orbit-one'),
       status: read('.eyebrow-dot'),
     }
   })
@@ -106,7 +107,12 @@ test('homepage uses a small motion budget and honors reduced-motion preferences'
     expect(value, key).not.toBeNull()
     expect(value?.animationName, key).toBe('none')
     expect(value?.opacity, key).toBe('1')
-    expect(value?.transform, key).toBe('none')
+    if (key === 'orbit') {
+      // Its translateX(-50%) is layout positioning, not motion; reduced motion should preserve centering.
+      expect(value?.transform, key).not.toBe('none')
+    } else {
+      expect(value?.transform, key).toBe('none')
+    }
   }
 })
 
