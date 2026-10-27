@@ -2097,7 +2097,8 @@ function MotionOnScroll() {
       if (observed.has(element) || !element.matches(selector)) return
       observed.add(element)
       element.classList.add('motion-reveal')
-      (element as HTMLElement).style.setProperty('--reveal-delay', `${Math.min(discoveryIndex % 3, 2) * 90}ms`)
+      const htmlElement = element as HTMLElement
+      htmlElement.style.setProperty('--reveal-delay', `${Math.min(discoveryIndex % 3, 2) * 90}ms`)
       discoveryIndex += 1
       observer.observe(element)
     }
