@@ -1,10 +1,41 @@
 /*
- * DreamEx Tech motion budget
- * Keep one-shot entrance/reveal and hover feedback, but avoid perpetual effects that
- * continuously repaint large blurred surfaces or text lines on lower-powered devices.
+ * Scroll-performance budget for DreamEx Tech.
+ *
+ * The brand keeps its dark gradient and short hero entrance, but large blurred layers,
+ * translucent sticky surfaces, perpetual loops, and per-card scroll-reveal transitions
+ * are deliberately removed. They add paint/compositing work without helping reading.
  */
 .hero::before,
-.hero::after,
+.hero::after {
+  display: none !important;
+  content: none !important;
+  filter: none !important;
+  animation: none !important;
+}
+
+/* Keep only an opaque sticky header; avoid repainting content through a backdrop blur. */
+.site-header {
+  background: #080d19 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 2px 18px #00000020 !important;
+}
+.site-header.navigation-open {
+  background: #080d19 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Remove glass blur from decorative surfaces that move with the document. */
+.floating-chip,
+.category-pill,
+.back-to-top,
+.command-trigger {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Disable all perpetual/decorative animations and card entrance loops. */
 .hero-gridlines,
 .visual-orbit,
 .terminal,
@@ -18,64 +49,66 @@
 .art-grid,
 .art-symbol,
 .trust-strip::before,
-.trust-strip::after {
+.trust-strip::after,
+.topic-card,
+.article-card,
+.launchpad-card {
   animation: none !important;
 }
 
-/* Do not allocate persistent compositor layers to every decorative/card element. */
-.hero-copy > *,
-.hero-visual,
+/* Scroll no longer assigns transform/opacity transitions to dozens of elements. */
 .motion-reveal,
+.motion-reveal.is-visible,
 .topic-card,
 .article-card,
-.floating-chip {
+.launchpad-card {
   will-change: auto !important;
+  transition-property: border-color, box-shadow, color !important;
+  transition-duration: 180ms !important;
+}
+.motion-reveal,
+.motion-reveal.is-visible,
+.topic-card.motion-reveal,
+.article-card.motion-reveal,
+.launchpad-card.motion-reveal {
+  opacity: 1 !important;
+  transform: none !important;
 }
 
-.topic-card,
-.article-card {
-  transform: none;
+/*
+ * Let Chromium defer paint/layout work for offscreen homepage sections.
+ * Intrinsic sizes keep the scroll range stable until each section is rendered.
+ */
+.topics-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 430px;
+}
+.launchpad-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 820px;
+}
+.featured-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 380px;
+}
+.articles-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 820px;
+}
+.newsletter {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
 }
 
-/* Keep scroll reveals and hover elevation after removing the old translateZ(0) layer hack. */
-.topic-card.motion-reveal:not(.is-visible),
-.article-card.motion-reveal:not(.is-visible) {
-  transform: translateY(22px);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .topic-card.motion-reveal.is-visible:hover,
-  .article-card.motion-reveal.is-visible:hover,
-  .topic-card:hover:not(.motion-reveal),
-  .article-card:hover:not(.motion-reveal) {
-    transform: translateY(-4px);
-  }
-}
-
-@media (max-width: 640px) {
-  .topic-card.motion-reveal:not(.is-visible),
-  .article-card.motion-reveal:not(.is-visible) {
-    transform: translateY(14px);
-  }
-}
-
-/* The sticky full-width header only needs a light separation from content behind it. */
-.site-header {
-  -webkit-backdrop-filter: blur(8px) !important;
-  backdrop-filter: blur(8px) !important;
-}
-
-.site-header.navigation-open {
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-}
-
-/* Respect reduced-motion preferences completely; reveal content must never remain hidden. */
+/* Preserve reduced-motion accessibility; no hidden content depends on an observer. */
 @media (prefers-reduced-motion: reduce) {
   .motion-reveal,
   .motion-reveal.is-visible,
   .topic-card,
-  .article-card {
+  .article-card,
+  .launchpad-card,
+  .hero-copy > *,
+  .hero-visual {
     animation: none !important;
     transition: none !important;
     opacity: 1 !important;
