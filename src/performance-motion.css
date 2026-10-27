@@ -35,7 +35,7 @@
 
 /* Keep decorative effects that repaint pixels disabled. */
 .hero-gridlines,
-.visual-orbit,
+.orbit-two,
 .terminal::after,
 .terminal-bar::after,
 .terminal-content p:not(.terminal-comment),
