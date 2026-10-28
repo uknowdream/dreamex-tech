@@ -203,35 +203,34 @@
   }
 }
 
-@media (hover: none), (pointer: coarse) {
-  @media (prefers-reduced-motion: no-preference) {
-    .hero-visual {
-      animation: dx-hero-float-mobile 10s ease-in-out infinite !important;
-    }
+@media (hover: none) and (prefers-reduced-motion: no-preference),
+       (pointer: coarse) and (prefers-reduced-motion: no-preference) {
+  .hero-visual {
+    animation: dx-hero-float-mobile 10s ease-in-out infinite !important;
+  }
 
-    .terminal {
-      animation: dx-terminal-float-mobile 10s ease-in-out infinite !important;
-    }
+  .terminal {
+    animation: dx-terminal-float-mobile 10s ease-in-out infinite !important;
+  }
 
-    .visual-orbit.orbit-one {
-      animation-duration: 44s !important;
-    }
+  .visual-orbit.orbit-one {
+    animation-duration: 44s !important;
+  }
 
-    .visual-orbit.orbit-two {
-      animation-duration: 58s !important;
-    }
+  .visual-orbit.orbit-two {
+    animation-duration: 58s !important;
+  }
 
-    .floating-chip.chip-top {
-      animation: dx-chip-float-mobile 9s ease-in-out infinite !important;
-    }
+  .floating-chip.chip-top {
+    animation: dx-chip-float-mobile 9s ease-in-out infinite !important;
+  }
 
-    .floating-chip.chip-bottom {
-      animation: dx-chip-float-mobile 10s ease-in-out infinite reverse !important;
-    }
+  .floating-chip.chip-bottom {
+    animation: dx-chip-float-mobile 10s ease-in-out infinite reverse !important;
+  }
 
-    .hero-gridlines::after {
-      animation-duration: 13s;
-    }
+  .hero-gridlines::after {
+    animation-duration: 13s;
   }
 }
 
