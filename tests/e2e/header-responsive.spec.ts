@@ -3,7 +3,8 @@ import { expect, test } from '@playwright/test'
 const desktopWidths = [1281, 1366, 1440, 1600, 1920]
 const drawerWidths = [1280, 1100, 1024, 768, 761]
 
-test('desktop header hides drawer-only Quick Find and keeps navigation controls separated', async ({ page }) => {
+test('desktop header hides drawer-only Quick Find and keeps navigation controls separated', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name.includes('mobile'), 'Touch-capable viewports intentionally use the navigation drawer even when emulating a wide screen.')
   for (const width of desktopWidths) {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/')
@@ -58,6 +59,24 @@ test('tablet/laptop header uses a menu drawer and Quick Find works inside it', a
     await search.fill('API Playground')
     await expect(nav.locator('a[href="/api-playground"]')).toBeVisible()
     await expect(nav.locator('.nav-platform')).toHaveAttribute('open', '')
+    await page.keyboard.press('Escape')
+    await expect(nav).toBeHidden()
+  }
+})
+
+test('touch navigation keeps the drawer on even wide desktop-site viewports', async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.includes('mobile'), 'This case validates the coarse-pointer layout only.')
+  for (const width of [1281, 1366, 1440, 1920]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/')
+    const menuToggle = page.locator('.site-header .menu-toggle')
+    const nav = page.locator('.site-header #primary-navigation')
+    await expect(menuToggle).toBeVisible()
+    await expect(nav).toBeHidden()
+    await expect(page.locator('.site-header .nav-drawer-search')).toBeHidden()
+    await menuToggle.click()
+    await expect(nav).toBeVisible()
+    await expect(nav.locator('.nav-drawer-search')).toBeVisible()
     await page.keyboard.press('Escape')
     await expect(nav).toBeHidden()
   }
