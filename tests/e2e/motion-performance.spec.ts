@@ -22,6 +22,14 @@ test('homepage restores ambient hero motion and moving terminal details', async 
       chipFloat: animation('.floating-chip.chip-top'),
       statusPulse: animation('.eyebrow-dot'),
       gridDrift: animation('.hero-gridlines'),
+      gridSweep: animation('.hero-gridlines', '::after'),
+      ambientDrift: animation('.hero', '::before'),
+      auroraRotation: animation('.hero', '::after'),
+      terminalSignal: animation('.terminal-bar', '::after'),
+      codeLinePulse: animation('.terminal-content p:not(.terminal-comment)'),
+      ambientFilter: getComputedStyle(document.querySelector('.hero')!, '::before').filter,
+      auroraFilter: getComputedStyle(document.querySelector('.hero')!, '::after').filter,
+      headerBackdropFilter: getComputedStyle(document.querySelector('.site-header')!).backdropFilter,
       artGrid: animation('.art-grid'),
       artSymbol: animation('.art-symbol'),
       heroBeforeDisplay: pseudoDisplay('::before'),
@@ -32,14 +40,28 @@ test('homepage restores ambient hero motion and moving terminal details', async 
 
   for (const key of [
     'heading', 'heroVisual', 'firstOrbit', 'secondOrbit', 'terminalFloat',
-    'terminalScan', 'chipFloat', 'statusPulse', 'gridDrift', 'artGrid', 'artSymbol',
+    'terminalScan', 'chipFloat', 'statusPulse', 'gridDrift', 'gridSweep',
+    'ambientDrift', 'auroraRotation', 'terminalSignal', 'artGrid', 'artSymbol',
   ] as const) {
     expect(motion[key], key).not.toBe('none')
     expect(motion[key], key).not.toBeNull()
   }
+  expect(motion.codeLinePulse).toBe('none')
+  expect(motion.ambientFilter).toBe('none')
+  expect(motion.auroraFilter).toBe('none')
+  expect(motion.headerBackdropFilter).toBe('none')
   expect(motion.heroBeforeDisplay).not.toBe('none')
   expect(motion.heroAfterDisplay).not.toBe('none')
   expect(motion.contentVisibility).not.toBe('auto')
+
+  const sweepTransformBefore = await page.evaluate(() =>
+    getComputedStyle(document.querySelector('.hero-gridlines')!, '::after').transform
+  )
+  await page.waitForTimeout(350)
+  const sweepTransformAfter = await page.evaluate(() =>
+    getComputedStyle(document.querySelector('.hero-gridlines')!, '::after').transform
+  )
+  expect(sweepTransformAfter).not.toBe(sweepTransformBefore)
 })
 
 test('scroll reveals reappear and complete as sections enter the viewport', async ({ page }) => {
@@ -73,6 +95,12 @@ test('reduced-motion disables moving decoration and never hides content', async 
       terminalAnimation: animation('.terminal'),
       scanAnimation: animation('.terminal', '::after'),
       chipAnimation: animation('.floating-chip'),
+      ambientAnimation: animation('.hero', '::before'),
+      auroraAnimation: animation('.hero', '::after'),
+      gridAnimation: animation('.hero-gridlines'),
+      sweepAnimation: animation('.hero-gridlines', '::after'),
+      terminalSignalAnimation: animation('.terminal-bar', '::after'),
+      codeLineAnimation: animation('.terminal-content p:not(.terminal-comment)'),
       headingOpacity: heading ? getComputedStyle(heading).opacity : null,
       footerRevealCount: document.querySelectorAll('.footer-inner.motion-reveal').length,
     }
@@ -85,6 +113,12 @@ test('reduced-motion disables moving decoration and never hides content', async 
   expect(result.terminalAnimation).toBe('none')
   expect(result.scanAnimation).toBe('none')
   expect(result.chipAnimation).toBe('none')
+  expect(result.ambientAnimation).toBe('none')
+  expect(result.auroraAnimation).toBe('none')
+  expect(result.gridAnimation).toBe('none')
+  expect(result.sweepAnimation).toBe('none')
+  expect(result.terminalSignalAnimation).toBe('none')
+  expect(result.codeLineAnimation).toBe('none')
   expect(result.headingOpacity).toBe('1')
   expect(result.footerRevealCount).toBe(0)
 })
