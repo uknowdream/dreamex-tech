@@ -36,17 +36,10 @@ test('route metadata follows the selected language and unknown articles are noin
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/api-playground')
   await expect(page).toHaveTitle(/API Playground & Contract Studio/i)
-  const useDrawer = await page.evaluate(() =>
-    window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(max-width: 1440px)').matches
-  )
-  if (useDrawer) {
-    // Laptop widths and touch devices use the drawer, where the language control lives.
-    await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
-    const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
-    await drawer.getByRole('button', { name: 'ID', exact: true }).click()
-  } else {
-    await page.getByRole('button', { name: 'ID', exact: true }).click()
-  }
+  // At 1280px the responsive header intentionally keeps language controls inside the drawer.
+  await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
+  const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
+  await drawer.getByRole('button', { name: 'ID', exact: true }).click()
   await expect(page).toHaveTitle(/API Playground & Contract Studio/i)
   await expect(page.locator('html')).toHaveAttribute('lang', 'id')
   await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /Periksa alur API/)
