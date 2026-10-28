@@ -12,7 +12,7 @@
 }
 
 /* Collapse before the long desktop link row runs out of available width. */
-@media (min-width: 1281px) and (max-width: 1440px) {
+@media (min-width: 1280px) and (max-width: 1440px) {
   #root .site-header .nav-wrap {
     gap: clamp(8px, 1vw, 14px);
   }
@@ -30,6 +30,25 @@
     align-items: center !important;
     justify-content: center !important;
     gap: 5px !important;
+    padding: 0 !important;
+    border: 1px solid #34445c !important;
+    border-radius: 10px !important;
+    background: #101827 !important;
+    cursor: pointer !important;
+  }
+
+  #root .site-header .menu-toggle > span:not(.menu-toggle-label) {
+    display: block !important;
+    flex: 0 0 1.5px !important;
+    width: 17px !important;
+    height: 1.5px !important;
+    min-height: 1.5px !important;
+    border-radius: 2px !important;
+    background: #dce5f3 !important;
+  }
+
+  #root .site-header .menu-toggle .menu-toggle-label {
+    display: none !important;
   }
 
   #root .site-header #primary-navigation.nav-links:not(.nav-open) {
@@ -42,7 +61,7 @@
 }
 
 /* Keep the full navigation only on genuinely wide viewports. */
-@media (min-width: 1441px) {
+@media (min-width: 1440.01px) {
   #root .site-header #primary-navigation.nav-links:not(.nav-open) {
     display: flex;
   }
