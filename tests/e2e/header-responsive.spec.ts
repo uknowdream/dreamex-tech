@@ -30,7 +30,7 @@ test('Quick Find stays inside the closed navigation drawer, not the desktop head
       await expect(page.locator('#nav-drawer-search-input')).toBeVisible()
       await page.locator('#nav-drawer-search-input').fill('API Playground')
       await expect(page.locator('#primary-navigation a[href="/api-playground"]')).toBeVisible()
-      await page.getByRole('button', { name: /close navigation|tutup navigasi/i }).click()
+      await page.locator('#primary-navigation .nav-drawer-close').click()
       await expect(page.locator('.nav-drawer-search')).toBeHidden()
     } else {
       await expect(page.locator('.menu-toggle')).toBeHidden()
