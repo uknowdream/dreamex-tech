@@ -11,6 +11,7 @@ import './engineering-page-system.css'
 import './navigation-panel-v3.css'
 import './performance-motion.css'
 import './quality-motion.css'
+import './header-responsive-fix.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
