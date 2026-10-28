@@ -1,9 +1,11 @@
 import { expect, test } from '@playwright/test'
 
 test('Quick Find stays inside the closed navigation drawer, not the desktop header row', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/')
+
   for (const width of [1280, 1366, 1440, 1600, 1920]) {
     await page.setViewportSize({ width, height: 900 })
-    await page.goto('/')
 
     await expect(page.locator('.site-header')).toBeVisible()
     await expect(page.locator('.nav-drawer-search')).toBeHidden()
