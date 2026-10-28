@@ -4,7 +4,7 @@
  */
 
 /* Compact desktop, tablet, and touch navigation surface. */
-@media (max-width: 1280px), (pointer: coarse) {
+@media (max-width: 1440px), (pointer: coarse) {
   /* A transformed/sticky header can become the containing block for fixed dialogs. */
   html body #root .site-header.navigation-open {
     position: relative !important;
