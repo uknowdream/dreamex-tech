@@ -7,6 +7,23 @@
  * Motion is opt-in by system preference; the reduced-motion path is fully static.
  */
 
+/*
+ * The terminal's LIVE signal remains visible even when movement is reduced.
+ * Only the pulse animation is gated by prefers-reduced-motion.
+ */
+.terminal-bar { position: relative; }
+.terminal-live { margin-left: 0; }
+.terminal-bar::after {
+  content: "";
+  flex: 0 0 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #c5ff70;
+  margin-left: auto;
+  box-shadow: 0 0 11px rgba(197, 255, 112, .72);
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .hero {
     isolation: isolate;
@@ -159,19 +176,8 @@
     animation: dx-terminal-sweep 5.8s cubic-bezier(.45, 0, .55, 1) infinite !important;
   }
 
-  .terminal-bar { position: relative; }
-  .terminal-live { margin-left: 0; }
-
-  /* Keep the signal glow static; only opacity changes each cycle. */
+  /* Keep the signal's appearance static; only opacity changes per cycle. */
   .terminal-bar::after {
-    content: "";
-    flex: 0 0 5px;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: #c5ff70;
-    margin-left: auto;
-    box-shadow: 0 0 11px rgba(197, 255, 112, .72) !important;
     animation: dx-status-pulse 2.7s ease-in-out infinite !important;
   }
 
