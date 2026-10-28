@@ -33,7 +33,7 @@ test('core routes publish route-specific canonical and social metadata', async (
 })
 
 test('route metadata follows the selected language and unknown articles are noindex', async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/api-playground')
   await expect(page).toHaveTitle(/API Playground & Contract Studio/i)
   const touchInput = await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches)
