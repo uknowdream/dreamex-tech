@@ -100,6 +100,8 @@ test('reduced-motion disables moving decoration and never hides content', async 
       gridAnimation: animation('.hero-gridlines'),
       sweepAnimation: animation('.hero-gridlines', '::after'),
       terminalSignalAnimation: animation('.terminal-bar', '::after'),
+      terminalSignalContent: getComputedStyle(document.querySelector('.terminal-bar')!, '::after').content,
+      terminalSignalWidth: getComputedStyle(document.querySelector('.terminal-bar')!, '::after').width,
       codeLineAnimation: animation('.terminal-content p:not(.terminal-comment)'),
       headingOpacity: heading ? getComputedStyle(heading).opacity : null,
       footerRevealCount: document.querySelectorAll('.footer-inner.motion-reveal').length,
@@ -118,6 +120,8 @@ test('reduced-motion disables moving decoration and never hides content', async 
   expect(result.gridAnimation).toBe('none')
   expect(result.sweepAnimation).toBe('none')
   expect(result.terminalSignalAnimation).toBe('none')
+  expect(result.terminalSignalContent).not.toBe('none')
+  expect(result.terminalSignalWidth).toBe('5px')
   expect(result.codeLineAnimation).toBe('none')
   expect(result.headingOpacity).toBe('1')
   expect(result.footerRevealCount).toBe(0)
