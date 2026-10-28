@@ -11,6 +11,7 @@ import './engineering-page-system.css'
 import './navigation-panel-v3.css'
 import './performance-motion.css'
 import './quality-motion.css'
+import './immersive-motion.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
