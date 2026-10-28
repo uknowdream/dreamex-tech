@@ -1,4 +1,57 @@
 /*
+ * Header integrity: drawer-only elements must never leak into the inline desktop nav.
+ * This stylesheet is imported last to override legacy navigation rules consistently.
+ */
+html body #root .site-header:not(.navigation-open) #primary-navigation:not(.nav-open) > .nav-drawer-head,
+html body #root .site-header:not(.navigation-open) #primary-navigation:not(.nav-open) > .nav-drawer-search,
+html body #root .site-header:not(.navigation-open) #primary-navigation:not(.nav-open) > .nav-recent-tools,
+html body #root .site-header:not(.navigation-open) #primary-navigation:not(.nav-open) > .nav-drawer-footer {
+  display: none !important;
+}
+
+/*
+ * At laptop/tablet widths, switch to the same intentional navigation drawer used on
+ * smaller screens instead of compressing every nav item into one crowded row.
+ */
+@media screen and (min-width: 761px) and (max-width: 1280px) {
+  html body #root .site-header .nav-wrap {
+    gap: 12px !important;
+  }
+
+  html body #root .site-header .brand {
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  html body #root .site-header .brand-beta {
+    display: none !important;
+  }
+
+  html body #root .site-header .command-trigger {
+    flex: 0 0 auto !important;
+    margin-left: auto !important;
+    margin-right: 8px !important;
+  }
+
+  html body #root .site-header .menu-toggle {
+    display: flex !important;
+    flex: 0 0 42px !important;
+    width: 42px !important;
+    height: 42px !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  html body #root .site-header #primary-navigation.nav-links:not(.nav-open) {
+    display: none !important;
+  }
+
+  html body #root .site-header.navigation-open #primary-navigation.nav-links.nav-open[role="dialog"] {
+    display: flex !important;
+  }
+}
+
+/*
  * DreamEx responsive navigation drawer — single authoritative responsive layer.
  * This file is imported last so legacy header styles cannot override drawer geometry.
  */
