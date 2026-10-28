@@ -12,6 +12,19 @@
     isolation: isolate;
   }
 
+  /* An opaque sticky surface avoids repainting the moving page through a live blur. */
+  .site-header {
+    background: rgba(8, 13, 25, .97) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .site-header.navigation-open {
+    background: rgba(8, 13, 25, .99) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
   /* Feathered radial gradients create the glow without an expensive animated blur. */
   .hero::before {
     width: min(86vw, 940px) !important;
