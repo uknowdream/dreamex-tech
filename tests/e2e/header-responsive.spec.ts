@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 const desktopWidths = [1281, 1366, 1440, 1600, 1920]
-const drawerWidths = [1280, 1100, 1024, 768]
+const drawerWidths = [1280, 1100, 1024, 768, 761]
 
 test('desktop header hides drawer-only Quick Find and keeps navigation controls separated', async ({ page }) => {
   for (const width of desktopWidths) {
