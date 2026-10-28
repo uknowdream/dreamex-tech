@@ -1335,3 +1335,32 @@ test('tablet drawer keeps recent tools and readable search-result feedback', asy
   expect(style.fontSize).toBe('10px')
   expect(style.marginTop).toBe('0px')
 })
+
+
+test('desktop header keeps Quick Find inside the navigation drawer and laptop header fits', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await expect(page.locator('.site-header .nav-drawer-search')).toBeHidden()
+  await expect(page.locator('.site-header .command-trigger')).toBeVisible()
+  let desktop = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    scroll: document.documentElement.scrollWidth,
+    header: document.querySelector('.site-header')?.getBoundingClientRect(),
+    brand: document.querySelector('.site-header .brand')?.getBoundingClientRect(),
+    command: document.querySelector('.site-header .command-trigger')?.getBoundingClientRect(),
+  }))
+  expect(desktop.scroll, 'desktop page should not overflow horizontally').toBeLessThanOrEqual(desktop.viewport + 1)
+  expect(desktop.command!.left).toBeGreaterThan(desktop.brand!.right)
+
+  await page.setViewportSize({ width: 1200, height: 900 })
+  await expect(page.locator('.site-header .menu-toggle')).toBeVisible()
+  await expect(page.locator('.site-header .command-trigger')).toBeVisible()
+  await expect(page.locator('.site-header .nav-links')).toBeHidden()
+  await page.locator('.site-header .menu-toggle').click()
+  await expect(page.locator('.site-header .nav-links')).toBeVisible()
+  await expect(page.locator('.site-header .nav-drawer-search')).toBeVisible()
+  await expect(page.getByLabel(/Find a tool or destination|Cari tools atau halaman/i)).toBeVisible()
+  const drawer = await page.locator('.site-header .nav-links').boundingBox()
+  expect(drawer?.width).toBeLessThanOrEqual(440)
+  expect(drawer?.height).toBeGreaterThan(0)
+  await expect(page.locator('.site-header .nav-drawer-search-control input')).toHaveCSS('font-size', '16px')
+})
