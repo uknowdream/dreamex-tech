@@ -125,6 +125,14 @@
 
   /* One transform/opacity scan is more effective and cheaper than pulsing every code line. */
   .terminal::after {
+    content: "";
+    position: absolute;
+    z-index: 3;
+    left: 0;
+    right: 0;
+    top: -35%;
+    height: 24%;
+    pointer-events: none;
     filter: none !important;
     background: linear-gradient(
       180deg,
@@ -134,12 +142,22 @@
       rgba(139, 220, 255, .04) 66%,
       transparent
     ) !important;
-    border-bottom-color: rgba(139, 220, 255, .22);
+    border-bottom: 1px solid rgba(139, 220, 255, .22);
     animation: dx-terminal-sweep 5.8s cubic-bezier(.45, 0, .55, 1) infinite !important;
   }
 
+  .terminal-bar { position: relative; }
+  .terminal-live { margin-left: 0; }
+
   /* Keep the signal glow static; only opacity changes each cycle. */
   .terminal-bar::after {
+    content: "";
+    flex: 0 0 5px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #c5ff70;
+    margin-left: auto;
     box-shadow: 0 0 11px rgba(197, 255, 112, .72) !important;
     animation: dx-status-pulse 2.7s ease-in-out infinite !important;
   }
@@ -231,6 +249,11 @@
 
   .hero-gridlines::after {
     animation-duration: 13s;
+  }
+
+  .terminal::after {
+    height: 18%;
+    animation-duration: 6.8s !important;
   }
 }
 
