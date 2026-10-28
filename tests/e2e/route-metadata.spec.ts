@@ -36,9 +36,11 @@ test('route metadata follows the selected language and unknown articles are noin
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/api-playground')
   await expect(page).toHaveTitle(/API Playground & Contract Studio/i)
-  const touchInput = await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches)
-  if (touchInput) {
-    // Desktop-width touch devices intentionally use the drawer rather than desktop navigation.
+  const useDrawer = await page.evaluate(() =>
+    window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(max-width: 1440px)').matches
+  )
+  if (useDrawer) {
+    // Laptop widths and touch devices use the drawer, where the language control lives.
     await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
     const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
     await drawer.getByRole('button', { name: 'ID', exact: true }).click()
