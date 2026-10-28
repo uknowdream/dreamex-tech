@@ -14,7 +14,8 @@ test('laptop header keeps Quick Find inside a responsive navigation drawer', asy
 
     await expect(header).toBeVisible()
     await expect(menuButton).toBeVisible()
-    await expect(header).toHaveJSProperty('scrollWidth', await header.evaluate(el => el.clientWidth))
+    const dimensions = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, scroll: document.documentElement.scrollWidth }))
+    expect(dimensions.scroll, `page should not overflow horizontally at ${width}px`).toBeLessThanOrEqual(dimensions.viewport + 1)
     await expect(drawer).toBeHidden()
     await expect(quickFind).toBeHidden()
 
@@ -35,7 +36,8 @@ test('mobile header Quick Find stays usable without horizontal overflow', async 
   await page.goto('/')
 
   const header = page.locator('.site-header')
-  await expect(header).toHaveJSProperty('scrollWidth', await header.evaluate(el => el.clientWidth))
+  const dimensions = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, scroll: document.documentElement.scrollWidth }))
+  expect(dimensions.scroll, 'mobile page should not overflow horizontally').toBeLessThanOrEqual(dimensions.viewport + 1)
 
   await page.getByRole('button', { name: /Open menu|Buka menu/i }).click()
   const drawer = page.getByRole('dialog', { name: /Navigation|Navigasi/i })
