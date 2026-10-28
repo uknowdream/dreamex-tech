@@ -3475,3 +3475,44 @@ main, header, footer, section, .container {
     line-height: 1.45 !important;
   }
 }
+
+
+/* Header regression fix: drawer-only search/recent content must never leak
+   into the inline desktop navigation. Keep it available in the tablet/mobile
+   navigation drawer where it is intentionally designed to appear. */
+.nav-links > .nav-drawer-search,
+.nav-links > .nav-recent-tools {
+  display: none !important;
+}
+
+@media (max-width: 1100px) {
+  .nav-links.nav-open > .nav-drawer-search {
+    display: grid !important;
+  }
+
+  .nav-links.nav-open > .nav-recent-tools:not([hidden]) {
+    display: grid !important;
+  }
+}
+
+/* Laptop widths use the drawer layout; prevent the brand and command trigger
+   from squeezing each other before the navigation switches to its compact mode. */
+@media (min-width: 641px) and (max-width: 1100px) {
+  .nav-wrap {
+    gap: clamp(10px, 2vw, 24px);
+  }
+
+  .brand {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  .brand > span:nth-child(2) {
+    white-space: nowrap;
+  }
+
+  .site-header .command-trigger {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+}
