@@ -25,7 +25,8 @@ test('Quick Find stays inside the closed navigation drawer, not the desktop head
     expect(layout.document, `document overflow at ${width}px: ${JSON.stringify(layout)}`).toBeLessThanOrEqual(layout.viewport + 1)
     expect(layout.wrapContent, `header content overflow at ${width}px: ${JSON.stringify(layout)}`).toBeLessThanOrEqual(layout.wrap + 1)
 
-    if (width <= 1440) {
+    const coarsePointer = await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches)
+    if (width <= 1440 || coarsePointer) {
       await expect(page.locator('.menu-toggle')).toBeVisible()
       await page.locator('.menu-toggle').click()
       await expect(page.locator('#primary-navigation[role="dialog"]')).toBeVisible()
