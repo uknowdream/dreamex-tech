@@ -1,0 +1,71 @@
+/*
+ * Desktop header normalization.
+ *
+ * The Quick Find input belongs to the navigation drawer, not the always-visible
+ * desktop row. Previously it had no desktop-hidden default, so its label/input
+ * leaked into the nav flex row and squeezed the actual navigation links.
+ */
+#root .site-header #primary-navigation.nav-links:not(.nav-open) > .nav-drawer-head,
+#root .site-header #primary-navigation.nav-links:not(.nav-open) > .nav-drawer-search,
+#root .site-header #primary-navigation.nav-links:not(.nav-open) > .nav-drawer-footer {
+  display: none !important;
+}
+
+/* Collapse before the long desktop link row runs out of available width. */
+@media (min-width: 1281px) and (max-width: 1440px) {
+  #root .site-header .nav-wrap {
+    gap: clamp(8px, 1vw, 14px);
+  }
+
+  #root .site-header .brand-beta {
+    display: none !important;
+  }
+
+  #root .site-header .menu-toggle {
+    display: flex !important;
+    flex: 0 0 42px !important;
+    width: 42px !important;
+    height: 42px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+  }
+
+  #root .site-header #primary-navigation.nav-links:not(.nav-open) {
+    display: none !important;
+  }
+
+  #root .site-header.navigation-open #primary-navigation.nav-links.nav-open[role="dialog"] {
+    display: flex !important;
+  }
+}
+
+/* Keep the full navigation only on genuinely wide viewports. */
+@media (min-width: 1441px) {
+  #root .site-header #primary-navigation.nav-links:not(.nav-open) {
+    display: flex;
+  }
+
+  #root .site-header #primary-navigation.nav-links:not(.nav-open) > .nav-drawer-search {
+    display: none !important;
+  }
+
+  #root .site-header .nav-links {
+    gap: clamp(8px, .9vw, 15px);
+    font-size: clamp(11px, .8vw, 12px);
+  }
+}
+
+/* Never allow the header's direct children to force horizontal document overflow. */
+#root .site-header .nav-wrap,
+#root .site-header .nav-links,
+#root .site-header .brand {
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #root .site-header .menu-toggle span {
+    transition: none !important;
+  }
+}
