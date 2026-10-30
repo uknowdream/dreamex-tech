@@ -32,6 +32,13 @@ test('homepage restores ambient hero motion and moving terminal details', async 
       headerBackdropFilter: getComputedStyle(document.querySelector('.site-header')!).backdropFilter,
       artGrid: animation('.art-grid'),
       artSymbol: animation('.art-symbol'),
+      signalCard: animation('.hero-signal-card'),
+      signalSweep: animation('.hero-signal-card', '::after'),
+      signalTrack: animation('.hero-signal-track > span'),
+      signalCardRect: (() => {
+        const rect = document.querySelector('.hero-signal-card')!.getBoundingClientRect()
+        return { left: rect.left, right: rect.right, width: rect.width }
+      })(),
       heroBeforeDisplay: pseudoDisplay('::before'),
       heroAfterDisplay: pseudoDisplay('::after'),
       contentVisibility: getComputedStyle(document.querySelector('.articles-section')!).contentVisibility,
@@ -42,6 +49,7 @@ test('homepage restores ambient hero motion and moving terminal details', async 
     'heading', 'heroVisual', 'firstOrbit', 'secondOrbit', 'terminalFloat',
     'terminalScan', 'chipFloat', 'statusPulse', 'gridDrift', 'gridSweep',
     'ambientDrift', 'auroraRotation', 'terminalSignal', 'artGrid', 'artSymbol',
+    'signalCard', 'signalSweep', 'signalTrack',
   ] as const) {
     expect(motion[key], key).not.toBe('none')
     expect(motion[key], key).not.toBeNull()
@@ -53,6 +61,9 @@ test('homepage restores ambient hero motion and moving terminal details', async 
   expect(motion.heroBeforeDisplay).not.toBe('none')
   expect(motion.heroAfterDisplay).not.toBe('none')
   expect(motion.contentVisibility).not.toBe('auto')
+  expect(motion.signalCardRect.left).toBeGreaterThanOrEqual(0)
+  expect(motion.signalCardRect.right).toBeLessThanOrEqual(1440)
+  expect(motion.signalCardRect.width).toBeLessThanOrEqual(194)
 
   const sweepTransformBefore = await page.evaluate(() =>
     getComputedStyle(document.querySelector('.hero-gridlines')!, '::after').transform
@@ -90,6 +101,9 @@ test('reduced-motion disables moving decoration and never hides content', async 
     return {
       preference: matchMedia('(prefers-reduced-motion: reduce)').matches,
       headingAnimation: animation('.hero h1'),
+      signalCardAnimation: animation('.hero-signal-card'),
+      signalSweepAnimation: animation('.hero-signal-card', '::after'),
+      signalTrackAnimation: animation('.hero-signal-track > span'),
       visualAnimation: animation('.hero-visual'),
       orbitAnimation: animation('.visual-orbit.orbit-one'),
       terminalAnimation: animation('.terminal'),
@@ -110,6 +124,9 @@ test('reduced-motion disables moving decoration and never hides content', async 
 
   expect(result.preference).toBe(true)
   expect(result.headingAnimation).toBe('none')
+  expect(result.signalCardAnimation).toBe('none')
+  expect(result.signalSweepAnimation).toBe('none')
+  expect(result.signalTrackAnimation).toBe('none')
   expect(result.visualAnimation).toBe('none')
   expect(result.orbitAnimation).toBe('none')
   expect(result.terminalAnimation).toBe('none')
