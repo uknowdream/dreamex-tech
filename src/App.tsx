@@ -580,6 +580,15 @@ function Home() {
       <div className="hero-visual"><div className="visual-orbit orbit-one" /><div className="visual-orbit orbit-two" /><div className="terminal">
         <div className="terminal-bar"><div className="terminal-dots"><span /><span /><span /></div><small><Terminal size={12} /> dreamex / engineering.ts</small><span className="terminal-live"><i /> {t('terminalLive')}</span></div>
         <div className="terminal-content"><p className="terminal-comment">{t('terminalComment')}</p><p><span className="syntax-purple">const</span> mindset = {'{'}</p><p className="indent"><span className="syntax-blue">quality</span>: <span className="syntax-green">'by design'</span>,</p><p className="indent"><span className="syntax-blue">learning</span>: <span className="syntax-green">'continuous'</span>,</p><p className="indent"><span className="syntax-blue">impact</span>: <span className="syntax-green">'measurable'</span></p><p>{'}'}</p><br /><p><span className="syntax-purple">for</span> (<span className="syntax-orange">const</span> idea <span className="syntax-purple">of</span> curiosity) {'{'}</p><p className="indent">build(idea);</p><p className="indent">test(assumptions);</p><p className="indent">improve(outcome);</p><p>{'}'}</p><div className="terminal-status"><span /> <span>{t('terminalPipeline')}</span><b>{t('terminalReady')}</b><Check size={13} /></div></div>
+      </div><div className="hero-signal-card" aria-hidden="true">
+        <div className="hero-signal-head"><span>{language === 'en' ? 'ENGINEERING LOOP' : 'SIKLUS ENGINEERING'}</span><span>03</span></div>
+        <strong>{language === 'en' ? 'From idea to release' : 'Dari ide hingga rilis'}</strong>
+        <div className="hero-signal-steps">
+          <span><i>01</i>{language === 'en' ? 'Plan' : 'Rencana'}</span>
+          <span><i>02</i>{language === 'en' ? 'Build' : 'Bangun'}</span>
+          <span><i>03</i>{language === 'en' ? 'Verify' : 'Validasi'}</span>
+        </div>
+        <div className="hero-signal-track"><span /></div>
       </div><div className="floating-chip chip-top"><ShieldCheck size={16} /> {t('visualChipQuality')}</div><div className="floating-chip chip-bottom"><Sparkles size={16} /> {t('visualChipCuriosity')}</div><div className="visual-caption"><span>{t('visualCaption')}</span><span>{t('visualIterate')} <ArrowDownRight size={13} /></span></div></div>
     </div></section>
     <section className="trust-strip"><div className="container trust-inner"><span><Zap size={15} /> {t('trustKnowledge')}</span><span><ShieldCheck size={15} /> {t('trustQuality')}</span><span><Braces size={15} /> {t('trustEngineering')}</span><span><Sparkles size={15} /> {t('trustAI')}</span></div></section>
