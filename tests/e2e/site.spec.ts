@@ -1335,3 +1335,19 @@ test('tablet drawer keeps recent tools and readable search-result feedback', asy
   expect(style.fontSize).toBe('10px')
   expect(style.marginTop).toBe('0px')
 })
+
+test('desktop header keeps Quick Find inside the navigation drawer and adapts at laptop width', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  await expect(page.locator('.nav-drawer-search')).toBeHidden()
+  await expect(page.locator('.menu-toggle')).toBeHidden()
+
+  await page.setViewportSize({ width: 1024, height: 900 })
+  await expect(page.locator('.menu-toggle')).toBeVisible()
+  await expect(page.locator('#primary-navigation')).toBeHidden()
+  await page.locator('.menu-toggle').click()
+  await expect(page.locator('.nav-drawer-search')).toBeVisible()
+  await expect(page.locator('#nav-drawer-search-input')).toBeVisible()
+  await page.locator('#nav-drawer-search-input').fill('API')
+  await expect(page.locator('.nav-search-count')).toBeVisible()
+})
