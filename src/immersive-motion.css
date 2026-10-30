@@ -413,3 +413,195 @@
     will-change: auto !important;
   }
 }
+
+
+/*
+ * MAHERO-inspired visual layering for DreamEx: a compact workflow card sits
+ * over the empty side of the terminal, adding product-preview depth without
+ * covering the code content. Its only continuous motion is transform/opacity.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-signal-card {
+    position: absolute;
+    z-index: 4;
+    top: 43%;
+    right: 10px;
+    width: clamp(164px, 34%, 194px);
+    padding: 13px 13px 12px;
+    border: 1px solid rgba(145, 207, 255, .26);
+    border-radius: 12px;
+    background: linear-gradient(145deg, rgba(20, 33, 54, .985), rgba(9, 17, 31, .99));
+    box-shadow: 0 18px 44px rgba(0, 0, 0, .34), inset 0 1px rgba(255, 255, 255, .055);
+    isolation: isolate;
+    pointer-events: none;
+    transform-origin: center;
+    animation: dx-signal-card-float 9.6s ease-in-out infinite;
+  }
+
+  .hero-signal-card::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: -5px -7px;
+    border: 1px solid rgba(197, 255, 112, .14);
+    border-radius: 15px;
+    background: rgba(12, 22, 38, .42);
+    transform: rotate(2.8deg);
+  }
+
+  .hero-signal-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    clip-path: inset(0 round 12px);
+    background: linear-gradient(105deg, transparent 26%, rgba(139, 220, 255, .025) 43%, rgba(197, 255, 112, .11) 50%, rgba(139, 220, 255, .025) 57%, transparent 74%);
+    opacity: 0;
+    transform: translate3d(-120%, 0, 0) skewX(-15deg);
+    animation: dx-signal-card-sweep 8.8s 1.2s ease-in-out infinite;
+  }
+
+  .hero-signal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: #91a1ba;
+    font: 8px/1.4 var(--mono);
+    letter-spacing: 1px;
+  }
+
+  .hero-signal-head > span:last-child {
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border: 1px solid rgba(197, 255, 112, .2);
+    border-radius: 6px;
+    color: #c5ff70;
+    background: rgba(197, 255, 112, .06);
+    font-size: 8px;
+  }
+
+  .hero-signal-card > strong {
+    display: block;
+    margin: 10px 0 12px;
+    color: #edf3ff;
+    font: 600 12px/1.35 var(--display);
+    letter-spacing: -.2px;
+  }
+
+  .hero-signal-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .hero-signal-steps > span {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+    color: #a6b6ce;
+    font: 8px/1.2 var(--mono);
+  }
+
+  .hero-signal-steps i {
+    display: grid;
+    place-items: center;
+    width: 19px;
+    height: 19px;
+    border: 1px solid rgba(139, 220, 255, .24);
+    border-radius: 6px;
+    color: #8bdcff;
+    background: rgba(139, 220, 255, .065);
+    font-style: normal;
+    font-size: 8px;
+  }
+
+  .hero-signal-steps > span:nth-child(2) i {
+    border-color: rgba(197, 255, 112, .24);
+    color: #c5ff70;
+    background: rgba(197, 255, 112, .065);
+  }
+
+  .hero-signal-steps > span:nth-child(3) i {
+    border-color: rgba(192, 168, 255, .25);
+    color: #c0a8ff;
+    background: rgba(192, 168, 255, .07);
+  }
+
+  .hero-signal-track {
+    height: 2px;
+    margin-top: 12px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: rgba(139, 163, 202, .15);
+  }
+
+  .hero-signal-track > span {
+    display: block;
+    width: 42%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #8bdcff, #c5ff70);
+    transform-origin: left;
+    animation: dx-signal-track 4.8s ease-in-out infinite alternate;
+  }
+
+  @keyframes dx-signal-card-float {
+    0%, 100% { transform: translate3d(0, 0, 0) rotate(.7deg); }
+    50% { transform: translate3d(0, -4px, 0) rotate(-.4deg); }
+  }
+
+  @keyframes dx-signal-card-sweep {
+    0%, 18% { opacity: 0; transform: translate3d(-120%, 0, 0) skewX(-15deg); }
+    28% { opacity: .85; }
+    58% { opacity: .45; }
+    72%, 100% { opacity: 0; transform: translate3d(120%, 0, 0) skewX(-15deg); }
+  }
+
+  @keyframes dx-signal-track {
+    from { transform: scaleX(.62); opacity: .72; }
+    to { transform: scaleX(1); opacity: 1; }
+  }
+}
+
+@media (hover: none) and (prefers-reduced-motion: no-preference),
+       (pointer: coarse) and (prefers-reduced-motion: no-preference) {
+  .hero-signal-card {
+    top: 43%;
+    right: 7px;
+    width: clamp(146px, 42%, 168px);
+    padding: 10px 10px 9px;
+    animation-duration: 12s;
+  }
+  .hero-signal-card > strong { margin: 8px 0 9px; font-size: 11px; }
+  .hero-signal-steps { gap: 3px; }
+  .hero-signal-steps > span { font-size: 7px; }
+  .hero-signal-track { margin-top: 9px; }
+  .hero-signal-card::after { animation-duration: 12s; }
+}
+
+@media (max-width: 360px) {
+  .hero-signal-card {
+    width: 136px;
+    right: 5px;
+    top: 41%;
+    padding: 8px;
+  }
+  .hero-signal-card > strong { font-size: 10px; }
+  .hero-signal-steps > span { font-size: 6.5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-signal-card,
+  .hero-signal-card::after,
+  .hero-signal-track > span {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+  .hero-signal-card::after { opacity: 0 !important; }
+  .hero-signal-card { opacity: 1 !important; }
+  .hero-signal-track > span { width: 72%; }
+}
