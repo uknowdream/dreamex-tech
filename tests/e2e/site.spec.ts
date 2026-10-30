@@ -1337,6 +1337,10 @@ test('tablet drawer keeps recent tools and readable search-result feedback', asy
 })
 
 test('desktop header keeps Quick Find inside the navigation drawer and adapts at laptop width', async ({ page }) => {
+  test.skip(
+    await page.evaluate(() => matchMedia('(pointer: coarse)').matches),
+    'Fine-pointer desktop/laptop behavior is covered by Chromium; touch devices intentionally use the navigation drawer.',
+  )
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/')
   await expect(page.locator('.nav-drawer-search')).toBeHidden()
