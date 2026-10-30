@@ -417,7 +417,7 @@
 
 
 /* Layered engineering workflow card: transform/opacity-only motion. */
-.hero-signal-card{position:absolute;z-index:4;top:43%;right:10px;width:clamp(164px,34%,194px);padding:12px;border:1px solid rgba(145,207,255,.26);border-radius:12px;background:linear-gradient(145deg,#142136fa,#09111ffa);box-shadow:0 18px 44px #0005,inset 0 1px #ffffff0e;isolation:isolate;pointer-events:none}
+.hero-signal-card{position:absolute;z-index:4;top:43%;right:10px;width:clamp(164px,34%,188px);padding:12px;border:1px solid rgba(145,207,255,.26);border-radius:12px;background:linear-gradient(145deg,#142136fa,#09111ffa);box-shadow:0 18px 44px #0005,inset 0 1px #ffffff0e;isolation:isolate;pointer-events:none}
 .hero-signal-card:before{content:"";position:absolute;z-index:-1;inset:-5px -7px;border:1px solid #c5ff7024;border-radius:15px;background:#0c16262e;transform:rotate(2.8deg)}
 .hero-signal-head{display:flex;justify-content:space-between;gap:8px;color:#91a1ba;font:8px var(--mono);letter-spacing:1px}
 .hero-signal-head span:last-child{display:grid;place-items:center;width:20px;height:20px;border:1px solid #c5ff7033;border-radius:6px;color:#c5ff70;background:#c5ff7010}
