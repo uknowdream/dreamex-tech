@@ -13,7 +13,7 @@
  */
 
 
-/* Critical foundation for the second aurora; the richer homepage layer is route-loaded. */
+/* Base pseudo-element box for the animated aurora; visual size and paint styles live in public/premium-experience.v2.css. */
 .hero { isolation: isolate; }
 .hero::after {
   content: "";

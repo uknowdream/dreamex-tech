@@ -6,7 +6,7 @@ test('premium homepage hero keeps its aurora and signal card inside every suppor
   await page.goto('/')
   await expect(page.locator('main#main-content .hero h1')).toBeVisible()
   await expect(page.locator('.hero-signal-card')).toBeVisible()
-  await expect.poll(() => page.evaluate(() => Boolean(getComputedStyle(document.documentElement).getPropertyValue('--dx-glass').trim()))).toBe(true)
+  await expect(page.locator('link[data-dreamex-premium-experience]')).toHaveAttribute('href', '/premium-experience.v2.css')
 
   for (const width of responsiveWidths) {
     await page.setViewportSize({ width, height: 900 })
@@ -37,7 +37,7 @@ test('reduced-motion preference keeps the hero information visible without runni
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   await expect(page.locator('.hero-signal-card')).toBeVisible()
-  await expect.poll(() => page.evaluate(() => Boolean(getComputedStyle(document.documentElement).getPropertyValue('--dx-glass').trim()))).toBe(true)
+  await expect(page.locator('link[data-dreamex-premium-experience]')).toHaveAttribute('href', '/premium-experience.v2.css')
 
   const motion = await page.evaluate(() => {
     const hero = document.querySelector<HTMLElement>('.hero')
@@ -57,4 +57,37 @@ test('reduced-motion preference keeps the hero information visible without runni
   expect(motion!.card).toBe('none')
   expect(motion!.cardOpacity).toBe('1')
   expect(motion!.track).toBe('none')
+})
+
+test('premium aurora animations are active when motion is allowed', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.goto('/')
+  await expect(page.locator('.home-page .hero h1')).toBeVisible()
+  const names = await page.evaluate(() => {
+    const hero = document.querySelector<HTMLElement>('.home-page .hero')
+    if (!hero) return null
+    return { ambient: getComputedStyle(hero, '::before').animationName, aurora: getComputedStyle(hero, '::after').animationName }
+  })
+  expect(names).toEqual({ ambient: 'dx-premium-ambient', aurora: 'dx-premium-aurora' })
+})
+
+test('premium visual rules stay scoped to the homepage after client-side article navigation', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.locator('.home-page')).toBeVisible()
+  await expect(page.locator('link[data-dreamex-premium-experience]')).toHaveAttribute('href', '/premium-experience.v2.css')
+  await page.locator('.featured-copy .read-link').click()
+  await expect(page.locator('.article-page')).toBeVisible()
+  await expect(page.locator('.home-page')).toHaveCount(0)
+  const scoped = await page.evaluate(() => {
+    const sheet = Array.from(document.styleSheets).find(item => item.href?.includes('/premium-experience.v2.css'))
+    if (!sheet) return false
+    const inspect = (rules: CSSRuleList): boolean => Array.from(rules).every(rule => {
+      if (rule instanceof CSSMediaRule || rule instanceof CSSSupportsRule) return inspect(rule.cssRules)
+      if (rule instanceof CSSKeyframesRule) return true
+      const selector = (rule as CSSStyleRule).selectorText
+      return !selector || selector.split(',').every(item => item.trim().startsWith('.home-page '))
+    })
+    return inspect(sheet.cssRules)
+  })
+  expect(scoped).toBe(true)
 })
