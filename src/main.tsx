@@ -12,6 +12,7 @@ import './navigation-panel-v3.css'
 import './performance-motion.css'
 import './quality-motion.css'
 import './immersive-motion.css'
+import './premium-experience.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
