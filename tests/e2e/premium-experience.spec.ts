@@ -91,3 +91,10 @@ test('premium visual rules stay scoped to the homepage after client-side article
   })
   expect(scoped).toBe(true)
 })
+
+test('direct non-home routes do not attach the homepage visual stylesheet', async ({ page }) => {
+  await page.goto('/about')
+  await expect(page.locator('main#main-content h1').first()).toBeVisible()
+  await expect(page.locator('.home-page')).toHaveCount(0)
+  await expect(page.locator('link[data-dreamex-premium-experience]')).toHaveCount(0)
+})

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowDownRight, ArrowRight, BookOpen, Bookmark, BookmarkCheck, Braces, Check, ChevronUp, ChevronDown, Layers3, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap, Rss, Activity, AlertTriangle, CheckCircle2, Download, ClipboardList, Network, Gauge, Clock3 } from 'lucide-react'
 import { articles } from './articles'
@@ -2343,8 +2343,8 @@ export default function App() {
   const { t } = useLanguage()
   const location = useLocation()
 
-  useEffect(() => {
-    // Direct homepage loads are styled before React mounts; this covers later SPA navigation.
+  useLayoutEffect(() => {
+    // The preload is fetched in index.html; attach it before paint on later SPA navigation.
     if (location.pathname !== '/') return
     const selector = 'link[data-dreamex-premium-experience]'
     if (document.head.querySelector(selector)) return
