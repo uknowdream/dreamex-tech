@@ -6,6 +6,7 @@ test('premium homepage hero keeps its aurora and signal card inside every suppor
   await page.goto('/')
   await expect(page.locator('main#main-content .hero h1')).toBeVisible()
   await expect(page.locator('.hero-signal-card')).toBeVisible()
+  await expect.poll(() => page.evaluate(() => Boolean(getComputedStyle(document.documentElement).getPropertyValue('--dx-glass').trim()))).toBe(true)
 
   for (const width of responsiveWidths) {
     await page.setViewportSize({ width, height: 900 })
@@ -36,6 +37,7 @@ test('reduced-motion preference keeps the hero information visible without runni
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   await expect(page.locator('.hero-signal-card')).toBeVisible()
+  await expect.poll(() => page.evaluate(() => Boolean(getComputedStyle(document.documentElement).getPropertyValue('--dx-glass').trim()))).toBe(true)
 
   const motion = await page.evaluate(() => {
     const hero = document.querySelector<HTMLElement>('.hero')

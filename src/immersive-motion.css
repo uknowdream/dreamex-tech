@@ -11,6 +11,18 @@
  * The terminal's LIVE signal remains visible even when movement is reduced.
  * Only the pulse animation is gated by prefers-reduced-motion.
  */
+
+
+/* Critical foundation for the second aurora; the richer homepage layer is route-loaded. */
+.hero { isolation: isolate; }
+.hero::after {
+  content: "";
+  position: absolute;
+  display: block;
+  z-index: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
 .terminal-bar { position: relative; }
 .terminal-live { margin-left: 0; }
 .terminal-bar::after {

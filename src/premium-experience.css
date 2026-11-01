@@ -33,23 +33,23 @@
 }
 
 .hero::before {
-  width: min(84vw, 940px) !important;
-  height: min(84vw, 940px) !important;
-  right: -18% !important;
-  top: -38% !important;
+  width: min(84vw, 940px);
+  height: min(84vw, 940px);
+  right: -18%;
+  top: -38%;
   background:
     radial-gradient(ellipse at 62% 36%, rgba(115, 105, 255, .21), transparent 50%),
     radial-gradient(ellipse at 36% 68%, rgba(70, 211, 224, .14), transparent 48%),
-    radial-gradient(ellipse at 74% 74%, rgba(197, 255, 112, .09), transparent 42%) !important;
-  filter: none !important;
-  opacity: .62 !important;
+    radial-gradient(ellipse at 74% 74%, rgba(197, 255, 112, .09), transparent 42%);
+  filter: none;
+  opacity: .62;
 }
 
 .hero::after {
-  width: min(68vw, 800px) !important;
-  height: min(68vw, 800px) !important;
-  right: -19% !important;
-  top: -43% !important;
+  width: min(68vw, 800px);
+  height: min(68vw, 800px);
+  right: -19%;
+  top: -43%;
   background: conic-gradient(
     from 18deg,
     transparent 0deg,
@@ -57,11 +57,11 @@
     rgba(141, 220, 255, .17) 145deg,
     rgba(197, 255, 112, .10) 222deg,
     transparent 318deg
-  ) !important;
+  );
   -webkit-mask-image: radial-gradient(circle, #000 13%, transparent 72%);
   mask-image: radial-gradient(circle, #000 13%, transparent 72%);
   transform-origin: center;
-  opacity: .34 !important;
+  opacity: .34;
 }
 
 .hero-gridlines {
@@ -349,11 +349,11 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .hero::before {
-    animation: dx-premium-ambient 23s ease-in-out infinite alternate !important;
+    animation: dx-premium-ambient 23s ease-in-out infinite alternate;
   }
 
   .hero::after {
-    animation: dx-premium-aurora 58s linear infinite !important;
+    animation: dx-premium-aurora 58s linear infinite;
   }
 
   .hero-signal-track > span {
@@ -408,8 +408,8 @@
 }
 
 @media (pointer: coarse) and (prefers-reduced-motion: no-preference) {
-  .hero::before { animation-duration: 34s !important; }
-  .hero::after { animation-duration: 84s !important; }
+  .hero::before { animation-duration: 34s; }
+  .hero::after { animation-duration: 84s; }
   .hero-visual { animation-duration: 12s !important; }
   .hero-signal-card { animation-duration: 14s !important; }
   .hero-signal-card::after { animation-duration: 14s !important; }

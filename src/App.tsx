@@ -519,6 +519,13 @@ function Home() {
   const [category, setCategory] = useState('Semua')
   const searchInput = useRef<HTMLInputElement>(null)
 
+  useEffect(() => {
+    // Keep the visual refinement route-scoped so it does not inflate initial CSS for every route.
+    void import('./premium-experience.css').catch(() => {
+      // The core homepage remains fully usable if the optional visual layer cannot load.
+    })
+  }, [])
+
   const [resumeRecord, setResumeRecord] = useState<ReadingProgressRecord | null>(readReadingProgress)
   useEffect(() => {
     const syncProgress = () => setResumeRecord(readReadingProgress())
