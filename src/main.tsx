@@ -13,11 +13,25 @@ import './performance-motion.css'
 import './quality-motion.css'
 import './immersive-motion.css'
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+const root = ReactDOM.createRoot(document.getElementById('root')!)
+const renderApp = () => root.render(
   <React.StrictMode>
     <LanguageProvider><BrowserRouter><App /></BrowserRouter></LanguageProvider>
   </React.StrictMode>,
 )
+
+// Load the homepage visual layer before mounting direct homepage visits to avoid a first-paint restyle.
+if (window.location.pathname === '/') {
+  const stylesheet = document.createElement('link')
+  stylesheet.rel = 'stylesheet'
+  stylesheet.href = '/premium-experience.v2.css'
+  stylesheet.dataset.dreamexPremiumExperience = 'true'
+  stylesheet.addEventListener('load', renderApp, { once: true })
+  stylesheet.addEventListener('error', renderApp, { once: true })
+  document.head.append(stylesheet)
+} else {
+  renderApp()
+}
 
 
 if (window.location.protocol === 'https:' && 'serviceWorker' in navigator) {

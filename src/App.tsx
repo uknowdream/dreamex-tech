@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowDownRight, ArrowRight, BookOpen, Bookmark, BookmarkCheck, Braces, Check, ChevronUp, ChevronDown, Layers3, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap, Rss, Activity, AlertTriangle, CheckCircle2, Download, ClipboardList, Network, Gauge, Clock3 } from 'lucide-react'
 import { articles } from './articles'
@@ -519,6 +519,7 @@ function Home() {
   const [category, setCategory] = useState('Semua')
   const searchInput = useRef<HTMLInputElement>(null)
 
+
   const [resumeRecord, setResumeRecord] = useState<ReadingProgressRecord | null>(readReadingProgress)
   useEffect(() => {
     const syncProgress = () => setResumeRecord(readReadingProgress())
@@ -569,7 +570,7 @@ function Home() {
     setMeta('link[rel="canonical"]', 'href', 'https://dreamex.tech/')
   }, [language, t])
 
-  return <main id="main-content">
+  return <main id="main-content" className="home-page">
     <section className="hero"><div className="hero-gridlines" /><div className="container hero-grid">
       <div className="hero-copy"><div className="eyebrow"><span className="eyebrow-dot" /> {t('heroEyebrow')}</div>
         <h1>{t('heroLine1')}<br /><span>{t('heroLine2')}</span><br />{t('heroLine3')}</h1>
@@ -2340,5 +2341,18 @@ function ToolRouteBreadcrumbs() {
 
 export default function App() {
   const { t } = useLanguage()
+  const location = useLocation()
+
+  useLayoutEffect(() => {
+    // The preload is fetched in index.html; attach it before paint on later SPA navigation.
+    if (location.pathname !== '/') return
+    const selector = 'link[data-dreamex-premium-experience]'
+    if (document.head.querySelector(selector)) return
+    const stylesheet = document.createElement('link')
+    stylesheet.rel = 'stylesheet'
+    stylesheet.href = '/premium-experience.v2.css'
+    stylesheet.dataset.dreamexPremiumExperience = 'true'
+    document.head.append(stylesheet)
+  }, [location.pathname])
   return <><a className="skip-link" href="#main-content">{t('skip')}</a><OfflineNotice /><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><ToolRouteBreadcrumbs /><Routes><Route path="/" element={<Home />} /><Route path="/github-ci" element={<Suspense fallback={<div className="container route-loading" role="status">Loading GitHub CI Activity…</div>}><GitHubIntegrationPage /></Suspense>} /><Route path="/team-workspace" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Shared Team Workspace…</div>}><TeamWorkspacePage /></Suspense>} /><Route path="/observatory" element={<WebQualityObservatoryPage />} /><Route path="/site-audit" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Page Health Audit…</div>}><SiteAuditPage /></Suspense>} /> <Route path="/devtools" element={<DeveloperUtilitiesPage />} /> <Route path="/workspace" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Workspace…</div>}><EngineeringWorkspacePage /></Suspense>} /><Route path="/control-plane" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Control Plane…</div>}><EngineeringControlPlanePage /></Suspense>} /><Route path="/engineering-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Intelligence…</div>}><EngineeringIntelligencePage /></Suspense>} /><Route path="/command-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Command Center…</div>}><EngineeringCommandCenterPage /></Suspense>} /><Route path="/qa-studio" element={<Suspense fallback={<div className="container route-loading" role="status">Loading QA Automation Studio…</div>}><QAAutomationStudioPage /></Suspense>} /><Route path="/quality-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Quality Intelligence…</div>}><QualityIntelligencePage /></Suspense>} /><Route path="/reliability-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Reliability Center…</div>}><ReliabilityCenterPage /></Suspense>} /><Route path="/supply-chain-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Supply Chain Intelligence…</div>}><SupplyChainIntelligencePage /></Suspense>} /><Route path="/security-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Security Center…</div>}><SecurityCenterPage /></Suspense>} /><Route path="/api-playground" element={<Suspense fallback={<div className="container route-loading" role="status">Loading API Playground…</div>}><ApiPlaygroundPage /></Suspense>} /><Route path="/performance" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Performance Observatory…</div>}><PerformanceObservatoryPage /></Suspense>} /><Route path="/knowledge-graph" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Knowledge Graph…</div>}><EngineeringKnowledgeGraphPage /></Suspense>} /><Route path="/roadmap" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Product Roadmap…</div>}><EngineeringRoadmapPage /></Suspense>} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><Footer /><RouteMetadata /></>
 }
