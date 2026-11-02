@@ -1,7 +1,8 @@
 import { useMemo, useState, type ChangeEvent } from 'react'
-import { AlertTriangle, Boxes, CheckCircle2, Download, FileJson2, FileText, Filter, Fingerprint, PackageCheck, Search, ShieldAlert, ShieldCheck, Upload, XCircle } from 'lucide-react'
+import { AlertTriangle, Boxes, CheckCircle2, Download, FileJson2, FileText, Filter, Fingerprint, PackageCheck, RefreshCw, Search, ShieldAlert, ShieldCheck, Upload, XCircle } from 'lucide-react'
 import { useLanguage } from './i18n'
 import './SbomIntegrity.css'
+import './SbomLiveScan.css'
 
 type Risk = 'critical' | 'high' | 'medium' | 'low' | 'review'
 type ComponentRecord = { id: string; name: string; version: string; type: string; purl: string; license: string; supplier: string; hashes: string[]; vulnerabilities: string[]; risks: Risk[] }
@@ -9,6 +10,9 @@ type VulnerabilityRecord = { id: string; source: string; severity: Risk; descrip
 type SbomProvenance = { documentId: string; specVersion: string; creators: string[]; createdAt: string; declaredComponents: number }
 type DuplicateIdentity = { identity: string; count: number }
 type Inventory = { source: string; format: 'CycloneDX' | 'SPDX'; importedAt: string; provenance: SbomProvenance; duplicateIdentities: DuplicateIdentity[]; components: ComponentRecord[]; vulnerabilities: VulnerabilityRecord[] }
+type OsvScanResult = { componentId: string; purl: string; vulnerabilities: { id: string; modified: string | null }[] }
+type OsvAdvisory = { id: string; source: 'OSV.dev'; severity: Risk; description: string; details: string; recommendation: string; references: string[]; modified: string | null; url: string }
+type LiveScanSummary = { source: 'OSV.dev'; scannedAt: string; scannedCount: number; skippedCount: number; cappedCount: number; detailsTruncated: boolean }
 const MAX_BYTES = 10 * 1024 * 1024
 const HISTORY_KEY = 'dreamex-supply-chain-history-v1'
 const asObject = (value: unknown): Record<string, unknown> | null => value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null
@@ -174,6 +178,8 @@ export function SupplyChainIntelligencePage() {
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
   const [loading, setLoading] = useState(false)
+  const [scanLoading, setScanLoading] = useState(false)
+  const [liveScan, setLiveScan] = useState<LiveScanSummary | null>(null)
   const [history, setHistory] = useState<{ source: string; format: string; importedAt: string; components: number; vulnerabilities: number }[]>(() => {
     try { const value: unknown = JSON.parse(window.localStorage.getItem(HISTORY_KEY) ?? '[]'); return Array.isArray(value) ? value.filter(item => { const row = asObject(item); return Boolean(row && typeof row.source === 'string' && typeof row.components === 'number') }).slice(0, 8) as { source: string; format: string; importedAt: string; components: number; vulnerabilities: number }[] : [] } catch { return [] }
   })
@@ -188,7 +194,7 @@ export function SupplyChainIntelligencePage() {
     setLoading(true)
     try {
       const next = parseSbom(await file.text(), file.name)
-      setInventory(next); setRiskFilter('all'); setQuery('')
+      setInventory(next); setRiskFilter('all'); setQuery(''); setLiveScan(null)
       const summary = summarize(next)
       const row = { source: file.name, format: next.format, importedAt: next.importedAt, components: summary.total, vulnerabilities: summary.findings }
       const nextHistory = [row, ...history.filter(item => item.source !== row.source)].slice(0, 8)
@@ -198,21 +204,152 @@ export function SupplyChainIntelligencePage() {
     } catch (cause) { setError(cause instanceof Error ? cause.message : (en ? 'Unable to analyze this SBOM.' : 'Tidak dapat menganalisis SBOM ini.')) }
     finally { setLoading(false) }
   }
-  const loadDemo = () => { setInventory(demo); setQuery(''); setRiskFilter('all'); setError(''); setNotice(en ? 'Demo data only — not a real project inventory or vulnerability scan.' : 'Hanya data demo — bukan inventaris proyek atau pemindaian kerentanan nyata.') }
-  const exportJson = () => { if (inventory) downloadFile('dreamex-sbom-inventory.json', JSON.stringify({ format: 'dreamex-sbom-analysis', version: 1, summary: metrics, inventory }, null, 2), 'application/json;charset=utf-8') }
+  const scanVulnerabilities = async () => {
+    if (!inventory) return
+    setError('')
+    setNotice('')
+    const eligible = inventory.components.filter(component => {
+      const purl = component.purl.trim()
+      if (!purl.toLowerCase().startsWith('pkg:')) return false
+      const path = purl.split(/[?#]/, 1)[0]
+      return Boolean(component.version.trim()) || path.lastIndexOf('@') > path.lastIndexOf('/')
+    })
+    if (!eligible.length) {
+      setError(en ? 'No components have a supported Package URL and version for live lookup.' : 'Tidak ada komponen dengan Package URL dan versi yang didukung untuk pemeriksaan langsung.')
+      return
+    }
+    const packages = eligible.slice(0, 100)
+    setScanLoading(true)
+    try {
+      const results: OsvScanResult[] = []
+      const advisories = new Map<string, OsvAdvisory>()
+      let detailsTruncated = false
+      let scannedAt = new Date().toISOString()
+      for (let offset = 0; offset < packages.length; offset += 100) {
+        const chunk = packages.slice(offset, offset + 100)
+        const response = await fetch('/api/osv-scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          cache: 'no-store',
+          body: JSON.stringify({ packages: chunk.map(component => ({ id: component.id, purl: component.purl, version: component.version })) }),
+          signal: AbortSignal.timeout(20_000),
+        })
+        let payload: Record<string, unknown>
+        try { payload = await response.json() as Record<string, unknown> } catch { throw new Error(en ? 'The advisory service returned an invalid response.' : 'Layanan advisori mengembalikan respons tidak valid.') }
+        if (!response.ok) {
+          if (response.status === 413) throw new Error(en ? 'The live scan request exceeded its safe batch limit. Retry with a smaller SBOM.' : 'Permintaan pemindaian melebihi batas batch. Coba dengan SBOM lebih kecil.')
+          throw new Error(typeof payload.message === 'string' ? payload.message : (en ? 'OSV.dev could not complete the scan (HTTP ' + response.status + ').' : 'OSV.dev tidak dapat menyelesaikan pemindaian (HTTP ' + response.status + ').'))
+        }
+        if (!Array.isArray(payload.results) || !Array.isArray(payload.advisories)) throw new Error(en ? 'OSV.dev response did not contain usable package results.' : 'Respons OSV.dev tidak berisi hasil paket yang dapat digunakan.')
+        const chunkResults = payload.results.filter((value): value is OsvScanResult => Boolean(
+          value && typeof value === 'object'
+          && typeof (value as Record<string, unknown>).componentId === 'string'
+          && typeof (value as Record<string, unknown>).purl === 'string'
+          && Array.isArray((value as Record<string, unknown>).vulnerabilities)
+        ))
+        if (chunkResults.length !== chunk.length) throw new Error(en ? 'OSV.dev returned an incomplete package result set.' : 'OSV.dev mengembalikan hasil paket yang tidak lengkap.')
+        results.push(...chunkResults)
+        for (const value of payload.advisories) {
+          if (!value || typeof value !== 'object') continue
+          const row = value as Record<string, unknown>
+          if (typeof row.id !== 'string' || !row.id) continue
+          const severity = ['critical', 'high', 'medium', 'low', 'review'].includes(String(row.severity)) ? row.severity as Risk : 'review'
+          advisories.set(row.id, {
+            id: row.id,
+            source: 'OSV.dev',
+            severity,
+            description: typeof row.description === 'string' ? row.description : 'OSV.dev returned an advisory identifier without a description.',
+            details: typeof row.details === 'string' ? row.details : '',
+            recommendation: typeof row.recommendation === 'string' ? row.recommendation : 'Review the linked OSV.dev advisory.',
+            references: Array.isArray(row.references) ? row.references.filter((item): item is string => typeof item === 'string').slice(0, 5) : [],
+            modified: typeof row.modified === 'string' ? row.modified : null,
+            url: typeof row.url === 'string' ? row.url : 'https://osv.dev/',
+          })
+        }
+        detailsTruncated ||= payload.detailsTruncated === true
+        if (typeof payload.scannedAt === 'string') scannedAt = payload.scannedAt
+      }
+
+      const previousOsvIds = new Set(inventory.vulnerabilities.filter(item => item.source === 'OSV.dev').map(item => item.id))
+      const resultsByComponent = new Map(results.map(result => [result.componentId, result]))
+      const allAdvisoryIds = [...new Set(results.flatMap(result => result.vulnerabilities.map(item => item.id)))]
+      const findingsById = new Map<string, VulnerabilityRecord>()
+      for (const id of allAdvisoryIds) {
+        const advisory = advisories.get(id)
+        const affected = results.filter(result => result.vulnerabilities.some(item => item.id === id)).map(result => result.purl)
+        findingsById.set(id, {
+          id,
+          source: 'OSV.dev',
+          severity: advisory?.severity ?? 'review',
+          description: advisory?.description ?? 'OSV.dev returned this advisory ID, but detailed metadata was capped for this response.',
+          affected,
+          recommendation: advisory?.recommendation ?? ('Review https://osv.dev/vulnerability/' + encodeURIComponent(id)),
+        })
+      }
+      const osvIdsForComponent = (component: ComponentRecord) => {
+        const result = resultsByComponent.get(component.id)
+        return result?.vulnerabilities.map(item => item.id) ?? []
+      }
+      const nextComponents = inventory.components.map(component => {
+        const newIds = osvIdsForComponent(component)
+        const previousOsvSeverities = inventory.vulnerabilities
+          .filter(item => item.source === 'OSV.dev' && component.vulnerabilities.includes(item.id))
+          .map(item => item.severity)
+        const nextRisks = newIds.map(id => findingsById.get(id)?.severity ?? 'review')
+        const risksWithoutPreviousOsvFlags = component.risks.filter(risk =>
+          !previousOsvSeverities.includes(risk) || inventory.vulnerabilities.some(item =>
+            item.source !== 'OSV.dev' && component.vulnerabilities.includes(item.id) && item.severity === risk
+          )
+        )
+        return {
+          ...component,
+          vulnerabilities: unique([...component.vulnerabilities.filter(id => !previousOsvIds.has(id)), ...newIds]),
+          risks: unique([...risksWithoutPreviousOsvFlags, ...nextRisks]) as Risk[],
+        }
+      })
+      const nextVulnerabilities = [...inventory.vulnerabilities.filter(item => item.source !== 'OSV.dev'), ...findingsById.values()]
+      const nextInventory = { ...inventory, components: nextComponents, vulnerabilities: nextVulnerabilities }
+      setInventory(nextInventory)
+      setLiveScan({
+        source: 'OSV.dev',
+        scannedAt,
+        scannedCount: results.length,
+        skippedCount: inventory.components.length - eligible.length,
+        cappedCount: Math.max(0, eligible.length - packages.length),
+        detailsTruncated,
+      })
+      setRiskFilter('all')
+      setQuery('')
+      setNotice(en
+        ? 'OSV.dev live lookup completed. Findings reflect advisory records returned for the package identifiers and versions that were checked.'
+        : 'Pemeriksaan langsung OSV.dev selesai. Temuan mencerminkan advisori yang dikembalikan untuk identitas dan versi paket yang diperiksa.')
+      const summary = summarize(nextInventory)
+      const historyRow = { source: inventory.source, format: inventory.format, importedAt: new Date().toISOString(), components: summary.total, vulnerabilities: summary.findings }
+      const nextHistory = [historyRow, ...history.filter(item => item.source !== historyRow.source)].slice(0, 8)
+      try { window.localStorage.setItem(HISTORY_KEY, JSON.stringify(nextHistory)); setHistory(nextHistory) } catch { /* The live report remains usable when local history is unavailable. */ }
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : (en ? 'Unable to query OSV.dev.' : 'Tidak dapat mengakses OSV.dev.'))
+    } finally {
+      setScanLoading(false)
+    }
+  }
+
+  const loadDemo = () => { setInventory(demo); setQuery(''); setRiskFilter('all'); setError(''); setLiveScan(null); setNotice(en ? 'Demo data only — not a real project inventory. Run an explicit OSV.dev scan to check public advisories for its package identifiers.' : 'Hanya data demo — bukan inventaris proyek nyata. Jalankan pemindaian OSV.dev secara eksplisit untuk memeriksa advisori publik berdasarkan identitas paket.') }
+  const exportJson = () => { if (inventory) downloadFile('dreamex-sbom-inventory.json', JSON.stringify({ format: 'dreamex-sbom-analysis', version: 1, summary: metrics, liveScan, inventory }, null, 2), 'application/json;charset=utf-8') }
   const exportCsv = () => {
     if (!inventory) return
     const duplicateKeys = new Set(inventory.duplicateIdentities.map(item => item.identity))
     const rows = [['Name', 'Version', 'Type', 'Package URL', 'License', 'Supplier', 'Vulnerabilities', 'Review flags', 'Duplicate identity', 'Hash count'], ...inventory.components.map(item => [item.name, item.version, item.type, item.purl, item.license, item.supplier, item.vulnerabilities.join('; '), item.risks.join('; '), duplicateKeys.has(componentIdentity(item)) ? 'yes' : 'no', String(item.hashes.length)])]
     downloadFile('dreamex-sbom-inventory.csv', '\uFEFF' + rows.map(row => row.map(csvCell).join(',')).join('\r\n'), 'text/csv;charset=utf-8')
   }
-  const exportMarkdown = () => { if (!inventory || !metrics) return; downloadFile('dreamex-sbom-review.md', ['# Software Supply Chain Review', '', '- Source: ' + inventory.source, '- Format: ' + inventory.format, '- Imported: ' + inventory.importedAt, '- Components: ' + metrics.total, '- Distinct license labels: ' + metrics.licenses, '- License coverage: ' + metrics.licenseCoveragePercent + '%', '- Duplicate components: ' + metrics.duplicateComponents, '- Document ID: ' + inventory.provenance.documentId, '- Spec version: ' + inventory.provenance.specVersion, '- Creators: ' + (inventory.provenance.creators.join(', ') || 'Not supplied'), '- Metadata hashes missing: ' + metrics.missingHashes, '- Vulnerability records included: ' + metrics.findings, '- High/critical records: ' + metrics.highCritical, '- Missing version: ' + metrics.missingVersion, '- Missing package URL: ' + metrics.missingPurl, '', '## Duplicate identities', ...inventory.duplicateIdentities.map(item => '- ' + item.identity + ' — ' + item.count + ' entries'), '', '## Components for review', ...inventory.components.filter(item => item.risks.length || item.vulnerabilities.length).map(item => '- **' + item.name + (item.version ? '@' + item.version : '') + '** — ' + [...item.risks, ...item.vulnerabilities].join(', ')), '', '_Local SBOM analysis only. This is not a vulnerability scan, license opinion, or proof of software safety._'].join('\n'), 'text/markdown;charset=utf-8') }
+  const exportMarkdown = () => { if (!inventory || !metrics) return; downloadFile('dreamex-sbom-review.md', ['# Software Supply Chain Review', '', '- Source: ' + inventory.source, '- Format: ' + inventory.format, '- Imported: ' + inventory.importedAt, '- Components: ' + metrics.total, '- Distinct license labels: ' + metrics.licenses, '- License coverage: ' + metrics.licenseCoveragePercent + '%', '- Duplicate components: ' + metrics.duplicateComponents, '- Document ID: ' + inventory.provenance.documentId, '- Spec version: ' + inventory.provenance.specVersion, '- Creators: ' + (inventory.provenance.creators.join(', ') || 'Not supplied'), '- Metadata hashes missing: ' + metrics.missingHashes, '- Vulnerability records included: ' + metrics.findings, '- High/critical records: ' + metrics.highCritical, '- Missing version: ' + metrics.missingVersion, '- Missing package URL: ' + metrics.missingPurl, '', '## Duplicate identities', ...inventory.duplicateIdentities.map(item => '- ' + item.identity + ' — ' + item.count + ' entries'), '', '## Components for review', ...inventory.components.filter(item => item.risks.length || item.vulnerabilities.length).map(item => '- **' + item.name + (item.version ? '@' + item.version : '') + '** — ' + [...item.risks, ...item.vulnerabilities].join(', ')), '', '_SBOM metadata is reviewed locally. ' + (liveScan ? 'OSV.dev lookup: ' + liveScan.scannedAt + ', ' + liveScan.scannedCount + ' package(s).' : 'No live advisory lookup was run.') + ' This is not a license opinion or proof of software safety._'].join('\n'), 'text/markdown;charset=utf-8') }
   const clearHistory = () => { try { window.localStorage.removeItem(HISTORY_KEY); setHistory([]); setNotice(en ? 'Local history cleared.' : 'Riwayat lokal dihapus.') } catch { setNotice(en ? 'Unable to clear local history.' : 'Tidak dapat menghapus riwayat lokal.') } }
 
   return <main id="main-content" className="container supply-chain-page">
-    <header className="supply-chain-hero"><div><span className="section-kicker"><Boxes size={14}/> SOFTWARE SUPPLY CHAIN / SBOM INTELLIGENCE</span><h1>{en ? <>Know what ships. <span>Prove the inventory.</span></> : <>Ketahui yang dirilis. <span>Buktikan inventarisnya.</span></>}</h1><p>{en ? 'Import CycloneDX or SPDX software bills of materials to inspect dependency inventory, license metadata, package identifiers, hashes, and vulnerability records supplied by the SBOM.' : 'Impor software bill of materials CycloneDX atau SPDX untuk meninjau inventaris dependensi, metadata lisensi, identitas paket, hash, dan data kerentanan yang disertakan dalam SBOM.'}</p><div className="supply-chain-trust"><ShieldCheck size={15}/>{en ? 'Browser-local analysis · no upload · 10 MB file limit' : 'Analisis lokal browser · tanpa unggah · batas file 10 MB'}</div></div><div className="supply-chain-import"><span className="supply-chain-import-icon"><Upload size={20}/></span><strong>{en ? 'Import an SBOM' : 'Impor SBOM'}</strong><p>CycloneDX JSON · SPDX JSON</p><label className="button button-primary supply-chain-file"><Upload size={15}/>{loading ? (en ? 'Analyzing…' : 'Menganalisis…') : (en ? 'Choose SBOM file' : 'Pilih file SBOM')}<input type="file" accept=".json,application/json" aria-label={en ? 'Choose CycloneDX or SPDX JSON SBOM' : 'Pilih SBOM JSON CycloneDX atau SPDX'} disabled={loading} onChange={event => void importFile(event)}/></label><button className="button button-secondary" type="button" onClick={loadDemo}><PackageCheck size={15}/>{en ? 'Explore demo inventory' : 'Lihat inventaris demo'}</button></div></header>
+    <header className="supply-chain-hero"><div><span className="section-kicker"><Boxes size={14}/> SOFTWARE SUPPLY CHAIN / SBOM INTELLIGENCE</span><h1>{en ? <>Know what ships. <span>Prove the inventory.</span></> : <>Ketahui yang dirilis. <span>Buktikan inventarisnya.</span></>}</h1><p>{en ? 'Import CycloneDX or SPDX SBOMs to inspect dependency and license metadata, then optionally query OSV.dev for live public vulnerability advisories by package URL and version.' : 'Impor SBOM CycloneDX atau SPDX untuk meninjau metadata dependensi dan lisensi, lalu secara opsional periksa advisori kerentanan publik terbaru dari OSV.dev menggunakan Package URL dan versi.'}</p><div className="supply-chain-trust"><ShieldCheck size={15}/>{en ? 'SBOM parsing stays in your browser; an explicit live scan sends only package identifiers and versions to OSV.dev · 10 MB file limit' : 'Parsing SBOM tetap di browser; pemindaian langsung hanya mengirim identitas dan versi paket ke OSV.dev · batas file 10 MB'}</div></div><div className="supply-chain-import"><span className="supply-chain-import-icon"><Upload size={20}/></span><strong>{en ? 'Import an SBOM' : 'Impor SBOM'}</strong><p>CycloneDX JSON · SPDX JSON</p><label className="button button-primary supply-chain-file"><Upload size={15}/>{loading ? (en ? 'Analyzing…' : 'Menganalisis…') : (en ? 'Choose SBOM file' : 'Pilih file SBOM')}<input type="file" accept=".json,application/json" aria-label={en ? 'Choose CycloneDX or SPDX JSON SBOM' : 'Pilih SBOM JSON CycloneDX atau SPDX'} disabled={loading} onChange={event => void importFile(event)}/></label><button className="button button-secondary" type="button" onClick={loadDemo}><PackageCheck size={15}/>{en ? 'Explore demo inventory' : 'Lihat inventaris demo'}</button></div></header>
     {error && <p className="supply-chain-alert" role="alert"><AlertTriangle size={16}/>{error}</p>}{notice && <p className="supply-chain-notice" role="status">{notice}</p>}
-    {inventory && metrics ? <><section className="supply-chain-summary"><div className="supply-chain-heading"><div><span className="section-kicker">{en ? 'IMPORTED INVENTORY' : 'INVENTARIS IMPOR'}</span><h2>{inventory.source}</h2><p>{inventory.format} · {metrics.total} {en ? 'components' : 'komponen'} · {new Date(inventory.importedAt).toLocaleString(en ? 'en-US' : 'id-ID')}</p></div><div className="supply-chain-exports"><button className="button button-secondary" onClick={exportJson}><FileJson2 size={15}/> JSON</button><button className="button button-secondary" onClick={exportCsv}><Download size={15}/> CSV</button><button className="button button-secondary" onClick={exportMarkdown}><FileText size={15}/> Markdown</button></div></div><div className="supply-chain-metrics"><article><span><Boxes size={16}/>{en ? 'Components' : 'Komponen'}</span><strong>{metrics.total}</strong><small>{en ? 'Inventory entries' : 'Entri inventaris'}</small></article><article><span><Fingerprint size={16}/>{en ? 'License labels' : 'Label lisensi'}</span><strong>{metrics.licenses}</strong><small>{en ? 'Distinct labels, not legal advice' : 'Label berbeda, bukan nasihat hukum'}</small></article><article><span><ShieldAlert size={16}/>{en ? 'Vulnerability records' : 'Data kerentanan'}</span><strong>{metrics.findings}</strong><small>{en ? 'Included in this SBOM' : 'Termasuk dalam SBOM ini'}</small></article><article><span><AlertTriangle size={16}/>{en ? 'High / critical' : 'Tinggi / kritis'}</span><strong>{metrics.highCritical}</strong><small>{en ? 'Based on imported ratings' : 'Berdasarkan rating impor'}</small></article><article><span><CheckCircle2 size={16}/>{en ? 'Needs metadata review' : 'Perlu tinjau metadata'}</span><strong>{inventory.components.filter(item => item.risks.includes('review')).length}</strong><small>{en ? 'Missing or unknown fields' : 'Field hilang atau tidak diketahui'}</small></article></div></section>
+    {inventory && metrics ? <><section className="supply-chain-summary"><div className="supply-chain-heading"><div><span className="section-kicker">{en ? 'IMPORTED INVENTORY' : 'INVENTARIS IMPOR'}</span><h2>{inventory.source}</h2><p>{inventory.format} · {metrics.total} {en ? 'components' : 'komponen'} · {new Date(inventory.importedAt).toLocaleString(en ? 'en-US' : 'id-ID')}</p></div><div className="supply-chain-exports"><button className="button button-secondary" onClick={exportJson}><FileJson2 size={15}/> JSON</button><button className="button button-secondary" onClick={exportCsv}><Download size={15}/> CSV</button><button className="button button-secondary" onClick={exportMarkdown}><FileText size={15}/> Markdown</button></div></div><div className="supply-chain-metrics"><article><span><Boxes size={16}/>{en ? 'Components' : 'Komponen'}</span><strong>{metrics.total}</strong><small>{en ? 'Inventory entries' : 'Entri inventaris'}</small></article><article><span><Fingerprint size={16}/>{en ? 'License labels' : 'Label lisensi'}</span><strong>{metrics.licenses}</strong><small>{en ? 'Distinct labels, not legal advice' : 'Label berbeda, bukan nasihat hukum'}</small></article><article><span><ShieldAlert size={16}/>{en ? 'Vulnerability records' : 'Data kerentanan'}</span><strong>{metrics.findings}</strong><small>{en ? 'Included in this SBOM' : 'Termasuk dalam SBOM ini'}</small></article><article><span><AlertTriangle size={16}/>{en ? 'High / critical' : 'Tinggi / kritis'}</span><strong>{metrics.highCritical}</strong><small>{liveScan ? (en ? 'Based on SBOM + OSV.dev data' : 'Berdasarkan data SBOM + OSV.dev') : (en ? 'Based on imported ratings' : 'Berdasarkan rating impor')}</small></article><article><span><CheckCircle2 size={16}/>{en ? 'Needs metadata review' : 'Perlu tinjau metadata'}</span><strong>{inventory.components.filter(item => item.risks.includes('review')).length}</strong><small>{en ? 'Missing or unknown fields' : 'Field hilang atau tidak diketahui'}</small></article></div></section>
+    <section className="supply-chain-live-scan" aria-labelledby="supply-chain-live-scan-title"><div><span className="section-kicker">LIVE ADVISORY LOOKUP / OSV.DEV</span><h2 id="supply-chain-live-scan-title">{en ? 'Check public vulnerability advisories' : 'Periksa advisori kerentanan publik'}</h2><p>{en ? 'Queries OSV.dev by package URL and version. Only supported identifiers are sent; the SBOM file itself is not uploaded.' : 'Memeriksa OSV.dev berdasarkan Package URL dan versi. Hanya identitas paket yang didukung yang dikirim; file SBOM tidak diunggah.'}</p>{liveScan && <p className="supply-chain-live-scan-meta" role="status">{en ? 'Last scan ' + new Date(liveScan.scannedAt).toLocaleString('en-US') + ': ' + liveScan.scannedCount + ' package(s) checked, ' + liveScan.skippedCount + ' skipped.' : 'Pemindaian terakhir ' + new Date(liveScan.scannedAt).toLocaleString('id-ID') + ': ' + liveScan.scannedCount + ' paket diperiksa, ' + liveScan.skippedCount + ' dilewati.'}{liveScan.cappedCount > 0 ? (en ? ' ' + liveScan.cappedCount + ' additional eligible packages were deferred by the per-run limit.' : ' ' + liveScan.cappedCount + ' paket tambahan ditunda karena batas per pemindaian.') : ''}{liveScan.detailsTruncated ? (en ? ' Advisory detail list was capped; review OSV.dev for all results.' : ' Rincian advisori dibatasi; periksa OSV.dev untuk seluruh hasil.') : ''}</p>}</div><button className="button button-primary" type="button" onClick={() => void scanVulnerabilities()} disabled={scanLoading || loading}><RefreshCw size={15} className={scanLoading ? 'supply-chain-scan-spinning' : ''}/>{scanLoading ? (en ? 'Scanning OSV.dev…' : 'Memindai OSV.dev…') : (en ? 'Scan live advisories' : 'Pindai advisori langsung')}</button></section>
     <section className="supply-chain-integrity" aria-labelledby="supply-chain-integrity-title">
       <div className="supply-chain-integrity-head">
         <div><span className="section-kicker">SBOM INTEGRITY / PROVENANCE</span><h2 id="supply-chain-integrity-title">{en ? 'Provenance and integrity review' : 'Tinjauan provenance dan integritas'}</h2><p>{en ? 'Review metadata, license coverage, hashes, and repeated package identities.' : 'Tinjau metadata, cakupan lisensi, hash, dan identitas paket berulang.'}</p></div>
@@ -233,8 +370,8 @@ export function SupplyChainIntelligencePage() {
       <p className="supply-chain-provenance-note"><ShieldCheck size={14}/>{en ? 'Metadata and hashes are read from the SBOM, not cryptographically verified here. License coverage is a metadata indicator, not legal advice.' : 'Metadata dan hash dibaca dari SBOM, bukan diverifikasi secara kriptografis di sini. Cakupan lisensi adalah indikator metadata, bukan nasihat hukum.'}</p>
     </section>
     <section className="supply-chain-components"><div className="supply-chain-section-head"><div><span className="section-kicker">{en ? 'DEPENDENCY INVENTORY' : 'INVENTARIS DEPENDENSI'}</span><h2>{en ? 'Component-level evidence' : 'Bukti per komponen'}</h2><p>{en ? 'Filter by review signal and search names, package URLs, licenses, or vulnerability IDs.' : 'Filter sinyal review dan cari nama, URL paket, lisensi, atau ID kerentanan.'}</p></div><span>{filtered.length} / {inventory.components.length}</span></div><div className="supply-chain-filters"><label><Filter size={15}/><select aria-label={en ? 'Filter components by risk' : 'Filter komponen berdasarkan risiko'} value={riskFilter} onChange={event => setRiskFilter(event.target.value as typeof riskFilter)}><option value="all">{en ? 'All components' : 'Semua komponen'}</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option><option value="review">{en ? 'Needs review' : 'Perlu tinjau'}</option></select></label><label className="supply-chain-search"><Search size={15}/><input type="search" aria-label={en ? 'Search SBOM components' : 'Cari komponen SBOM'} placeholder={en ? 'Search name, version, license, purl…' : 'Cari nama, versi, lisensi, purl…'} value={query} onChange={event => setQuery(event.target.value)}/></label></div><div className="supply-chain-table-wrap"><table className="supply-chain-table"><thead><tr><th>{en ? 'Component' : 'Komponen'}</th><th>{en ? 'License' : 'Lisensi'}</th><th>{en ? 'Review signals' : 'Sinyal review'}</th></tr></thead><tbody>{filtered.map(component => <tr key={component.id}><td><strong>{component.name}</strong><small>{component.version || (en ? 'Version missing' : 'Versi tidak tersedia')} · {component.type}</small>{component.purl && <code>{component.purl}</code>}{component.supplier && <small>{en ? 'Supplier: ' : 'Pemasok: '}{component.supplier}</small>}{component.hashes.map(hash => <small key={hash}>{hash}</small>)}</td><td>{component.license}</td><td><div className="supply-chain-badges">{component.vulnerabilities.map(id => <span key={id} className="supply-chain-risk risk-high">{id}</span>)}{component.risks.map((risk,index) => <span key={risk+index} className={'supply-chain-risk risk-'+risk}>{risk==='review' ? (en ? 'Review metadata' : 'Tinjau metadata') : risk}</span>)}{!component.risks.length && !component.vulnerabilities.length && <span className="supply-chain-clean"><CheckCircle2 size={13}/>{en ? 'No imported flags' : 'Tidak ada flag impor'}</span>}</div></td></tr>)}</tbody></table>{filtered.length===0&&<p className="supply-chain-empty">{en ? 'No components match this filter.' : 'Tidak ada komponen yang cocok dengan filter.'}</p>}</div></section>
-    {inventory.vulnerabilities.length>0&&<section className="supply-chain-vulnerabilities"><div className="supply-chain-section-head"><div><span className="section-kicker">{en ? 'IMPORTED FINDINGS' : 'TEMUAN IMPOR'}</span><h2>{en ? 'Vulnerability records' : 'Data kerentanan'}</h2><p>{en ? 'Only vulnerabilities present in the imported CycloneDX file are displayed.' : 'Hanya data kerentanan yang ada dalam file CycloneDX impor yang ditampilkan.'}</p></div></div><div className="supply-chain-vuln-list">{inventory.vulnerabilities.map(vulnerability=><article key={vulnerability.id}><div><span className={'supply-chain-risk risk-'+vulnerability.severity}>{vulnerability.severity}</span><h3>{vulnerability.id}</h3></div><p>{vulnerability.description}</p>{vulnerability.affected.length>0&&<small>{en ? 'Affected refs: ' : 'Referensi terdampak: '}{vulnerability.affected.join(', ')}</small>}{vulnerability.recommendation&&<small>{en ? 'Advisory / recommendation: ' : 'Advisori / rekomendasi: '}{vulnerability.recommendation}</small>}</article>)}</div></section>}</> : <section className="supply-chain-empty-state"><div><Boxes size={26}/><h2>{en ? 'Start with an SBOM, not a guess' : 'Mulai dari SBOM, bukan tebakan'}</h2><p>{en ? 'Import a real CycloneDX or SPDX JSON file, or open the clearly labeled demo inventory.' : 'Impor file JSON CycloneDX atau SPDX nyata, atau buka inventaris demo yang diberi label jelas.'}</p></div><div><span><CheckCircle2 size={15}/>{en ? 'Component and license inventory' : 'Inventaris komponen dan lisensi'}</span><span><Fingerprint size={15}/>{en ? 'Package URLs and available hashes' : 'Package URL dan hash yang tersedia'}</span><span><ShieldAlert size={15}/>{en ? 'Vulnerability records included in the SBOM' : 'Data kerentanan yang disertakan dalam SBOM'}</span><span><Download size={15}/>{en ? 'Portable JSON, CSV, and Markdown evidence' : 'Bukti portabel JSON, CSV, dan Markdown'}</span></div></section>}
+    {inventory.vulnerabilities.length>0&&<section className="supply-chain-vulnerabilities"><div className="supply-chain-section-head"><div><span className="section-kicker">{liveScan ? (en ? 'SBOM + OSV.DEV RESULTS' : 'HASIL SBOM + OSV.DEV') : (en ? 'IMPORTED FINDINGS' : 'TEMUAN IMPOR')}</span><h2>{en ? 'Vulnerability records' : 'Data kerentanan'}</h2><p>{en ? 'Findings combine records supplied by the SBOM with any explicit OSV.dev lookup performed for supported package versions.' : 'Temuan menggabungkan data dalam SBOM dan hasil pemeriksaan OSV.dev yang dijalankan secara eksplisit untuk versi paket yang didukung.'}</p></div></div><div className="supply-chain-vuln-list">{inventory.vulnerabilities.map(vulnerability=><article key={vulnerability.id}><div><span className={'supply-chain-risk risk-'+vulnerability.severity}>{vulnerability.severity}</span><h3>{vulnerability.id}</h3></div><p>{vulnerability.description}</p>{vulnerability.affected.length>0&&<small>{en ? 'Affected refs: ' : 'Referensi terdampak: '}{vulnerability.affected.join(', ')}</small>}{vulnerability.recommendation&&<small>{en ? 'Advisory / recommendation: ' : 'Advisori / rekomendasi: '}{vulnerability.recommendation}</small>}</article>)}</div></section>}</> : <section className="supply-chain-empty-state"><div><Boxes size={26}/><h2>{en ? 'Start with an SBOM, not a guess' : 'Mulai dari SBOM, bukan tebakan'}</h2><p>{en ? 'Import a real CycloneDX or SPDX JSON file, or open the clearly labeled demo inventory.' : 'Impor file JSON CycloneDX atau SPDX nyata, atau buka inventaris demo yang diberi label jelas.'}</p></div><div><span><CheckCircle2 size={15}/>{en ? 'Component and license inventory' : 'Inventaris komponen dan lisensi'}</span><span><Fingerprint size={15}/>{en ? 'Package URLs and available hashes' : 'Package URL dan hash yang tersedia'}</span><span><ShieldAlert size={15}/>{en ? 'Vulnerability records included in the SBOM' : 'Data kerentanan yang disertakan dalam SBOM'}</span><span><Download size={15}/>{en ? 'Portable JSON, CSV, and Markdown evidence' : 'Bukti portabel JSON, CSV, dan Markdown'}</span></div></section>}
     {history.length>0&&<section className="supply-chain-history"><div className="supply-chain-section-head"><div><span className="section-kicker">{en ? 'LOCAL HISTORY' : 'RIWAYAT LOKAL'}</span><h2>{en ? 'Recent SBOM snapshots' : 'Snapshot SBOM terbaru'}</h2><p>{en ? 'Summary only. Raw component inventories are not stored in browser history.' : 'Hanya ringkasan. Inventaris komponen mentah tidak disimpan dalam riwayat browser.'}</p></div><button className="button button-secondary" onClick={clearHistory}><XCircle size={15}/>{en ? 'Clear history' : 'Hapus riwayat'}</button></div><div className="supply-chain-history-list">{history.map((item,index)=><article key={item.source+item.importedAt+index}><div><strong>{item.source}</strong><small>{item.format} · {new Date(item.importedAt).toLocaleString(en ? 'en-US' : 'id-ID')}</small></div><strong>{item.components}</strong><span>{item.vulnerabilities} {en ? 'vulnerability records' : 'data kerentanan'}</span></article>)}</div></section>}
-    <p className="supply-chain-disclaimer"><ShieldCheck size={15}/>{en ? 'This tool parses only the SBOM you provide. It does not query vulnerability databases, validate license obligations, or certify supply-chain security. No imported file content is uploaded.' : 'Tool ini hanya mem-parsing SBOM yang Anda berikan. Tool tidak mengakses database kerentanan, memvalidasi kewajiban lisensi, atau mensertifikasi keamanan supply chain. Isi file impor tidak diunggah.'}</p>
+    <p className="supply-chain-disclaimer"><ShieldCheck size={15}/>{en ? 'SBOM parsing is local. An explicit scan sends supported package URLs and versions to OSV.dev and displays its available advisories; results depend on database coverage and are not proof of safety. License indicators are not legal advice, and no complete SBOM file is uploaded.' : 'Parsing SBOM berlangsung lokal. Pemindaian eksplisit mengirim Package URL dan versi yang didukung ke OSV.dev untuk menampilkan advisori yang tersedia; hasil bergantung pada cakupan database dan bukan bukti bahwa paket aman. Indikator lisensi bukan nasihat hukum, dan file SBOM lengkap tidak diunggah.'}</p>
   </main>
 }

@@ -36,7 +36,7 @@ DreamEx Tech combines editorial knowledge with practical, browser-first engineer
 - `/command-center` — local work queue, incident register, architecture decision records, and release checklist.
 - `/qa-studio` — editable test-case tables, BDD/Gherkin scenarios, bug reports, and test plans; supports local draft snapshots and Markdown export.
 - `/quality-intelligence` — local-first Playwright JSON and JUnit XML report analysis, pass-rate and duration summaries, retry-based flaky-test signals, failure clustering, report exports, and browser-local summary history.
-- `/supply-chain-intelligence` — local-first CycloneDX/SPDX JSON SBOM inventory, dependency and license metadata review, included vulnerability records, and JSON/CSV/Markdown evidence exports. It does not perform a live vulnerability scan.
+- `/supply-chain-intelligence` — CycloneDX/SPDX SBOM inventory, dependency and license metadata review, imported findings, optional live OSV.dev advisory lookup by package URL and version, and JSON/CSV/Markdown exports. The SBOM file stays in the browser; only supported package identifiers and versions are sent on an explicit scan.
 - `/security-center` — same-origin security-header review, visible document-quality signals, local-storage inventory, JSON/Markdown audit exports, and scoped deletion of DreamEx browser data.
 - `/github-ci` — live, read-only status of recent public GitHub Actions runs, sourced from GitHub's public API without a browser token.
 - `/team-workspace` — revision-checked shared JSON snapshots over an optional server-side Upstash Redis backend.
