@@ -1355,3 +1355,60 @@ test('desktop header keeps Quick Find inside the navigation drawer and adapts at
   await page.locator('#nav-drawer-search-input').fill('API')
   await expect(page.locator('.nav-search-count')).toBeVisible()
 })
+
+test('article page exposes table of contents, copyable code block, breadcrumb schema, and prev-next navigation', async ({ page }) => {
+  await page.goto('/blog/typescript-for-maintainable-projects')
+  const toc = page.getByRole('navigation', { name: /Table of contents|Daftar isi/i })
+  await expect(toc).toBeVisible()
+  await expect(toc.locator('a')).toHaveCount(3)
+  await expect(page.locator('.article-section-heading').first()).toBeVisible()
+
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async (text: string) => {
+          ;(window as Window & { __copiedCodeSnippet?: string }).__copiedCodeSnippet = text
+        },
+      },
+    })
+  })
+  const copyCodeBtn = page.getByRole('button', { name: /Copy code snippet|Salin potongan kode/i })
+  await expect(copyCodeBtn).toBeVisible()
+  await copyCodeBtn.click()
+  await expect(copyCodeBtn).toContainText(/Code copied|Kode disalin/i)
+  const copiedCode = await page.evaluate(() => (window as Window & { __copiedCodeSnippet?: string }).__copiedCodeSnippet ?? '')
+  expect(copiedCode).toContain('export type ApiResult')
+
+  const breadcrumbSchema = await page.locator('script[data-breadcrumb-schema="true"]').evaluate(node => JSON.parse(node.textContent ?? '{}'))
+  expect(breadcrumbSchema['@type']).toBe('BreadcrumbList')
+  expect(breadcrumbSchema.itemListElement).toHaveLength(3)
+
+  const prevNextNav = page.getByRole('navigation', { name: /Previous and next articles|Artikel sebelumnya dan berikutnya/i })
+  await expect(prevNextNav).toBeVisible()
+  await expect(prevNextNav.locator('a.article-sequence-card.prev')).toHaveAttribute('href', '/blog/qa-automation-foundations')
+  await expect(prevNextNav.locator('a.article-sequence-card.next')).toHaveAttribute('href', '/blog/practical-ai-engineering')
+})
+
+test('homepage supports tag filtering and article sorting controls', async ({ page }) => {
+  await page.goto('/')
+  const tagGroup = page.getByRole('group', { name: /Filter by tag|Filter berdasarkan tag/i })
+  await expect(tagGroup).toBeVisible()
+  const playwrightTag = tagGroup.getByRole('button', { name: '#Playwright', exact: true })
+  await playwrightTag.click()
+  await expect(playwrightTag).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.article-card')).toHaveCount(1)
+  await expect(page.locator('.article-card h3 a').first()).toHaveAttribute('href', '/blog/playwright-test-architecture')
+
+  await page.getByRole('button', { name: /clear search|hapus pencarian/i }).click()
+  await expect(playwrightTag).toHaveAttribute('aria-pressed', 'false')
+  await expect(page.locator('.article-card')).toHaveCount(6)
+
+  const sortSelect = page.getByRole('combobox', { name: /Sort articles|Urutkan artikel/i })
+  await sortSelect.selectOption('newest')
+  await expect(page.locator('.article-card h3 a').first()).toHaveAttribute('href', '/blog/playwright-test-architecture')
+  await sortSelect.selectOption('oldest')
+  await expect(page.locator('.article-card h3 a').first()).toHaveAttribute('href', '/blog/practical-ai-engineering')
+  await sortSelect.selectOption('default')
+  await expect(page.locator('.article-card h3 a').first()).toHaveAttribute('href', '/blog/qa-automation-foundations')
+})

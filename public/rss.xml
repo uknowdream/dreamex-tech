@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/rss.xsl"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>DreamEx Tech</title>
+    <link>https://dreamex.tech/</link>
+    <description>Practical notes on software engineering, quality engineering, AI, and modern technology.</description>
+    <language>id-ID</language>
+    <lastBuildDate>Thu, 12 Nov 2026 16:50:39 GMT</lastBuildDate>
+    <atom:link href="https://dreamex.tech/rss.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Merancang Playwright Test Suite yang Stabil</title>
+      <link>https://dreamex.tech/blog/playwright-test-architecture</link>
+      <guid isPermaLink="true">https://dreamex.tech/blog/playwright-test-architecture</guid>
+      <description>Pola page object yang proporsional, locator yang tangguh, isolasi data, dan strategi mengurangi flaky test.</description>
+      <pubDate>Sat, 10 Oct 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Checklist Keamanan Dasar untuk Pipeline CI/CD</title>
+      <link>https://dreamex.tech/blog/secure-ci-cd-basics</link>
+      <guid isPermaLink="true">https://dreamex.tech/blog/secure-ci-cd-basics</guid>
+      <description>Praktik least privilege, pengelolaan secret, dependency hygiene, dan perlindungan supply chain perangkat lunak.</description>
+      <pubDate>Wed, 07 Oct 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Membangun Evaluasi AI yang Bisa Diulang</title>
+      <link>https://dreamex.tech/blog/evaluating-ai-features</link>
+      <guid isPermaLink="true">https://dreamex.tech/blog/evaluating-ai-features</guid>
+      <description>Rancang dataset, rubrik penilaian, regression checks, dan pemantauan agar perubahan AI dapat dinilai secara objektif.</description>
+      <pubDate>Sat, 03 Oct 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Membangun Fondasi QA Automation yang Andal</title>
+      <link>https://dreamex.tech/blog/qa-automation-foundations</link>
+      <guid isPermaLink="true">https://dreamex.tech/blog/qa-automation-foundations</guid>
+      <description>Prinsip memilih test case, menjaga stabilitas suite, dan membuat hasil pengujian dapat dipercaya.</description>
+      <pubDate>Thu, 01 Oct 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>TypeScript untuk Proyek yang Mudah Dipelihara</title>
+      <link>https://dreamex.tech/blog/typescript-for-maintainable-projects</link>
+      <guid isPermaLink="true">https://dreamex.tech/blog/typescript-for-maintainable-projects</guid>
+      <description>Cara memanfaatkan tipe, kontrak, dan batas modul agar perubahan lebih aman.</description>
+      <pubDate>Thu, 24 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Menerapkan AI dengan Pendekatan Engineering</title>
+      <link>https://dreamex.tech/blog/practical-ai-engineering</link>
+      <guid isPermaLink="true">https://dreamex.tech/blog/practical-ai-engineering</guid>
+      <description>Evaluasi kualitas, batasan, observability, dan pengujian untuk fitur berbasis AI.</description>
+      <pubDate>Fri, 18 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

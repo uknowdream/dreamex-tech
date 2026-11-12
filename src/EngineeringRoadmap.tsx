@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, BookOpenCheck, ClipboardCheck, Download, FileText, Layers3, ShieldAlert, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useLanguage } from './i18n'
+import './EngineeringRoadmap.css'
 
 const ROADMAP_KEY = 'dreamex-roadmap-v1'
 const SCORECARD_KEY = 'dreamex-readiness-scorecard-v1'

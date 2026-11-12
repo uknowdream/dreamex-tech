@@ -4,6 +4,7 @@ import { useLanguage } from './i18n'
 import { TestDataBuilder } from './TestDataBuilder'
 import { PlaywrightStarterGenerator } from './PlaywrightStarterGenerator'
 import { ThreatModelWorksheet } from './ThreatModelWorksheet'
+import './EngineeringQualitySuite.css'
 
 type Finding = { id: string; title: string; detail: string; status: 'pass' | 'warn' | 'fail' }
 type Audit = { checkedAt: string; url: string; findings: Finding[]; headers: Record<string, string>; error?: string }

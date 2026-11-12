@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Activity, AlertTriangle, ArrowDownToLine, Boxes, CheckCircle2, Copy, FileCode2, GitCompare, Network, Plus, Search, ShieldCheck, Trash2, Upload } from 'lucide-react'
 import { useLanguage } from './i18n'
+import './EngineeringIntelligence.css'
 
 type Service = {
   id: string

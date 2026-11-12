@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Activity, ArrowRight, Boxes, Check, CheckCircle2, ClipboardCheck, Code2, Download, Gauge, Network, Search, ShieldCheck, Sparkles, Workflow } from 'lucide-react'
 import { useLanguage } from './i18n'
+import './EngineeringControlPlane.css'
 
 const CHECKLIST_KEY = 'dreamex-control-plane-checklist-v1'
 

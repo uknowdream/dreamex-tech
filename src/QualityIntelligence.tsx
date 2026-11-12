@@ -1,6 +1,7 @@
 import { useMemo, useState, type ChangeEvent } from 'react'
 import { AlertTriangle, BarChart3, CheckCircle2, Clock3, Download, FileJson2, FileText, Filter, RotateCcw, ShieldCheck, Sparkles, Upload, XCircle } from 'lucide-react'
 import { useLanguage } from './i18n'
+import './QualityIntelligence.css'
 
 type TestStatus = 'passed' | 'failed' | 'flaky' | 'skipped'
 type TestRecord = { id: string; title: string; file: string; status: TestStatus; durationMs: number; error: string }

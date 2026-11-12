@@ -2,6 +2,7 @@ import { useMemo, useState, type ChangeEvent } from 'react'
 import { AlertTriangle, Boxes, CheckCircle2, Download, FileJson2, FileText, Filter, Fingerprint, PackageCheck, Search, ShieldAlert, ShieldCheck, Upload, XCircle } from 'lucide-react'
 import { useLanguage } from './i18n'
 import './SbomIntegrity.css'
+import './SupplyChainIntelligence.css'
 
 type Risk = 'critical' | 'high' | 'medium' | 'low' | 'review'
 type ComponentRecord = { id: string; name: string; version: string; type: string; purl: string; license: string; supplier: string; hashes: string[]; vulnerabilities: string[]; risks: Risk[] }

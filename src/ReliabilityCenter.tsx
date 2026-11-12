@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Activity, AlertTriangle, Archive, CheckCircle2, Clock3, Download, FileText, Gauge, Plus, RotateCcw, ShieldCheck, Siren, Trash2 } from 'lucide-react'
 import { useLanguage } from './i18n'
+import './ReliabilityCenter.css'
 
 type IncidentEvent = { id: string; time: string; kind: string; note: string }
 type Incident = { id: string; title: string; severity: string; status: string; service: string; impact: string; commander: string; startedAt: string; cause: string; mitigation: string; resolution: string; lessons: string; nextActions: string; timeline: IncidentEvent[]; updatedAt: string }

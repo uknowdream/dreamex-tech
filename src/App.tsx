@@ -3,6 +3,7 @@ import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } fro
 import { ArrowDownRight, ArrowRight, BookOpen, Bookmark, BookmarkCheck, Braces, Check, ChevronUp, ChevronDown, Layers3, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap, Rss, Activity, AlertTriangle, CheckCircle2, Download, ClipboardList, Network, Gauge, Clock3 } from 'lucide-react'
 import { articles } from './articles'
 import { articleTranslations } from './articleTranslations'
+import { articleEnhancementsEn, articleEnhancementsId } from './articleEnhancements'
 import { useLanguage } from './i18n'
 import { EngineeringLaunchpad } from './EngineeringLaunchpad'
 const EngineeringControlPlanePage = lazy(() => import('./EngineeringControlPlane').then(module => ({ default: module.EngineeringControlPlanePage })))
@@ -500,7 +501,7 @@ function Footer() {
   </footer>
 }
 
-function ArticleCard({ article, index = 0 }: { article: typeof articles[number]; index?: number }) {
+function ArticleCard({ article, index = 0, activeTag = '', onSelectTag }: { article: typeof articles[number]; index?: number; activeTag?: string; onSelectTag?: (tag: string) => void }) {
   const { t, language } = useLanguage()
   const { isSaved, toggleSaved } = useReadingList()
   const translated = language === 'en' ? articleTranslations[article.slug] : undefined
@@ -508,7 +509,7 @@ function ArticleCard({ article, index = 0 }: { article: typeof articles[number];
   return <article className="article-card" style={{ animationDelay: `${index * 70}ms` }}>
     <div className="card-top"><span className="category-pill">{categoryLabel(article.category, language)}</span><div className="card-meta-actions"><span className="read-time">{language === 'en' ? article.readTime.replace('menit', 'min') : article.readTime}</span><button className="bookmark-button" type="button" aria-pressed={saved} aria-label={`${saved ? (language === 'en' ? 'Remove saved article' : 'Hapus artikel tersimpan') : (language === 'en' ? 'Save article' : 'Simpan artikel')}: ${translated?.title ?? article.title}`} onClick={() => toggleSaved(article.slug)} title={saved ? (language === 'en' ? 'Remove from reading list' : 'Hapus dari daftar bacaan') : (language === 'en' ? 'Save to reading list' : 'Simpan ke daftar bacaan')}>{saved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}</button></div></div>
     <h3><Link to={`/blog/${article.slug}`}>{translated?.title ?? article.title}</Link></h3><p>{translated?.excerpt ?? article.excerpt}</p>
-    <div className="tag-row">{article.tags.slice(0, 3).map(tag => <span key={tag}>#{tag.replaceAll(' ', '')}</span>)}</div>
+    <div className="tag-row">{article.tags.slice(0, 3).map(tag => onSelectTag ? <button key={tag} type="button" className={activeTag === tag ? 'tag-chip active' : 'tag-chip'} aria-pressed={activeTag === tag} onClick={() => onSelectTag(activeTag === tag ? '' : tag)}>#{tag.replaceAll(' ', '')}</button> : <span key={tag}>#{tag.replaceAll(' ', '')}</span>)}</div>
     <Link className="read-link" to={`/blog/${article.slug}`}>{t('readArticle')} <ArrowRight size={16} /></Link>
   </article>
 }
@@ -517,7 +518,10 @@ function Home() {
   const { t, language } = useLanguage()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('Semua')
+  const [selectedTag, setSelectedTag] = useState('')
+  const [sortBy, setSortBy] = useState<'default' | 'newest' | 'oldest' | 'shortest' | 'title'>('default')
   const searchInput = useRef<HTMLInputElement>(null)
+  const allTags = useMemo(() => [...new Set(articles.flatMap(item => item.tags))], [])
 
 
   const [resumeRecord, setResumeRecord] = useState<ReadingProgressRecord | null>(readReadingProgress)
@@ -546,12 +550,26 @@ function Home() {
     window.addEventListener('keydown', handleShortcut)
     return () => window.removeEventListener('keydown', handleShortcut)
   }, [])
-  const filtered = useMemo(() => articles.filter(article => {
-    const matchesCategory = category === 'Semua' || article.category === category
-    const translated = language === 'en' ? articleTranslations[article.slug] : undefined
-    const haystack = `${translated?.title ?? article.title} ${translated?.excerpt ?? article.excerpt} ${article.category} ${article.tags.join(' ')} ${article.body.join(' ')}`.toLowerCase()
-    return matchesCategory && haystack.includes(query.toLowerCase().trim())
-  }), [category, query, language])
+  const filtered = useMemo(() => {
+    const matches = articles.filter(article => {
+      const matchesCategory = category === 'Semua' || article.category === category
+      const matchesTag = !selectedTag || article.tags.includes(selectedTag)
+      const translated = language === 'en' ? articleTranslations[article.slug] : undefined
+      const haystack = `${translated?.title ?? article.title} ${translated?.excerpt ?? article.excerpt} ${article.category} ${article.tags.join(' ')} ${article.body.join(' ')}`.toLowerCase()
+      return matchesCategory && matchesTag && haystack.includes(query.toLowerCase().trim())
+    })
+    if (sortBy === 'newest') return [...matches].sort((a, b) => b.date.localeCompare(a.date))
+    if (sortBy === 'oldest') return [...matches].sort((a, b) => a.date.localeCompare(b.date))
+    if (sortBy === 'shortest') return [...matches].sort((a, b) => Number.parseInt(a.readTime, 10) - Number.parseInt(b.readTime, 10))
+    if (sortBy === 'title') {
+      return [...matches].sort((a, b) => {
+        const leftTitle = language === 'en' ? (articleTranslations[a.slug]?.title ?? a.title) : a.title
+        const rightTitle = language === 'en' ? (articleTranslations[b.slug]?.title ?? b.title) : b.title
+        return leftTitle.localeCompare(rightTitle)
+      })
+    }
+    return matches
+  }, [category, selectedTag, query, sortBy, language])
   const featured = articles[0]
   const featuredTranslation = language === 'en' ? articleTranslations[featured.slug] : undefined
 
@@ -617,10 +635,11 @@ function Home() {
         </section>
       })()}
 
-      <div className="section-heading"><div><span className="section-kicker">{t('articlesEyebrow')}</span><h2>{t('articlesHeading')} <span>{t('articlesHeadingAccent')}</span></h2><p>{t('latestDescription')}</p></div><label className="search-box"><Search size={18} /><input ref={searchInput} value={query} onChange={event => setQuery(event.target.value)} placeholder={t('searchPlaceholder')} aria-label={t('searchLabel')} /><kbd>/</kbd></label></div>
+      <div className="section-heading"><div><span className="section-kicker">{t('articlesEyebrow')}</span><h2>{t('articlesHeading')} <span>{t('articlesHeadingAccent')}</span></h2><p>{t('latestDescription')}</p></div><div className="discovery-toolbar"><label className="search-box"><Search size={18} /><input ref={searchInput} value={query} onChange={event => setQuery(event.target.value)} placeholder={t('searchPlaceholder')} aria-label={t('searchLabel')} /><kbd>/</kbd></label><label className="article-sort-control"><span>{language === 'en' ? 'Sort' : 'Urutkan'}</span><select value={sortBy} onChange={event => setSortBy(event.target.value as typeof sortBy)} aria-label={language === 'en' ? 'Sort articles' : 'Urutkan artikel'}><option value="default">{language === 'en' ? 'Featured order' : 'Urutan utama'}</option><option value="newest">{language === 'en' ? 'Newest first' : 'Terbaru'}</option><option value="oldest">{language === 'en' ? 'Oldest first' : 'Terlama'}</option><option value="shortest">{language === 'en' ? 'Shortest read' : 'Waktu baca tercepat'}</option><option value="title">{language === 'en' ? 'Title A–Z' : 'Judul A–Z'}</option></select></label></div></div>
       <div className="filter-row" aria-label={t('topics')}>{categories.map(item => <button key={item} className={category === item ? 'filter active' : 'filter'} aria-pressed={category === item} onClick={() => setCategory(item)}>{categoryLabel(item, language)}</button>)}</div>
-      <div className="results-meta"><span>{filtered.length} {t('found')}</span>{query && <button onClick={() => setQuery('')}>{t('clearSearch')} <span>×</span></button>}</div>
-      {filtered.length ? <div className="article-grid">{filtered.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} />)}</div> : <div className="empty-state"><Search size={22} /><strong>{t('noResults')}</strong><span>{t('tryOther')}</span></div>}
+      <div className="tag-filter-row" role="group" aria-label={language === 'en' ? 'Filter by tag' : 'Filter berdasarkan tag'}>{allTags.map(tag => <button key={tag} type="button" className={selectedTag === tag ? 'tag-filter-pill active' : 'tag-filter-pill'} aria-pressed={selectedTag === tag} onClick={() => setSelectedTag(current => current === tag ? '' : tag)}>#{tag.replaceAll(' ', '')}</button>)}</div>
+      <div className="results-meta"><span>{filtered.length} {t('found')}{selectedTag ? ` · #${selectedTag.replaceAll(' ', '')}` : ''}</span>{(query || selectedTag) && <button onClick={() => { setQuery(''); setSelectedTag('') }}>{t('clearSearch')} <span>×</span></button>}</div>
+      {filtered.length ? <div className="article-grid">{filtered.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} activeTag={selectedTag} onSelectTag={setSelectedTag} />)}</div> : <div className="empty-state"><Search size={22} /><strong>{t('noResults')}</strong><span>{t('tryOther')}</span></div>}
     </div></section>
     <section className="newsletter"><div className="container newsletter-inner"><div><span className="section-kicker">{t('buildInPublic')}</span><h2>Better systems.<br /><span>Better questions.</span></h2><p>{t('buildDescription')}</p></div><a className="button button-primary" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">{t('exploreCode')} <ArrowRight size={17} /></a></div></section>
   </main>
@@ -1772,13 +1791,18 @@ function RssPage() {
 function ArticlePage() {
   const { t, language } = useLanguage()
   const { slug } = useParams()
-  const article = articles.find(item => item.slug === slug)
+  const articleIndex = articles.findIndex(item => item.slug === slug)
+  const article = articleIndex >= 0 ? articles[articleIndex] : undefined
+  const prevArticle = articleIndex > 0 ? articles[articleIndex - 1] : undefined
+  const nextArticle = articleIndex >= 0 && articleIndex < articles.length - 1 ? articles[articleIndex + 1] : undefined
   const translated = article && language === 'en' ? articleTranslations[article.slug] : undefined
+  const enhancement = article ? (language === 'en' ? articleEnhancementsEn[article.slug] : articleEnhancementsId[article.slug]) : undefined
   const [progress, setProgress] = useState(0)
   const lastSavedProgress = useRef(-1)
   const { isSaved, toggleSaved } = useReadingList()
   const [linkCopied, setLinkCopied] = useState(false)
   const [citationCopied, setCitationCopied] = useState(false)
+  const [codeCopied, setCodeCopied] = useState(false)
   const [copyError, setCopyError] = useState(false)
   const relatedArticles = useMemo(() => article ? articles
     .filter(item => item.slug !== article.slug)
@@ -1803,6 +1827,17 @@ function ArticlePage() {
       await navigator.clipboard.writeText(citation)
       setCitationCopied(true)
       setCopyError(false)
+    } catch {
+      setCopyError(true)
+    }
+  }
+  const copyCodeSnippet = async () => {
+    if (!enhancement) return
+    try {
+      await navigator.clipboard.writeText(enhancement.snippet.code)
+      setCodeCopied(true)
+      setCopyError(false)
+      window.setTimeout(() => setCodeCopied(false), 2400)
     } catch {
       setCopyError(true)
     }
@@ -1844,11 +1879,25 @@ function ArticlePage() {
       structuredData.textContent = JSON.stringify({
         '@context': 'https://schema.org', '@type': 'Article', headline: translated?.title ?? article.title,
         description: translated?.excerpt ?? article.excerpt, datePublished: article.date,
+        dateModified: enhancement?.updatedAt ?? article.date,
         author: { '@type': 'Organization', name: 'DreamEx Tech' },
         publisher: { '@type': 'Organization', name: 'DreamEx Tech' },
         mainEntityOfPage: canonicalUrl,
       })
       document.head.appendChild(structuredData)
+      const breadcrumbData = document.createElement('script')
+      breadcrumbData.type = 'application/ld+json'
+      breadcrumbData.dataset.breadcrumbSchema = 'true'
+      breadcrumbData.textContent = JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'DreamEx Tech', item: 'https://dreamex.tech/' },
+          { '@type': 'ListItem', position: 2, name: categoryLabel(article.category, language), item: 'https://dreamex.tech/#latest' },
+          { '@type': 'ListItem', position: 3, name: translated?.title ?? article.title, item: canonicalUrl },
+        ],
+      })
+      document.head.appendChild(breadcrumbData)
     }
     const updateProgress = () => {
       const scrollable = document.documentElement.scrollHeight - window.innerHeight
@@ -1875,6 +1924,7 @@ function ArticlePage() {
     return () => {
       window.removeEventListener('scroll', updateProgress)
       document.querySelector('script[data-article-schema="true"]')?.remove()
+      document.querySelector('script[data-breadcrumb-schema="true"]')?.remove()
       const canonical = document.querySelector('link[rel="canonical"]')
       canonical?.setAttribute('href', 'https://dreamex.tech/')
       setMeta('meta[property="og:title"]', 'content', 'DreamEx Tech — Think deeper. Build smarter.')
@@ -1884,14 +1934,42 @@ function ArticlePage() {
       setMeta('meta[name="twitter:description"]', 'content', 'Ruang eksplorasi software engineering, quality engineering, AI, dan teknologi modern.')
       setMeta('meta[name="description"]', 'content', 'DreamEx Tech — practical notes on software engineering, quality engineering, AI, and modern technology.')
     }
-  }, [article, language, t, translated?.excerpt, translated?.title])
+  }, [article, enhancement?.updatedAt, language, t, translated?.excerpt, translated?.title])
   if (!article) return <main id="main-content" className="container not-found"><h1>{t('articleNotFound')}</h1><p>{t('articleMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>
+  const paragraphs = translated?.body ?? article.body
   return <main id="main-content" className="article-page"><div className="reading-progress" role="progressbar" aria-label={language === 'en' ? 'Article reading progress' : 'Progres membaca artikel'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><span style={{ transform: `scaleX(${progress / 100})` }} /></div><div className="container article-container">
     <Link className="back-link" to="/">{t('backAll')}</Link>
-    <div className="article-header"><span className="category-pill">{categoryLabel(article.category, language)}</span><h1>{translated?.title ?? article.title}</h1><p>{translated?.excerpt ?? article.excerpt}</p><div className="article-meta"><span>{new Date(article.date + 'T00:00:00').toLocaleDateString(language === 'en' ? 'en-US' : 'id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span><span>•</span><span>{language === 'en' ? article.readTime.replace('menit', 'min') : article.readTime}</span><span>•</span><span>{t('editorial')}</span></div></div>
-    <div className="article-body">{(translated?.body ?? article.body).map((paragraph, index) => <p key={index}>{paragraph}</p>)}<div className="article-note"><strong><ShieldCheck size={16} /> {t('engineeringNote')}</strong><p>{t('noteDescription')}</p></div></div>
+    <div className="article-header"><span className="category-pill">{categoryLabel(article.category, language)}</span><h1>{translated?.title ?? article.title}</h1><p>{translated?.excerpt ?? article.excerpt}</p><div className="article-meta"><span>{new Date(article.date + 'T00:00:00').toLocaleDateString(language === 'en' ? 'en-US' : 'id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>{enhancement?.updatedAt && <><span>•</span><span>{language === 'en' ? `Updated ${enhancement.updatedAt}` : `Diperbarui ${enhancement.updatedAt}`}</span></>}<span>•</span><span>{language === 'en' ? article.readTime.replace('menit', 'min') : article.readTime}</span><span>•</span><span>{enhancement ? `${enhancement.author} (${enhancement.authorRole})` : t('editorial')}</span></div></div>
+    {enhancement && enhancement.sections.length > 0 && <nav className="article-toc" aria-label={language === 'en' ? 'Table of contents' : 'Daftar isi'}>
+      <strong><BookOpen size={15} /> {language === 'en' ? 'Table of contents' : 'Daftar isi'}</strong>
+      <ol>
+        {enhancement.sections.map(section => <li key={section.id}><a href={`#${section.id}`}>{section.heading}</a></li>)}
+      </ol>
+    </nav>}
+    <div className="article-body">
+      {paragraphs.map((paragraph, index) => {
+        const sectionHeading = enhancement?.sections.find(section => section.startParagraphIndex === index)
+        return <div key={index} className="article-paragraph-group">
+          {sectionHeading && <h2 id={sectionHeading.id} className="article-section-heading">{sectionHeading.heading}</h2>}
+          <p>{paragraph}</p>
+        </div>
+      })}
+      {enhancement && <section className="article-code-block" aria-label={language === 'en' ? 'Reference implementation' : 'Implementasi referensi'}>
+        <div className="article-code-header">
+          <div className="article-code-meta"><Terminal size={14} /> <code>{enhancement.snippet.filename}</code> <span className="article-code-lang">{enhancement.snippet.language}</span></div>
+          <button type="button" className="copy-link-button article-copy-code" onClick={copyCodeSnippet} aria-label={language === 'en' ? 'Copy code snippet' : 'Salin potongan kode'}><Copy size={13} /> {codeCopied ? (language === 'en' ? 'Code copied' : 'Kode disalin') : (language === 'en' ? 'Copy code' : 'Salin kode')}</button>
+        </div>
+        <pre><code>{enhancement.snippet.code}</code></pre>
+        <p className="article-code-caption">{enhancement.snippet.caption}</p>
+      </section>}
+      <div className="article-note"><strong><ShieldCheck size={16} /> {t('engineeringNote')}</strong><p>{t('noteDescription')}</p></div>
+    </div>
     <div className="article-end"><span>{t('topicsLabel')}</span><div className="tag-row">{article.tags.map(tag => <span key={tag}>#{tag.replaceAll(' ', '')}</span>)}</div><button className="copy-link-button" onClick={() => toggleSaved(article.slug)} aria-pressed={isSaved(article.slug)}><Bookmark size={14} /> {isSaved(article.slug) ? (language === 'en' ? 'Saved to reading list' : 'Tersimpan di daftar bacaan') : (language === 'en' ? 'Save to reading list' : 'Simpan ke daftar bacaan')}</button><button className="copy-link-button" onClick={shareArticle}><Share2 size={14} /> {language === 'en' ? 'Share article' : 'Bagikan artikel'}</button><button className="copy-link-button" onClick={copyCitation}><Copy size={14} /> {citationCopied ? (language === 'en' ? 'Citation copied' : 'Sitasi disalin') : (language === 'en' ? 'Copy Markdown citation' : 'Salin sitasi Markdown')}</button><button className="copy-link-button" onClick={copyArticleLink}><Copy size={14} /> {linkCopied ? t('copied') : t('copyLink')}</button></div>
     {copyError && <p className="copy-error" role="status">{t('copyError')}</p>}
+    {(prevArticle || nextArticle) && <nav className="article-prev-next" aria-label={language === 'en' ? 'Previous and next articles' : 'Artikel sebelumnya dan berikutnya'}>
+      {prevArticle ? <Link className="article-sequence-card prev" to={`/blog/${prevArticle.slug}`}><span className="section-kicker">← {language === 'en' ? 'PREVIOUS ARTICLE' : 'ARTIKEL SEBELUMNYA'}</span><strong>{(language === 'en' ? articleTranslations[prevArticle.slug]?.title : undefined) ?? prevArticle.title}</strong></Link> : <div />}
+      {nextArticle ? <Link className="article-sequence-card next" to={`/blog/${nextArticle.slug}`}><span className="section-kicker">{language === 'en' ? 'NEXT ARTICLE' : 'ARTIKEL BERIKUTNYA'} →</span><strong>{(language === 'en' ? articleTranslations[nextArticle.slug]?.title : undefined) ?? nextArticle.title}</strong></Link> : <div />}
+    </nav>}
     {relatedArticles.length > 0 && <section className="related-section"><div className="related-heading"><span className="section-kicker">{t('nextLearning')}</span><h2>{t('continueExploring')}</h2></div><div className="related-grid">{relatedArticles.map((related, index) => <ArticleCard key={related.slug} article={related} index={index} />)}</div></section>}
     <div className="article-next"><div><span className="section-kicker">{t('keepExploring')}</span><h2>{t('shareKnowledge')}</h2></div><Link className="button button-primary" to="/">{t('exploreArticles')} <ArrowRight size={16} /></Link></div>
   </div></main>

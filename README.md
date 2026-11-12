@@ -71,3 +71,18 @@ The Team Workspace backend remains disabled until its server-side credentials ar
 - Optional `DREAMEX_ALLOWED_ORIGINS`: comma-separated exact origins; defaults to `https://dreamex.tech,https://www.dreamex.tech`.
 
 Redeploy after changing environment variables. The bootstrap owner token can issue per-member access tokens with server-enforced owner/admin/editor/viewer roles. Member tokens are stored as SHA-256 hashes in Redis and the raw token is shown once. Editors can publish snapshots; viewers are read-only; owner/admin control membership with admin escalation restricted to the owner. All authorized members still share one snapshot (maximum 100 KB), so the MVP does not provide per-project tenant isolation or individual actor identity. Owner/admin can inspect a bounded server-side action audit feed that excludes token values and snapshot contents. Use it only for non-sensitive planning data. See [docs/TEAM-WORKSPACE.md](docs/TEAM-WORKSPACE.md).
+
+## Engineering Documentation & Governance Suite
+
+- [CURRENT_STATE_AUDIT.md](CURRENT_STATE_AUDIT.md) — Baseline repository, Vercel, and GitHub audit
+- [TECHNICAL_ROADMAP.md](TECHNICAL_ROADMAP.md) — Phased modernization roadmap and architectural decisions
+- [ARCHITECTURE.md](ARCHITECTURE.md) — System architecture, route inventory, and prerender pipeline
+- [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) — Color tokens, typography scale, layout containers, and component patterns
+- [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md) — Vercel domain (`dreamex.tech` → `www.dreamex.tech`), DNS, build, and env var reference
+- [SECURITY_AUDIT.md](SECURITY_AUDIT.md) — CSP, HSTS, RBAC token hashing, Lua CAS concurrency, and dependency audit
+- [PERFORMANCE_REPORT.md](PERFORMANCE_REPORT.md) — Before/after bundle sizes, route-level CSS code splitting, and runtime optimizations
+- [SEO_AUDIT.md](SEO_AUDIT.md) — Static `<head>` prerendering, JSON-LD (`Organization`, `WebSite`, `Article`, `BreadcrumbList`), RSS, and sitemap
+- [ACCESSIBILITY_REPORT.md](ACCESSIBILITY_REPORT.md) — WCAG 2.2 AA compliance matrix, keyboard focus trapping, and reduced-motion verification
+- [TEST_REPORT.md](TEST_REPORT.md) — Automated build, API unit test, Playwright E2E, and 38-point production smoke test report
+- [CHANGELOG.md](CHANGELOG.md) — Chronological record of platform releases and engineering improvements
+

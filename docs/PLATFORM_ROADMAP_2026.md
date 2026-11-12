@@ -246,7 +246,7 @@ The repository currently contains a technology publication and browser-first eng
 
 ## 7. Execution status and immediate action list
 
-**Status snapshot:** 15 October 2026. Implementation, CI validation, preview deployment, production deployment, and production smoke are separate gates. A merged PR is not production-complete merely because it is merged.
+**Status snapshot:** 12 November 2026. Implementation, CI validation, preview deployment, production deployment, and production smoke are separate gates. `main` (`337ec97140c131c8f9601e80312938e83f2fb48a`) is deployed `READY` on Vercel (`https://www.dreamex.tech`, with `308` redirect from `https://dreamex.tech`) and passes all 38/38 production smoke checks (`npm run smoke:production`).
 
 ### Implemented and merged into the repository
 
@@ -256,7 +256,7 @@ The repository currently contains a technology publication and browser-first eng
 - [x] **Synthetic QA data and Playwright starter generation — PR #22.** Deterministic fixtures and editable scaffolds with review guidance.
 - [x] **Production smoke workflow — PR #26.** Scheduled HTTPS checks for core routes, RSS, and sitemap with content/body markers and bounded retries.
 - [x] **SBOM provenance and metadata review — PR #23.** Browser-local CycloneDX/SPDX review; imported vulnerability data is not represented as a live scan.
-- [x] **CSP Report-Only and security-header verification — PR #24.** Non-enforcing baseline; no server-side violation collection endpoint is configured.
+- [x] **CSP Report-Only and security-header verification — PR #24 & PR #110.** Enforcing baseline CSP + staged `Content-Security-Policy-Report-Only` verified by `scripts/verify-security-config.mjs`.
 - [x] **QA traceability manifest — PR #30.** Versioned export with metadata, counts, integrity digest, and legacy import support.
 - [x] **SLO/error-budget worksheet — PR #28.** Manual inputs only; not connected to live telemetry.
 - [x] **API Contract Studio — PR #38.** OpenAPI inventory, static compatibility comparison, schema heuristics, inline example checks, Swagger 2.0 body parameters, and JSON export.
@@ -266,37 +266,20 @@ The repository currently contains a technology publication and browser-first eng
 - [x] **Quality Intelligence comparison — PR #49.** Imported report summary comparison and summary-only local history.
 - [x] **Flaky-test sample size — PR #61.** Retry-derived signals expose sample size and parser limitations.
 - [x] **Incident timeline integrity — PR #63.** Postmortem generation flags chronology, invalid incident windows, and missing follow-up owners/due dates.
-- [x] **Reliability & Incident Center — PR #74.** Dedicated local-first incident records, severity/status, timeline events, postmortem export, and manually entered delivery metrics. CI and desktop/mobile Playwright passed; the tool is not connected to live telemetry.
+- [x] **Reliability & Incident Center — PR #74.** Dedicated local-first incident records, severity/status, timeline events, postmortem export, and manually entered delivery metrics.
 - [x] **Threat-model worksheet.** Local STRIDE-inspired planning aid for assets, trust boundaries, threats, and mitigations; not automated threat detection.
-- [x] **Responsive/accessibility baseline and performance-budget checks.** Representative route viewport/keyboard checks, route inventory, and initial asset gzip budgets are part of repository verification.
-- [x] **Premium engineering sidebar — PR #77 (merged 15 Oct 2026).** Right-side drawer, grouped platform taxonomy, internal scrolling, backdrop, focus trap/restoration, Escape behavior, scroll locking, localized labels, and desktop/mobile Playwright coverage. Typecheck/lint/build/output verification and both Playwright projects passed on PR head `956732862e01810d38c4559a7360927483e0adc4`; merge commit `a435918f54f1f6a41eb84a3ae0625a95c678057f` is deployed to Vercel production with state `READY`.
-- [x] **Searchable sidebar and complete tool discovery — PR #85 (merged 15 Oct 2026).** Adds bilingual Quick Find, accessible empty states, and direct access to Engineering Intelligence, Performance Observatory, Web Quality Observatory, Developer Utilities, and Engineering Knowledge Graph; CI and desktop/mobile Playwright passed on the PR head.
-- [x] **Static route metadata prerender — PR #84 (merged 15 Oct 2026).** Generates route-specific title, description, canonical, Open Graph/Twitter, robots, and article publication metadata before JavaScript executes. This is static metadata prerendering; page content remains client-rendered.
+- [x] **Responsive/accessibility baseline and performance-budget checks — PR #80.** Representative route viewport/keyboard checks, route inventory, and initial asset gzip budgets are part of repository verification.
+- [x] **Premium engineering sidebar & searchable Quick Find — PRs #77, #85, #94.** Right-side drawer, grouped platform taxonomy, internal scrolling, backdrop, focus trap/restoration, Escape behavior, scroll locking, localized labels, and bounded local-first recent tools.
+- [x] **Static route metadata prerender & sitemap/indexing integrity — PRs #84, #89.** Generates route-specific title, description, canonical, Open Graph/Twitter, robots, and article publication metadata before JavaScript executes.
+- [x] **Serverless Team Workspace & RBAC — PRs #106, #107, #114.** Hardened `/api/team-workspace` Upstash Redis endpoint with SHA-256 member token hashing, Lua optimistic concurrency, RBAC (`owner`/`admin`/`editor`/`viewer`), and bounded 200-entry audit trail.
+- [x] **GitHub Integration & Site Audit workbenches — PRs #103, #113, #118, #119.** Browser-first GitHub public repo/PR/Actions inspector, Site Audit workbench, and homepage visual refinement.
 
-### Production verification still required
+### Production verification status (12 November 2026)
 
-- [ ] **Exact-commit deployment verification is pending for current `main`.** The latest READY production deployment returned by Vercel is `dpl_8vQSUSC33rhpSezn61wVsQBsizGR`, commit `63b1cad3cf4df373a6f3912c91622b861185bba9`. PR #89 has since advanced `main` to `db429c81e04538c5783bdeb473f867801cc6a285`; that SHA is not yet confirmed deployed. Vercel reports `build-rate-limit` for new preview/deployment checks. Production aliases are `www.dreamex.tech` and `dreamex.tech`.
-- [ ] **Production smoke on the current deployment remains unverified.** A manual equivalent of the 25-path route/feed suite previously passed 25/25 against the older production commit `06e068779775bf84d2c3e8c0cb63f2b26db2bbf7`; that result must not be reused as proof for commit `63b1cad3cf4df373a6f3912c91622b861185bba9` or newer `main`. Run `npm run smoke:production` after the latest main SHA has a READY production deployment. The script covers static routes, article metadata, feeds, sitemap, manifest, redirects, content types, and security headers.
-- [ ] **Fresh CI on exact main SHA.** PR checks are not a substitute for verifying the latest main-push workflow after PR #89 merged as `db429c81e04538c5783bdeb473f867801cc6a285`; the available commit status only reports the Vercel build-rate-limit failure, so the main-push Actions result remains unverified.
-- [ ] **Full scripted production smoke after deployment.** Run `npm run smoke:production` against the exact production alias after main deploys the sitemap/indexing fix. The script checks route and article metadata, feeds, sitemap, manifest, redirects, content types, and security headers; a manual request sample is not equivalent to a successful script run.
-
-### Next implementation queue
-
-1. [x] **Finish premium sidebar PR #77 and deploy.** Merged after typecheck/lint/build/output verification and desktop/mobile Playwright passed; exact merge SHA is deployed READY.
-2. [ ] **Fresh main CI and scripted smoke workflow.** The last documented manual 25-path smoke pass was for historical commit `06e068779775bf84d2c3e8c0cb63f2b26db2bbf7`, not the current deployment. The last confirmed production deployment is `63b1cad3cf4df373a6f3912c91622b861185bba9`, while `main` is `db429c81e04538c5783bdeb473f867801cc6a285` and has not deployed because Vercel hit its 100-deployments-per-24-hour limit. Verify fresh main-push CI and run the full scripted smoke after that exact main SHA reaches `READY`.
-3. [x] **Accessibility baseline PR #80 merged.** The 17-route, six-viewport semantic/responsive suite and shared navigation helpers passed typecheck/lint/build/output verification plus desktop and mobile Playwright on PR head `1a8be009eb44599750886d1cfc1479f97315ee40`; merge commit `06e068779775bf84d2c3e8c0cb63f2b26db2bbf7` is now on `main`.
-4. [ ] **Performance/accessibility follow-through.** Measure representative production routes and real-device Core Web Vitals, add automated WCAG scans and visual baselines, and tune budgets from stable measurements rather than arbitrary targets.
-5. [x] **SEO metadata prerender — PR #84.** Route-specific static HTML carries titles, descriptions, canonical/social metadata, robots directives, and article publication dates before JavaScript runs. [x] **Sitemap/indexing integrity — PR #89 merged.** Command Center is included, personalized Reading List is `noindex, follow` and excluded from the sitemap, and smoke/SEO/E2E checks cover the policy. Production confirmation remains pending until the latest main commit is deployed.
-6. [ ] **Evidence privacy and collaboration architecture.** Sidebar recent-history deletion is scoped and tested to preserve unrelated browser storage in PR #94. Extend the same deletion/privacy guarantees to evidence and report tools; do not simulate cloud sync, and require authentication/authorization, consent, retention/deletion, auditability, rate limits, and operational ownership before team features or GitHub integrations.
-
-### Navigation polish follow-up
-
-- [x] **Sidebar quick-find live feedback.** Announce matching destination counts through a polite live region, show the localized empty state only when no matches exist, and test both states on mobile.
-- [ ] **Sidebar recents and keyboard shortcut — PR #94 (this change).** Validate the bounded local-only history, slash-to-search shortcut, focus timing, live search counts, desktop mega-menu, tablet drawer styling, and preservation of unrelated browser storage before merge.
-
-### Deployment blocker to resolve
-
-- **Vercel preview/production deployment checks are returning `build-rate-limit`.** GitHub typecheck/build/E2E results are separate and must not be represented as a successful Vercel deployment. Re-check the project deployment quota, avoid creating redundant preview builds, and verify the exact main SHA reaches `READY` before declaring production complete.
+- [x] **Exact-commit deployment verification (`337ec97140c131c8f9601e80312938e83f2fb48a`).** Confirmed `success` via GitHub Commit Status API (`Vercel — Deployment has completed`) and live production inspection.
+- [x] **Full scripted production smoke (`npm run smoke:production`).** Passed **38/38 checks** against `https://www.dreamex.tech` (23 static routes, 6 article routes, `/robots.txt`, `/manifest.webmanifest`, `/rss.xml`, `/rss.xsl`, `/sitemap.xml`, and `/api/team-workspace` security headers + `503 workspace_not_configured` status).
+- [x] **Main-push CI, E2E, and Security Audit workflows.** All 4 GitHub Actions workflows (`CI`, `E2E`, `Production Smoke`, `Security Audit`) succeeded on `main` (`337ec97`).
+- [x] **Phase 3–9 Modernization (12 November 2026).** Route-level CSS code splitting (reducing initial entry CSS gzip by ~14 KiB), long-form article Table of Contents + interactive Copy-Code blocks + Previous/Next navigation + BreadcrumbList JSON-LD, and homepage `#tag` filtering + article sorting.
 
 ### Required release sequence for every feature
 
