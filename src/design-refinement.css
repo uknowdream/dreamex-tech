@@ -40,14 +40,54 @@ body{
 .hero-description,.supply-chain-hero>div:first-child>p{line-height:1.9}
 .eyebrow,.section-kicker{letter-spacing:1.7px}
 .button{
-  min-height:44px;
-  border-radius:10px;
-  transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease,border-color .22s ease,background .22s ease;
+  position:relative;
+  overflow:hidden;
+  min-height:46px;
+  border-radius:12px;
+  letter-spacing:.01em;
+  transition:transform .24s cubic-bezier(.2,.8,.2,1),box-shadow .24s ease,border-color .24s ease,background .24s ease;
 }
+.button::after{
+  content:"";
+  position:absolute;
+  top:0;
+  left:-120%;
+  width:65%;
+  height:100%;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,.32),transparent);
+  transform:skewX(-18deg);
+  transition:left .55s cubic-bezier(.22,1,.36,1);
+  pointer-events:none;
+}
+.button:hover::after{left:145%}
+.button svg{transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+.button:hover svg{transform:translateX(1.5px)}
 .button:active{transform:translateY(0) scale(.985)}
-.button-primary{box-shadow:0 5px 22px rgba(197,255,112,.08),inset 0 1px rgba(255,255,255,.22)}
-.button-ghost{background:rgba(255,255,255,.018);border-color:rgba(142,163,199,.27)}
-.button-ghost:hover{background:rgba(255,255,255,.045);border-color:rgba(145,207,255,.5)}
+.button-primary{
+  background:linear-gradient(135deg,#c5ff70 0%,#5eead4 56%,#38bdf8 100%);
+  color:#06101f;
+  border:1px solid rgba(197,255,112,.52);
+  box-shadow:0 8px 26px rgba(94,234,212,.22),inset 0 1px rgba(255,255,255,.65);
+}
+.button-primary:hover{
+  box-shadow:0 12px 34px rgba(56,189,248,.36),0 0 22px rgba(197,255,112,.35),inset 0 1px rgba(255,255,255,.85);
+}
+.button-ghost{
+  background:linear-gradient(160deg,rgba(20,32,58,.78),rgba(10,17,32,.92));
+  border:1px solid rgba(142,174,224,.32);
+  color:#ebf3ff;
+  box-shadow:inset 0 1px rgba(255,255,255,.09);
+}
+.button-ghost:hover{
+  background:linear-gradient(160deg,rgba(27,45,80,.92),rgba(12,22,42,.96));
+  border-color:rgba(125,211,252,.62);
+  box-shadow:0 10px 26px -10px rgba(56,189,248,.35),inset 0 1px rgba(255,255,255,.16);
+}
+@media (prefers-reduced-motion:reduce){
+  .button::after,.button svg{transition:none}
+  .button:hover::after{left:-120%}
+  .button:hover svg{transform:none}
+}
 .card,.tool-card,.article-card,.topic-card,.workspace-card,.command-card,.quality-card,.supply-chain-card{
   border-color:rgba(127,151,190,.2);
   box-shadow:0 8px 28px rgba(0,0,0,.1);

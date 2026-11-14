@@ -459,17 +459,28 @@
   .home-page .hero-visual{
     max-width: 600px;
     margin-inline: auto;
-    padding-top: 22px;
+    padding-top: 12px;
   }
 
   .home-page .hero-signal-card{
-    top: 43%;
-    right: 4px;
-    width: clamp(136px, 43%, 164px);
+    order: 2;
+    position: relative;
+    inset: auto;
+    top: auto;
+    right: auto;
+    width: 100%;
+    margin: 10px 0 0;
+  }
+
+  .home-page .hero-visual > .chip-bottom{
+    order: 3;
+  }
+
+  .home-page .hero-visual > .visual-caption{
+    order: 4;
   }
 
   .home-page .hero-stats{
-    justify-content: space-between;
     gap: 10px;
   }
 
@@ -503,10 +514,10 @@
 
 @media (max-width: 380px){
   .home-page .hero h1{ font-size: clamp(36px, 10.2vw, 42px); }
-  .home-page .hero-signal-card{ width: 132px; padding: 9px; }
-  .home-page .hero-signal-steps{ gap: 2px; }
-  .home-page .hero-signal-steps > span{ font-size: 7px; }
-  .home-page .floating-chip{ max-width: 46%; padding: 8px 9px; font-size: 9px; }
+  .home-page .hero-signal-card{ width: 100%; padding: 10px; }
+  .home-page .hero-signal-steps{ gap: 4px; }
+  .home-page .hero-signal-steps > span{ font-size: 8px; }
+  .home-page .floating-chip{ max-width: 100%; padding: 8px 10px; font-size: 10px; }
   .home-page .hero-stats{ gap: 8px; }
   .home-page .hero-stats span{ font-size: 9px; }
 }
@@ -599,6 +610,352 @@
   }
 }
 
+/* Flagship AI Eyebrow, Telemetry Stats & Hero Neural Cockpit */
+.home-page .eyebrow{
+  border-color: rgba(110, 243, 197, .34);
+  background: linear-gradient(95deg, rgba(16, 30, 56, .88), rgba(11, 20, 38, .74));
+  box-shadow: 0 0 24px rgba(56, 189, 248, .12), inset 0 1px rgba(255, 255, 255, .1);
+  color: #dcf7ff;
+}
+
+.home-page .hero-stats{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.home-page .hero-stats > div{
+  padding: 14px 15px;
+  border-radius: 14px;
+  border: 1px solid rgba(139, 220, 255, .18);
+  background: linear-gradient(155deg, rgba(16, 28, 52, .76), rgba(8, 15, 29, .9));
+  box-shadow: 0 12px 30px -18px rgba(0, 0, 0, .75), inset 0 1px rgba(255, 255, 255, .07);
+  transition: border-color .22s ease, transform .22s ease;
+}
+
+.home-page .hero-stats > div:hover{
+  border-color: rgba(110, 243, 197, .42);
+  transform: translateY(-2px);
+}
+
+.home-page .hero-stats strong{
+  background: linear-gradient(120deg, #f0f9ff 10%, #86efac 65%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (min-width: 641px){
+  .home-page .hero-signal-card{
+    top: 52px;
+    right: 8px;
+  }
+}
+
+.home-page .hero-ai-cockpit{
+  transform: none;
+  border-radius: 20px;
+  border: 1px solid rgba(125, 211, 252, .34);
+  background: linear-gradient(155deg, rgba(15, 25, 46, .97), rgba(6, 11, 23, .98));
+  box-shadow:
+    0 32px 90px rgba(0, 0, 0, .58),
+    0 0 0 1px rgba(197, 255, 112, .08),
+    0 0 58px rgba(56, 189, 248, .12),
+    inset 0 1px rgba(255, 255, 255, .1);
+}
+
+.home-page .hero-cockpit-bar{
+  height: 44px;
+  padding: 0 14px;
+  background: linear-gradient(90deg, rgba(56, 189, 248, .08), rgba(16, 185, 129, .03), transparent);
+}
+
+.home-page .hero-cockpit-title{
+  color: #dbeafe;
+  font-weight: 600;
+  letter-spacing: .04em;
+}
+
+.home-page .hero-cockpit-title svg{
+  color: #6ef3c5;
+}
+
+.home-page .hero-cockpit-live{
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(110, 243, 197, .34);
+  background: rgba(8, 22, 36, .88);
+  color: #bdfce7;
+}
+
+.home-page .hero-cockpit-visual{
+  position: relative;
+  height: 152px;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(139, 178, 226, .18);
+  background: #050a16;
+}
+
+.home-page .hero-cockpit-visual img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .7s cubic-bezier(.22, 1, .36, 1);
+}
+
+.home-page .hero-ai-cockpit:hover .hero-cockpit-visual img{
+  transform: scale(1.045);
+}
+
+.home-page .hero-cockpit-visual-scrim{
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(6, 11, 24, .18) 0%, rgba(6, 11, 24, .58) 65%, rgba(7, 13, 27, .94) 100%);
+  pointer-events: none;
+}
+
+.home-page .hero-cockpit-visual-scrim::after{
+  content: "";
+  position: absolute;
+  inset: -40% 0;
+  background: linear-gradient(180deg, transparent, rgba(56, 189, 248, .12), transparent);
+  animation: dx-cockpit-scan 5.5s linear infinite;
+}
+
+.home-page .hero-cockpit-hud{
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: calc(100% - 24px);
+  pointer-events: none;
+}
+
+.home-page .hero-cockpit-badge{
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 211, 252, .38);
+  background: rgba(6, 12, 24, .82);
+  color: #bae6fd;
+  font: 700 9.5px/1 var(--mono);
+  letter-spacing: .07em;
+}
+
+.home-page .hero-cockpit-badge svg{
+  color: #c5ff70;
+}
+
+.home-page .hero-ai-wave{
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 18px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(110, 243, 197, .28);
+  background: rgba(6, 12, 24, .8);
+}
+
+.home-page .hero-ai-wave span{
+  display: block;
+  width: 2.5px;
+  height: 11px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #c5ff70, #38bdf8);
+  transform-origin: bottom;
+  animation: dx-wave-bar 1.2s ease-in-out infinite;
+}
+
+.home-page .hero-ai-wave span:nth-child(2){ animation-delay: .18s; }
+.home-page .hero-ai-wave span:nth-child(3){ animation-delay: .36s; }
+.home-page .hero-ai-wave span:nth-child(4){ animation-delay: .52s; }
+.home-page .hero-ai-wave span:nth-child(5){ animation-delay: .28s; }
+
+.home-page .hero-cockpit-tabs{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 10px 12px;
+  background: rgba(7, 13, 25, .86);
+  border-bottom: 1px solid rgba(139, 178, 226, .14);
+}
+
+.home-page .hero-cockpit-tab{
+  min-height: 36px;
+  padding: 6px 8px;
+  border-radius: 9px;
+  border: 1px solid rgba(139, 176, 224, .2);
+  background: rgba(14, 24, 44, .78);
+  color: #a8bddc;
+  font: 600 11px/1.2 var(--sans);
+  cursor: pointer;
+  transition: all .2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-page .hero-cockpit-tab:hover{
+  border-color: rgba(125, 211, 252, .5);
+  color: #f0f7ff;
+}
+
+.home-page .hero-cockpit-tab.active{
+  border-color: rgba(110, 243, 197, .58);
+  background: linear-gradient(135deg, rgba(197, 255, 112, .16), rgba(56, 189, 248, .2));
+  color: #f4fbff;
+  box-shadow: 0 0 18px rgba(56, 189, 248, .2);
+}
+
+.home-page .hero-cockpit-stream{
+  padding: 12px 14px;
+  background: radial-gradient(circle at 88% 0%, rgba(56, 189, 248, .08), transparent 58%), #070d1a;
+}
+
+.home-page .hero-cockpit-subline{
+  margin: 0 0 6px;
+  color: #7dd3fc;
+  font: 700 9.5px/1.3 var(--mono);
+  letter-spacing: .08em;
+  animation: none !important;
+}
+
+.home-page .hero-cockpit-output{
+  margin: 0;
+  min-height: 92px;
+  font: 500 11.2px/1.68 var(--mono);
+  color: #dff0ff;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.home-page .hero-cockpit-metrics{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.home-page .hero-cockpit-metric{
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(139, 178, 226, .16);
+  background: rgba(11, 20, 38, .86);
+  display: grid;
+  gap: 3px;
+}
+
+.home-page .hero-cockpit-metric span{
+  color: #84a0c4;
+  font: 700 8.5px/1 var(--mono);
+  letter-spacing: .08em;
+}
+
+.home-page .hero-cockpit-metric strong{
+  color: #c5ff70;
+  font: 700 12px/1.1 var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.home-page .hero-cockpit-footer{
+  margin-top: 0;
+  padding: 10px 14px;
+  border-top: 1px solid rgba(139, 178, 226, .16);
+  background: rgba(9, 16, 30, .92);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.home-page .hero-cockpit-tools{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.home-page .hero-mini-btn{
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(139, 178, 226, .24);
+  background: rgba(16, 28, 52, .85);
+  color: #cfe0fa;
+  font: 600 10.5px/1 var(--sans);
+  cursor: pointer;
+  transition: border-color .2s ease, background .2s ease, color .2s ease;
+}
+
+.home-page .hero-mini-btn:hover{
+  border-color: rgba(110, 243, 197, .55);
+  background: rgba(24, 42, 74, .95);
+  color: #fff;
+}
+
+.home-page .hero-cockpit-cta{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #c5ff70 0%, #5eead4 56%, #38bdf8 100%);
+  color: #06101f !important;
+  font: 700 11px/1 var(--sans);
+  box-shadow: 0 6px 20px rgba(94, 234, 212, .25);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.home-page .hero-cockpit-cta svg{
+  color: #06101f !important;
+}
+
+.home-page .hero-cockpit-cta:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(56, 189, 248, .38);
+}
+
+@media (max-width: 640px){
+  .home-page .hero-cockpit-visual{
+    height: 122px;
+  }
+  .home-page .hero-cockpit-tab{
+    font-size: 10px;
+    padding: 5px;
+  }
+  .home-page .hero-stats{
+    gap: 8px;
+  }
+  .home-page .hero-stats > div{
+    padding: 11px 10px;
+  }
+}
+
+@keyframes dx-cockpit-scan{
+  0% { transform: translateY(-60%); }
+  100% { transform: translateY(60%); }
+}
+
+@keyframes dx-wave-bar{
+  0%, 100% { transform: scaleY(.35); opacity: .75; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
 @keyframes dx-premium-shimmer{
   from { background-position: 0% center; }
   to { background-position: 220% center; }
@@ -615,6 +972,9 @@
 .home-page .hero-core-backdrop,
 .home-page .hero h1 span,
 .home-page .featured-cover-img,
+.home-page .hero-cockpit-visual img,
+.home-page .hero-cockpit-visual-scrim::after,
+.home-page .hero-ai-wave span,
 .home-page .hero-signal-card,
 .home-page .hero-signal-card::after,
 .home-page .hero-signal-track > span,

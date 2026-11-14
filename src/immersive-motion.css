@@ -316,13 +316,13 @@
 }
 
 @keyframes dx-hero-float {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(0, -6px, 0); }
+  0%, 100% { opacity: .98; }
+  50% { opacity: 1; }
 }
 
 @keyframes dx-hero-float-mobile {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(0, -3px, 0); }
+  0%, 100% { opacity: .985; }
+  50% { opacity: 1; }
 }
 
 @keyframes dx-orbit-spin {
@@ -336,13 +336,19 @@
 }
 
 @keyframes dx-terminal-float {
-  0%, 100% { transform: translate3d(0, 0, 0) rotate(.35deg); }
-  50% { transform: translate3d(0, -4px, 0) rotate(-.25deg); }
+  0%, 100% {
+    border-color: rgba(125, 211, 252, .34);
+    box-shadow: 0 30px 88px rgba(0, 0, 0, .56), 0 0 46px rgba(56, 189, 248, .12), inset 0 1px rgba(255, 255, 255, .1);
+  }
+  50% {
+    border-color: rgba(110, 243, 197, .52);
+    box-shadow: 0 34px 96px rgba(0, 0, 0, .6), 0 0 68px rgba(110, 243, 197, .2), inset 0 1px rgba(255, 255, 255, .14);
+  }
 }
 
 @keyframes dx-terminal-float-mobile {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(0, -2px, 0); }
+  0%, 100% { border-color: rgba(125, 211, 252, .34); }
+  50% { border-color: rgba(110, 243, 197, .48); }
 }
 
 @keyframes dx-terminal-sweep {

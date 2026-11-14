@@ -13,7 +13,28 @@ test.describe('DreamEx Tech AI Visual Studio, Cover Imagery & Responsive Verific
     const heroBackdrop = page.locator('.hero-core-backdrop')
     await expect(heroBackdrop).toBeAttached()
 
-    await expect(page.locator('.hero a[href="/tools"]')).toBeVisible()
+    await expect(page.locator('.hero a[href="/tools"]').first()).toBeVisible()
+
+    // Flagship Hero AI Cockpit replaces legacy engineering.ts panel
+    const cockpit = page.getByTestId('hero-ai-cockpit')
+    await expect(cockpit).toBeVisible()
+    await expect(cockpit).not.toContainText('engineering.ts')
+
+    const cockpitImg = cockpit.locator('.hero-cockpit-visual img')
+    await expect
+      .poll(async () => cockpitImg.evaluate(el => (el as HTMLImageElement).complete && (el as HTMLImageElement).naturalWidth > 0))
+      .toBeTruthy()
+
+    const cockpitOutput = page.getByTestId('hero-cockpit-output')
+    await expect(cockpitOutput).toContainText('N_max = 34')
+
+    await cockpit.getByRole('tab', { name: '02 · QA AI' }).click()
+    await expect(cockpitOutput).toContainText('orphan_rows')
+    await expect(cockpit.locator('.hero-cockpit-cta')).toHaveAttribute('href', '/qa-studio')
+
+    await cockpit.getByRole('tab', { name: '03 · BA & Jira AI' }).click()
+    await expect(cockpitOutput).toContainText('Jira REST API')
+    await expect(cockpit.locator('.hero-cockpit-cta')).toHaveAttribute('href', '/ba-hub')
 
     const studio = page.locator('.dx-ai-suite')
     await studio.scrollIntoViewIfNeeded()
