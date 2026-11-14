@@ -1,30 +1,31 @@
 /* Quantum Obsidian & Neural Glass v3.0 — Sovereign Multi-Role Workbench */
 .sovereign-workbench {
-  --obs-void: #050811;
-  --neural-slate: rgba(12, 19, 34, 0.78);
-  --elevated-wb: #10192e;
-  --wb-border: rgba(148, 163, 184, 0.14);
-  --wb-border-strong: rgba(148, 163, 184, 0.28);
-  --role-eng: #10b981;
-  --role-qa: #06b6d4;
-  --role-ba: #8b5cf6;
-  --role-pm: #f59e0b;
-  --role-alert: #f43f5e;
-  padding: 40px 0 88px;
+  --obs-void: #03060c;
+  --neural-slate: linear-gradient(155deg, rgba(13, 23, 44, 0.94), rgba(6, 11, 23, 0.98));
+  --elevated-wb: linear-gradient(155deg, rgba(16, 28, 54, 0.94), rgba(8, 15, 29, 0.98));
+  --wb-border: rgba(125, 211, 252, 0.2);
+  --wb-border-strong: rgba(110, 243, 197, 0.45);
+  --role-eng: #4df4ca;
+  --role-qa: #38bdf8;
+  --role-ba: #c084fc;
+  --role-pm: #fbbf24;
+  --role-alert: #fb7185;
+  padding: 28px 0 88px;
 }
 
 .sovereign-hero {
+  position: relative;
+  overflow: hidden;
   background:
-    radial-gradient(circle at 14% 18%, rgba(16, 185, 129, 0.12), transparent 38%),
-    radial-gradient(circle at 86% 22%, rgba(139, 92, 246, 0.14), transparent 42%),
-    radial-gradient(circle at 52% 85%, rgba(6, 182, 212, 0.1), transparent 45%),
-    var(--neural-slate);
-  border: 1px solid var(--wb-border);
-  border-radius: 22px;
+    radial-gradient(ellipse 56% 52% at 14% 12%, rgba(77, 244, 202, 0.14), transparent 60%),
+    radial-gradient(ellipse 52% 48% at 88% 18%, rgba(167, 139, 250, 0.16), transparent 62%),
+    radial-gradient(ellipse 50% 45% at 50% 92%, rgba(56, 189, 248, 0.12), transparent 64%),
+    linear-gradient(155deg, rgba(12, 22, 42, 0.96), rgba(5, 10, 21, 0.98));
+  border: 1px solid rgba(125, 211, 252, 0.26);
+  border-radius: 24px;
   padding: 32px;
-  backdrop-filter: blur(20px);
   margin-bottom: 24px;
-  box-shadow: 0 24px 60px rgba(3, 6, 14, 0.55);
+  box-shadow: 0 28px 72px rgba(0, 0, 0, 0.55), 0 0 38px rgba(56, 189, 248, 0.08), inset 0 1px rgba(255, 255, 255, 0.1);
 }
 
 .sovereign-hero-top {
@@ -190,9 +191,9 @@
   grid-column: span 6;
   background: var(--neural-slate);
   border: 1px solid var(--wb-border);
-  border-radius: 18px;
+  border-radius: 20px;
   padding: 22px;
-  backdrop-filter: blur(20px);
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.38), inset 0 1px rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -208,7 +209,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  border-bottom: 1px solid rgba(125, 211, 252, 0.14);
   padding-bottom: 12px;
 }
 
@@ -216,20 +217,20 @@
   font-family: var(--display);
   font-size: 18px;
   margin: 4px 0 0;
-  color: #f8fafc;
+  color: #f4f8ff;
 }
 
 .sovereign-panel-head p {
   margin: 4px 0 0;
   font-size: 13px;
-  color: #94a3b8;
+  color: #9cb2cf;
 }
 
 .sovereign-kicker {
   font: 600 10.5px var(--mono);
   letter-spacing: 0.9px;
   text-transform: uppercase;
-  color: #38bdf8;
+  color: #5eead4;
 }
 
 .sovereign-form-grid {
@@ -246,19 +247,20 @@
 
 .sovereign-field label {
   font: 600 11.5px var(--mono);
-  color: #cbd5e1;
+  color: #dbeafe;
 }
 
 .sovereign-field input,
 .sovereign-field select,
 .sovereign-field textarea {
-  background: #080e1c;
-  border: 1px solid var(--wb-border);
-  border-radius: 10px;
+  background: rgba(6, 11, 22, 0.96);
+  border: 1px solid rgba(125, 211, 252, 0.24);
+  border-radius: 11px;
   padding: 9px 12px;
-  color: #f1f5f9;
+  color: #f8fafc;
   font-size: 13px;
   font-family: inherit;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .sovereign-field textarea {
@@ -335,26 +337,32 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 13px;
-  border-radius: 10px;
-  border: 1px solid var(--wb-border-strong);
-  background: #131f38;
+  padding: 9px 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 211, 252, 0.3);
+  background: linear-gradient(155deg, rgba(16, 29, 54, 0.88), rgba(7, 13, 27, 0.96));
   color: #f1f5f9;
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .sovereign-btn:hover {
-  background: #1c2c4d;
-  border-color: #38bdf8;
+  background: linear-gradient(155deg, rgba(22, 42, 76, 0.96), rgba(10, 18, 36, 0.98));
+  border-color: rgba(110, 243, 197, 0.62);
 }
 
 .sovereign-btn.primary {
-  background: linear-gradient(135deg, #10b981, #06b6d4);
-  color: #041019;
-  border-color: transparent;
+  background: linear-gradient(135deg, #c5ff70 0%, #4df4ca 55%, #38bdf8 100%);
+  color: #050d1b;
+  border-color: rgba(215, 255, 165, 0.68);
+  box-shadow: 0 8px 24px rgba(77, 244, 202, 0.24), inset 0 1px rgba(255, 255, 255, 0.72);
+}
+
+.sovereign-btn.primary:hover {
+  box-shadow: 0 12px 32px rgba(56, 189, 248, 0.38), inset 0 1px rgba(255, 255, 255, 0.9);
 }
 
 .sovereign-table-wrap {
@@ -429,8 +437,8 @@
 
 @keyframes sovereignPanelEnter {
   from {
-    opacity: 0;
-    transform: translateY(10px);
+    opacity: 0.94;
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -439,7 +447,7 @@
 }
 
 .sovereign-panel {
-  animation: sovereignPanelEnter 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: sovereignPanelEnter 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 

@@ -400,7 +400,7 @@ function Header() {
             </div>
           </section>}
           <NavLink to="/" end onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><HomeIcon size={16}/></span><span><b>{language === 'en' ? 'Journal' : 'Jurnal'}</b><small>{language === 'en' ? 'Articles, ideas and guides' : 'Artikel, ide, dan panduan'}</small></span></NavLink>
-          <details className="nav-platform">
+          <details className={NAV_DESTINATIONS[location.pathname] ? 'nav-platform nav-platform-current' : 'nav-platform'}>
             <summary><span className="nav-link-icon"><Layers3 size={16}/></span><span><b>{language === 'en' ? 'Engineering platform' : 'Platform engineering'}</b><small>{language === 'en' ? 'Explore all engineering tools' : 'Jelajahi semua tools engineering'}</small></span><ChevronDown size={15} className="nav-chevron" /></summary>
             <div className="nav-mega-panel">
               <div className="nav-mega-intro">
@@ -408,6 +408,7 @@ function Header() {
                 <strong>{language === 'en' ? 'From first idea to reliable release.' : 'Dari ide hingga rilis yang andal.'}</strong>
                 <p>{language === 'en' ? 'A focused workspace for building, testing, securing and improving software.' : 'Ruang kerja terpadu untuk membangun, menguji, mengamankan, dan meningkatkan software.'}</p>
                 <Link to="/workspace" onClick={() => setDrawerOpen(false)}>{language === 'en' ? 'Open workspace' : 'Buka workspace'} <ArrowRight size={14}/></Link>
+                <span className="nav-mega-orbit" aria-hidden="true"><span /><span /><span /></span>
               </div>
               <div className="nav-mega-group">
                 <span className="nav-group-label">{language === 'en' ? 'PLAN & OPERATE' : 'RENCANAKAN & KELOLA'}</span>
