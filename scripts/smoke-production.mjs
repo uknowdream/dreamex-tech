@@ -10,6 +10,9 @@ if (baseUrl.username || baseUrl.password || baseUrl.search || baseUrl.hash || ba
 
 const checks = [
   { path: '/', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/tools', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/ba-hub', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/pm-jira-hub', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/api-playground', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/github-ci', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/team-workspace', type: 'html', markers: ['id="root"', '<div'] },
