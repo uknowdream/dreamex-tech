@@ -511,9 +511,110 @@
   .home-page .hero-stats span{ font-size: 9px; }
 }
 
+/* AI-era Neural Backdrop, Animated Gradient Highlights, Cover Imagery & Radar Form */
+.home-page .hero-core-backdrop{
+  position: absolute;
+  right: -4%;
+  top: 50%;
+  width: min(62vw, 820px);
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  transform: translate3d(0, -50%, 0);
+  opacity: .34;
+  z-index: 0;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse at 65% 50%, #000 18%, transparent 72%);
+  mask-image: radial-gradient(ellipse at 65% 50%, #000 18%, transparent 72%);
+}
+
+.home-page .featured-art{
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.home-page .featured-cover-img{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: .52;
+  z-index: 0;
+  pointer-events: none;
+  transition: transform .8s cubic-bezier(.2, .8, .2, 1), opacity .4s ease;
+}
+
+.home-page .featured-card:hover .featured-cover-img{
+  transform: scale(1.06);
+  opacity: .68;
+}
+
+.home-page .newsletter-form{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.home-page .newsletter-form input{
+  flex: 1 1 240px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(139, 168, 214, .28);
+  background: rgba(8, 13, 25, .92);
+  color: #edf3ff;
+  font: 400 14px/1.4 var(--sans);
+}
+
+.home-page .newsletter-status{
+  margin: 10px 0 0;
+  color: #c5ff70;
+  font: 500 12.5px/1.5 var(--mono);
+}
+
+@media (prefers-reduced-motion: no-preference){
+  .home-page .hero h1 span{
+    background: linear-gradient(92deg, #c5ff70 0%, #8bdcff 45%, #c084fc 80%, #c5ff70 100%);
+    background-size: 220% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: dx-premium-shimmer 9s linear infinite;
+  }
+
+  .home-page .hero-core-backdrop{
+    animation: dx-premium-core-float 16s ease-in-out infinite alternate;
+  }
+}
+
+@media (max-width: 900px){
+  .home-page .hero-core-backdrop{
+    width: 100%;
+    right: 0;
+    opacity: .22;
+  }
+}
+
+@keyframes dx-premium-shimmer{
+  from { background-position: 0% center; }
+  to { background-position: 220% center; }
+}
+
+@keyframes dx-premium-core-float{
+  from { transform: translate3d(0, -51%, 0) scale(1); }
+  to { transform: translate3d(-1.5%, -49%, 0) scale(1.045); }
+}
+
 @media (prefers-reduced-motion: reduce){
   .home-page .hero::before,
 .home-page .hero::after,
+.home-page .hero-core-backdrop,
+.home-page .hero h1 span,
+.home-page .featured-cover-img,
 .home-page .hero-signal-card,
 .home-page .hero-signal-card::after,
 .home-page .hero-signal-track > span,

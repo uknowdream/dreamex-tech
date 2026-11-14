@@ -4,8 +4,10 @@ import { ArrowDownRight, ArrowRight, BookOpen, Bookmark, BookmarkCheck, Braces, 
 import { articles } from './articles'
 import { articleTranslations } from './articleTranslations'
 import { articleEnhancementsEn, articleEnhancementsId } from './articleEnhancements'
+import { getArticleCover } from './articleCovers'
 import { useLanguage } from './i18n'
 import { EngineeringLaunchpad } from './EngineeringLaunchpad'
+const NeuralAiStudio = lazy(() => import('./NeuralAiStudio').then(module => ({ default: module.NeuralAiStudio })))
 const EngineeringControlPlanePage = lazy(() => import('./EngineeringControlPlane').then(module => ({ default: module.EngineeringControlPlanePage })))
 const QualityIntelligencePage = lazy(() => import('./QualityIntelligence').then(module => ({ default: module.QualityIntelligencePage })))
 const ReliabilityCenterPage = lazy(() => import('./ReliabilityCenter').then(module => ({ default: module.ReliabilityCenterPage })))
@@ -516,7 +518,12 @@ function ArticleCard({ article, index = 0, activeTag = '', onSelectTag }: { arti
   const { isSaved, toggleSaved } = useReadingList()
   const translated = language === 'en' ? articleTranslations[article.slug] : undefined
   const saved = isSaved(article.slug)
+  const cover = getArticleCover(article.slug, language)
   return <article className="article-card" style={{ animationDelay: `${index * 70}ms` }}>
+    <Link className="article-cover-thumb" to={`/blog/${article.slug}`} tabIndex={-1} aria-hidden="true">
+      <img className="article-cover-img" src={cover.src} alt="" width={640} height={360} loading="lazy" />
+      <span className="article-cover-badge" style={{ borderColor: cover.accent }}>{cover.badge}</span>
+    </Link>
     <div className="card-top"><span className="category-pill">{categoryLabel(article.category, language)}</span><div className="card-meta-actions"><span className="read-time">{language === 'en' ? article.readTime.replace('menit', 'min') : article.readTime}</span><button className="bookmark-button" type="button" aria-pressed={saved} aria-label={`${saved ? (language === 'en' ? 'Remove saved article' : 'Hapus artikel tersimpan') : (language === 'en' ? 'Save article' : 'Simpan artikel')}: ${translated?.title ?? article.title}`} onClick={() => toggleSaved(article.slug)} title={saved ? (language === 'en' ? 'Remove from reading list' : 'Hapus dari daftar bacaan') : (language === 'en' ? 'Save to reading list' : 'Simpan ke daftar bacaan')}>{saved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}</button></div></div>
     <h3><Link to={`/blog/${article.slug}`}>{translated?.title ?? article.title}</Link></h3><p>{translated?.excerpt ?? article.excerpt}</p>
     <div className="tag-row">{article.tags.slice(0, 3).map(tag => onSelectTag ? <button key={tag} type="button" className={activeTag === tag ? 'tag-chip active' : 'tag-chip'} aria-pressed={activeTag === tag} onClick={() => onSelectTag(activeTag === tag ? '' : tag)}>#{tag.replaceAll(' ', '')}</button> : <span key={tag}>#{tag.replaceAll(' ', '')}</span>)}</div>
@@ -530,6 +537,8 @@ function Home() {
   const [category, setCategory] = useState('Semua')
   const [selectedTag, setSelectedTag] = useState('')
   const [sortBy, setSortBy] = useState<'default' | 'newest' | 'oldest' | 'shortest' | 'title'>('default')
+  const [digestEmail, setDigestEmail] = useState('')
+  const [digestStatus, setDigestStatus] = useState('')
   const searchInput = useRef<HTMLInputElement>(null)
   const allTags = useMemo(() => [...new Set(articles.flatMap(item => item.tags))], [])
 
@@ -582,6 +591,20 @@ function Home() {
   }, [category, selectedTag, query, sortBy, language])
   const featured = articles[0]
   const featuredTranslation = language === 'en' ? articleTranslations[featured.slug] : undefined
+  const featuredCover = getArticleCover(featured.slug, language)
+  const submitDigest = (event: React.FormEvent) => {
+    event.preventDefault()
+    const clean = digestEmail.trim()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
+      setDigestStatus(language === 'en' ? 'Enter a valid engineering email address.' : 'Masukkan alamat email engineering yang valid.')
+      return
+    }
+    try {
+      window.localStorage.setItem('dreamex-digest-subscriber-v1', JSON.stringify({ email: clean, savedAt: new Date().toISOString() }))
+    } catch { /* Safe fallback when storage is disabled */ }
+    setDigestStatus(language === 'en' ? `Saved local radar alert for ${clean}. Follow live updates via /rss.` : `Preferensi radar dicatat lokal untuk ${clean}. Ikuti rilis langsung via /rss.`)
+    setDigestEmail('')
+  }
 
   useEffect(() => {
     document.title = language === 'en' ? 'DreamEx Tech — Engineering, AI & QA' : 'DreamEx Tech — Engineering, AI & QA'
@@ -599,11 +622,11 @@ function Home() {
   }, [language, t])
 
   return <main id="main-content" className="home-page">
-    <section className="hero"><div className="hero-gridlines" /><div className="container hero-grid">
+    <section className="hero"><div className="hero-gridlines" /><img className="hero-core-backdrop" src="/images/hero-neural-core.jpg" alt="" aria-hidden="true" width={1408} height={768} /><div className="container hero-grid">
       <div className="hero-copy"><div className="eyebrow"><span className="eyebrow-dot" /> {t('heroEyebrow')}</div>
         <h1>{t('heroLine1')}<br /><span>{t('heroLine2')}</span><br />{t('heroLine3')}</h1>
         <p className="hero-description">{t('heroDescription')}</p>
-        <div className="hero-actions"><a className="button button-primary" href="#latest">{t('exploreKnowledge')} <ArrowRight size={17} /></a><a className="button button-ghost" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer"><Github size={17} /> {t('sourceCode')}</a></div>
+        <div className="hero-actions"><Link className="button button-primary" to="/tools"><Sparkles size={17} /> {language === 'en' ? 'Launch AI & IT Workbench' : 'Buka Workbench AI & IT'}</Link><a className="button button-ghost" href="#latest">{t('exploreKnowledge')} <ArrowRight size={17} /></a><a className="button button-ghost" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer"><Github size={17} /> {t('sourceCode')}</a></div>
         <div className="hero-stats"><div><strong>{String(articles.length).padStart(2, '0')}<i>+</i></strong><span>{t('engineeringNotes')}</span></div><div><strong>03</strong><span>{t('coreDisciplines')}</span></div><div><strong>∞</strong><span>{t('ideasExplore')}</span></div></div>
       </div>
       <div className="hero-visual"><div className="visual-orbit orbit-one" /><div className="visual-orbit orbit-two" /><div className="terminal">
@@ -627,7 +650,8 @@ function Home() {
       <a className="topic-card" href="#latest" onClick={() => setCategory('AI & Technology')}><span className="topic-number">03</span><span className="topic-icon blue"><Sparkles /></span><h3>{t('aiTopic')}</h3><p>{t('aiDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
     </div></div></section>
     <EngineeringLaunchpad />
-    <section className="featured-section"><div className="container featured-wrap"><div className="featured-label"><span className="section-kicker">{t('featuredHeading')}</span><span className="featured-line" /></div><div className="featured-card"><div className="featured-art"><div className="art-grid" /><div className="art-symbol"><Braces size={72} strokeWidth={1.1} /></div><span className="art-index">DX / 001</span><span className="art-caption">ENGINEERING<br />FOR WHAT'S NEXT</span></div><div className="featured-copy"><span className="category-pill">{categoryLabel(featured.category, language)}</span><p className="featured-overline">{t('featuredInsight')} · {(language === 'en' ? featured.readTime.replace('menit', 'min read') : `${featured.readTime} baca`).toUpperCase()}</p><h2>{featuredTranslation?.title ?? featured.title}</h2><p>{featuredTranslation?.excerpt ?? featured.excerpt}</p><Link className="read-link" to={`/blog/${featured.slug}`}>{t('readFeatured')} <ArrowRight size={16} /></Link></div></div></div></section>
+    <Suspense fallback={null}><NeuralAiStudio /></Suspense>
+    <section className="featured-section"><div className="container featured-wrap"><div className="featured-label"><span className="section-kicker">{t('featuredHeading')}</span><span className="featured-line" /></div><div className="featured-card"><div className="featured-art"><img className="featured-cover-img" src={featuredCover.src} alt={featuredCover.alt} width={960} height={540} loading="lazy" /><div className="art-grid" /><div className="art-symbol"><Braces size={72} strokeWidth={1.1} /></div><span className="art-index">DX / 001</span><span className="art-caption">ENGINEERING<br />FOR WHAT'S NEXT</span></div><div className="featured-copy"><span className="category-pill">{categoryLabel(featured.category, language)}</span><p className="featured-overline">{t('featuredInsight')} · {(language === 'en' ? featured.readTime.replace('menit', 'min read') : `${featured.readTime} baca`).toUpperCase()}</p><h2>{featuredTranslation?.title ?? featured.title}</h2><p>{featuredTranslation?.excerpt ?? featured.excerpt}</p><Link className="read-link" to={`/blog/${featured.slug}`}>{t('readFeatured')} <ArrowRight size={16} /></Link></div></div></div></section>
     <section className="articles-section" id="latest"><div className="container">
       {resumeRecord && (() => {
         const resumeArticle = articles.find(item => item.slug === resumeRecord.slug)
@@ -651,7 +675,7 @@ function Home() {
       <div className="results-meta"><span>{filtered.length} {t('found')}{selectedTag ? ` · #${selectedTag.replaceAll(' ', '')}` : ''}</span>{(query || selectedTag) && <button onClick={() => { setQuery(''); setSelectedTag('') }}>{t('clearSearch')} <span>×</span></button>}</div>
       {filtered.length ? <div className="article-grid">{filtered.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} activeTag={selectedTag} onSelectTag={setSelectedTag} />)}</div> : <div className="empty-state"><Search size={22} /><strong>{t('noResults')}</strong><span>{t('tryOther')}</span></div>}
     </div></section>
-    <section className="newsletter"><div className="container newsletter-inner"><div><span className="section-kicker">{t('buildInPublic')}</span><h2>Better systems.<br /><span>Better questions.</span></h2><p>{t('buildDescription')}</p></div><a className="button button-primary" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer">{t('exploreCode')} <ArrowRight size={17} /></a></div></section>
+    <section className="newsletter"><div className="container newsletter-inner"><div><span className="section-kicker">{t('buildInPublic')}</span><h2>Better systems.<br /><span>Better questions.</span></h2><p>{t('buildDescription')}</p><form className="newsletter-form" onSubmit={submitDigest}><input type="email" value={digestEmail} onChange={e => setDigestEmail(e.target.value)} placeholder={language === 'en' ? 'you@company.dev — Release & AI Radar' : 'anda@tim.dev — Radar Rilis & AI'} aria-label={language === 'en' ? 'Email for engineering radar updates' : 'Email untuk pembaruan radar engineering'} /><button type="submit" className="button button-primary">{language === 'en' ? 'Save Radar' : 'Simpan Radar'} <ArrowRight size={15} /></button><Link className="button button-ghost" to="/rss"><Rss size={15} /> RSS</Link></form>{digestStatus && <p className="newsletter-status" role="status">{digestStatus}</p>}</div><a className="button button-ghost" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer"><Github size={16} /> {t('exploreCode')} <ArrowRight size={17} /></a></div></section>
   </main>
 }
 
@@ -1947,9 +1971,11 @@ function ArticlePage() {
   }, [article, enhancement?.updatedAt, language, t, translated?.excerpt, translated?.title])
   if (!article) return <main id="main-content" className="container not-found"><h1>{t('articleNotFound')}</h1><p>{t('articleMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>
   const paragraphs = translated?.body ?? article.body
+  const articleCover = getArticleCover(article.slug, language)
   return <main id="main-content" className="article-page"><div className="reading-progress" role="progressbar" aria-label={language === 'en' ? 'Article reading progress' : 'Progres membaca artikel'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><span style={{ transform: `scaleX(${progress / 100})` }} /></div><div className="container article-container">
     <Link className="back-link" to="/">{t('backAll')}</Link>
     <div className="article-header"><span className="category-pill">{categoryLabel(article.category, language)}</span><h1>{translated?.title ?? article.title}</h1><p>{translated?.excerpt ?? article.excerpt}</p><div className="article-meta"><span>{new Date(article.date + 'T00:00:00').toLocaleDateString(language === 'en' ? 'en-US' : 'id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>{enhancement?.updatedAt && <><span>•</span><span>{language === 'en' ? `Updated ${enhancement.updatedAt}` : `Diperbarui ${enhancement.updatedAt}`}</span></>}<span>•</span><span>{language === 'en' ? article.readTime.replace('menit', 'min') : article.readTime}</span><span>•</span><span>{enhancement ? `${enhancement.author} (${enhancement.authorRole})` : t('editorial')}</span></div></div>
+    <figure className="article-hero-figure"><img src={articleCover.src} alt={articleCover.alt} width={1200} height={630} /><figcaption>{articleCover.badge}</figcaption></figure>
     {enhancement && enhancement.sections.length > 0 && <nav className="article-toc" aria-label={language === 'en' ? 'Table of contents' : 'Daftar isi'}>
       <strong><BookOpen size={15} /> {language === 'en' ? 'Table of contents' : 'Daftar isi'}</strong>
       <ol>
