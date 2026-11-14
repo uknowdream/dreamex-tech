@@ -105,6 +105,9 @@ const sitemapUrls = [
   { loc: `${siteUrl}/performance`, changefreq: 'monthly', priority: '0.7' },
   { loc: `${siteUrl}/knowledge-graph`, changefreq: 'weekly', priority: '0.7' },
   { loc: `${siteUrl}/learn`, changefreq: 'weekly', priority: '0.8' },
+  { loc: `${siteUrl}/tools`, changefreq: 'weekly', priority: '0.9' },
+  { loc: `${siteUrl}/ba-hub`, changefreq: 'weekly', priority: '0.8' },
+  { loc: `${siteUrl}/pm-jira-hub`, changefreq: 'weekly', priority: '0.8' },
   { loc: `${siteUrl}/rss`, changefreq: 'daily', priority: '0.7' },
   ...articles.map(article => ({
     loc: `${siteUrl}/blog/${article.slug}`,

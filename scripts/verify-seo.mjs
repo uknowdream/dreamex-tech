@@ -111,7 +111,7 @@ const indexableRoutes = [
   '/engineering-intelligence', '/control-plane', '/command-center', '/github-ci', '/team-workspace',
   '/quality-intelligence', '/reliability-center', '/supply-chain-intelligence',
   '/roadmap', '/qa-studio', '/security-center', '/api-playground',
-  '/performance', '/knowledge-graph', '/learn', '/rss',
+  '/performance', '/knowledge-graph', '/learn', '/tools', '/ba-hub', '/pm-jira-hub', '/rss',
 ]
 for (const route of indexableRoutes) {
   if (!sitemapPaths.has(route)) errors.push('Indexable route is missing from sitemap: ' + route)

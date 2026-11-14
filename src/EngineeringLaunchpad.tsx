@@ -35,7 +35,14 @@ export function EngineeringLaunchpad() {
           </Link>
         })}
       </div>
-      <div className="launchpad-foot"><span><span className="launchpad-foot-dot" /> {en ? 'Designed for practical engineering work' : 'Dirancang untuk kebutuhan engineering nyata'}</span><span>{en ? 'Explore at your own pace' : 'Jelajahi sesuai kebutuhan'} <ArrowUpRight size={14} /></span></div>
+      <div className="launchpad-foot">
+        <span><span className="launchpad-foot-dot" /> {en ? 'Sovereign v3.0 Multi-Role Suite: SE · QA/UAT · BA · PM · Jira Automation' : 'Suite Sovereign v3.0 Multi-Peran: SE · QA/UAT · BA · PM · Otomasi Jira'}</span>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+          <Link to="/tools">{en ? 'Open 6-Pillar IT Workbench' : 'Buka 6-Pilar IT Workbench'} <ArrowUpRight size={14} /></Link>
+          <Link to="/ba-hub">{en ? 'BA Gherkin & RTM Hub' : 'Hub BA Gherkin & RTM'} <ArrowUpRight size={14} /></Link>
+          <Link to="/pm-jira-hub">{en ? 'PM Monte Carlo & Jira Hub' : 'Hub PM Monte Carlo & Jira'} <ArrowUpRight size={14} /></Link>
+        </div>
+      </div>
     </div>
   </section>
 }
