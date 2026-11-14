@@ -195,6 +195,13 @@ export function HeroAiCockpit() {
           decoding="async"
         />
         <div className="hero-cockpit-visual-scrim" aria-hidden="true" />
+        <svg className="hero-cockpit-mesh" viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true">
+          <path className="mesh-arc" d="M 35 150 Q 175 28 310 105 T 565 55" fill="none" />
+          <path className="mesh-arc mesh-arc-alt" d="M 65 48 Q 220 165 385 68 T 550 148" fill="none" />
+          <circle className="mesh-node" cx="175" cy="68" r="4" />
+          <circle className="mesh-node" cx="310" cy="105" r="5" />
+          <circle className="mesh-node" cx="445" cy="82" r="4" />
+        </svg>
         <div className="hero-cockpit-hud">
           <span className="hero-cockpit-badge">
             <Sparkles size={11} /> {en ? mode.badgeEn : mode.badgeId}

@@ -65,6 +65,7 @@
 .home-page .hero-grid{
   position: relative;
   z-index: 1;
+  align-items: center;
 }
 
 .home-page .hero-copy{
@@ -73,10 +74,12 @@
 }
 
 .home-page .hero h1{
-  max-width: 12ch;
+  max-width: 16ch;
+  font-size: clamp(38px, 4.15vw, 57px);
   text-wrap: balance;
-  line-height: 1.015;
-  letter-spacing: -.052em;
+  line-height: 1.045;
+  letter-spacing: -.042em;
+  margin: 20px 0 18px;
 }
 
 .home-page .hero h1 span{
@@ -462,24 +465,6 @@
     padding-top: 12px;
   }
 
-  .home-page .hero-signal-card{
-    order: 2;
-    position: relative;
-    inset: auto;
-    top: auto;
-    right: auto;
-    width: 100%;
-    margin: 10px 0 0;
-  }
-
-  .home-page .hero-visual > .chip-bottom{
-    order: 3;
-  }
-
-  .home-page .hero-visual > .visual-caption{
-    order: 4;
-  }
-
   .home-page .hero-stats{
     gap: 10px;
   }
@@ -525,18 +510,18 @@
 /* AI-era Neural Backdrop, Animated Gradient Highlights, Cover Imagery & Radar Form */
 .home-page .hero-core-backdrop{
   position: absolute;
-  right: -4%;
+  right: 0;
   top: 50%;
-  width: min(62vw, 820px);
+  width: min(68vw, 900px);
   height: auto;
   aspect-ratio: 16 / 9;
   object-fit: cover;
   transform: translate3d(0, -50%, 0);
-  opacity: .34;
+  opacity: .46;
   z-index: 0;
   pointer-events: none;
-  -webkit-mask-image: radial-gradient(ellipse at 65% 50%, #000 18%, transparent 72%);
-  mask-image: radial-gradient(ellipse at 65% 50%, #000 18%, transparent 72%);
+  -webkit-mask-image: radial-gradient(ellipse at 65% 50%, #000 24%, transparent 78%);
+  mask-image: radial-gradient(ellipse at 65% 50%, #000 24%, transparent 78%);
 }
 
 .home-page .featured-art{
@@ -551,8 +536,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: .52;
+  opacity: .64;
   z-index: 0;
+  animation: dx-cockpit-photo 18s ease-in-out infinite alternate;
+  transition: transform .65s cubic-bezier(.22, 1, .36, 1), opacity .35s ease;
+}
   pointer-events: none;
   transition: transform .8s cubic-bezier(.2, .8, .2, 1), opacity .4s ease;
 }
@@ -648,11 +636,75 @@
   color: transparent;
 }
 
-@media (min-width: 641px){
-  .home-page .hero-signal-card{
-    top: 52px;
-    right: 8px;
+.home-page .hero-actions{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-page .hero-actions .button{
+  padding: 0 16px;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+@media (min-width: 1080px){
+  .home-page .hero-actions{
+    flex-wrap: nowrap;
   }
+}
+
+/* Non-overlapping Docked Bento Shelf under Hero Cockpit */
+.home-page .hero-bento-meta{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 186px;
+  gap: 10px;
+  margin-top: 12px;
+  align-items: stretch;
+}
+
+.home-page .hero-chips-rack{
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.home-page .hero-bento-meta .floating-chip{
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  max-width: none !important;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 13px;
+  border-radius: 12px;
+  border-color: rgba(139, 220, 255, .24);
+  background: linear-gradient(155deg, rgba(16, 28, 52, .88), rgba(8, 15, 29, .95));
+  animation: dx-chip-glow 7s ease-in-out infinite !important;
+}
+
+.home-page .hero-bento-meta .hero-signal-card{
+  position: relative !important;
+  inset: auto !important;
+  top: auto !important;
+  right: auto !important;
+  width: 100%;
+  max-width: 186px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.home-page .hero-visual > .visual-caption{
+  position: relative !important;
+  inset: auto !important;
+  margin-top: 10px;
+  padding: 2px 2px 0;
 }
 
 .home-page .hero-ai-cockpit{
@@ -693,7 +745,7 @@
 
 .home-page .hero-cockpit-visual{
   position: relative;
-  height: 152px;
+  height: 184px;
   overflow: hidden;
   border-bottom: 1px solid rgba(139, 178, 226, .18);
   background: #050a16;
@@ -704,19 +756,48 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform .7s cubic-bezier(.22, 1, .36, 1);
+  animation: dx-cockpit-photo 16s ease-in-out infinite alternate;
+  transition: filter .45s ease;
 }
 
 .home-page .hero-ai-cockpit:hover .hero-cockpit-visual img{
-  transform: scale(1.045);
+  filter: brightness(1.1) saturate(1.1);
 }
 
 .home-page .hero-cockpit-visual-scrim{
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(6, 11, 24, .18) 0%, rgba(6, 11, 24, .58) 65%, rgba(7, 13, 27, .94) 100%);
+    linear-gradient(180deg, rgba(6, 11, 24, .06) 0%, rgba(6, 11, 24, .28) 58%, rgba(7, 13, 27, .88) 100%);
   pointer-events: none;
+}
+
+.home-page .hero-cockpit-mesh{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.home-page .hero-cockpit-mesh .mesh-arc{
+  stroke: rgba(110, 243, 197, .42);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 6;
+  animation: dx-mesh-flow 5s linear infinite;
+}
+
+.home-page .hero-cockpit-mesh .mesh-arc-alt{
+  stroke: rgba(56, 189, 248, .38);
+  animation-direction: reverse;
+  animation-duration: 7s;
+}
+
+.home-page .hero-cockpit-mesh .mesh-node{
+  fill: #c5ff70;
+  filter: drop-shadow(0 0 6px #38bdf8);
+  animation: dx-node-pulse 2.4s ease-in-out infinite;
 }
 
 .home-page .hero-cockpit-visual-scrim::after{
@@ -931,8 +1012,25 @@
 }
 
 @media (max-width: 640px){
+  .home-page .hero-actions .button{
+    white-space: normal;
+    max-width: 100%;
+  }
+  .home-page .hero-visual > .hero-ai-cockpit{
+    order: 0;
+  }
   .home-page .hero-cockpit-visual{
-    height: 122px;
+    height: 146px;
+  }
+  .home-page .hero-bento-meta{
+    grid-template-columns: 1fr;
+    order: 1;
+  }
+  .home-page .hero-visual > .visual-caption{
+    order: 2;
+  }
+  .home-page .hero-bento-meta .hero-signal-card{
+    max-width: 186px;
   }
   .home-page .hero-cockpit-tab{
     font-size: 10px;
@@ -944,6 +1042,25 @@
   .home-page .hero-stats > div{
     padding: 11px 10px;
   }
+}
+
+@keyframes dx-cockpit-photo{
+  from { transform: scale(1) translate3d(0, 0, 0); }
+  to { transform: scale(1.09) translate3d(-1.6%, -1%, 0); }
+}
+
+@keyframes dx-mesh-flow{
+  to { stroke-dashoffset: -48; }
+}
+
+@keyframes dx-node-pulse{
+  0%, 100% { r: 3.5; opacity: .7; }
+  50% { r: 5.5; opacity: 1; }
+}
+
+@keyframes dx-chip-glow{
+  0%, 100% { border-color: rgba(139, 220, 255, .24); }
+  50% { border-color: rgba(110, 243, 197, .48); }
 }
 
 @keyframes dx-cockpit-scan{
@@ -963,7 +1080,7 @@
 
 @keyframes dx-premium-core-float{
   from { transform: translate3d(0, -51%, 0) scale(1); }
-  to { transform: translate3d(-1.5%, -49%, 0) scale(1.045); }
+  to { transform: translate3d(-2.5%, -49%, 0) scale(1.08); }
 }
 
 @media (prefers-reduced-motion: reduce){
@@ -974,7 +1091,10 @@
 .home-page .featured-cover-img,
 .home-page .hero-cockpit-visual img,
 .home-page .hero-cockpit-visual-scrim::after,
+.home-page .hero-cockpit-mesh .mesh-arc,
+.home-page .hero-cockpit-mesh .mesh-node,
 .home-page .hero-ai-wave span,
+.home-page .hero-bento-meta .floating-chip,
 .home-page .hero-signal-card,
 .home-page .hero-signal-card::after,
 .home-page .hero-signal-track > span,

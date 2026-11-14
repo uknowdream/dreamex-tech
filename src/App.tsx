@@ -627,10 +627,10 @@ function Home() {
       <div className="hero-copy"><div className="eyebrow"><span className="eyebrow-dot" /> {t('heroEyebrow')}</div>
         <h1>{t('heroLine1')}<br /><span>{t('heroLine2')}</span><br />{t('heroLine3')}</h1>
         <p className="hero-description">{t('heroDescription')}</p>
-        <div className="hero-actions"><Link className="button button-primary" to="/tools"><Sparkles size={17} /> {language === 'en' ? 'Launch AI & IT Workbench' : 'Buka Workbench AI & IT'}</Link><a className="button button-ghost" href="#latest">{t('exploreKnowledge')} <ArrowRight size={17} /></a><a className="button button-ghost" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer"><Github size={17} /> {t('sourceCode')}</a></div>
+        <div className="hero-actions"><Link className="button button-primary" to="/tools"><Sparkles size={17} /> {language === 'en' ? 'Launch AI Workbench' : 'Buka Workbench AI'}</Link><a className="button button-ghost" href="#latest">{t('exploreKnowledge')} <ArrowRight size={17} /></a><a className="button button-ghost hero-github-btn" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer"><Github size={17} /> {t('sourceCode')}</a></div>
         <div className="hero-stats"><div><strong>{String(articles.length).padStart(2, '0')}<i>+</i></strong><span>{t('engineeringNotes')}</span></div><div><strong>03</strong><span>{t('coreDisciplines')}</span></div><div><strong>∞</strong><span>{t('ideasExplore')}</span></div></div>
       </div>
-      <div className="hero-visual"><div className="visual-orbit orbit-one" /><div className="visual-orbit orbit-two" /><HeroAiCockpit /><div className="hero-signal-card" aria-hidden="true">
+      <div className="hero-visual"><div className="visual-orbit orbit-one" /><div className="visual-orbit orbit-two" /><HeroAiCockpit /><div className="hero-bento-meta"><div className="hero-chips-rack"><div className="floating-chip chip-top"><ShieldCheck size={16} /> {t('visualChipQuality')}</div><div className="floating-chip chip-bottom"><Sparkles size={16} /> {t('visualChipCuriosity')}</div></div><div className="hero-signal-card" aria-hidden="true">
         <div className="hero-signal-head"><span>{language === 'en' ? 'ENGINEERING LOOP' : 'SIKLUS ENGINEERING'}</span><span>03</span></div>
         <strong>{language === 'en' ? 'From idea to release' : 'Dari ide hingga rilis'}</strong>
         <div className="hero-signal-steps">
@@ -639,7 +639,7 @@ function Home() {
           <span><i>03</i>{language === 'en' ? 'Verify' : 'Validasi'}</span>
         </div>
         <div className="hero-signal-track"><span /></div>
-      </div><div className="floating-chip chip-top"><ShieldCheck size={16} /> {t('visualChipQuality')}</div><div className="floating-chip chip-bottom"><Sparkles size={16} /> {t('visualChipCuriosity')}</div><div className="visual-caption"><span>{t('visualCaption')}</span><span>{t('visualIterate')} <ArrowDownRight size={13} /></span></div></div>
+      </div></div><div className="visual-caption"><span>{t('visualCaption')}</span><span>{t('visualIterate')} <ArrowDownRight size={13} /></span></div></div>
     </div></section>
     <section className="trust-strip"><div className="container trust-inner"><span><Zap size={15} /> {t('trustKnowledge')}</span><span><ShieldCheck size={15} /> {t('trustQuality')}</span><span><Braces size={15} /> {t('trustEngineering')}</span><span><Sparkles size={15} /> {t('trustAI')}</span></div></section>
     <section className="topics-section" id="topics"><div className="container"><div className="topics-heading"><div><span className="section-kicker">{t('topicsEyebrow')}</span><h2>{t('topicsHeading')} <span>{t('topicsHeadingAccent')}</span></h2></div><p>{t('topicsDescription')}</p></div><div className="topics-grid">

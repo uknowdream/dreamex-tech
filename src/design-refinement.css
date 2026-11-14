@@ -197,9 +197,13 @@ input, select, textarea, button { max-width: 100%; }
   .article-sequence-card.next{text-align:left;align-items:flex-start}
 }
 /* Article cover imagery & responsive hero visual frames */
-.article-cover-thumb{position:relative;display:block;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:11px;margin-bottom:16px;border:1px solid rgba(139,168,214,.2);background:#070d18}
-.article-cover-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .45s cubic-bezier(.2,.8,.2,1)}
-.article-card:hover .article-cover-img{transform:scale(1.05)}
+.article-cover-thumb{position:relative;display:block;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:12px;margin-bottom:16px;border:1px solid rgba(139,168,214,.24);background:#070d18}
+.article-cover-thumb::after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent 25%,rgba(125,211,252,.16) 50%,transparent 75%);transform:translateX(-125%);animation:dx-thumb-scan 7.2s cubic-bezier(.22,1,.36,1) infinite;pointer-events:none}
+.article-cover-img{width:100%;height:100%;object-fit:cover;display:block;animation:dx-cover-kenburns 14s ease-in-out infinite alternate;transition:transform .55s cubic-bezier(.2,.8,.2,1),filter .35s ease}
+.article-card:hover .article-cover-img{transform:scale(1.05);filter:brightness(1.1) saturate(1.14)}
+@keyframes dx-cover-kenburns{from{object-position:48% 49%;filter:brightness(1) saturate(1.04)}to{object-position:52% 51%;filter:brightness(1.12) saturate(1.18)}}
+@keyframes dx-thumb-scan{0%,62%{transform:translateX(-125%);opacity:0}72%{opacity:1}100%{transform:translateX(125%);opacity:0}}
+@media (prefers-reduced-motion:reduce){.article-cover-img{animation:none!important;transform:none!important}.article-cover-thumb::after{animation:none!important;display:none}}
 .article-cover-badge{position:absolute;top:10px;left:10px;padding:3px 9px;border-radius:999px;border:1px solid rgba(197,255,112,.45);background:rgba(7,12,22,.82);color:#e9f4ff;font:700 9.5px/1 var(--mono);letter-spacing:.08em}
 .article-hero-figure{margin:22px 0 6px;position:relative;border-radius:16px;overflow:hidden;border:1px solid rgba(139,168,214,.24);background:#080f1d;aspect-ratio:16/9}
 .article-hero-figure img{width:100%;height:100%;object-fit:cover;display:block}
