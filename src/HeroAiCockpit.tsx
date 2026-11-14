@@ -195,13 +195,27 @@ export function HeroAiCockpit() {
           decoding="async"
         />
         <div className="hero-cockpit-visual-scrim" aria-hidden="true" />
-        <svg className="hero-cockpit-mesh" viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true">
-          <path className="mesh-arc" d="M 35 150 Q 175 28 310 105 T 565 55" fill="none" />
-          <path className="mesh-arc mesh-arc-alt" d="M 65 48 Q 220 165 385 68 T 550 148" fill="none" />
-          <circle className="mesh-node" cx="175" cy="68" r="4" />
-          <circle className="mesh-node" cx="310" cy="105" r="5" />
-          <circle className="mesh-node" cx="445" cy="82" r="4" />
+        <div className="hero-cockpit-scanbeam" aria-hidden="true" />
+        <svg className="hero-cockpit-mesh" viewBox="0 0 600 220" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M 24 166 Q 175 28 310 112 T 576 58" className="mesh-arc" fill="none" />
+          <path d="M 48 52 Q 220 185 385 74 T 565 158" className="mesh-arc mesh-arc-alt" fill="none" />
+          <g className="mesh-radar-ring" style={{ transformOrigin: '390px 110px' }}>
+            <circle cx="390" cy="110" r="64" fill="none" />
+            <circle className="mesh-packet mesh-packet-lime" cx="454" cy="110" r="3.6" />
+            <circle className="mesh-packet mesh-packet-cyan" cx="326" cy="110" r="2.8" />
+          </g>
+          <g className="mesh-radar-ring mesh-radar-ring-inner" style={{ transformOrigin: '390px 110px' }}>
+            <circle cx="390" cy="110" r="40" fill="none" />
+            <circle className="mesh-packet mesh-packet-violet" cx="390" cy="70" r="3.2" />
+          </g>
+          <circle className="mesh-node" cx="175" cy="70" r="4" />
+          <circle className="mesh-node" cx="310" cy="112" r="5" />
+          <circle className="mesh-node" cx="445" cy="86" r="4" />
         </svg>
+        <div className="hero-cockpit-top-hud" aria-hidden="true">
+          <span className="hero-mesh-pill"><i /> NEURAL MESH · 60 FPS</span>
+          <span className="hero-mesh-mode">SOVEREIGN AI</span>
+        </div>
         <div className="hero-cockpit-hud">
           <span className="hero-cockpit-badge">
             <Sparkles size={11} /> {en ? mode.badgeEn : mode.badgeId}

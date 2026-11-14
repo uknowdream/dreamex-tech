@@ -8,6 +8,8 @@ import { getArticleCover } from './articleCovers'
 import { useLanguage } from './i18n'
 import { EngineeringLaunchpad } from './EngineeringLaunchpad'
 import { HeroAiCockpit } from './HeroAiCockpit'
+import { HeroNeuralCanvas } from './HeroNeuralCanvas'
+import { HoloMotionFx } from './HoloMotionFx'
 const NeuralAiStudio = lazy(() => import('./NeuralAiStudio').then(module => ({ default: module.NeuralAiStudio })))
 const EngineeringControlPlanePage = lazy(() => import('./EngineeringControlPlane').then(module => ({ default: module.EngineeringControlPlanePage })))
 const QualityIntelligencePage = lazy(() => import('./QualityIntelligence').then(module => ({ default: module.QualityIntelligencePage })))
@@ -522,7 +524,8 @@ function ArticleCard({ article, index = 0, activeTag = '', onSelectTag }: { arti
   const cover = getArticleCover(article.slug, language)
   return <article className="article-card" style={{ animationDelay: `${index * 70}ms` }}>
     <Link className="article-cover-thumb" to={`/blog/${article.slug}`} tabIndex={-1} aria-hidden="true">
-      <img className="article-cover-img" src={cover.src} alt="" width={640} height={360} loading="lazy" />
+      <img className="article-cover-img" src={cover.src} alt="" width={640} height={360} loading="lazy" decoding="async" />
+      <HoloMotionFx variant={article.category.includes('QA') ? 'qa' : article.category.includes('AI') ? 'neural' : 'arch'} />
       <span className="article-cover-badge" style={{ borderColor: cover.accent }}>{cover.badge}</span>
     </Link>
     <div className="card-top"><span className="category-pill">{categoryLabel(article.category, language)}</span><div className="card-meta-actions"><span className="read-time">{language === 'en' ? article.readTime.replace('menit', 'min') : article.readTime}</span><button className="bookmark-button" type="button" aria-pressed={saved} aria-label={`${saved ? (language === 'en' ? 'Remove saved article' : 'Hapus artikel tersimpan') : (language === 'en' ? 'Save article' : 'Simpan artikel')}: ${translated?.title ?? article.title}`} onClick={() => toggleSaved(article.slug)} title={saved ? (language === 'en' ? 'Remove from reading list' : 'Hapus dari daftar bacaan') : (language === 'en' ? 'Save to reading list' : 'Simpan ke daftar bacaan')}>{saved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}</button></div></div>
@@ -623,7 +626,7 @@ function Home() {
   }, [language, t])
 
   return <main id="main-content" className="home-page">
-    <section className="hero"><div className="hero-gridlines" /><img className="hero-core-backdrop" src="/images/hero-neural-core.jpg" alt="" aria-hidden="true" width={1408} height={768} /><div className="container hero-grid">
+    <section className="hero"><div className="hero-gridlines" /><img className="hero-core-backdrop" src="/images/hero-neural-core.jpg" alt="" aria-hidden="true" width={1408} height={768} /><HeroNeuralCanvas /><div className="container hero-grid">
       <div className="hero-copy"><div className="eyebrow"><span className="eyebrow-dot" /> {t('heroEyebrow')}</div>
         <h1>{t('heroLine1')}<br /><span>{t('heroLine2')}</span><br />{t('heroLine3')}</h1>
         <p className="hero-description">{t('heroDescription')}</p>
@@ -642,14 +645,14 @@ function Home() {
       </div></div><div className="visual-caption"><span>{t('visualCaption')}</span><span>{t('visualIterate')} <ArrowDownRight size={13} /></span></div></div>
     </div></section>
     <section className="trust-strip"><div className="container trust-inner"><span><Zap size={15} /> {t('trustKnowledge')}</span><span><ShieldCheck size={15} /> {t('trustQuality')}</span><span><Braces size={15} /> {t('trustEngineering')}</span><span><Sparkles size={15} /> {t('trustAI')}</span></div></section>
-    <section className="topics-section" id="topics"><div className="container"><div className="topics-heading"><div><span className="section-kicker">{t('topicsEyebrow')}</span><h2>{t('topicsHeading')} <span>{t('topicsHeadingAccent')}</span></h2></div><p>{t('topicsDescription')}</p></div><div className="topics-grid">
-      <a className="topic-card" href="#latest" onClick={() => setCategory('Software Engineering')}><span className="topic-number">01</span><span className="topic-icon purple"><Braces /></span><h3>{t('softwareTopic')}</h3><p>{t('softwareDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
-      <a className="topic-card" href="#latest" onClick={() => setCategory('QA Automation')}><span className="topic-number">02</span><span className="topic-icon green"><ShieldCheck /></span><h3>{t('qaTopic')}</h3><p>{t('qaDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
-      <a className="topic-card" href="#latest" onClick={() => setCategory('AI & Technology')}><span className="topic-number">03</span><span className="topic-icon blue"><Sparkles /></span><h3>{t('aiTopic')}</h3><p>{t('aiDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
-    </div></div></section>
-    <EngineeringLaunchpad />
     <Suspense fallback={null}><NeuralAiStudio /></Suspense>
-    <section className="featured-section"><div className="container featured-wrap"><div className="featured-label"><span className="section-kicker">{t('featuredHeading')}</span><span className="featured-line" /></div><div className="featured-card"><div className="featured-art"><img className="featured-cover-img" src={featuredCover.src} alt={featuredCover.alt} width={960} height={540} loading="lazy" /><div className="art-grid" /><div className="art-symbol"><Braces size={72} strokeWidth={1.1} /></div><span className="art-index">DX / 001</span><span className="art-caption">ENGINEERING<br />FOR WHAT'S NEXT</span></div><div className="featured-copy"><span className="category-pill">{categoryLabel(featured.category, language)}</span><p className="featured-overline">{t('featuredInsight')} · {(language === 'en' ? featured.readTime.replace('menit', 'min read') : `${featured.readTime} baca`).toUpperCase()}</p><h2>{featuredTranslation?.title ?? featured.title}</h2><p>{featuredTranslation?.excerpt ?? featured.excerpt}</p><Link className="read-link" to={`/blog/${featured.slug}`}>{t('readFeatured')} <ArrowRight size={16} /></Link></div></div></div></section>
+    <EngineeringLaunchpad />
+    <section className="topics-section" id="topics"><div className="container"><div className="topics-heading"><div><span className="section-kicker">{t('topicsEyebrow')}</span><h2>{t('topicsHeading')} <span>{t('topicsHeadingAccent')}</span></h2></div><p>{t('topicsDescription')}</p></div><div className="topics-grid">
+      <a className="topic-card" href="#latest" onClick={() => setCategory('Software Engineering')}><span className="topic-holo-stage" aria-hidden="true"><HoloMotionFx variant="arch" /></span><span className="topic-number">01</span><span className="topic-icon purple"><Braces /></span><h3>{t('softwareTopic')}</h3><p>{t('softwareDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
+      <a className="topic-card" href="#latest" onClick={() => setCategory('QA Automation')}><span className="topic-holo-stage" aria-hidden="true"><HoloMotionFx variant="qa" /></span><span className="topic-number">02</span><span className="topic-icon green"><ShieldCheck /></span><h3>{t('qaTopic')}</h3><p>{t('qaDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
+      <a className="topic-card" href="#latest" onClick={() => setCategory('AI & Technology')}><span className="topic-holo-stage" aria-hidden="true"><HoloMotionFx variant="neural" /></span><span className="topic-number">03</span><span className="topic-icon blue"><Sparkles /></span><h3>{t('aiTopic')}</h3><p>{t('aiDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
+    </div></div></section>
+    <section className="featured-section"><div className="container featured-wrap"><div className="featured-label"><span className="section-kicker">{t('featuredHeading')}</span><span className="featured-line" /></div><div className="featured-card"><div className="featured-art"><img className="featured-cover-img" src={featuredCover.src} alt={featuredCover.alt} width={960} height={540} loading="lazy" /><HoloMotionFx variant="qa" /><div className="art-grid" /><div className="art-symbol"><Braces size={72} strokeWidth={1.1} /></div><span className="art-index">DX / 001</span><span className="art-caption">ENGINEERING<br />FOR WHAT'S NEXT</span></div><div className="featured-copy"><span className="category-pill">{categoryLabel(featured.category, language)}</span><p className="featured-overline">{t('featuredInsight')} · {(language === 'en' ? featured.readTime.replace('menit', 'min read') : `${featured.readTime} baca`).toUpperCase()}</p><h2>{featuredTranslation?.title ?? featured.title}</h2><p>{featuredTranslation?.excerpt ?? featured.excerpt}</p><Link className="read-link" to={`/blog/${featured.slug}`}>{t('readFeatured')} <ArrowRight size={16} /></Link></div></div></div></section>
     <section className="articles-section" id="latest"><div className="container">
       {resumeRecord && (() => {
         const resumeArticle = articles.find(item => item.slug === resumeRecord.slug)

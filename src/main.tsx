@@ -12,6 +12,8 @@ import './navigation-panel-v3.css'
 import './performance-motion.css'
 import './quality-motion.css'
 import './immersive-motion.css'
+import './NeuralAiStudio.css'
+import './spatial-ai-system.css'
 
 const root = ReactDOM.createRoot(document.getElementById('root')!)
 const renderApp = () => root.render(

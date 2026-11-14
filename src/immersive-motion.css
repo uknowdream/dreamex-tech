@@ -119,7 +119,7 @@
     );
     opacity: 0;
     transform: translate3d(0, 0, 0);
-    animation: dx-grid-sweep 10.5s cubic-bezier(.45, 0, .55, 1) infinite;
+    animation: dx-grid-sweep 8.5s linear -1.5s infinite;
   }
 
   .hero-visual {
@@ -279,7 +279,7 @@
   }
 
   .hero-gridlines::after {
-    animation-duration: 13s;
+    animation-duration: 10s;
   }
 
   .terminal::after {

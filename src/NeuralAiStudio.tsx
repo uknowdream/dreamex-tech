@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, Check, Copy, Maximize2, Play, Sparkles, Terminal, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useLanguage } from './i18n'
+import { HoloMotionFx } from './HoloMotionFx'
 import './NeuralAiStudio.css'
 
 type AiRolePreset = 'architect' | 'qa' | 'ba' | 'pm'
@@ -232,6 +233,7 @@ export function NeuralAiStudio() {
 
   const [rolePreset, setRolePreset] = useState<AiRolePreset>('architect')
   const [promptInput, setPromptInput] = useState('')
+  const [replaySeed, setReplaySeed] = useState(0)
   const [streamedLength, setStreamedLength] = useState(0)
   const [copiedOutput, setCopiedOutput] = useState(false)
   const [galleryFilter, setGalleryFilter] = useState<GalleryCategory>('all')
@@ -242,26 +244,26 @@ export function NeuralAiStudio() {
   const effectivePrompt = promptInput.trim() || (en ? currentRole.defaultPromptEn : currentRole.defaultPromptId)
   const fullOutput = useMemo(() => currentRole.output(effectivePrompt, en), [currentRole, effectivePrompt, en])
 
-  // Stream typewriter simulation smoothly (respects prefers-reduced-motion)
+  // Stream typewriter simulation only on user replay / tab switch (avoids boot-frame churn)
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduce) {
+    if (reduce || replaySeed === 0) {
       setStreamedLength(fullOutput.length)
       return
     }
-    setStreamedLength(18)
-    let frame = 0
-    let count = 18
+    setStreamedLength(24)
+    let timer = 0
+    let count = 24
     const step = () => {
-      count = Math.min(fullOutput.length, count + Math.max(4, Math.ceil(fullOutput.length / 42)))
+      count = Math.min(fullOutput.length, count + Math.max(14, Math.ceil(fullOutput.length / 20)))
       setStreamedLength(count)
       if (count < fullOutput.length) {
-        frame = window.setTimeout(() => window.requestAnimationFrame(step), 22)
+        timer = window.setTimeout(step, 16)
       }
     }
-    frame = window.setTimeout(() => window.requestAnimationFrame(step), 22)
-    return () => window.clearTimeout(frame)
-  }, [fullOutput])
+    timer = window.setTimeout(step, 16)
+    return () => window.clearTimeout(timer)
+  }, [fullOutput, replaySeed])
 
   // Interactive neural particle constellation canvas
   useEffect(() => {
@@ -274,6 +276,7 @@ export function NeuralAiStudio() {
     if (!ctx) return
 
     let animId = 0
+    let inViewport = false
     let width = (canvas.width = canvas.offsetWidth || 460)
     let height = (canvas.height = canvas.offsetHeight || 400)
 
@@ -284,15 +287,19 @@ export function NeuralAiStudio() {
     }
     window.addEventListener('resize', onResize, { passive: true })
 
-    const nodes = Array.from({ length: 24 }, (_, idx) => ({
+    const nodes = Array.from({ length: 20 }, (_, idx) => ({
       x: ((idx * 97) % 100) * 0.01 * width,
       y: ((idx * 53) % 100) * 0.01 * height,
-      vx: ((idx % 5) - 2) * 0.24 + 0.12,
-      vy: ((idx % 3) - 1) * 0.22 - 0.08,
-      color: idx % 3 === 0 ? 'rgba(56, 189, 248, 0.85)' : idx % 3 === 1 ? 'rgba(197, 255, 112, 0.8)' : 'rgba(139, 92, 246, 0.85)',
+      vx: ((idx % 5) - 2) * 0.28 + 0.14,
+      vy: ((idx % 3) - 1) * 0.24 - 0.1,
+      r: idx % 4 === 0 ? 3.1 : 2.2,
+      color: idx % 3 === 0 ? 'rgba(56, 189, 248, 0.9)' : idx % 3 === 1 ? 'rgba(197, 255, 112, 0.86)' : 'rgba(167, 139, 250, 0.9)',
+      bloom: idx % 3 === 0 ? 'rgba(56, 189, 248, 0.16)' : idx % 3 === 1 ? 'rgba(197, 255, 112, 0.16)' : 'rgba(167, 139, 250, 0.16)',
     }))
 
-    const draw = () => {
+    let phase = 0
+    const draw = (scheduleNext: boolean) => {
+      phase += 0.025
       ctx.clearRect(0, 0, width, height)
       for (let i = 0; i < nodes.length; i++) {
         const a = nodes[i]
@@ -306,27 +313,68 @@ export function NeuralAiStudio() {
           const dx = a.x - b.x
           const dy = a.y - b.y
           const dist = Math.hypot(dx, dy)
-          if (dist < 118) {
+          if (dist < 142) {
             ctx.beginPath()
             ctx.moveTo(a.x, a.y)
             ctx.lineTo(b.x, b.y)
-            ctx.strokeStyle = `rgba(139, 220, 255, ${(1 - dist / 118) * 0.28})`
-            ctx.lineWidth = 1
+            ctx.strokeStyle = `rgba(139, 220, 255, ${(1 - dist / 142) * 0.34})`
+            ctx.lineWidth = 1.05
             ctx.stroke()
+
+            if ((i + j) % 6 === 0) {
+              const t = (phase * 0.8 + i * 0.19) % 1
+              const px = a.x + (b.x - a.x) * t
+              const py = a.y + (b.y - a.y) * t
+              ctx.beginPath()
+              ctx.arc(px, py, 2.2, 0, Math.PI * 2)
+              ctx.fillStyle = j % 2 === 0 ? 'rgba(197, 255, 112, 0.95)' : 'rgba(56, 189, 248, 0.95)'
+              ctx.fill()
+            }
           }
         }
 
+        if (a.r > 2.6) {
+          ctx.beginPath()
+          ctx.arc(a.x, a.y, 8, 0, Math.PI * 2)
+          ctx.fillStyle = a.bloom
+          ctx.fill()
+        }
+
         ctx.beginPath()
-        ctx.arc(a.x, a.y, 2.3, 0, Math.PI * 2)
+        ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2)
         ctx.fillStyle = a.color
         ctx.fill()
       }
-      animId = window.requestAnimationFrame(draw)
+      if (scheduleNext && inViewport) {
+        animId = window.requestAnimationFrame(() => draw(true))
+      }
     }
 
-    animId = window.requestAnimationFrame(draw)
+    // Paint initial frame immediately, animate whenever visible in viewport
+    draw(false)
+    const observer =
+      typeof IntersectionObserver !== 'undefined'
+        ? new IntersectionObserver(
+            (entries) => {
+              const visible = entries[0]?.isIntersecting ?? true
+              if (visible === inViewport) return
+              inViewport = visible
+              window.cancelAnimationFrame(animId)
+              if (inViewport) animId = window.requestAnimationFrame(() => draw(true))
+            },
+            { threshold: 0.01 }
+          )
+        : null
+    if (observer) {
+      observer.observe(canvas)
+    } else {
+      inViewport = true
+      animId = window.requestAnimationFrame(() => draw(true))
+    }
+
     return () => {
       window.cancelAnimationFrame(animId)
+      observer?.disconnect()
       window.removeEventListener('resize', onResize)
     }
   }, [])
@@ -347,8 +395,7 @@ export function NeuralAiStudio() {
   )
 
   const replaySynthesis = () => {
-    setStreamedLength(0)
-    window.setTimeout(() => setStreamedLength(14), 10)
+    setReplaySeed(s => s + 1)
   }
 
   const copySynthesized = async () => {
@@ -411,6 +458,7 @@ export function NeuralAiStudio() {
                 src="/images/showcase-datacenter-ai.jpg"
                 alt={en ? 'Futuristic AI command center neural compute cluster' : 'Pusat kendali komputasi neural AI futuristik'}
                 loading="lazy"
+                decoding="async"
                 width={1200}
                 height={520}
               />
@@ -452,7 +500,10 @@ export function NeuralAiStudio() {
                       role="tab"
                       aria-selected={rolePreset === key}
                       className={rolePreset === key ? 'dx-role-tab active' : 'dx-role-tab'}
-                      onClick={() => setRolePreset(key)}
+                      onClick={() => {
+                        setRolePreset(key)
+                        setReplaySeed(s => s + 1)
+                      }}
                     >
                       {en ? item.labelEn : item.labelId}
                     </button>
@@ -558,9 +609,11 @@ export function NeuralAiStudio() {
                     src={item.image}
                     alt={en ? item.altEn : item.altId}
                     loading="lazy"
+                    decoding="async"
                     width={960}
                     height={540}
                   />
+                  <HoloMotionFx variant={item.category} />
                   <span className="dx-gallery-media-badge">{en ? item.badgeEn : item.badgeId}</span>
                   <span className="dx-gallery-zoom-chip">
                     <Maximize2 size={12} /> {en ? 'Inspect' : 'Perbesar'}
