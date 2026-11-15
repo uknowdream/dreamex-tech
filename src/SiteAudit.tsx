@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Activity, AlertTriangle, CheckCircle2, Download, RefreshCw, ShieldCheck, SearchCheck } from 'lucide-react'
 import { useLanguage } from './i18n'
+import { AiCopilotPanel, SvgRingGauge, SvgStackedBar } from './DashboardKit'
 import './SiteAudit.css'
 
 type Severity = 'error' | 'warning' | 'info'
@@ -98,6 +99,30 @@ export function SiteAuditPage() {
         <article className="site-audit-metric site-audit-errors"><span>{isEn ? 'Errors' : 'Error'}</span><strong>{errors}</strong><p>{isEn ? 'High-priority findings' : 'Temuan prioritas tinggi'}</p></article>
         <article className="site-audit-metric site-audit-warnings"><span>{isEn ? 'Warnings' : 'Peringatan'}</span><strong>{warnings}</strong><p>{isEn ? 'Review recommended' : 'Disarankan untuk ditinjau'}</p></article>
       </section>
+      <div className="dx-split-grid">
+        <div className="dx-kpi-card">
+          <div className="dx-kpi-copy">
+            <span className="dx-kpi-label">{isEn ? 'HEURISTIC DOM SCORE' : 'SKOR HEURISTIK DOM'}</span>
+            <strong className="dx-kpi-value">{score}/100</strong>
+            <span className="dx-kpi-sub">{isEn ? `${result.checks} local DOM assertions evaluated` : `${result.checks} pemeriksaan DOM dievaluasi`}</span>
+          </div>
+          <SvgRingGauge
+            value={score ?? 0}
+            label={isEn ? 'Heuristic DOM quality gauge' : 'Indikator skor kualitas DOM'}
+            tone={(score ?? 0) >= 90 ? 'emerald' : (score ?? 0) >= 70 ? 'cyan' : 'rose'}
+            size={64}
+          />
+        </div>
+        <SvgStackedBar
+          title={isEn ? 'Findings by Severity' : 'Temuan Berdasarkan Severitas'}
+          totalLabel={`${result.findings.length} ${isEn ? 'findings' : 'temuan'}`}
+          segments={[
+            { label: isEn ? 'Errors' : 'Error', value: errors, color: '#fb7185' },
+            { label: isEn ? 'Warnings' : 'Peringatan', value: warnings, color: '#fbbf24' },
+            { label: 'Info', value: result.findings.filter(f => f.severity === 'info').length, color: '#38bdf8' },
+          ]}
+        />
+      </div>
       <section className="site-audit-results">
         <div className="site-audit-results-head"><div><h2>{isEn ? 'Findings' : 'Temuan'}</h2><p>{result.title || (isEn ? 'Untitled page' : 'Halaman tanpa judul')} · {new Date(result.scannedAt).toLocaleString(isEn ? 'en-US' : 'id-ID')}</p></div>
           <div className="site-audit-filters" role="group" aria-label={isEn ? 'Filter findings' : 'Filter temuan'}>
@@ -106,6 +131,21 @@ export function SiteAuditPage() {
         </div>
         {visibleFindings.length ? <ul className="site-audit-finding-list">{visibleFindings.map(item => <li key={item.id} className={`site-audit-finding severity-${item.severity}`}><span className="site-audit-severity-icon">{item.severity === 'error' ? <AlertTriangle size={18} /> : item.severity === 'warning' ? <AlertTriangle size={18} /> : <CheckCircle2 size={18} />}</span><div><div className="site-audit-finding-meta"><span>{item.category}</span><span>{item.severity}</span></div><h3>{item.title}</h3><p>{item.detail}</p>{item.selector && <pre>{item.selector}</pre>}</div></li>)}</ul> : <div className="site-audit-no-findings"><CheckCircle2 size={22} /><p>{isEn ? 'No findings in this filter. This does not guarantee the page is defect-free.' : 'Tidak ada temuan pada filter ini. Ini tidak menjamin halaman bebas dari cacat.'}</p></div>}
       </section>
+      <AiCopilotPanel
+        kicker={isEn ? 'PAGE AUDIT CO-PILOT' : 'KO-PILOT AUDIT HALAMAN'}
+        title={isEn ? 'Accessibility & DOM Quality Brief' : 'Ringkasan Aksesibilitas & Kualitas DOM'}
+        summaryLines={[
+          isEn ? `Heuristic DOM score for ${result.page}: ${score}/100 across ${result.checks} checks.` : `Skor heuristik DOM untuk ${result.page}: ${score}/100 dari ${result.checks} pemeriksaan.`,
+          isEn ? `Detected signals: ${errors} errors, ${warnings} warnings.` : `Sinyal terdeteksi: ${errors} error, ${warnings} peringatan.`,
+        ]}
+        recommendations={[
+          ...(errors > 0 || warnings > 0 ? [isEn ? `Address top flagged items (${result.findings.slice(0, 3).map(f => f.title).join(', ')}).` : `Tangani temuan teratas (${result.findings.slice(0, 3).map(f => f.title).join(', ')}).`] : [isEn ? 'Zero DOM errors or warnings found in this local scan.' : 'Tidak ada error atau peringatan DOM dalam pemindaian ini.']),
+          isEn ? 'Follow up with Playwright axe-core and manual keyboard tab-order verification.' : 'Lanjutkan dengan pengujian Playwright axe-core dan navigasi keyboard manual.',
+        ]}
+        systemPrompt="You are an accessibility and web quality specialist. Summarize actionable remediation steps strictly from DOM heuristic findings."
+        userPrompt={`Page=${result.page}, Score=${score}/100, Checks=${result.checks}, Errors=${errors}, Warnings=${warnings}. Findings=${result.findings.slice(0, 5).map(f => `[${f.severity}] ${f.title}`).join('; ') || 'none'}. Give 3 fixes.`}
+        en={isEn}
+      />
       <p className="site-audit-footnote">{isEn ? `Scanned ${result.page}. External resources, real user performance, contrast, keyboard flows, and server behavior are not fully assessed by this lightweight audit.` : `Halaman yang diperiksa: ${result.page}. Resource eksternal, performa pengguna nyata, kontras, alur keyboard, dan perilaku server tidak sepenuhnya dinilai oleh audit ringan ini.`}</p>
     </>}
   </main>

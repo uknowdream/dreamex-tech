@@ -13,6 +13,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import { useLanguage } from './i18n'
+import { AiCopilotPanel, SvgRingGauge, SvgStackedBar } from './DashboardKit'
 import './github-integration.css'
 
 type WorkflowRun = {
@@ -329,6 +330,33 @@ export function GitHubIntegrationPage() {
         </article>
       </section>
 
+      {counts.total > 0 && (
+        <div className="dx-split-grid">
+          <div className="dx-kpi-card">
+            <div className="dx-kpi-copy">
+              <span className="dx-kpi-label">{en ? 'SAMPLE CI PASS RATE' : 'PASS RATE SAMPEL CI'}</span>
+              <strong className="dx-kpi-value">{Math.round((counts.success / Math.max(1, counts.success + counts.failure)) * 100)}%</strong>
+              <span className="dx-kpi-sub">{en ? `${counts.success} passed · ${counts.failure} failed · ${counts.running} running` : `${counts.success} lulus · ${counts.failure} gagal · ${counts.running} berjalan`}</span>
+            </div>
+            <SvgRingGauge
+              value={Math.round((counts.success / Math.max(1, counts.success + counts.failure)) * 100)}
+              label={en ? 'CI workflow pass rate gauge' : 'Indikator pass rate workflow CI'}
+              tone={counts.failure > 0 ? 'amber' : 'emerald'}
+              size={64}
+            />
+          </div>
+          <SvgStackedBar
+            title={en ? 'Workflow Run Outcomes' : 'Distribusi Hasil Workflow Run'}
+            totalLabel={`${counts.total} ${en ? 'runs' : 'run'}`}
+            segments={[
+              { label: en ? 'Succeeded' : 'Berhasil', value: counts.success, color: '#c5ff70' },
+              { label: en ? 'Running' : 'Berjalan', value: counts.running, color: '#38bdf8' },
+              { label: en ? 'Failed' : 'Gagal', value: counts.failure, color: '#fb7185' },
+            ]}
+          />
+        </div>
+      )}
+
       <div className="github-ci-view-tabs" role="tablist" aria-label={en ? 'GitHub views' : 'Tampilan GitHub'}>
         <button
           type="button"
@@ -489,6 +517,21 @@ export function GitHubIntegrationPage() {
           )}
         </section>
       )}
+      <AiCopilotPanel
+        kicker={en ? 'GITHUB CI CO-PILOT' : 'KO-PILOT GITHUB CI'}
+        title={en ? 'Build & PR Readiness Brief' : 'Ringkasan Kesiapan Build & PR'}
+        summaryLines={[
+          en ? `Latest sample: ${counts.total} workflow runs (${counts.success} succeeded, ${counts.failure} failed, ${counts.running} in progress).` : `Sampel terbaru: ${counts.total} workflow run (${counts.success} berhasil, ${counts.failure} gagal, ${counts.running} berjalan).`,
+          en ? `Pull requests fetched: ${pulls.length} total (${pulls.filter(p => p.state === 'open').length} open).` : `Pull request diambil: ${pulls.length} total (${pulls.filter(p => p.state === 'open').length} terbuka).`,
+        ]}
+        recommendations={[
+          ...(counts.failure > 0 ? [en ? `Inspect ${counts.failure} failing workflow run(s) in the activity log or on GitHub Actions.` : `Periksa ${counts.failure} workflow run yang gagal di daftar aktivitas atau GitHub Actions.`] : [en ? 'No failed runs in the latest fetched sample.' : 'Tidak ada run yang gagal dalam sampel terbaru ini.']),
+          en ? 'Use session-only PAT only if unauthenticated GitHub REST API rate limits are reached.' : 'Gunakan PAT sesi opsional hanya jika limit REST API publik tercapai.',
+        ]}
+        systemPrompt="You are a CI/CD reliability engineer. Summarize build & PR status cleanly from recent workflow runs without inventing logs not shown."
+        userPrompt={`Workflows sampled=${counts.total} (success=${counts.success}, failure=${counts.failure}, running=${counts.running}). Open PRs=${pulls.filter(p => p.state === 'open').length}. Latest runs: ${runs.slice(0, 4).map(r => `${r.name}#${r.run_number}:${runState(r)}`).join(', ') || 'none'}. Give 3 focused recommendations.`}
+        en={en}
+      />
     </main>
   )
 }

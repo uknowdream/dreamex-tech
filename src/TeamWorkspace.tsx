@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent } from 'react'
 import { AlertTriangle, CheckCircle2, Cloud, Copy, Download, FileJson, Link2, Plus, RefreshCw, Save, ShieldCheck, Trash2, Upload, Users } from 'lucide-react'
 import { useLanguage } from './i18n'
+import { AiCopilotPanel, SvgRingGauge } from './DashboardKit'
 import './github-integration.css'
 
 type JsonObject = Record<string, unknown>
@@ -396,6 +397,35 @@ export function TeamWorkspacePage() {
       <p>{en ? 'Publish a JSON release plan, task list, decision log, or incident follow-up to the shared server-side snapshot. Optimistic revision checks prevent blind overwrites.' : 'Publikasikan rencana rilis, daftar tugas, keputusan, atau tindak lanjut insiden berformat JSON ke snapshot server bersama. Pemeriksaan revisi mencegah penimpaan tanpa pemeriksaan.'}</p>
     </header>
 
+    <div className="dx-kpi-grid">
+      <div className="dx-kpi-card">
+        <div className="dx-kpi-copy">
+          <span className="dx-kpi-label">{en ? 'SNAPSHOT PAYLOAD' : 'UKURAN SNAPSHOT'}</span>
+          <strong className="dx-kpi-value">{(new Blob([jsonText]).size / 1024).toFixed(1)} KB</strong>
+          <span className="dx-kpi-sub">{en ? 'Max 100 KB per shared revision' : 'Maks 100 KB per revisi bersama'}</span>
+        </div>
+        <SvgRingGauge
+          value={Math.min(100, Math.round((new Blob([jsonText]).size / 1024)))}
+          label={en ? 'Snapshot size budget gauge' : 'Indikator ukuran payload snapshot'}
+          tone={new Blob([jsonText]).size > 85000 ? 'rose' : 'cyan'}
+          size={58}
+        />
+      </div>
+      <div className="dx-kpi-card">
+        <div className="dx-kpi-copy">
+          <span className="dx-kpi-label">{en ? 'REVISION & ACCESS' : 'REVISI & AKSES'}</span>
+          <strong className="dx-kpi-value">r{revision} · {role ?? (en ? 'Local' : 'Lokal')}</strong>
+          <span className="dx-kpi-sub">{en ? `${members.length} member token(s) · ${auditEntries.length} audit events` : `${members.length} token anggota · ${auditEntries.length} log audit`}</span>
+        </div>
+        <SvgRingGauge
+          value={connected ? 100 : 25}
+          label={en ? 'Session sync readiness' : 'Status sinkronisasi sesi'}
+          tone={connected ? 'emerald' : 'amber'}
+          size={58}
+        />
+      </div>
+    </div>
+
     <div className="team-workspace-panels">
       <section className="team-workspace-panel" aria-labelledby="team-workspace-connection-title">
         <div className="team-workspace-panel-head"><div><span className="section-kicker">{en ? '01 / ACCESS' : '01 / AKSES'}</span><h2 id="team-workspace-connection-title">{en ? 'Connect to shared storage' : 'Hubungkan penyimpanan bersama'}</h2></div><Link2 size={20} /></div>
@@ -482,5 +512,21 @@ export function TeamWorkspacePage() {
         <p className="team-workspace-footnote">{en ? 'Local edits are kept in this browser as a draft. Remote publishing requires the site owner to configure Upstash Redis REST credentials and DREAMEX_WORKSPACE_TOKEN in Vercel. A revision conflict preserves your editor content.' : 'Edit lokal tersimpan sebagai draft di browser ini. Publikasi remote memerlukan konfigurasi kredensial Upstash Redis REST dan DREAMEX_WORKSPACE_TOKEN oleh pemilik situs di Vercel. Konflik revisi tidak menghapus isi editor Anda.'}</p>
       </section>
     </div>
+
+    <AiCopilotPanel
+      kicker={en ? 'TEAM WORKSPACE CO-PILOT' : 'KO-PILOT WORKSPACE TIM'}
+      title={en ? 'Shared Snapshot Reviewer' : 'Pemeriksa Snapshot Bersama'}
+      summaryLines={[
+        en ? `Access role: ${connected ? role : 'local draft'} · Revision ${revision}.` : `Peran akses: ${connected ? role : 'draft lokal'} · Revisi ${revision}.`,
+        en ? `Payload size: ${(new Blob([jsonText]).size / 1024).toFixed(1)} / 100 KB limit.` : `Ukuran payload: ${(new Blob([jsonText]).size / 1024).toFixed(1)} / 100 KB batas maksimal.`,
+      ]}
+      recommendations={[
+        ...(connected ? [en ? 'Session synchronized — publish snapshot edits cleanly with optimistic revision check.' : 'Sesi tersinkron — publikasikan perubahan snapshot dengan pemeriksaan revisi optimistis.'] : [en ? 'Save local draft or connect with a session workspace token to collaborate across browsers.' : 'Simpan draft lokal atau hubungkan token workspace sesi untuk berkolaborasi.']),
+        en ? 'Keep secrets, bearer tokens, and confidential PII out of shared workspace snapshots.' : 'Pastikan secret, token, dan data sensitif tidak dimasukkan ke JSON bersama.',
+      ]}
+      systemPrompt="You are a collaboration reliability assistant. Review JSON workspace snapshot health, payload sizing, and revision discipline concisely."
+      userPrompt={`Connected=${connected}, Role=${role ?? 'local'}, Revision=${revision}, PayloadKB=${(new Blob([jsonText]).size / 1024).toFixed(1)}, AuditEvents=${auditEntries.length}. Recommend 3 hygiene steps.`}
+      en={en}
+    />
   </main>
 }

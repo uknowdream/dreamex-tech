@@ -161,10 +161,12 @@ test('navigation drawer keeps filtered links hidden and uses a bounded content-l
   expect(geometry.height).toBeLessThanOrEqual(geometry.viewportHeight + 2)
 })
 
-test('navigation drawer and submenu remain bounded at tablet and desktop widths', async ({ page }) => {
+test('navigation drawer and submenu remain bounded at tablet and desktop widths', async ({ page }, testInfo) => {
+  test.slow(testInfo.project.name === 'mobile-safari', 'Mobile Safari software emulation runs five full viewport reloads sequentially')
   for (const width of [768, 820, 1024, 1280, 1440]) {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/')
+    await expect(page.locator('.site-header .brand')).toBeVisible()
     const menuButton = page.locator('.menu-toggle')
     if (await menuButton.isVisible()) {
       await menuButton.click()

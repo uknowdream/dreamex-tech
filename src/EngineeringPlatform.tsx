@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import { useLanguage } from './i18n'
 import { ApiContractStudio } from './ApiContractStudio'
+import { AiCopilotPanel, SvgRingGauge, SvgSparkBars, SvgStackedBar, readWorkspacePulse } from './DashboardKit'
 import './EngineeringPlatform.css'
 
 type RoleFocus = 'all' | 'dev' | 'qa' | 'ba' | 'pm'
@@ -339,7 +340,26 @@ export function EngineeringWorkspacePage() {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All')
   const [role, setRole] = useState<RoleFocus>('all')
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const [pulse, setPulse] = useState(() => readWorkspacePulse())
   const normalizedQuery = query.trim().toLocaleLowerCase()
+
+  useEffect(() => {
+    const refreshPulse = () => setPulse(readWorkspacePulse())
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey) return
+      const target = event.target as HTMLElement | null
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) return
+      event.preventDefault()
+      searchInputRef.current?.focus()
+    }
+    window.addEventListener('storage', refreshPulse)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('storage', refreshPulse)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [])
 
   const visible = useMemo(
     () =>
@@ -400,6 +420,7 @@ export function EngineeringWorkspacePage() {
         <label className="workspace-search">
           <Search size={18} />
           <input
+            ref={searchInputRef}
             aria-label={en ? 'Search workspace tools' : 'Cari tools workspace'}
             placeholder={en ? 'Find an AI suite, QA workflow, BA compiler, or topic…' : 'Cari suite AI, alur QA, kompilator BA, atau topik…'}
             value={query}
@@ -412,6 +433,47 @@ export function EngineeringWorkspacePage() {
           {en ? 'Client-sovereign runtime · explicit network actions · zero lock-in' : 'Runtime client-sovereign · aksi jaringan eksplisit · tanpa lock-in'}
         </div>
       </header>
+      <section className="dx-kpi-grid" aria-label={en ? 'Browser workspace summary' : 'Ringkasan workspace browser'}>
+        <article className="dx-kpi-card">
+          <div className="dx-kpi-copy">
+            <span className="dx-kpi-label">{en ? 'CONTROL PLANE GATE' : 'GERBANG CONTROL PLANE'}</span>
+            <strong className="dx-kpi-value">{pulse.controlPlaneDone}/{pulse.controlPlaneTotal}</strong>
+            <span className="dx-kpi-sub">{en ? 'Personal release checks marked' : 'Checklist rilis pribadi selesai'}</span>
+          </div>
+          <SvgRingGauge
+            value={Math.round((pulse.controlPlaneDone / pulse.controlPlaneTotal) * 100)}
+            label={en ? 'Control plane readiness' : 'Kesiapan control plane'}
+            tone={pulse.controlPlaneDone >= pulse.controlPlaneTotal ? 'emerald' : 'cyan'}
+            size={60}
+          />
+        </article>
+        <article className="dx-kpi-card">
+          <div className="dx-kpi-copy">
+            <span className="dx-kpi-label">{en ? 'COMMAND QUEUE' : 'ANTREAN KOMANDO'}</span>
+            <strong className="dx-kpi-value">{pulse.commandTasksOpen}</strong>
+            <span className="dx-kpi-sub">{en ? `${pulse.commandTasksActive} active · ${pulse.commandIncidentsOpen} open incidents` : `${pulse.commandTasksActive} aktif · ${pulse.commandIncidentsOpen} insiden`}</span>
+          </div>
+          <SvgRingGauge
+            value={Math.max(0, 100 - pulse.commandIncidentsOpen * 25)}
+            label={en ? 'Operational stability' : 'Stabilitas operasional'}
+            tone={pulse.commandIncidentsOpen > 0 ? 'amber' : 'emerald'}
+            size={60}
+          />
+        </article>
+        <article className="dx-kpi-card">
+          <div className="dx-kpi-copy">
+            <span className="dx-kpi-label">{en ? 'LOCAL ARTIFACTS' : 'ARTIFAK LOKAL'}</span>
+            <strong className="dx-kpi-value">{pulse.qualityReportsCount + pulse.sbomSnapshotsCount}</strong>
+            <span className="dx-kpi-sub">{en ? `${pulse.catalogServicesCount} services · ${pulse.roadmapDoneCount} roadmap items` : `${pulse.catalogServicesCount} layanan · ${pulse.roadmapDoneCount} item roadmap`}</span>
+          </div>
+          <SvgRingGauge
+            value={Math.min(100, (pulse.qualityReportsCount + pulse.sbomSnapshotsCount) * 20)}
+            label={en ? 'Local evidence coverage' : 'Cakupan bukti lokal'}
+            tone="cyan"
+            size={60}
+          />
+        </article>
+      </section>
       <section className="workspace-section">
         <div className="workspace-section-heading">
           <div>
@@ -816,6 +878,19 @@ export function ApiPlaygroundPage() {
                 <span>Content-Type</span>
               </div>
             </div>
+            <div className="dx-kpi-card" style={{ margin: '12px 0' }}>
+              <div className="dx-kpi-copy">
+                <span className="dx-kpi-label">{en ? 'EXCHANGE STATUS HEALTH' : 'KESEHATAN STATUS PERTUKARAN'}</span>
+                <strong className="dx-kpi-value">{response.status} {response.statusText}</strong>
+                <span className="dx-kpi-sub">{en ? `Completed in ${response.ms} ms (${(response.size / 1024).toFixed(1)} KB)` : `Selesai dalam ${response.ms} ms (${(response.size / 1024).toFixed(1)} KB)`}</span>
+              </div>
+              <SvgRingGauge
+                value={response.status < 300 ? 100 : response.status < 400 ? 85 : response.status < 500 ? 45 : 15}
+                label={en ? 'HTTP response status indicator' : 'Indikator status response HTTP'}
+                tone={response.status < 400 ? 'emerald' : response.status < 500 ? 'amber' : 'rose'}
+                size={58}
+              />
+            </div>
             <div className="api-response-tabs">
               <button type="button" className={tab === 'body' ? 'active' : ''} onClick={() => setTab('body')}>
                 Body
@@ -994,6 +1069,16 @@ export function PerformanceObservatoryPage() {
                 <h2>{en ? 'Page lifecycle' : 'Siklus halaman'}</h2>
               </div>
             </div>
+            <SvgSparkBars
+              title={en ? 'Navigation Phase Timing (ms)' : 'Timing Fase Navigasi (ms)'}
+              meta={`${snapshot.resources.length} ${en ? 'resources sampled' : 'resource disampel'}`}
+              items={Object.entries(snapshot.timing).slice(0, 6).map(([name, value]) => ({
+                label: name.slice(0, 10),
+                value: Math.round(value),
+                suffix: 'ms',
+                tone: value > 1000 ? 'amber' : 'cyan',
+              }))}
+            />
             <div className="performance-timing-list">
               {Object.entries(snapshot.timing).map(([name, value]) => (
                 <div key={name}>
@@ -1048,6 +1133,24 @@ export function PerformanceObservatoryPage() {
               {en ? 'Export snapshot' : 'Ekspor snapshot'}
             </button>
           </div>
+          <AiCopilotPanel
+            kicker={en ? 'PERFORMANCE CO-PILOT' : 'KO-PILOT PERFORMA'}
+            title={en ? 'Runtime Performance Brief' : 'Ringkasan Performa Runtime'}
+            summaryLines={[
+              en ? `Observed ${snapshot.resources.length} browser resource transfer entries.` : `Mengamati ${snapshot.resources.length} entri transfer resource browser.`,
+              en ? `Exposed Web Vitals: LCP=${snapshot.vitals.LCP ? `${snapshot.vitals.LCP.value}ms` : 'n/a'}, CLS=${snapshot.vitals.CLS ? snapshot.vitals.CLS.value : 'n/a'}, INP=${snapshot.vitals.INP ? `${snapshot.vitals.INP.value}ms` : 'n/a'}.` : `Web Vitals browser: LCP=${snapshot.vitals.LCP ? `${snapshot.vitals.LCP.value}ms` : 'n/a'}, CLS=${snapshot.vitals.CLS ? snapshot.vitals.CLS.value : 'n/a'}, INP=${snapshot.vitals.INP ? `${snapshot.vitals.INP.value}ms` : 'n/a'}.`,
+              snapshot.resources[0]
+                ? (en ? `Slowest captured asset: ${snapshot.resources[0].name.split('/').pop() || snapshot.resources[0].name} (${snapshot.resources[0].duration} ms).` : `Aset paling lambat: ${snapshot.resources[0].name.split('/').pop() || snapshot.resources[0].name} (${snapshot.resources[0].duration} ms).`)
+                : (en ? 'No slow resource transfers recorded yet.' : 'Belum ada transfer resource yang lambat.'),
+            ]}
+            recommendations={[
+              ...(snapshot.resources.slice(0, 2).some(r => r.duration > 300) ? [en ? 'Inspect heavy chunks over 300ms for lazy splitting or caching optimization.' : 'Periksa aset di atas 300ms untuk optimasi code-splitting atau caching.'] : [en ? 'Sampled resource load times appear brisk in this browser session.' : 'Waktu muat resource yang disampel tampak cepat pada sesi browser ini.']),
+              en ? 'Run Lighthouse CI or PageSpeed Insights for repeatable Core Web Vitals lab comparisons.' : 'Jalankan Lighthouse CI atau PageSpeed Insights untuk pengukuran lab terstandar.',
+            ]}
+            systemPrompt="You are a web performance engineer. Summarize runtime navigation timing & slowest assets concisely without claiming lab Lighthouse scores."
+            userPrompt={`Resources=${snapshot.resources.length}. LCP=${snapshot.vitals.LCP?.value ?? 'n/a'}, CLS=${snapshot.vitals.CLS?.value ?? 'n/a'}, INP=${snapshot.vitals.INP?.value ?? 'n/a'}. Top slowest: ${snapshot.resources.slice(0, 3).map(r => `${r.name.split('/').pop()}(${r.duration}ms)`).join(', ') || 'none'}. Give 3 pragmatic tips.`}
+            en={en}
+          />
         </>
       )}
     </main>
@@ -1282,6 +1385,16 @@ export function EngineeringKnowledgeGraphPage() {
           </div>
         )}
       </section>
+
+      <SvgStackedBar
+        title={en ? 'Graph Topology Mix' : 'Komposisi Topologi Graf'}
+        totalLabel={`${visible.length} nodes · ${edges.length} ${en ? 'edges' : 'koneksi'}`}
+        segments={[
+          { label: en ? 'Concepts' : 'Konsep', value: visible.filter(n => n.kind === 'concept').length, color: '#a78bfa' },
+          { label: en ? 'Articles' : 'Artikel', value: visible.filter(n => n.kind === 'article').length, color: '#38bdf8' },
+          { label: en ? 'Tools' : 'Tools', value: visible.filter(n => n.kind === 'tool').length, color: '#c5ff70' },
+        ]}
+      />
 
       <div className="knowledge-layout">
         <section className="knowledge-network" aria-label={en ? 'Interactive knowledge graph nodes' : 'Node knowledge graph interaktif'}>

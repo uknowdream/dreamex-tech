@@ -162,6 +162,7 @@ function Header() {
   const { language, setLanguage, t } = useLanguage()
   const [menuOpen, setMenuOpen] = useState(false)
   const [navQuery, setNavQuery] = useState('')
+  const [activeMegaPillar, setActiveMegaPillar] = useState<'all' | 'plan' | 'build' | 'secure'>('all')
   const [recentRoutes, setRecentRoutes] = useState<string[]>(() => {
     if (typeof window === 'undefined') return []
     try {
@@ -237,6 +238,7 @@ function Header() {
     previousPathRef.current = location.pathname
     setDrawerOpen(false)
     setNavQuery('')
+    setActiveMegaPillar('all')
     document.querySelector('.nav-platform')?.removeAttribute('open')
   }, [location.pathname, setDrawerOpen])
 
@@ -250,15 +252,29 @@ function Header() {
   }, [location.pathname])
 
   useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (menuOpen) return
+      const platform = document.querySelector<HTMLDetailsElement>('.nav-platform')
+      if (!platform?.open) return
+      if (event.target instanceof Node && !platform.contains(event.target)) {
+        platform.open = false
+        setActiveMegaPillar('all')
+      }
+    }
     const handlePlatformEscape = (event: KeyboardEvent) => {
       if (event.key !== 'Escape' || menuOpen) return
       const platform = document.querySelector<HTMLDetailsElement>('.nav-platform')
       if (!platform?.open) return
       platform.open = false
+      setActiveMegaPillar('all')
       platform.querySelector<HTMLElement>('summary')?.focus()
     }
+    document.addEventListener('click', handleOutsideClick)
     document.addEventListener('keydown', handlePlatformEscape)
-    return () => document.removeEventListener('keydown', handlePlatformEscape)
+    return () => {
+      document.removeEventListener('click', handleOutsideClick)
+      document.removeEventListener('keydown', handlePlatformEscape)
+    }
   }, [menuOpen])
 
   useEffect(() => {
@@ -400,44 +416,71 @@ function Header() {
             </div>
           </section>}
           <NavLink to="/" end onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><HomeIcon size={16}/></span><span><b>{language === 'en' ? 'Journal' : 'Jurnal'}</b><small>{language === 'en' ? 'AI OS overview & research' : 'Ikhtisar AI OS & riset'}</small></span></NavLink>
-          <details className={NAV_DESTINATIONS[location.pathname] ? 'nav-platform nav-platform-current' : 'nav-platform'}>
-            <summary><span className="nav-link-icon"><Layers3 size={16}/></span><span><b>{language === 'en' ? 'Engineering platform' : 'Platform engineering'}</b><small>{language === 'en' ? '22 AI workspaces for Dev, QA, BA & PM' : '22 workspace AI untuk Dev, QA, BA & PM'}</small></span><ChevronDown size={15} className="nav-chevron" /></summary>
+          <details
+            className={NAV_DESTINATIONS[location.pathname] ? 'nav-platform nav-platform-current' : 'nav-platform'}
+            onToggle={event => {
+              if (!event.currentTarget.open) setActiveMegaPillar('all')
+            }}
+          >
+            <summary><span className="nav-link-icon"><Layers3 size={16}/></span><span><b>{language === 'en' ? 'Engineering platform' : 'Platform engineering'}</b><small>{language === 'en' ? '23 AI workspaces for Dev, QA, BA & PM' : '23 workspace AI untuk Dev, QA, BA & PM'}</small></span><ChevronDown size={15} className="nav-chevron" /></summary>
             <div className="nav-mega-panel">
               <div className="nav-mega-intro">
                 <img className="nav-mega-spotlight-art" src="/images/spotlight-ai-os.jpg" alt="" aria-hidden="true" width={360} height={200} />
                 <span className="nav-mega-kicker">{language === 'en' ? 'SPATIAL AI WORKSPACE · v4.0' : 'RUANG KERJA AI SPASIAL · v4.0'}</span>
                 <strong>{language === 'en' ? 'From architecture to autonomous release.' : 'Dari arsitektur hingga rilis otonom.'}</strong>
                 <p>{language === 'en' ? 'Unify distributed systems design, self-healing QA automation, executable BA specs, and Jira telemetry in one sovereign OS.' : 'Satukan desain sistem, otomasi QA self-healing, spesifikasi BA, dan telemetri Jira dalam satu OS privat.'}</p>
-                <div className="nav-mega-badges" aria-hidden="true"><span>22 Suites</span><span>0ms Lock-in</span><span>Zero-Trust</span></div>
+                <div className="nav-mega-badges" aria-hidden="true"><span>23 Suites</span><span>Local + BYOK</span><span>Zero-Trust</span></div>
+                <div className="nav-mega-intro-stats" aria-hidden="true">
+                  <div><b>01–04</b><span>{language === 'en' ? 'Role pillars' : 'Pilar peran'}</span></div>
+                  <div><b>100%</b><span>{language === 'en' ? 'Browser-first' : 'Berbasis browser'}</span></div>
+                </div>
                 <Link to="/workspace" onClick={() => setDrawerOpen(false)}>{language === 'en' ? 'Open workspace' : 'Buka workspace'} <ArrowRight size={14}/></Link>
                 <span className="nav-mega-orbit" aria-hidden="true"><span /><span /><span /></span>
               </div>
-              <div className="nav-mega-group">
+              <div className="nav-mega-pillars" role="group" aria-label={language === 'en' ? 'Filter platform pillar' : 'Filter pilar platform'}>
+                {([
+                  { id: 'all', en: 'All Suites (21)', idLabel: 'Semua Suite (21)' },
+                  { id: 'plan', en: 'Control & Ops (8)', idLabel: 'Kendali & Ops (8)' },
+                  { id: 'build', en: 'Build & QA (9)', idLabel: 'Bangun & QA (9)' },
+                  { id: 'secure', en: 'Security & Learn (4)', idLabel: 'Keamanan & Edukasi (4)' },
+                ] as const).map(pillar => (
+                  <button
+                    key={pillar.id}
+                    type="button"
+                    className={activeMegaPillar === pillar.id ? 'nav-mega-pillar-tab is-active' : 'nav-mega-pillar-tab'}
+                    aria-pressed={activeMegaPillar === pillar.id}
+                    onClick={() => setActiveMegaPillar(pillar.id)}
+                  >
+                    {language === 'en' ? pillar.en : pillar.idLabel}
+                  </button>
+                ))}
+              </div>
+              <div className={activeMegaPillar !== 'all' && activeMegaPillar !== 'plan' && !navQuery.trim() ? 'nav-mega-group is-pillar-filtered' : 'nav-mega-group'} data-pillar="plan">
                 <span className="nav-group-label">{language === 'en' ? 'PLAN & OPERATE' : 'RENCANAKAN & KELOLA'}</span>
                 <NavLink to="/control-plane" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Activity size={15}/></span><span><b>Control Plane</b><small>{language === 'en' ? 'Unified release & governance plane' : 'Bidang kendali rilis & tata kelola'}</small></span></NavLink>
                 <NavLink to="/team-workspace" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Layers3 size={15}/></span><span><b>{language === 'en' ? 'Shared Team Workspace' : 'Workspace Tim Bersama'}</b><small>{language === 'en' ? 'Revision-controlled team snapshots' : 'Snapshot tim dengan kontrol revisi'}</small></span></NavLink>
                 <NavLink to="/engineering-intelligence" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Activity size={15}/></span><span><b>Engineering Intelligence</b><small>{language === 'en' ? 'Service catalog & schema diff' : 'Katalog layanan & diff skema API'}</small></span></NavLink>
                 <NavLink to="/command-center" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><ClipboardList size={15}/></span><span><b>Command Center</b><small>{language === 'en' ? 'Live incidents, ADRs & gates' : 'Insiden aktif, ADR & gate rilis'}</small></span></NavLink>
                 <NavLink to="/roadmap" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><ArrowDownRight size={15}/></span><span><b>{language === 'en' ? 'Product Roadmap' : 'Roadmap Produk'}</b><small>{language === 'en' ? 'STRIDE threats & delivery readiness' : 'Ancaman STRIDE & kesiapan rilis'}</small></span></NavLink>
-                <NavLink to="/tools" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Zap size={15}/></span><span><b>{language === 'en' ? 'Sovereign IT Suite (v3)' : 'Suite IT Sovereign (v3)'}</b><small>{language === 'en' ? '6-pillar AI Workbench for Dev, QA, BA, PM' : 'Workbench AI 6-pilar Dev, QA, BA, PM'}</small></span></NavLink>
+                <NavLink to="/tools" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Zap size={15}/></span><span><b>{language === 'en' ? 'Sovereign IT Suite (v3)' : 'Suite IT Sovereign (v3)'}</b><small>{language === 'en' ? '6-pillar AI Workbench for Dev, QA, BA, PM' : 'Workbench AI 6-pilar Dev, QA, BA, PM'}</small></span><i className="nav-item-tag" aria-hidden="true">AI</i></NavLink>
                 <NavLink to="/ba-hub" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><ClipboardList size={15}/></span><span><b>{language === 'en' ? 'BA & Gherkin Studio' : 'Studio BA & Gherkin'}</b><small>{language === 'en' ? 'Executable specs & RTM matrices' : 'Spesifikasi BDD & matriks RTM'}</small></span></NavLink>
                 <NavLink to="/pm-jira-hub" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Gauge size={15}/></span><span><b>{language === 'en' ? 'PM & Jira Automation' : 'Otomasi PM & Jira'}</b><small>{language === 'en' ? 'Jira ADF payloads, JQL & Monte Carlo' : 'Jira API v3 ADF, JQL & Monte Carlo'}</small></span></NavLink>
               </div>
-              <div className="nav-mega-group">
+              <div className={activeMegaPillar !== 'all' && activeMegaPillar !== 'build' && !navQuery.trim() ? 'nav-mega-group is-pillar-filtered' : 'nav-mega-group'} data-pillar="build">
                 <span className="nav-group-label">{language === 'en' ? 'BUILD & VERIFY' : 'BANGUN & VALIDASI'}</span>
                 <NavLink to="/lab" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Terminal size={15}/></span><span><b>Engineering Lab</b><small>{language === 'en' ? 'QA matrices & API verification' : 'Matriks QA & verifikasi API'}</small></span></NavLink>
-                <NavLink to="/quality-intelligence" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><ShieldCheck size={15}/></span><span><b>Quality Intelligence</b><small>{language === 'en' ? 'Flake clustering & JUnit analytics' : 'Deteksi flaky & analitik JUnit'}</small></span></NavLink>
+                <NavLink to="/quality-intelligence" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><ShieldCheck size={15}/></span><span><b>Quality Intelligence</b><small>{language === 'en' ? 'Flake clustering & JUnit analytics' : 'Deteksi flaky & analitik JUnit'}</small></span><i className="nav-item-tag" aria-hidden="true">QA</i></NavLink>
                 <NavLink to="/reliability-center" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Gauge size={15}/></span><span><b>{language === 'en' ? 'Reliability & Incidents' : 'Reliability & Insiden'}</b><small>{language === 'en' ? 'DORA delivery metrics & postmortems' : 'Metrik DORA & postmortem insiden'}</small></span></NavLink>
                 <NavLink to="/performance" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Gauge size={15}/></span><span><b>Performance Observatory</b><small>{language === 'en' ? 'Core Web Vitals & bundle budgets' : 'Core Web Vitals & budget aset'}</small></span></NavLink>
                 <NavLink to="/knowledge-graph" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Network size={15}/></span><span><b>Knowledge Graph</b><small>{language === 'en' ? 'Interactive architecture topology' : 'Topologi arsitektur interaktif'}</small></span></NavLink>
                 <NavLink to="/devtools" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Terminal size={15}/></span><span><b>Developer Utilities</b><small>{language === 'en' ? 'Schema generator, Regex & JWT' : 'Generator Skema, Regex & JWT'}</small></span></NavLink>
                 <NavLink to="/api-playground" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Braces size={15}/></span><span><b>API Playground</b><small>{language === 'en' ? 'Inspect REST endpoints locally' : 'Validasi endpoint REST secara lokal'}</small></span></NavLink>
                 <NavLink to="/qa-studio" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><CheckCircle2 size={15}/></span><span><b>QA Automation Studio</b><small>{language === 'en' ? 'Playwright specs & test syntheses' : 'Sintesis skrip Playwright & test plan'}</small></span></NavLink>
-                <NavLink to="/github-ci" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Github size={15}/></span><span><b>GitHub CI Activity</b><small>{language === 'en' ? 'Live Actions pipeline telemetry' : 'Telemetri langsung GitHub Actions'}</small></span></NavLink>
+                <NavLink to="/github-ci" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Github size={15}/></span><span><b>GitHub CI Activity</b><small>{language === 'en' ? 'Live Actions pipeline telemetry' : 'Telemetri langsung GitHub Actions'}</small></span><i className="nav-item-tag" aria-hidden="true">RUNS</i></NavLink>
               </div>
-              <div className="nav-mega-group">
+              <div className={activeMegaPillar !== 'all' && activeMegaPillar !== 'secure' && !navQuery.trim() ? 'nav-mega-group is-pillar-filtered' : 'nav-mega-group'} data-pillar="secure">
                 <span className="nav-group-label">{language === 'en' ? 'SECURE & LEARN' : 'AMANKAN & PELAJARI'}</span>
-                <NavLink to="/security-center" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><ShieldCheck size={15}/></span><span><b>{language === 'en' ? 'Security Center' : 'Pusat Keamanan'}</b><small>{language === 'en' ? 'Zero-trust headers & CSP auditing' : 'Audit header zero-trust & CSP'}</small></span></NavLink>
+                <NavLink to="/security-center" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><ShieldCheck size={15}/></span><span><b>{language === 'en' ? 'Security Center' : 'Pusat Keamanan'}</b><small>{language === 'en' ? 'Zero-trust headers & CSP auditing' : 'Audit header zero-trust & CSP'}</small></span><i className="nav-item-tag" aria-hidden="true">SEC</i></NavLink>
                 <NavLink to="/supply-chain-intelligence" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Network size={15}/></span><span><b>Supply Chain</b><small>{language === 'en' ? 'CycloneDX/SPDX SBOM intelligence' : 'Intelijen SBOM CycloneDX & SPDX'}</small></span></NavLink>
                 <NavLink to="/observatory" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Activity size={15}/></span><span><b>Web Quality Observatory</b><small>{language === 'en' ? 'Accessibility, SEO & DOM signals' : 'Audit aksesibilitas, SEO & DOM'}</small></span></NavLink>
                 <NavLink to="/learn" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><BookOpen size={15}/></span><span><b>{language === 'en' ? 'Learning Hub' : 'Pusat Belajar'}</b><small>{language === 'en' ? 'Interactive engineering roadmaps' : 'Jalur belajar engineering interaktif'}</small></span></NavLink>
@@ -2147,7 +2190,7 @@ function CommandPalette() {
     document.body.style.overflow = 'hidden'
     setQuery('')
     setActiveIndex(0)
-    window.requestAnimationFrame(() => inputRef.current?.focus())
+    inputRef.current?.focus()
     return () => {
       document.body.style.overflow = previousOverflow
       previousFocus?.focus()
@@ -2478,20 +2521,101 @@ const TOOL_BREADCRUMB_LABELS: Record<string, { id: string; en: string }> = {
   '/pm-jira-hub': { id: 'Hub PM Monte Carlo & Jira', en: 'PM Monte Carlo & Jira Hub' },
 }
 
+const TOOL_SUBNAV_CLUSTERS = [
+  {
+    id: 'plan',
+    en: '01 Plan & Govern',
+    idLabel: '01 Rencana & Kendali',
+    routes: ['/control-plane', '/command-center', '/roadmap', '/engineering-intelligence', '/team-workspace', '/workspace'],
+  },
+  {
+    id: 'build',
+    en: '02 Build & Verify',
+    idLabel: '02 Bangun & Uji',
+    routes: ['/qa-studio', '/quality-intelligence', '/reliability-center', '/performance', '/knowledge-graph', '/api-playground', '/github-ci', '/lab', '/devtools'],
+  },
+  {
+    id: 'secure',
+    en: '03 SecOps & Intel',
+    idLabel: '03 Keamanan & Audit',
+    routes: ['/security-center', '/supply-chain-intelligence', '/observatory', '/site-audit', '/learn'],
+  },
+  {
+    id: 'workbench',
+    en: '04 6-Pillar AI',
+    idLabel: '04 AI 6-Pilar',
+    routes: ['/tools', '/ba-hub', '/pm-jira-hub'],
+  },
+] as const
+
+type SubnavClusterId = (typeof TOOL_SUBNAV_CLUSTERS)[number]['id']
+
 function ToolRouteBreadcrumbs() {
   const { pathname } = useLocation()
   const { language } = useLanguage()
-  const label = TOOL_BREADCRUMB_LABELS[pathname.replace(/\/+$/, '') || '/']
-  if (!label) return null
-  const homeLabel = language === 'en' ? 'Home' : 'Beranda'
-  const currentLabel = language === 'en' ? label.en : label.id
-  return <nav className="tool-route-breadcrumbs" aria-label={language === 'en' ? 'Breadcrumb' : 'Navigasi lokasi'}>
-    <ol>
-      <li><Link to="/">{homeLabel}</Link></li>
-      <li aria-hidden="true" className="tool-route-breadcrumb-separator">/</li>
-      <li aria-current="page"><span>{currentLabel}</span></li>
-    </ol>
-  </nav>
+  const cleanPath = pathname.replace(/\/+$/, '') || '/'
+  const label = TOOL_BREADCRUMB_LABELS[cleanPath]
+  const detectedCluster: SubnavClusterId =
+    TOOL_SUBNAV_CLUSTERS.find(cluster => (cluster.routes as readonly string[]).includes(cleanPath))?.id ?? 'plan'
+  const [selectedCluster, setSelectedCluster] = useState<SubnavClusterId>(detectedCluster)
+
+  useEffect(() => {
+    setSelectedCluster(detectedCluster)
+  }, [detectedCluster])
+
+  const activeGroup = TOOL_SUBNAV_CLUSTERS.find(cluster => cluster.id === selectedCluster) ?? TOOL_SUBNAV_CLUSTERS[0]
+  const hasClusterRoute = TOOL_SUBNAV_CLUSTERS.some(cluster => (cluster.routes as readonly string[]).includes(cleanPath))
+
+  if (!label && !hasClusterRoute) return null
+  const en = language === 'en'
+  const homeLabel = en ? 'Home' : 'Beranda'
+  const currentLabel = label ? (en ? label.en : label.id) : (NAV_DESTINATIONS[cleanPath]?.[en ? 'en' : 'id'] ?? cleanPath)
+
+  return <div className="tool-context-shell">
+    <div className="tool-context-top">
+      {label ? (
+        <nav className="tool-route-breadcrumbs" aria-label={en ? 'Breadcrumb' : 'Navigasi lokasi'}>
+          <ol>
+            <li><Link to="/">{homeLabel}</Link></li>
+            <li aria-hidden="true" className="tool-route-breadcrumb-separator">/</li>
+            <li aria-current="page"><span>{currentLabel}</span></li>
+          </ol>
+        </nav>
+      ) : (
+        <span className="tool-context-kicker">{en ? 'ENGINEERING OS MODULE' : 'MODUL OS ENGINEERING'}</span>
+      )}
+      <div className="tool-context-clusters" role="group" aria-label={en ? 'Switch OS pillar submenu' : 'Ganti submenu pilar OS'}>
+        {TOOL_SUBNAV_CLUSTERS.map(cluster => (
+          <button
+            key={cluster.id}
+            type="button"
+            className={selectedCluster === cluster.id ? 'tool-cluster-tab is-active' : 'tool-cluster-tab'}
+            aria-pressed={selectedCluster === cluster.id}
+            onClick={() => setSelectedCluster(cluster.id)}
+          >
+            {en ? cluster.en : cluster.idLabel}
+          </button>
+        ))}
+      </div>
+    </div>
+    <nav className="tool-context-subnav" aria-label={en ? 'Suite pillar quick navigation' : 'Navigasi cepat suite engineering'}>
+      {activeGroup.routes.map(routePath => {
+        const dest = NAV_DESTINATIONS[routePath]
+        if (!dest) return null
+        const active = cleanPath === routePath
+        return (
+          <Link
+            key={routePath}
+            to={routePath}
+            className={active ? 'tool-subnav-pill is-active' : 'tool-subnav-pill'}
+            aria-current={active ? 'page' : undefined}
+          >
+            {en ? dest.en : dest.id}
+          </Link>
+        )
+      })}
+    </nav>
+  </div>
 }
 
 export default function App() {

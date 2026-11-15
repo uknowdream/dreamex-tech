@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Activity, ArrowRight, Boxes, Check, CheckCircle2, ClipboardCheck, Code2, Download, Gauge, Network, Search, ShieldCheck, Sparkles, Workflow } from 'lucide-react'
+import { Activity, ArrowRight, Boxes, Check, CheckCircle2, ClipboardCheck, Code2, Download, Gauge, Network, RotateCcw, Search, ShieldCheck, Sparkles, Workflow } from 'lucide-react'
 import { useLanguage } from './i18n'
+import { AiCopilotPanel, PipelineStageStrip, SvgRingGauge, readWorkspacePulse } from './DashboardKit'
 import './EngineeringControlPlane.css'
 
 const CHECKLIST_KEY = 'dreamex-control-plane-checklist-v1'
@@ -31,13 +32,15 @@ const workflows: readonly WorkflowItem[] = [
 ]
 
 const checks = [
-  { id: 'scope', title: 'Define change scope and acceptance criteria', group: 'Plan' },
-  { id: 'contract', title: 'Review API contracts and compatibility', group: 'Design' },
-  { id: 'tests', title: 'Run relevant functional and regression tests', group: 'Verify' },
-  { id: 'security', title: 'Review security and privacy impact', group: 'Verify' },
-  { id: 'evidence', title: 'Capture test evidence and unresolved risks', group: 'Release' },
-  { id: 'rollback', title: 'Confirm rollback and recovery approach', group: 'Release' },
+  { id: 'scope', title: 'Define change scope and acceptance criteria', group: 'Plan', groupId: 'Rencana' },
+  { id: 'contract', title: 'Review API contracts and compatibility', group: 'Design', groupId: 'Desain' },
+  { id: 'tests', title: 'Run relevant functional and regression tests', group: 'Verify', groupId: 'Verifikasi' },
+  { id: 'security', title: 'Review security and privacy impact', group: 'Verify', groupId: 'Verifikasi' },
+  { id: 'evidence', title: 'Capture test evidence and unresolved risks', group: 'Release', groupId: 'Rilis' },
+  { id: 'rollback', title: 'Confirm rollback and recovery approach', group: 'Release', groupId: 'Rilis' },
 ] as const
+
+type FilterCategory = 'all' | 'Architecture' | 'Quality Engineering' | 'Security' | 'Operations'
 
 type CheckState = Record<string, boolean>
 type BrowserSignals = { online: boolean; secure: boolean; width: number; height: number }
@@ -63,35 +66,113 @@ export function EngineeringControlPlanePage() {
   const { language } = useLanguage()
   const en = language === 'en'
   const [query, setQuery] = useState('')
+  const [activeCategory, setActiveCategory] = useState<FilterCategory>('all')
   const [checked, setChecked] = useState<CheckState>(readChecks)
   const [signals, setSignals] = useState<BrowserSignals>(getBrowserSignals)
+  const [pulse, setPulse] = useState(() => readWorkspacePulse())
   const [notice, setNotice] = useState('')
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     try { window.localStorage.setItem(CHECKLIST_KEY, JSON.stringify(checked)) } catch {
       setNotice(en ? 'Browser storage is unavailable; checklist changes may not persist.' : 'Penyimpanan browser tidak tersedia; perubahan checklist mungkin tidak tersimpan.')
     }
+    setPulse(readWorkspacePulse())
   }, [checked, en])
 
   useEffect(() => {
-    const update = () => setSignals(getBrowserSignals())
+    const update = () => {
+      setSignals(getBrowserSignals())
+      setPulse(readWorkspacePulse())
+    }
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey) return
+      const target = event.target as HTMLElement | null
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) return
+      event.preventDefault()
+      searchInputRef.current?.focus()
+    }
     window.addEventListener('online', update)
     window.addEventListener('offline', update)
     window.addEventListener('resize', update, { passive: true })
+    window.addEventListener('storage', update)
+    window.addEventListener('keydown', handleKey)
     return () => {
       window.removeEventListener('online', update)
       window.removeEventListener('offline', update)
       window.removeEventListener('resize', update)
+      window.removeEventListener('storage', update)
+      window.removeEventListener('keydown', handleKey)
     }
   }, [])
 
   const filteredWorkflows = useMemo(() => {
     const term = query.trim().toLocaleLowerCase()
-    if (!term) return workflows
-    return workflows.filter(item => [item.title, item.titleId, item.description, item.descriptionId, item.category, item.categoryId, item.keywords].join(' ').toLocaleLowerCase().includes(term))
-  }, [query])
+    return workflows.filter(item => {
+      const catMatch = activeCategory === 'all'
+        || (activeCategory === 'Architecture' && (item.category === 'Architecture' || item.category === 'API Engineering'))
+        || (activeCategory === 'Operations' && (item.category === 'Operations' || item.category === 'Reliability' || item.category === 'Developer Experience' || item.category === 'Knowledge'))
+        || item.category === activeCategory
+      if (!catMatch) return false
+      if (!term) return true
+      return [item.title, item.titleId, item.description, item.descriptionId, item.category, item.categoryId, item.keywords].join(' ').toLocaleLowerCase().includes(term)
+    })
+  }, [activeCategory, query])
   const completed = checks.filter(item => checked[item.id]).length
   const readiness = Math.round(completed / checks.length * 100)
+
+  const pipelineStages = useMemo(() => ([
+    {
+      id: 'plan',
+      step: '01 / PLAN',
+      title: en ? 'Scope & Intent' : 'Ruang Lingkup',
+      subtitle: en ? 'Acceptance criteria' : 'Kriteria penerimaan',
+      complete: checked.scope ? 1 : 0,
+      total: 1,
+    },
+    {
+      id: 'design',
+      step: '02 / DESIGN',
+      title: en ? 'Contracts & API' : 'Kontrak & API',
+      subtitle: en ? 'Schema compatibility' : 'Kompatibilitas skema',
+      complete: checked.contract ? 1 : 0,
+      total: 1,
+    },
+    {
+      id: 'verify',
+      step: '03 / VERIFY',
+      title: en ? 'Tests & Security' : 'Uji & Keamanan',
+      subtitle: en ? 'Functional + privacy' : 'Fungsional + privasi',
+      complete: (checked.tests ? 1 : 0) + (checked.security ? 1 : 0),
+      total: 2,
+    },
+    {
+      id: 'release',
+      step: '04 / RELEASE',
+      title: en ? 'Evidence & Rollback' : 'Bukti & Rollback',
+      subtitle: en ? 'Recovery readiness' : 'Kesiapan pemulihan',
+      complete: (checked.evidence ? 1 : 0) + (checked.rollback ? 1 : 0),
+      total: 2,
+    },
+  ]), [checked, en])
+
+  const openCount = checks.filter(item => !checked[item.id])
+  const copilotSummaryLines = [
+    en ? `Personal release checklist: ${completed}/${checks.length} items complete (${readiness}%).` : `Checklist rilis pribadi: ${completed}/${checks.length} item selesai (${readiness}%).`,
+    en ? `Command Center queue: ${pulse.commandTasksOpen} open tasks (${pulse.commandTasksActive} active) & ${pulse.commandIncidentsOpen} open incidents.` : `Antrean Command Center: ${pulse.commandTasksOpen} tugas terbuka (${pulse.commandTasksActive} aktif) & ${pulse.commandIncidentsOpen} insiden terbuka.`,
+    en ? `Saved evidence in browser: ${pulse.qualityReportsCount} QA reports, ${pulse.sbomSnapshotsCount} SBOM snapshots, ${pulse.catalogServicesCount} catalog services.` : `Bukti tersimpan di browser: ${pulse.qualityReportsCount} laporan QA, ${pulse.sbomSnapshotsCount} snapshot SBOM, ${pulse.catalogServicesCount} layanan katalog.`,
+  ]
+  const copilotRecommendations = [
+    ...(openCount.length > 0
+      ? [en ? `Next incomplete gate: "${openCount[0].title}" (${openCount[0].group}).` : `Gerbang berikutnya: "${openCount[0].title}" (${openCount[0].groupId}).`]
+      : [en ? 'All personal release checklist items checked — export snapshot as local evidence.' : 'Semua item checklist pribadi selesai — ekspor snapshot sebagai bukti lokal.']),
+    ...(pulse.commandIncidentsOpen > 0
+      ? [en ? `Review ${pulse.commandIncidentsOpen} open Command Center incident(s) before final sign-off.` : `Tinjau ${pulse.commandIncidentsOpen} insiden Command Center yang masih terbuka sebelum sign-off.`]
+      : [en ? 'No open Command Center incidents logged in this browser.' : 'Tidak ada insiden Command Center terbuka yang tercatat di browser ini.']),
+    en
+      ? `Browser session is ${signals.online ? 'online' : 'offline'} in a ${signals.secure ? 'secure' : 'non-secure'} context (${signals.width}×${signals.height}px).`
+      : `Sesi browser sedang ${signals.online ? 'online' : 'offline'} pada ${signals.secure ? 'konteks aman' : 'konteks non-aman'} (${signals.width}×${signals.height}px).`,
+  ]
 
   const downloadSnapshot = () => {
     const snapshot = {
@@ -100,6 +181,7 @@ export function EngineeringControlPlanePage() {
       exportedAt: new Date().toISOString(),
       checklist: checks.map(item => ({ ...item, complete: checked[item.id] === true })),
       browserSignals: signals,
+      workspacePulse: pulse,
       note: 'Browser-session signals and a user-maintained checklist only; this is not a live backend health report or release certification.',
     }
     const url = URL.createObjectURL(new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json;charset=utf-8' }))
@@ -127,7 +209,16 @@ export function EngineeringControlPlanePage() {
       </div>
       <aside className="control-plane-score" aria-label={en ? 'Personal checklist progress' : 'Progres checklist pribadi'}>
         <span className="control-plane-score-label">{en ? 'RELEASE CHECKLIST' : 'CHECKLIST RILIS'}</span>
-        <div className="control-plane-score-value"><strong>{readiness}%</strong><span>{en ? 'completed' : 'selesai'}</span></div>
+        <div className="control-plane-score-top">
+          <div className="control-plane-score-value"><strong>{readiness}%</strong><span>{en ? 'completed' : 'selesai'}</span></div>
+          <SvgRingGauge
+            value={readiness}
+            label={en ? 'Release checklist ring gauge' : 'Indikator checklist rilis'}
+            sublabel={`${completed}/${checks.length}`}
+            tone={readiness >= 100 ? 'emerald' : readiness >= 50 ? 'cyan' : 'amber'}
+            size={68}
+          />
+        </div>
         <div className="control-plane-progress" role="progressbar" aria-label={en ? 'Release checklist completion' : 'Penyelesaian checklist rilis'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={readiness}><span style={{ width: readiness + '%' }} /></div>
         <p>{completed} / {checks.length} {en ? 'checks complete' : 'pemeriksaan selesai'}</p>
         <small>{en ? 'Personal checklist only — not a deployment status.' : 'Checklist pribadi — bukan status deployment.'}</small>
@@ -141,16 +232,123 @@ export function EngineeringControlPlanePage() {
       <p>{en ? 'Signals describe this browser session only. They do not query Vercel, CI, APIs, or production services.' : 'Sinyal hanya menjelaskan sesi browser ini. Tidak mengakses Vercel, CI, API, atau layanan produksi.'}</p>
     </section>
 
+    <section className="control-plane-pulse" aria-label={en ? 'Local workspace telemetry' : 'Telemetri workspace lokal'}>
+      <div className="dx-kpi-grid">
+        <article className="dx-kpi-card">
+          <div className="dx-kpi-copy">
+            <span className="dx-kpi-label">{en ? 'COMMAND QUEUE' : 'ANTREAN KOMANDO'}</span>
+            <strong className="dx-kpi-value">{pulse.commandTasksOpen}</strong>
+            <span className="dx-kpi-sub">{en ? `${pulse.commandTasksActive} active · ${pulse.commandIncidentsOpen} open incidents` : `${pulse.commandTasksActive} aktif · ${pulse.commandIncidentsOpen} insiden`}</span>
+          </div>
+          <SvgRingGauge
+            value={Math.max(0, 100 - pulse.commandIncidentsOpen * 25)}
+            label={en ? 'Incident stability' : 'Stabilitas insiden'}
+            tone={pulse.commandIncidentsOpen > 0 ? 'amber' : 'emerald'}
+            size={64}
+          />
+        </article>
+        <article className="dx-kpi-card">
+          <div className="dx-kpi-copy">
+            <span className="dx-kpi-label">{en ? 'QA & SBOM ARTIFACTS' : 'ARTIFAK QA & SBOM'}</span>
+            <strong className="dx-kpi-value">{pulse.qualityReportsCount + pulse.sbomSnapshotsCount}</strong>
+            <span className="dx-kpi-sub">{en ? `${pulse.qualityReportsCount} QA runs · ${pulse.sbomSnapshotsCount} SBOM snapshots` : `${pulse.qualityReportsCount} laporan QA · ${pulse.sbomSnapshotsCount} SBOM`}</span>
+          </div>
+          <SvgRingGauge
+            value={Math.min(100, (pulse.qualityReportsCount + pulse.sbomSnapshotsCount) * 20)}
+            label={en ? 'Evidence coverage' : 'Cakupan bukti'}
+            tone="cyan"
+            size={64}
+          />
+        </article>
+        <article className="dx-kpi-card">
+          <div className="dx-kpi-copy">
+            <span className="dx-kpi-label">{en ? 'CATALOG & ROADMAP' : 'KATALOG & ROADMAP'}</span>
+            <strong className="dx-kpi-value">{pulse.catalogServicesCount}</strong>
+            <span className="dx-kpi-sub">{en ? `${pulse.roadmapDoneCount} roadmap checks · ${pulse.hasSessionByok ? 'BYOK ready' : 'Local AI'}` : `${pulse.roadmapDoneCount} item roadmap · ${pulse.hasSessionByok ? 'BYOK aktif' : 'AI Lokal'}`}</span>
+          </div>
+          <SvgRingGauge
+            value={Math.min(100, Math.round((pulse.roadmapDoneCount / 16) * 100))}
+            label={en ? 'Roadmap readiness' : 'Kesiapan roadmap'}
+            tone="emerald"
+            size={64}
+          />
+        </article>
+      </div>
+      <PipelineStageStrip
+        stages={pipelineStages}
+        ariaLabel={en ? 'Four-stage release delivery pipeline' : 'Pipeline delivery rilis empat tahap'}
+      />
+    </section>
+
     <section className="control-plane-workflows">
-      <div className="control-plane-section-heading"><div><span className="section-kicker">{en ? 'ENGINEERING TOOLCHAIN' : 'TOOLCHAIN ENGINEERING'}</span><h2>{en ? 'Choose your next workflow' : 'Pilih workflow berikutnya'}</h2><p>{en ? 'Search across the core capabilities and jump straight into a focused tool.' : 'Cari kemampuan utama dan langsung buka tool yang dibutuhkan.'}</p></div><label className="control-plane-search"><Search size={17} /><input type="search" aria-label={en ? 'Search engineering workflows' : 'Cari workflow engineering'} placeholder={en ? 'Search tools and workflows…' : 'Cari tools dan workflow…'} value={query} onChange={event => setQuery(event.target.value)} /><kbd>/</kbd></label></div>
+      <div className="control-plane-section-heading">
+        <div>
+          <span className="section-kicker">{en ? 'ENGINEERING TOOLCHAIN' : 'TOOLCHAIN ENGINEERING'}</span>
+          <h2>{en ? 'Choose your next workflow' : 'Pilih workflow berikutnya'}</h2>
+          <p>{en ? 'Search across the core capabilities and jump straight into a focused tool.' : 'Cari kemampuan utama dan langsung buka tool yang dibutuhkan.'}</p>
+        </div>
+        <label className="control-plane-search">
+          <Search size={17} />
+          <input ref={searchInputRef} type="search" aria-label={en ? 'Search engineering workflows' : 'Cari workflow engineering'} placeholder={en ? 'Search tools and workflows…' : 'Cari tools dan workflow…'} value={query} onChange={event => setQuery(event.target.value)} />
+          <kbd>/</kbd>
+        </label>
+      </div>
+      <div className="dx-filter-pills" role="group" aria-label={en ? 'Filter workflows by discipline' : 'Filter workflow berdasarkan disiplin'}>
+        {([
+          { id: 'all', en: 'All workflows', idLabel: 'Semua workflow' },
+          { id: 'Architecture', en: 'Architecture & API', idLabel: 'Arsitektur & API' },
+          { id: 'Quality Engineering', en: 'Quality & Testing', idLabel: 'Quality & Testing' },
+          { id: 'Security', en: 'Security', idLabel: 'Keamanan' },
+          { id: 'Operations', en: 'Ops & Learning', idLabel: 'Ops & Belajar' },
+        ] as const).map(cat => (
+          <button
+            key={cat.id}
+            type="button"
+            className={activeCategory === cat.id ? 'dx-filter-pill active' : 'dx-filter-pill'}
+            aria-pressed={activeCategory === cat.id}
+            onClick={() => setActiveCategory(cat.id)}
+          >
+            {en ? cat.en : cat.idLabel}
+          </button>
+        ))}
+      </div>
       <div className="control-plane-grid">{filteredWorkflows.map((item, index) => { const Icon = item.icon; return <Link key={item.id} to={item.route} className="control-plane-card"><div className="control-plane-card-top"><span className="control-plane-icon"><Icon size={19} /></span><span>{String(index + 1).padStart(2, '0')}</span></div><small>{en ? item.category : item.categoryId}</small><h3>{en ? item.title : item.titleId}</h3><p>{en ? item.description : item.descriptionId}</p><span className="control-plane-card-link">{en ? 'Open workflow' : 'Buka workflow'} <ArrowRight size={15} /></span></Link> })}</div>
       {filteredWorkflows.length === 0 && <p className="control-plane-empty">{en ? 'No workflows match that search. Try another keyword.' : 'Tidak ada workflow yang cocok. Coba kata kunci lain.'}</p>}
     </section>
 
     <section className="control-plane-checklist">
-      <div className="control-plane-section-heading"><div><span className="section-kicker">{en ? 'DELIVERY DISCIPLINE' : 'DISIPLIN DELIVERY'}</span><h2>{en ? 'Release readiness checklist' : 'Checklist kesiapan rilis'}</h2><p>{en ? 'A lightweight, editable checklist saved in this browser. Use it as a reminder, not as an automated quality gate.' : 'Checklist ringan yang bisa diedit dan disimpan di browser ini. Gunakan sebagai pengingat, bukan quality gate otomatis.'}</p></div><span className="control-plane-check-count"><CheckCircle2 size={16} /> {completed}/{checks.length}</span></div>
-      <div className="control-plane-check-list">{checks.map(item => <label key={item.id} className={checked[item.id] ? 'control-plane-check is-checked' : 'control-plane-check'}><input type="checkbox" checked={checked[item.id] === true} onChange={event => setChecked(current => ({ ...current, [item.id]: event.target.checked }))} /><span className="control-plane-checkbox"><Check size={13} /></span><span className="control-plane-check-copy"><small>{item.group}</small><strong>{en ? item.title : ({ scope: 'Tentukan ruang lingkup dan kriteria penerimaan', contract: 'Tinjau kontrak API dan kompatibilitas', tests: 'Jalankan pengujian fungsional dan regresi', security: 'Tinjau dampak keamanan dan privasi', evidence: 'Catat bukti pengujian dan risiko tersisa', rollback: 'Pastikan pendekatan rollback dan pemulihan' }[item.id])}</strong></span></label>)}</div>
+      <div className="control-plane-section-heading">
+        <div>
+          <span className="section-kicker">{en ? 'DELIVERY DISCIPLINE' : 'DISIPLIN DELIVERY'}</span>
+          <h2>{en ? 'Release readiness checklist' : 'Checklist kesiapan rilis'}</h2>
+          <p>{en ? 'A lightweight, editable checklist saved in this browser. Use it as a reminder, not as an automated quality gate.' : 'Checklist ringan yang bisa diedit dan disimpan di browser ini. Gunakan sebagai pengingat, bukan quality gate otomatis.'}</p>
+        </div>
+        <div className="control-plane-check-actions">
+          <span className="control-plane-check-count"><CheckCircle2 size={16} /> {completed}/{checks.length}</span>
+          {completed > 0 && (
+            <button
+              type="button"
+              className="button button-secondary control-plane-reset-btn"
+              onClick={() => setChecked({})}
+            >
+              <RotateCcw size={14} /> {en ? 'Reset' : 'Reset'}
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="control-plane-check-list">{checks.map(item => <label key={item.id} className={checked[item.id] ? 'control-plane-check is-checked' : 'control-plane-check'}><input type="checkbox" checked={checked[item.id] === true} onChange={event => setChecked(current => ({ ...current, [item.id]: event.target.checked }))} /><span className="control-plane-checkbox"><Check size={13} /></span><span className="control-plane-check-copy"><small>{en ? item.group : item.groupId}</small><strong>{en ? item.title : ({ scope: 'Tentukan ruang lingkup dan kriteria penerimaan', contract: 'Tinjau kontrak API dan kompatibilitas', tests: 'Jalankan pengujian fungsional dan regresi', security: 'Tinjau dampak keamanan dan privasi', evidence: 'Catat bukti pengujian dan risiko tersisa', rollback: 'Pastikan pendekatan rollback dan pemulihan' }[item.id])}</strong></span></label>)}</div>
     </section>
+
+    <AiCopilotPanel
+      kicker={en ? 'CONTROL PLANE CO-PILOT' : 'KO-PILOT CONTROL PLANE'}
+      title={en ? 'Release Readiness Brief' : 'Ringkasan Kesiapan Rilis'}
+      summaryLines={copilotSummaryLines}
+      recommendations={copilotRecommendations}
+      systemPrompt="You are a concise principal release engineering advisor. Summarize actionable engineering readiness guidance from browser-local telemetry without claiming backend telemetry exists."
+      userPrompt={`Checklist completion: ${completed}/${checks.length} (${readiness}%). Incomplete: ${openCount.map(o => o.title).join('; ') || 'none'}. Command tasks open: ${pulse.commandTasksOpen}, active: ${pulse.commandTasksActive}, open incidents: ${pulse.commandIncidentsOpen}. QA reports: ${pulse.qualityReportsCount}, SBOM snapshots: ${pulse.sbomSnapshotsCount}, catalog services: ${pulse.catalogServicesCount}. Provide 4 concise, crisp action items.`}
+      en={en}
+    />
+
     {notice && <p className="control-plane-notice" role="status">{notice}</p>}
     <p className="control-plane-disclaimer"><ShieldCheck size={15} /> {en ? 'Privacy-first by design: checklist data stays in this browser. Export creates a portable JSON snapshot; it does not upload project data.' : 'Privasi sejak awal: data checklist tersimpan di browser ini. Ekspor membuat snapshot JSON portabel dan tidak mengunggah data proyek.'}</p>
   </main>

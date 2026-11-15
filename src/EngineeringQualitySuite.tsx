@@ -4,6 +4,7 @@ import { useLanguage } from './i18n'
 import { TestDataBuilder } from './TestDataBuilder'
 import { PlaywrightStarterGenerator } from './PlaywrightStarterGenerator'
 import { ThreatModelWorksheet } from './ThreatModelWorksheet'
+import { AiCopilotPanel, SvgRingGauge, SvgStackedBar } from './DashboardKit'
 import './EngineeringQualitySuite.css'
 
 type Finding = { id: string; title: string; detail: string; status: 'pass' | 'warn' | 'fail' }
@@ -75,8 +76,51 @@ export function SecurityCenterPage() {
   return <main id="main-content" className="container quality-suite-page">
     <header className="workspace-hero quality-suite-hero"><span className="section-kicker"><ShieldCheck size={14}/> DREAMEX ENGINEERING / TRUST CENTER</span><h1>{en?<>Security deserves<br/><span>evidence, not guesses.</span></>:<>Keamanan perlu<br/><span>bukti, bukan asumsi.</span></>}</h1><p>{en?'A browser-side baseline review of visible document quality and same-origin security headers. Findings are signals to verify—not a penetration test or compliance certification.':'Pemeriksaan baseline melalui browser atas kualitas dokumen dan security header same-origin. Hasil adalah sinyal untuk diverifikasi, bukan penetration test atau sertifikasi kepatuhan.'}</p><div className="quality-suite-actions"><span><ShieldCheck size={15}/>{en?'Read-only checks · no external targets':'Pemeriksaan read-only · tanpa target eksternal'}</span><button type="button" className="button button-primary" onClick={run} disabled={busy}><RefreshCw size={15} className={busy?'quality-spin':''}/>{busy?(en?'Checking…':'Memeriksa…'):(en?'Run security baseline':'Jalankan baseline keamanan')}</button></div></header>
     <section className="quality-suite-grid" aria-label={en?'Security audit summary':'Ringkasan audit keamanan'}><div><span>{en?'Passed signals':'Sinyal lulus'}</span><strong>{counts.pass}</strong></div><div><span>{en?'Needs review':'Perlu ditinjau'}</span><strong>{counts.warn}</strong></div><div><span>{en?'Critical transport issue':'Masalah transport kritis'}</span><strong>{counts.fail}</strong></div></section>
+    {audit && (
+      <div className="dx-split-grid">
+        <div className="dx-kpi-card">
+          <div className="dx-kpi-copy">
+            <span className="dx-kpi-label">{en ? 'BROWSER HYGIENE RATIO' : 'RASIO HIGIENITAS BROWSER'}</span>
+            <strong className="dx-kpi-value">{Math.round((counts.pass / Math.max(1, audit.findings.length)) * 100)}%</strong>
+            <span className="dx-kpi-sub">{en ? `${counts.pass} passed · ${counts.warn} review · ${counts.fail} failed` : `${counts.pass} lulus · ${counts.warn} tinjau · ${counts.fail} gagal`}</span>
+          </div>
+          <SvgRingGauge
+            value={Math.round((counts.pass / Math.max(1, audit.findings.length)) * 100)}
+            label={en ? 'Security baseline pass percentage' : 'Persentase lulus baseline keamanan'}
+            tone={counts.fail > 0 ? 'rose' : counts.warn > 3 ? 'amber' : 'emerald'}
+            size={64}
+          />
+        </div>
+        <SvgStackedBar
+          title={en ? 'Baseline Check Breakdown' : 'Distribusi Pemeriksaan Baseline'}
+          totalLabel={`${audit.findings.length} ${en ? 'checks' : 'cek'}`}
+          segments={[
+            { label: en ? 'Passed' : 'Lulus', value: counts.pass, color: '#c5ff70' },
+            { label: en ? 'Review' : 'Tinjau', value: counts.warn, color: '#fbbf24' },
+            { label: en ? 'Failed' : 'Gagal', value: counts.fail, color: '#fb7185' },
+          ]}
+        />
+      </div>
+    )}
     {message&&<p className="command-center-notice" role="status">{message}</p>}
     {!audit?<section className="quality-suite-empty"><ShieldCheck size={28}/><h2>{en?'Run your first baseline':'Jalankan baseline pertama'}</h2><p>{en?'Inspect the current origin and visible document signals. No credentials are requested or stored.':'Periksa origin saat ini dan sinyal dokumen yang terlihat. Tidak ada kredensial yang diminta atau disimpan.'}</p></section>:<section className="quality-suite-content"><div className="command-center-section-head"><div><span className="section-kicker">01 / FINDINGS</span><h2>{en?'Security baseline findings':'Temuan baseline keamanan'}</h2></div><div className="quality-suite-actions"><button type="button" className="button button-secondary" onClick={()=>saveJson('dreamex-security-audit.json',audit)}><ArrowDownToLine size={15}/>{en?'Export JSON':'Ekspor JSON'}</button><button type="button" className="button button-secondary" onClick={()=>saveTextFile('dreamex-security-audit.md',report)}><FileText size={15}/>{en?'Export report':'Ekspor laporan'}</button></div></div><p className="quality-suite-timestamp">{en?'Checked':'Diperiksa'}: {new Date(audit.checkedAt).toLocaleString(en?'en-US':'id-ID')} · {audit.url}</p><div className="quality-suite-findings">{audit.findings.map(x=><article key={x.id} className="quality-suite-finding"><span className={'quality-suite-status '+x.status}>{x.status==='pass'?<CheckCircle2 size={16}/>:<AlertTriangle size={16}/>} {x.status.toUpperCase()}</span><div><h3>{x.title}</h3><p>{x.detail}</p></div></article>)}</div><div className="quality-suite-disclaimer"><AlertTriangle size={16}/><p>{en?'Browser-visible checks can miss proxy behavior, server-side risks, authentication flaws, and configuration differences. Confirm against raw HTTP responses and a controlled security test plan.':'Pemeriksaan browser dapat melewatkan perilaku proxy, risiko server-side, kelemahan autentikasi, dan perbedaan konfigurasi. Verifikasi dengan respons HTTP mentah dan rencana pengujian terkontrol.'}</p></div></section>}
+    <AiCopilotPanel
+      kicker={en ? 'TRUST CENTER CO-PILOT' : 'KO-PILOT TRUST CENTER'}
+      title={en ? 'Security & Privacy Posture Brief' : 'Ringkasan Postur Keamanan & Privasi'}
+      summaryLines={[
+        audit
+          ? (en ? `Latest origin baseline (${audit.url}): ${counts.pass} passed, ${counts.warn} warnings, ${counts.fail} critical transport issues.` : `Baseline origin terbaru (${audit.url}): ${counts.pass} lulus, ${counts.warn} peringatan, ${counts.fail} masalah kritis.`)
+          : (en ? 'Run the same-origin security baseline above to inspect HTTP headers & DOM security signals.' : 'Jalankan baseline keamanan di atas untuk memeriksa security header & sinyal DOM.'),
+        en ? `Local browser footprint: ${localEntries.length} DreamEx storage keys (${(localEntries.reduce((sum, item) => sum + item.bytes, 0) / 1024).toFixed(1)} KB total).` : `Jejak penyimpanan lokal: ${localEntries.length} key DreamEx (${(localEntries.reduce((sum, item) => sum + item.bytes, 0) / 1024).toFixed(1)} KB).`,
+      ]}
+      recommendations={[
+        ...(audit?.findings.some(f => f.status !== 'pass') ? [en ? `Inspect ${counts.warn + counts.fail} unpassed security signal(s) in the baseline table and confirm edge/CDN header config.` : `Periksa ${counts.warn + counts.fail} sinyal keamanan pada tabel baseline dan pastikan konfigurasi header edge/CDN.`] : [en ? 'All inspected browser security signals appear clean or awaiting first run.' : 'Semua sinyal keamanan browser tampak bersih atau menunggu baseline pertama.']),
+        en ? 'Export local storage backup regularly and clear profile keys on shared workstations.' : 'Ekspor cadangan data lokal secara berkala dan bersihkan profil pada perangkat bersama.',
+      ]}
+      systemPrompt="You are a concise application security engineer. Summarize header hygiene & privacy cleanup guidance strictly from browser baseline findings without overclaiming."
+      userPrompt={`Origin=${audit?.url || 'unscanned'}. Pass=${counts.pass}, Warn=${counts.warn}, Fail=${counts.fail}. StorageKeys=${localEntries.length}. Unpassed: ${audit?.findings.filter(f => f.status !== 'pass').map(f => f.title).join(', ') || 'none'}. Give 3 actionable checks.`}
+      en={en}
+    />
     <section className="quality-suite-content quality-privacy-panel"><div className="command-center-section-head"><div><span className="section-kicker">02 / PRIVACY CONTROLS</span><h2>{en?'Local data & privacy':'Data lokal & privasi'}</h2></div><p>{en?'Review browser-local DreamEx data. Nothing is uploaded by these controls.':'Tinjau data DreamEx lokal di browser. Kontrol ini tidak mengunggah data.'}</p></div><div className="quality-privacy-summary"><div><span>{en?'Stored items':'Item tersimpan'}</span><strong>{localEntries.length}</strong></div><div><span>{en?'Approx. storage':'Perkiraan ukuran'}</span><strong>{(localEntries.reduce((sum,item)=>sum+item.bytes,0)/1024).toFixed(1)} KB</strong></div><div><span>{en?'Storage scope':'Cakupan data'}</span><strong>dreamex-*</strong></div></div><div className="quality-suite-actions"><button type="button" className="button button-secondary" onClick={refreshInventory}><RefreshCw size={15}/>{en?'Refresh inventory':'Perbarui inventaris'}</button><button type="button" className="button button-secondary" onClick={exportLocalData}><ArrowDownToLine size={15}/>{en?'Export local data':'Ekspor data lokal'}</button><button type="button" className="button button-secondary" onClick={clearLocalData}><AlertTriangle size={15}/>{en?'Clear DreamEx data':'Hapus data DreamEx'}</button></div><div className="quality-privacy-list">{localEntries.map(item=><div key={item.key}><code>{item.key}</code><span>{item.bytes.toLocaleString()} B</span></div>)}{!localEntries.length&&<p className="quality-suite-hint">{en?'No DreamEx-prefixed local storage entries were found.':'Tidak ditemukan entri local storage berawalan DreamEx.'}</p>}</div>{privacyMessage&&<p className="command-center-notice" role="status">{privacyMessage}</p>}<p className="quality-suite-hint">{en?'Clear affects only localStorage keys beginning with dreamex- in this browser profile. It cannot erase server logs, cookies, caches, or data in another browser/device.':'Penghapusan hanya memengaruhi key localStorage berawalan dreamex- pada profil browser ini. Ini tidak menghapus server log, cookie, cache, atau data di browser/perangkat lain.'}</p></section>
     <ThreatModelWorksheet />
   </main>

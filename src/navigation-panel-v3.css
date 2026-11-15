@@ -671,6 +671,13 @@ html body #root .site-header:not(.navigation-open) #primary-navigation:not(.nav-
   /* Android "Desktop site" may report a desktop viewport while retaining touch input. */
   html body #root .site-header .menu-toggle {
     display: flex !important;
+    flex: 0 0 44px !important;
+    width: 44px !important;
+    height: 44px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
   }
 
   html body #root .site-header #primary-navigation.nav-links {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Activity, AlertTriangle, Archive, CheckCircle2, Clock3, Download, FileText, Gauge, Plus, RotateCcw, ShieldCheck, Siren, Trash2 } from 'lucide-react'
 import { useLanguage } from './i18n'
+import { AiCopilotPanel, SvgRingGauge } from './DashboardKit'
 import './ReliabilityCenter.css'
 
 type IncidentEvent = { id: string; time: string; kind: string; note: string }
@@ -70,17 +71,26 @@ export function ReliabilityCenterPage() {
   const [eventKind, setEventKind] = useState(eventKinds[0])
   const [eventTime, setEventTime] = useState(nowLocal)
   const [eventNote, setEventNote] = useState('')
+  const [severityFilter, setSeverityFilter] = useState<'all' | 'SEV-1' | 'SEV-2' | 'SEV-3' | 'SEV-4'>('all')
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
   useEffect(() => { try { window.localStorage.setItem(METRICS_KEY, JSON.stringify(metrics)) } catch { setNotice(en ? 'Browser storage is unavailable; metrics may not persist.' : 'Penyimpanan browser tidak tersedia; metrik mungkin tidak tersimpan.') } }, [metrics, en])
   const updateDraft = (patch: Partial<Incident>) => setDraft(current => ({ ...current, ...patch, updatedAt: new Date().toISOString() }))
   const updateMetric = (key: keyof Metrics, value: string) => setMetrics(current => ({ ...current, [key]: key === 'observationWindow' ? value.slice(0, 80) : Math.max(0, Math.min(key === 'changeFailureRate' ? 100 : 1000000, Number(value) || 0)) } as Metrics))
+  const doraTier = (key: keyof Omit<Metrics, 'observationWindow'>, val: number) => {
+    if (key === 'deploymentsPerWeek') return val >= 7 ? (en ? 'Self-assessed: Elite (daily+)' : 'Mandiri: Elite (harian+)') : val >= 1 ? (en ? 'Self-assessed: High (weekly)' : 'Mandiri: Tinggi (mingguan)') : val > 0 ? (en ? 'Self-assessed: Medium' : 'Mandiri: Sedang') : (en ? 'Manual input' : 'Input manual')
+    if (key === 'leadTimeHours') return val <= 0 ? (en ? 'Manual input' : 'Input manual') : val <= 24 ? (en ? 'Self-assessed: Elite (<24h)' : 'Mandiri: Elite (<24j)') : val <= 168 ? (en ? 'Self-assessed: High (<1w)' : 'Mandiri: Tinggi (<1mg)') : (en ? 'Self-assessed: Medium' : 'Mandiri: Sedang')
+    if (key === 'changeFailureRate') return val === 0 ? (en ? 'Manual baseline (0%)' : 'Baseline manual (0%)') : val <= 5 ? (en ? 'Self-assessed: Elite (<=5%)' : 'Mandiri: Elite (<=5%)') : val <= 15 ? (en ? 'Self-assessed: High (<=15%)' : 'Mandiri: Tinggi (<=15%)') : (en ? 'Needs stabilization (>15%)' : 'Perlu stabilisasi (>15%)')
+    return val <= 0 ? (en ? 'Manual input' : 'Input manual') : val <= 1 ? (en ? 'Self-assessed: Elite (<1h)' : 'Mandiri: Elite (<1j)') : val <= 24 ? (en ? 'Self-assessed: High (<24h)' : 'Mandiri: Tinggi (<24j)') : (en ? 'Self-assessed: Medium' : 'Mandiri: Sedang')
+  }
   const metricCards = useMemo(() => [
     { key: 'deploymentsPerWeek' as const, label: en ? 'Deployments / week' : 'Deployment / minggu', unit: en ? 'deployments' : 'deployment', icon: Activity },
     { key: 'leadTimeHours' as const, label: en ? 'Change lead time' : 'Lead time perubahan', unit: en ? 'hours' : 'jam', icon: Clock3 },
     { key: 'changeFailureRate' as const, label: en ? 'Change failure rate' : 'Change failure rate', unit: '%', icon: AlertTriangle },
     { key: 'restoreHours' as const, label: en ? 'Restore time' : 'Waktu pemulihan', unit: en ? 'hours' : 'jam', icon: RotateCcw },
   ], [en])
+  const resolvedCount = useMemo(() => incidents.filter(item => item.status === 'Resolved' || item.status === 'Closed').length, [incidents])
+  const filteredIncidents = useMemo(() => severityFilter === 'all' ? incidents : incidents.filter(item => item.severity === severityFilter), [incidents, severityFilter])
   const saveIncident = (event: FormEvent) => {
     event.preventDefault()
     if (!draft.title.trim()) { setError(en ? 'Add an incident title before saving.' : 'Isi judul insiden sebelum menyimpan.'); return }
@@ -104,9 +114,9 @@ export function ReliabilityCenterPage() {
   const exportSnapshot = () => download('dreamex-reliability-snapshot.json', JSON.stringify({ format: 'dreamex-reliability-snapshot', version: 1, exportedAt: new Date().toISOString(), metrics, incidents }, null, 2), 'application/json;charset=utf-8')
 
   return <main id="main-content" className="container reliability-center-page">
-    <header className="reliability-center-hero"><div><span className="section-kicker"><Gauge size={14} /> RELIABILITY ENGINEERING / INCIDENT OPERATIONS</span><h1>{en ? <>Operate with <span>clarity.</span></> : <>Operasikan sistem dengan <span>jelas.</span></>}</h1><p>{en ? 'A practical workspace for incident timelines, post-incident learning, and manually reported delivery metrics. Capture what happened, what changed, and what to improve next.' : 'Workspace praktis untuk timeline insiden, pembelajaran pascainsiden, dan metrik delivery yang diisi manual. Catat kejadian, perubahan, dan perbaikan berikutnya.'}</p><div className="reliability-center-actions"><button className="button button-primary" type="button" onClick={newIncident}><Plus size={15} />{en ? 'New incident' : 'Insiden baru'}</button><button className="button button-secondary" type="button" onClick={exportSnapshot}><Download size={15} />{en ? 'Export snapshot' : 'Ekspor snapshot'}</button></div></div><aside className="reliability-center-summary"><span className="section-kicker">{en ? 'LOCAL INCIDENT LOG' : 'LOG INSIDEN LOKAL'}</span><strong>{incidents.length.toString().padStart(2, '0')}</strong><p>{en ? 'saved incident records' : 'catatan insiden tersimpan'}</p><small>{en ? 'Stored in this browser only. No incident data is uploaded.' : 'Hanya tersimpan di browser ini. Data insiden tidak diunggah.'}</small></aside></header>
+    <header className="reliability-center-hero"><div><span className="section-kicker"><Gauge size={14} /> RELIABILITY ENGINEERING / INCIDENT OPERATIONS</span><h1>{en ? <>Operate with <span>clarity.</span></> : <>Operasikan sistem dengan <span>jelas.</span></>}</h1><p>{en ? 'A practical workspace for incident timelines, post-incident learning, and manually reported delivery metrics. Capture what happened, what changed, and what to improve next.' : 'Workspace praktis untuk timeline insiden, pembelajaran pascainsiden, dan metrik delivery yang diisi manual. Catat kejadian, perubahan, dan perbaikan berikutnya.'}</p><div className="reliability-center-actions"><button className="button button-primary" type="button" onClick={newIncident}><Plus size={15} />{en ? 'New incident' : 'Insiden baru'}</button><button className="button button-secondary" type="button" onClick={exportSnapshot}><Download size={15} />{en ? 'Export snapshot' : 'Ekspor snapshot'}</button></div></div><aside className="reliability-center-summary"><span className="section-kicker">{en ? 'LOCAL INCIDENT LOG' : 'LOG INSIDEN LOKAL'}</span><div className="dx-kpi-card" style={{ padding: '12px 14px', margin: '8px 0 6px' }}><div className="dx-kpi-copy"><strong>{incidents.length.toString().padStart(2, '0')}</strong><span className="dx-kpi-sub">{en ? `${resolvedCount} resolved` : `${resolvedCount} selesai`}</span></div><SvgRingGauge value={incidents.length ? Math.round((resolvedCount / incidents.length) * 100) : 100} label={en ? 'Incident resolution rate' : 'Rasio resolusi insiden'} tone={incidents.length && resolvedCount < incidents.length ? 'amber' : 'emerald'} size={58} /></div><p>{en ? 'saved incident records' : 'catatan insiden tersimpan'}</p><small>{en ? 'Stored in this browser only. No incident data is uploaded.' : 'Hanya tersimpan di browser ini. Data insiden tidak diunggah.'}</small></aside></header>
 
-    <section className="reliability-metrics-section"><div className="reliability-section-heading"><div><span className="section-kicker">{en ? 'DELIVERY PERFORMANCE' : 'PERFORMA DELIVERY'}</span><h2>{en ? 'DORA-style operating metrics' : 'Metrik operasional bergaya DORA'}</h2><p>{en ? 'Enter measurements from your own reporting window. These values are not connected to your repository, deployment pipeline, or monitoring provider.' : 'Masukkan pengukuran dari periode pelaporan Anda. Nilai ini tidak terhubung ke repositori, pipeline deployment, atau penyedia monitoring.'}</p></div><label className="reliability-window"><span>{en ? 'Observation window' : 'Periode observasi'}</span><input aria-label={en ? 'Observation window' : 'Periode observasi'} value={metrics.observationWindow} onChange={event => updateMetric('observationWindow', event.target.value)} maxLength={80} /></label></div><div className="reliability-metric-grid">{metricCards.map(card => { const Icon = card.icon; return <article key={card.key} className="reliability-metric-card"><span><Icon size={16} />{card.label}</span><div><input type="number" min="0" max={card.key === 'changeFailureRate' ? 100 : 1000000} step="any" aria-label={card.label} value={metrics[card.key]} onChange={event => updateMetric(card.key, event.target.value)} /><small>{card.unit}</small></div><p>{en ? 'Manual input' : 'Input manual'}</p></article> })}</div></section>
+    <section className="reliability-metrics-section"><div className="reliability-section-heading"><div><span className="section-kicker">{en ? 'DELIVERY PERFORMANCE' : 'PERFORMA DELIVERY'}</span><h2>{en ? 'DORA-style operating metrics' : 'Metrik operasional bergaya DORA'}</h2><p>{en ? 'Enter measurements from your own reporting window. These values are not connected to your repository, deployment pipeline, or monitoring provider.' : 'Masukkan pengukuran dari periode pelaporan Anda. Nilai ini tidak terhubung ke repositori, pipeline deployment, atau penyedia monitoring.'}</p></div><label className="reliability-window"><span>{en ? 'Observation window' : 'Periode observasi'}</span><input aria-label={en ? 'Observation window' : 'Periode observasi'} value={metrics.observationWindow} onChange={event => updateMetric('observationWindow', event.target.value)} maxLength={80} /></label></div><div className="reliability-metric-grid">{metricCards.map(card => { const Icon = card.icon; return <article key={card.key} className="reliability-metric-card"><span><Icon size={16} />{card.label}</span><div><input type="number" min="0" max={card.key === 'changeFailureRate' ? 100 : 1000000} step="any" aria-label={card.label} value={metrics[card.key]} onChange={event => updateMetric(card.key, event.target.value)} /><small>{card.unit}</small></div><p><span className="dx-pipeline-step">{doraTier(card.key, metrics[card.key])}</span></p></article> })}</div></section>
 
     <section className="reliability-incident-editor"><div className="reliability-section-heading"><div><span className="section-kicker">{en ? 'INCIDENT COMMAND' : 'KENDALI INSIDEN'}</span><h2>{activeId ? (en ? 'Update incident record' : 'Perbarui catatan insiden') : (en ? 'Capture an incident' : 'Catat insiden')}</h2><p>{en ? 'Build an evidence-based record that can become a post-incident review.' : 'Bangun catatan berbasis bukti yang dapat menjadi laporan pascainsiden.'}</p></div>{activeId && <button type="button" className="button button-secondary" onClick={newIncident}><Plus size={14} />{en ? 'Start new' : 'Buat baru'}</button>}</div>
       <form onSubmit={saveIncident} className="reliability-incident-form">
@@ -120,7 +130,45 @@ export function ReliabilityCenterPage() {
       </form>
     </section>
 
-    <section className="reliability-history"><div className="reliability-section-heading"><div><span className="section-kicker">{en ? 'INCIDENT HISTORY' : 'RIWAYAT INSIDEN'}</span><h2>{en ? 'Saved incident records' : 'Catatan insiden tersimpan'}</h2><p>{en ? 'Up to 20 local records. Save changes to update a record; export creates a file on your device.' : 'Maksimal 20 catatan lokal. Simpan perubahan untuk memperbarui catatan; ekspor membuat file di perangkat Anda.'}</p></div><span className="reliability-history-count"><Archive size={15} />{incidents.length}/20</span></div>{incidents.length ? <div className="reliability-history-list">{incidents.map(item => <article key={item.id}><button type="button" className="reliability-history-open" onClick={() => openIncident(item)}><span className={'reliability-severity severity-' + item.severity.toLowerCase()}>{item.severity}</span><strong>{item.title}</strong><small>{item.service || (en ? 'Service not specified' : 'Layanan belum ditentukan')} · {item.status} · {new Date(item.updatedAt).toLocaleString(en ? 'en-US' : 'id-ID')}</small></button><button type="button" className="reliability-delete" aria-label={(en ? 'Delete incident ' : 'Hapus insiden ') + item.title} onClick={() => deleteIncident(item.id)}><Trash2 size={15} /></button></article>)}</div> : <div className="reliability-history-empty"><Siren size={22} /><p>{en ? 'No incident records saved yet. Create one above when you need a structured response log.' : 'Belum ada catatan insiden. Buat catatan di atas saat membutuhkan log respons terstruktur.'}</p></div>}</section>
+    <section className="reliability-history">
+      <div className="reliability-section-heading">
+        <div>
+          <span className="section-kicker">{en ? 'INCIDENT HISTORY' : 'RIWAYAT INSIDEN'}</span>
+          <h2>{en ? 'Saved incident records' : 'Catatan insiden tersimpan'}</h2>
+          <p>{en ? 'Up to 20 local records. Save changes to update a record; export creates a file on your device.' : 'Maksimal 20 catatan lokal. Simpan perubahan untuk memperbarui catatan; ekspor membuat file di perangkat Anda.'}</p>
+        </div>
+        <span className="reliability-history-count"><Archive size={15} />{incidents.length}/20</span>
+      </div>
+      {incidents.length > 0 && (
+        <div className="dx-filter-pills" role="group" aria-label={en ? 'Filter incident history by severity' : 'Filter riwayat insiden berdasarkan keparahan'}>
+          {(['all', 'SEV-1', 'SEV-2', 'SEV-3', 'SEV-4'] as const).map(sev => (
+            <button key={sev} type="button" className={severityFilter === sev ? 'dx-filter-pill active' : 'dx-filter-pill'} aria-pressed={severityFilter === sev} onClick={() => setSeverityFilter(sev)}>
+              {sev === 'all' ? (en ? 'All severities' : 'Semua level') : sev}
+            </button>
+          ))}
+        </div>
+      )}
+      {filteredIncidents.length ? <div className="reliability-history-list">{filteredIncidents.map(item => <article key={item.id}><button type="button" className="reliability-history-open" onClick={() => openIncident(item)}><span className={'reliability-severity severity-' + item.severity.toLowerCase()}>{item.severity}</span><strong>{item.title}</strong><small>{item.service || (en ? 'Service not specified' : 'Layanan belum ditentukan')} · {item.status} · {new Date(item.updatedAt).toLocaleString(en ? 'en-US' : 'id-ID')}</small></button><button type="button" className="reliability-delete" aria-label={(en ? 'Delete incident ' : 'Hapus insiden ') + item.title} onClick={() => deleteIncident(item.id)}><Trash2 size={15} /></button></article>)}</div> : <div className="reliability-history-empty"><Siren size={22} /><p>{incidents.length ? (en ? 'No saved incidents match that severity filter.' : 'Tidak ada insiden yang sesuai filter keparahan ini.') : (en ? 'No incident records saved yet. Create one above when you need a structured response log.' : 'Belum ada catatan insiden. Buat catatan di atas saat membutuhkan log respons terstruktur.')}</p></div>}
+    </section>
+
+    <AiCopilotPanel
+      kicker={en ? 'RELIABILITY CO-PILOT' : 'KO-PILOT RELIABILITAS'}
+      title={en ? 'Executive Postmortem & Delivery Brief' : 'Ringkasan Eksekutif Postmortem & Delivery'}
+      summaryLines={[
+        en ? `Active incident draft: ${draft.title || 'Untitled'} (${draft.severity} · ${draft.status}, ${draft.timeline.length} timeline events).` : `Draf insiden aktif: ${draft.title || 'Tanpa judul'} (${draft.severity} · ${draft.status}, ${draft.timeline.length} kejadian timeline).`,
+        en ? `Browser history: ${incidents.length} incident record(s) saved (${resolvedCount} resolved/closed).` : `Riwayat browser: ${incidents.length} catatan insiden tersimpan (${resolvedCount} selesai).`,
+        en ? `Manual delivery input (${metrics.observationWindow}): ${metrics.deploymentsPerWeek}/wk deploys, ${metrics.leadTimeHours}h lead time, ${metrics.changeFailureRate}% CFR, ${metrics.restoreHours}h MTTR.` : `Input delivery manual (${metrics.observationWindow}): ${metrics.deploymentsPerWeek}/mg deploy, ${metrics.leadTimeHours}j lead time, ${metrics.changeFailureRate}% CFR, ${metrics.restoreHours}j MTTR.`,
+      ]}
+      recommendations={[
+        ...(!draft.cause.trim() || !draft.nextActions.trim() ? [en ? 'Populate root contributing factors and concrete owners/due dates before closing postmortem.' : 'Lengkapi faktor kontribusi utama serta PIC & tenggat sebelum menutup postmortem.'] : [en ? 'Cause and follow-up actions documented — ready for Markdown postmortem export.' : 'Penyebab dan tindak lanjut terdokumentasi — siap diekspor ke Markdown.']),
+        ...(metrics.changeFailureRate > 15 ? [en ? 'Self-entered CFR exceeds 15%: tighten pre-merge verification or canary rollouts.' : 'CFR di atas 15%: perketat verifikasi pra-merge atau rilis bertahap.'] : [en ? 'Use manual DORA bands as internal trend cues, not automated telemetry.' : 'Gunakan indikator DORA manual sebagai refleksi tren tim, bukan telemetri otomatis.']),
+        en ? 'Export incident review Markdown to attach timeline proof alongside release notes.' : 'Ekspor tinjauan insiden Markdown untuk dokumentasi rilis.',
+      ]}
+      systemPrompt="You are a site reliability incident commander. Synthesize a crisp executive postmortem summary from manually entered incident & DORA fields without claiming external telemetry."
+      userPrompt={`Incident="${draft.title || 'Draft'}", Severity=${draft.severity}, Status=${draft.status}, Service=${draft.service || 'unspecified'}, Events=${draft.timeline.length}, Impact="${draft.impact.slice(0, 120)}". Manual DORA: deploys/wk=${metrics.deploymentsPerWeek}, leadTime=${metrics.leadTimeHours}h, CFR=${metrics.changeFailureRate}%, MTTR=${metrics.restoreHours}h. Summarize key next actions.`}
+      en={en}
+    />
+
     <p className="reliability-disclaimer"><ShieldCheck size={15} />{en ? 'Privacy-first, local-only workspace. No incident details or metric values are sent to a server. Metrics are manually entered and are not an official DORA assessment.' : 'Workspace lokal dengan prioritas privasi. Detail insiden dan metrik tidak dikirim ke server. Metrik diisi manual dan bukan penilaian DORA resmi.'}</p>
   </main>
 }

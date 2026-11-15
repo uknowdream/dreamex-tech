@@ -68,11 +68,15 @@ test('homepage restores ambient hero motion and moving terminal details', async 
   const sweepTransformBefore = await page.evaluate(() =>
     getComputedStyle(document.querySelector('.hero-gridlines')!, '::after').transform
   )
-  await page.waitForTimeout(350)
-  const sweepTransformAfter = await page.evaluate(() =>
-    getComputedStyle(document.querySelector('.hero-gridlines')!, '::after').transform
-  )
-  expect(sweepTransformAfter).not.toBe(sweepTransformBefore)
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() =>
+          getComputedStyle(document.querySelector('.hero-gridlines')!, '::after').transform
+        ),
+      { timeout: 3000 }
+    )
+    .not.toBe(sweepTransformBefore)
 })
 
 test('scroll reveals reappear and complete as sections enter the viewport', async ({ page }) => {

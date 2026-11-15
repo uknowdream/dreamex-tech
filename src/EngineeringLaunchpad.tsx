@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom'
 import { useLanguage } from './i18n'
 
 const destinations = [
-  { href: '/workspace', icon: Workflow, key: 'workspace', en: 'Unified AI workspace', id: 'Workspace AI terpadu', detailEn: '22 integrated toolchains across software design, verification, specs, and operations.', detailId: '22 toolchain terpadu untuk arsitektur software, verifikasi, spesifikasi, dan operasi.', labelEn: 'OS HUB', labelId: 'OS HUB' },
-  { href: '/quality-intelligence', icon: Gauge, key: 'quality', en: 'Quality intelligence', id: 'Quality intelligence', detailEn: 'Parse Playwright & JUnit telemetry, isolate flakiness, and export audit proof.', detailId: 'Analisis telemetri Playwright & JUnit, isolasi tes flaky, dan ekspor bukti audit.', labelEn: 'QA ENGINE', labelId: 'QA ENGINE' },
-  { href: '/api-playground', icon: Code2, key: 'api', en: 'API contract runner', id: 'API contract runner', detailEn: 'Inspect HTTP payloads, validate strict schemas, and verify contract compatibility.', detailId: 'Periksa payload HTTP, validasi skema ketat, dan verifikasi kompatibilitas kontrak.', labelEn: 'API SPEC', labelId: 'API SPEC' },
-  { href: '/security-center', icon: ShieldCheck, key: 'security', en: 'Zero-trust security center', id: 'Pusat keamanan zero-trust', detailEn: 'Evaluate CSP, header hardening, client privacy posture, and OWASP baselines.', detailId: 'Evaluasi CSP, hardening header, privasi klien, dan standar dasar OWASP.', labelEn: 'SECURITY', labelId: 'KEAMANAN' },
-  { href: '/supply-chain-intelligence', icon: Boxes, key: 'supply', en: 'SBOM & supply chain', id: 'SBOM & rantai pasok', detailEn: 'Trace CycloneDX/SPDX graphs, transitive exposure, and license compliance offline.', detailId: 'Telusuri grafik CycloneDX/SPDX, paparan dependensi, dan lisensi secara offline.', labelEn: 'SUPPLY CHAIN', labelId: 'RANTAI PASOK' },
-  { href: '/roadmap', icon: Wrench, key: 'roadmap', en: 'Architecture & release gate', id: 'Gerbang rilis & arsitektur', detailEn: 'Score release readiness, author ADR blueprints, and run STRIDE threat modeling.', detailId: 'Skor kesiapan rilis, susun blueprint ADR, dan lakukan pemodelan ancaman STRIDE.', labelEn: 'GOVERNANCE', labelId: 'TATA KELOLA' },
+  { href: '/workspace', icon: Workflow, key: 'workspace', en: 'Unified AI workspace', id: 'Workspace AI terpadu', detailEn: '22 integrated toolchains across software design, verification, specs, and operations.', detailId: '22 toolchain terpadu untuk arsitektur software, verifikasi, spesifikasi, dan operasi.', labelEn: 'OS HUB', labelId: 'OS HUB', chips: ['22 SUITES', 'SVG + AI'] },
+  { href: '/quality-intelligence', icon: Gauge, key: 'quality', en: 'Quality intelligence', id: 'Quality intelligence', detailEn: 'Parse Playwright & JUnit telemetry, isolate flakiness, and export audit proof.', detailId: 'Analisis telemetri Playwright & JUnit, isolasi tes flaky, dan ekspor bukti audit.', labelEn: 'QA ENGINE', labelId: 'QA ENGINE', chips: ['JUNIT / PW', 'FLAKE AI'] },
+  { href: '/api-playground', icon: Code2, key: 'api', en: 'API contract runner', id: 'API contract runner', detailEn: 'Inspect HTTP payloads, validate strict schemas, and verify contract compatibility.', detailId: 'Periksa payload HTTP, validasi skema ketat, dan verifikasi kompatibilitas kontrak.', labelEn: 'API SPEC', labelId: 'API SPEC', chips: ['OPENAPI 3.X', 'SCHEMA DIFF'] },
+  { href: '/security-center', icon: ShieldCheck, key: 'security', en: 'Zero-trust security center', id: 'Pusat keamanan zero-trust', detailEn: 'Evaluate CSP, header hardening, client privacy posture, and OWASP baselines.', detailId: 'Evaluasi CSP, hardening header, privasi klien, dan standar dasar OWASP.', labelEn: 'SECURITY', labelId: 'KEAMANAN', chips: ['CSP & OWASP', 'LOCAL VAULT'] },
+  { href: '/supply-chain-intelligence', icon: Boxes, key: 'supply', en: 'SBOM & supply chain', id: 'SBOM & rantai pasok', detailEn: 'Trace CycloneDX/SPDX graphs, transitive exposure, and license compliance offline.', detailId: 'Telusuri grafik CycloneDX/SPDX, paparan dependensi, dan lisensi secara offline.', labelEn: 'SUPPLY CHAIN', labelId: 'RANTAI PASOK', chips: ['CYCLONEDX', 'SPDX AUDIT'] },
+  { href: '/roadmap', icon: Wrench, key: 'roadmap', en: 'Architecture & release gate', id: 'Gerbang rilis & arsitektur', detailEn: 'Score release readiness, author ADR blueprints, and run STRIDE threat modeling.', detailId: 'Skor kesiapan rilis, susun blueprint ADR, dan lakukan pemodelan ancaman STRIDE.', labelEn: 'GOVERNANCE', labelId: 'TATA KELOLA', chips: ['ADR STUDIO', 'STRIDE'] },
 ]
 
 export function EngineeringLaunchpad() {
@@ -31,6 +31,9 @@ export function EngineeringLaunchpad() {
             <div className="launchpad-card-top"><span className="launchpad-icon"><Icon size={19} strokeWidth={1.8} /></span><span className="launchpad-label">{en ? item.labelEn : item.labelId}</span></div>
             <h3>{en ? item.en : item.id}</h3>
             <p>{en ? item.detailEn : item.detailId}</p>
+            <div className="launchpad-card-meta" aria-hidden="true">
+              {item.chips.map(chip => <span key={chip} className="launchpad-chip">{chip}</span>)}
+            </div>
             <span className="launchpad-open">{en ? 'Explore workflow' : 'Jelajahi fitur'} <ArrowUpRight size={16} /></span>
           </Link>
         })}

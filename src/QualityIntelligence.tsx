@@ -1,6 +1,7 @@
 import { useMemo, useState, type ChangeEvent } from 'react'
 import { AlertTriangle, BarChart3, CheckCircle2, Clock3, Download, FileJson2, FileText, Filter, RotateCcw, ShieldCheck, Sparkles, Upload, XCircle } from 'lucide-react'
 import { useLanguage } from './i18n'
+import { AiCopilotPanel, SvgRingGauge, SvgSparkBars, SvgStackedBar } from './DashboardKit'
 import './QualityIntelligence.css'
 
 type TestStatus = 'passed' | 'failed' | 'flaky' | 'skipped'
@@ -213,6 +214,41 @@ export function QualityIntelligencePage() {
           <article><span><RotateCcw size={16} />{en ? 'Flaky' : 'Flaky'}</span><strong>{summary.flaky}</strong><small>{flakyPercent === null ? (en ? 'No executed tests' : 'Tidak ada tes dijalankan') : (en ? summary.flaky + ' of ' + executedCount + ' executed (' + flakyPercent + '%)' : summary.flaky + ' dari ' + executedCount + ' tes dijalankan (' + flakyPercent + '%)')}</small></article>
           <article><span><Clock3 size={16} />{en ? 'Slowest test' : 'Tes terlama'}</span><strong>{(Math.max(0, ...report.tests.map(test => test.durationMs)) / 1000).toFixed(2)}s</strong><small>{en ? 'Longest recorded test' : 'Durasi tes terpanjang'}</small></article>
         </div>
+        <div className="dx-split-grid">
+          <div className="dx-kpi-card">
+            <div className="dx-kpi-copy">
+              <span className="dx-kpi-label">{en ? 'VERDICT HEALTH SCORE' : 'SKOR KESEHATAN VERDICT'}</span>
+              <strong className="dx-kpi-value">{summary.passRate}%</strong>
+              <span className="dx-kpi-sub">{en ? `${summary.passed} passed · ${summary.flaky} flaky · ${summary.failed} failed · ${summary.skipped} skipped` : `${summary.passed} lulus · ${summary.flaky} flaky · ${summary.failed} gagal · ${summary.skipped} dilewati`}</span>
+            </div>
+            <SvgRingGauge
+              value={summary.passRate}
+              label={en ? 'Test suite pass rate gauge' : 'Indikator pass rate suite'}
+              tone={summary.passRate >= 95 ? 'emerald' : summary.passRate >= 75 ? 'cyan' : 'rose'}
+              size={66}
+            />
+          </div>
+          <SvgStackedBar
+            title={en ? 'Execution Outcome Split' : 'Distribusi Hasil Eksekusi'}
+            totalLabel={`${summary.total} ${en ? 'tests' : 'tes'}`}
+            segments={[
+              { label: en ? 'Passed' : 'Lulus', value: summary.passed, color: '#c5ff70' },
+              { label: 'Flaky', value: summary.flaky, color: '#fbbf24' },
+              { label: en ? 'Failed' : 'Gagal', value: summary.failed, color: '#fb7185' },
+              { label: en ? 'Skipped' : 'Dilewati', value: summary.skipped, color: '#64748b' },
+            ]}
+          />
+        </div>
+        <SvgSparkBars
+          title={en ? 'Test Duration Buckets' : 'Distribusi Durasi Tes'}
+          meta={`${en ? 'Avg' : 'Rata-rata'}: ${summary.avgDurationMs === null ? '—' : summary.avgDurationMs >= 1000 ? `${(summary.avgDurationMs / 1000).toFixed(2)}s` : `${Math.round(summary.avgDurationMs)}ms`}`}
+          items={[
+            { label: '<100ms', value: report.tests.filter(t => t.durationMs < 100).length, tone: 'emerald' },
+            { label: '0.1–1s', value: report.tests.filter(t => t.durationMs >= 100 && t.durationMs < 1000).length, tone: 'cyan' },
+            { label: '1s–5s', value: report.tests.filter(t => t.durationMs >= 1000 && t.durationMs < 5000).length, tone: 'amber' },
+            { label: '>5s', value: report.tests.filter(t => t.durationMs >= 5000).length, tone: 'rose' },
+          ]}
+        />
       </section>
       {comparisonHistory.length > 0 && comparison && <section className="quality-intelligence-comparison" aria-labelledby="quality-comparison-title">
         <div className="quality-intelligence-section-heading"><div><span className="section-kicker">{en ? 'SNAPSHOT COMPARISON' : 'PERBANDINGAN SNAPSHOT'}</span><h2 id="quality-comparison-title">{en ? 'Compare with a previous report' : 'Bandingkan dengan laporan sebelumnya'}</h2><p>{en ? 'Summary-only comparison; historical test-level records are not stored in this browser.' : 'Perbandingan ringkasan saja; detail test historis tidak disimpan di browser ini.'}</p></div>
@@ -232,6 +268,23 @@ export function QualityIntelligencePage() {
         <div className="quality-intelligence-table-wrap"><table className="quality-intelligence-table"><thead><tr><th>{en ? 'Test' : 'Test'}</th><th>{en ? 'Status' : 'Status'}</th><th>{en ? 'Duration' : 'Durasi'}</th></tr></thead><tbody>{visibleTests.map(test => <tr key={test.id}><td><strong>{test.title}</strong><small>{test.file || (en ? 'File path not provided' : 'Path file tidak tersedia')}</small>{test.error && <details><summary>{en ? 'View failure details' : 'Lihat detail kegagalan'}</summary><pre>{test.error}</pre></details>}</td><td><span className={'quality-intelligence-status status-' + test.status}>{test.status}</span></td><td>{test.durationMs >= 1000 ? (test.durationMs / 1000).toFixed(2) + 's' : Math.round(test.durationMs) + 'ms'}</td></tr>)}</tbody></table>{visibleTests.length === 0 && <p className="quality-intelligence-empty">{en ? 'No tests match these filters.' : 'Tidak ada tes yang cocok dengan filter.'}</p>}</div>
       </section>
       {failures.length > 0 && <section className="quality-intelligence-failures"><div className="quality-intelligence-section-heading"><div><span className="section-kicker">{en ? 'FAILURE CLUSTERS' : 'KELOMPOK KEGAGALAN'}</span><h2>{en ? 'Repeated failure signals' : 'Sinyal kegagalan berulang'}</h2><p>{en ? 'Grouped by the first non-empty error line. Treat these as triage hints, not root-cause proof.' : 'Dikelompokkan berdasarkan baris error pertama yang tidak kosong. Ini petunjuk triage, bukan bukti akar masalah.'}</p></div></div><div className="quality-intelligence-failure-grid">{failures.map(group => <article key={group.fingerprint}><span>{group.count} {en ? 'tests' : 'tes'}</span><h3>{group.fingerprint}</h3><ul>{group.examples.map(example => <li key={example}>{example}</li>)}</ul></article>)}</div></section>}
+      <AiCopilotPanel
+        kicker={en ? 'QA REPORT CO-PILOT' : 'KO-PILOT LAPORAN QA'}
+        title={en ? 'Flake & Failure Cluster Brief' : 'Ringkasan Kluster Kegagalan & Flake'}
+        summaryLines={[
+          en ? `Suite pass rate: ${summary.passRate}% (${summary.passed} clean passes across ${summary.total} tests).` : `Pass rate suite: ${summary.passRate}% (${summary.passed} lulus bersih dari ${summary.total} tes).`,
+          en ? `Failures & retries: ${summary.failed} failed, ${summary.flaky} flaky (${flakyPercent ?? 0}% of executed).` : `Kegagalan & retry: ${summary.failed} gagal, ${summary.flaky} flaky (${flakyPercent ?? 0}% dari tes dijalankan).`,
+          en ? `Failure clusters detected: ${failures.length} unique signature(s).` : `Kluster kegagalan terdeteksi: ${failures.length} tanda tangan unik.`,
+        ]}
+        recommendations={[
+          ...(failures.length > 0 ? [en ? `Triage top repeated cluster first: "${failures[0].fingerprint}" (${failures[0].count} tests).` : `Triase kluster berulang teratas terlebih dahulu: "${failures[0].fingerprint}" (${failures[0].count} tes).`] : [en ? 'Zero repeated failure clusters in this imported report.' : 'Tidak ada kluster kegagalan berulang pada laporan ini.']),
+          ...(summary.flaky > 0 ? [en ? `Stabilize ${summary.flaky} flaky test(s) by isolating shared state or waiting on explicit network/DOM readiness.` : `Stabilkan ${summary.flaky} tes flaky dengan mengisolasi state bersama atau menunggu kesiapan DOM/jaringan.`] : [en ? 'No retry-flagged flaky tests present in this run.' : 'Tidak ada tes flaky terdeteksi oleh retry pada laporan ini.']),
+          en ? 'Export CSV/Markdown report to attach immutable client-verified test evidence.' : 'Ekspor laporan CSV/Markdown untuk menyimpan bukti pengujian lokal.',
+        ]}
+        systemPrompt="You are a staff SDET / quality engineering advisor. Synthesize concise failure triage and flake-reduction priorities strictly from parsed report stats."
+        userPrompt={`Source=${report.source} (${report.format}). Total=${summary.total}, PassRate=${summary.passRate}%, Failed=${summary.failed}, Flaky=${summary.flaky}. Top failures: ${failures.slice(0, 3).map(f => `${f.count}x ${f.fingerprint}`).join(' | ') || 'none'}. Give 3 actionable triage steps.`}
+        en={en}
+      />
     </> : <section className="quality-intelligence-empty-state"><div><BarChart3 size={25} /><h2>{en ? 'Your test report, made actionable' : 'Laporan pengujian yang bisa ditindaklanjuti'}</h2><p>{en ? 'Import a real report or open the demo to explore the analysis. No report is sent to a server.' : 'Impor laporan nyata atau buka demo untuk melihat analisis. Tidak ada laporan yang dikirim ke server.'}</p></div><div className="quality-intelligence-empty-points"><span><CheckCircle2 size={15} />{en ? 'Pass rate and test duration' : 'Pass rate dan durasi tes'}</span><span><RotateCcw size={15} />{en ? 'Retry-based flaky test signals' : 'Sinyal flaky test berdasarkan retry'}</span><span><AlertTriangle size={15} />{en ? 'Failure clusters and evidence' : 'Kelompok kegagalan dan bukti'}</span><span><Download size={15} />{en ? 'JSON, CSV, and Markdown exports' : 'Ekspor JSON, CSV, dan Markdown'}</span></div></section>}
     {history.length > 0 && <section className="quality-intelligence-history"><div className="quality-intelligence-section-heading"><div><span className="section-kicker">{en ? 'LOCAL HISTORY' : 'RIWAYAT LOKAL'}</span><h2>{en ? 'Recent report snapshots' : 'Snapshot laporan terbaru'}</h2><p>{en ? 'Only summary metrics are stored in this browser; raw test cases are not saved.' : 'Hanya metrik ringkasan yang disimpan di browser ini; detail test mentah tidak disimpan.'}</p></div><button className="button button-secondary" onClick={() => { try { window.localStorage.removeItem(HISTORY_KEY); setHistory([]); setNotice(en ? 'Local report history cleared.' : 'Riwayat laporan lokal dihapus.') } catch { setNotice(en ? 'Unable to clear browser history.' : 'Tidak dapat menghapus riwayat browser.') } }}><XCircle size={15} />{en ? 'Clear history' : 'Hapus riwayat'}</button></div><div className="quality-intelligence-history-list">{history.map(item => <article key={item.id}><div><strong>{item.source}</strong><small>{new Date(item.importedAt).toLocaleString(en ? 'en-US' : 'id-ID')}</small></div><strong>{item.passRate}%</strong><span>{item.failed} {en ? 'failed' : 'gagal'} · {item.flaky} flaky · {item.total} {en ? 'tests' : 'tes'}</span></article>)}</div></section>}
     <p className="quality-intelligence-disclaimer"><ShieldCheck size={15} />{en ? 'This is a local report analyzer, not a live CI integration. Results depend on the imported report format and completeness; flaky detection is based on retries explicitly present in Playwright JSON; this view shows the observed sample count, not a statistical confidence estimate. JUnit XML does not preserve retry history in this parser, so flaky status is not inferred from XML.' : 'Ini analyzer laporan lokal, bukan integrasi CI live. Hasil bergantung pada format dan kelengkapan laporan impor; deteksi flaky berdasarkan retry yang tercatat eksplisit di Playwright JSON; tampilan menunjukkan jumlah sampel yang diamati, bukan estimasi confidence statistik. Parser ini tidak menyimpulkan status flaky dari JUnit XML karena riwayat retry tidak tersedia.'}</p>
