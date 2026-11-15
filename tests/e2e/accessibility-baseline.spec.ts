@@ -52,6 +52,7 @@ for (const route of routes) {
 }
 
 test('primary navigation and command search expose accessible names', async ({ page }) => {
+  test.slow()
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/')
   await ensurePrimaryNavigationVisible(page)

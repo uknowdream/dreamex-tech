@@ -64,4 +64,31 @@ export const articleTranslations: Record<string, ArticleTranslation> = {
       'After release, monitor quality with privacy-appropriate data, user feedback, latency, cost, and escalation rates. Separate offline evaluation from production monitoring, then use production findings to refresh test datasets regularly.',
     ],
   },
+  'api-contract-governance-idempotency': {
+    title: 'API Contract Governance, Idempotency & the Outbox Pattern',
+    excerpt: 'Prevent duplicate financial debits and schema drift across microservices using runtime contracts and idempotency keys.',
+    body: [
+      'In distributed systems, transient network failures and automatic retries make duplicate request delivery virtually inevitable. Without strict idempotency keys on state-changing endpoints, retries risk double-charging balances or duplicating orders.',
+      'Combine the transactional outbox pattern with runtime contract validation at service boundaries. Ensure producers commit business state and domain events atomically while consumers safely deduplicate processed event identifiers.',
+      'Enforce OpenAPI breaking-change checks in pull requests so frontend, mobile, and external partners never suffer silent runtime failures during progressive rollouts.',
+    ],
+  },
+  'requirements-traceability-jira-adf': {
+    title: 'Bridging BRDs, Gherkin BDD, and Automated Jira REST v3 Workflows',
+    excerpt: 'Maintain end-to-end requirement traceability from business specs to Playwright suites and structured Jira ADF payloads.',
+    body: [
+      'The widest delivery gap between product, QA, and engineering emerges when business requirement documents never translate directly into verifiable acceptance scenarios.',
+      'Authoring acceptance criteria in structured Gherkin BDD at sprint refinement gives business analysts and QA engineers a single source of truth that compiles directly into a Requirements Traceability Matrix.',
+      'Pair deterministic Jira REST API v3 Atlassian Document Format generation with objective risk scoring so every UAT blocker automatically receives an auditable priority and SLA target.',
+    ],
+  },
+  'monte-carlo-forecasting-delivery': {
+    title: 'Replacing Single-Point Deadlines with Monte Carlo P85 Forecasting',
+    excerpt: 'Quantify release confidence across agile teams using historical throughput distributions and Earned Value metrics.',
+    body: [
+      'Dividing remaining story points by a single historical average velocity masks sprint variance and cross-team dependency shocks until late in a release.',
+      'Monte Carlo throughput simulations sample thousands of delivery trajectories from real historical sprints to output P50, P85, and P95 commitment dates grounded in observed variance.',
+      'Combine probabilistic sprint forecasts with Earned Value indices (SPI and CPI) to detect cost or schedule slippage early enough for scope adjustments rather than weekend firefighting.',
+    ],
+  },
 }

@@ -173,6 +173,70 @@ export function passesRegressionGate(baseline: EvalRunSummary, candidate: EvalRu
 }`,
     },
   },
+  'api-contract-governance-idempotency': {
+    author: 'DreamEx Engineering Editorial',
+    authorRole: 'Distributed Systems & API Reliability',
+    updatedAt: '2026-11-10',
+    sections: [
+      { id: 'idempotency-mutation-safety', heading: '1. Idempotency Keys for Network-Safe Retries', startParagraphIndex: 0 },
+      { id: 'transactional-outbox-sync', heading: '2. Transactional Outbox & Consumer Deduplication', startParagraphIndex: 1 },
+      { id: 'openapi-breaking-guards', heading: '3. Automated OpenAPI Breaking-Change Detection', startParagraphIndex: 2 },
+    ],
+    snippet: {
+      language: 'typescript',
+      filename: 'src/settlement/idempotencyGuard.ts',
+      caption: 'Atomic idempotency check preventing duplicate financial writes across retried HTTP requests.',
+      code: `export async function executeIdempotent<T>(
+  store: { acquire(key: string): Promise<'acquired' | 'duplicate'> },
+  idempotencyKey: string,
+  operation: () => Promise<T>,
+): Promise<{ deduplicated: boolean; result?: T }> {
+  if ((await store.acquire(idempotencyKey)) === 'duplicate') {
+    return { deduplicated: true }
+  }
+  return { deduplicated: false, result: await operation() }
+}`,
+    },
+  },
+  'requirements-traceability-jira-adf': {
+    author: 'DreamEx Engineering Editorial',
+    authorRole: 'Business Analysis & QA Orchestration',
+    updatedAt: '2026-11-10',
+    sections: [
+      { id: 'bridging-spec-and-test', heading: '1. Closing the BRD-to-Verification Gap', startParagraphIndex: 0 },
+      { id: 'gherkin-single-source', heading: '2. Compiling Gherkin BDD into Traceability Matrices', startParagraphIndex: 1 },
+      { id: 'jira-adf-sla-automation', heading: '3. Automated Jira REST v3 ADF Payloads & SLA Scoring', startParagraphIndex: 2 },
+    ],
+    snippet: {
+      language: 'gherkin',
+      filename: 'specs/settlement-traceability.feature',
+      caption: 'Executable Gherkin scenario linked to BRD and QA regression coverage.',
+      code: `Feature: Idempotent Payment Settlement @BRD-PAY-02 @ENT-418
+  Scenario: Reject duplicate settlement replay within concurrency window
+    Given a settled transaction with idempotency key "idem_9f82a10c7b"
+    When the client retries POST /api/v2/orders/settle
+    Then the ledger balance remains unchanged and HTTP 200 cached result is returned`,
+    },
+  },
+  'monte-carlo-forecasting-delivery': {
+    author: 'DreamEx Engineering Editorial',
+    authorRole: 'Program Delivery & Engineering Physics',
+    updatedAt: '2026-11-10',
+    sections: [
+      { id: 'beyond-average-velocity', heading: '1. Why Mean Velocity Hides Delivery Variance', startParagraphIndex: 0 },
+      { id: 'probabilistic-sprint-curves', heading: '2. Running 10,000-Trial P50/P85/P95 Simulations', startParagraphIndex: 1 },
+      { id: 'earned-value-early-warning', heading: '3. Combining SPI/CPI Early Warnings with Buffers', startParagraphIndex: 2 },
+    ],
+    snippet: {
+      language: 'typescript',
+      filename: 'src/pm/monteCarloPercentile.ts',
+      caption: 'Selecting objective delivery percentiles across simulated sprint completion counts.',
+      code: `export function sprintPercentile(sortedTrials: number[], percentile: number): number {
+  const index = Math.min(sortedTrials.length - 1, Math.floor((sortedTrials.length - 1) * percentile))
+  return sortedTrials[index] ?? 0
+}`,
+    },
+  },
 }
 
 export const articleEnhancementsId: Record<string, ArticleEditorialEnhancement> = {
@@ -270,6 +334,54 @@ export const articleEnhancementsId: Record<string, ArticleEditorialEnhancement> 
       filename: 'src/ai/regressionGate.ts',
       caption: 'Membandingkan pass rate kandidat evaluasi dan kegagalan keamanan kritis terhadap baseline.',
       code: articleEnhancementsEn['evaluating-ai-features'].snippet.code,
+    },
+  },
+  'api-contract-governance-idempotency': {
+    author: 'Redaksi Engineering DreamEx',
+    authorRole: 'Sistem Terdistribusi & Reliabilitas API',
+    updatedAt: '2026-11-10',
+    sections: [
+      { id: 'idempotency-mutation-safety', heading: '1. Idempotency Key untuk Retry Aman', startParagraphIndex: 0 },
+      { id: 'transactional-outbox-sync', heading: '2. Transactional Outbox & Deduplikasi Event', startParagraphIndex: 1 },
+      { id: 'openapi-breaking-guards', heading: '3. Deteksi Otomatis Perubahan Breaking OpenAPI', startParagraphIndex: 2 },
+    ],
+    snippet: {
+      language: 'typescript',
+      filename: 'src/settlement/idempotencyGuard.ts',
+      caption: 'Pemeriksaan idempotency atomik untuk mencegah penulisan ganda akibat HTTP retry.',
+      code: articleEnhancementsEn['api-contract-governance-idempotency'].snippet.code,
+    },
+  },
+  'requirements-traceability-jira-adf': {
+    author: 'Redaksi Engineering DreamEx',
+    authorRole: 'Analisis Bisnis & Orkestrasi QA',
+    updatedAt: '2026-11-10',
+    sections: [
+      { id: 'bridging-spec-and-test', heading: '1. Menutup Celah BRD ke Skenario Pengujian', startParagraphIndex: 0 },
+      { id: 'gherkin-single-source', heading: '2. Mengkompilasi Gherkin BDD ke Matriks RTM', startParagraphIndex: 1 },
+      { id: 'jira-adf-sla-automation', heading: '3. Payload Jira REST v3 ADF & Penilaian SLA', startParagraphIndex: 2 },
+    ],
+    snippet: {
+      language: 'gherkin',
+      filename: 'specs/settlement-traceability.feature',
+      caption: 'Skenario Gherkin terukur yang tertaut langsung ke baris BRD dan cakupan regresi QA.',
+      code: articleEnhancementsEn['requirements-traceability-jira-adf'].snippet.code,
+    },
+  },
+  'monte-carlo-forecasting-delivery': {
+    author: 'Redaksi Engineering DreamEx',
+    authorRole: 'Tata Kelola Delivery & Fisika Rekayasa',
+    updatedAt: '2026-11-10',
+    sections: [
+      { id: 'beyond-average-velocity', heading: '1. Mengapa Rata-Rata Velocity Menutupi Variabilitas', startParagraphIndex: 0 },
+      { id: 'probabilistic-sprint-curves', heading: '2. Simulasi 10.000 Iterasi P50/P85/P95', startParagraphIndex: 1 },
+      { id: 'earned-value-early-warning', heading: '3. Memadukan Peringatan Dini SPI/CPI & Buffer', startParagraphIndex: 2 },
+    ],
+    snippet: {
+      language: 'typescript',
+      filename: 'src/pm/monteCarloPercentile.ts',
+      caption: 'Pemilihan persentil probabilitas penyelesaian sprint secara objektif.',
+      code: articleEnhancementsEn['monte-carlo-forecasting-delivery'].snippet.code,
     },
   },
 }

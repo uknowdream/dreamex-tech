@@ -6,16 +6,29 @@ import './EngineeringControlPlane.css'
 
 const CHECKLIST_KEY = 'dreamex-control-plane-checklist-v1'
 
-const workflows = [
-  { id: 'catalog', title: 'Software Catalog', description: 'Map services, ownership, repositories, and dependencies.', route: '/engineering-intelligence', category: 'Architecture', icon: Boxes, keywords: 'catalog service ownership repo dependencies architecture' },
-  { id: 'api', title: 'API Contract Studio', description: 'Inspect OpenAPI contracts and compare likely breaking changes.', route: '/engineering-intelligence', category: 'API Engineering', icon: Code2, keywords: 'api openapi contract schema compatibility' },
-  { id: 'quality', title: 'QA Automation Studio', description: 'Create test cases, Gherkin scenarios, plans, and defect reports.', route: '/qa-studio', category: 'Quality Engineering', icon: ClipboardCheck, keywords: 'qa test case gherkin bdd regression defect' },
-  { id: 'security', title: 'Security & Privacy Center', description: 'Review browser-visible security signals and manage local data.', route: '/security-center', category: 'Security', icon: ShieldCheck, keywords: 'security privacy headers audit' },
-  { id: 'performance', title: 'Performance Observatory', description: 'Inspect browser timing and available performance signals.', route: '/performance', category: 'Reliability', icon: Gauge, keywords: 'performance vitals timing observability' },
-  { id: 'operations', title: 'Engineering Command Center', description: 'Organize work items, incident notes, and release checklists.', route: '/command-center', category: 'Operations', icon: Activity, keywords: 'command center incident release work queue' },
-  { id: 'workspace', title: 'Engineering Workspace', description: 'Search and launch the broader engineering toolkit.', route: '/workspace', category: 'Developer Experience', icon: Workflow, keywords: 'workspace tools search developer' },
-  { id: 'learning', title: 'Learning Hub', description: 'Follow curated paths and strengthen engineering fundamentals.', route: '/learn', category: 'Knowledge', icon: Network, keywords: 'learning courses glossary qa automation' },
-] as const
+type WorkflowItem = {
+  id: string
+  title: string
+  titleId: string
+  description: string
+  descriptionId: string
+  route: string
+  category: string
+  categoryId: string
+  icon: typeof Boxes
+  keywords: string
+}
+
+const workflows: readonly WorkflowItem[] = [
+  { id: 'catalog', title: 'Software Catalog', titleId: 'Katalog Software', description: 'Map services, ownership, repositories, and dependencies.', descriptionId: 'Petakan layanan, kepemilikan tim, repositori, dan dependensi sistem.', route: '/engineering-intelligence', category: 'Architecture', categoryId: 'Arsitektur', icon: Boxes, keywords: 'catalog katalog service ownership repo dependencies architecture' },
+  { id: 'api', title: 'API Contract Studio', titleId: 'Studio Kontrak API', description: 'Inspect OpenAPI contracts and compare likely breaking changes.', descriptionId: 'Periksa kontrak OpenAPI dan bandingkan potensi perubahan breaking.', route: '/engineering-intelligence', category: 'API Engineering', categoryId: 'Rekayasa API', icon: Code2, keywords: 'api openapi contract schema compatibility' },
+  { id: 'quality', title: 'QA Automation Studio', titleId: 'Studio Otomasi QA', description: 'Create test cases, Gherkin scenarios, plans, and defect reports.', descriptionId: 'Buat test case, skenario Gherkin, test plan, dan laporan bug terstruktur.', route: '/qa-studio', category: 'Quality Engineering', categoryId: 'Quality Engineering', icon: ClipboardCheck, keywords: 'qa test case gherkin bdd regression defect' },
+  { id: 'security', title: 'Security & Privacy Center', titleId: 'Pusat Keamanan & Privasi', description: 'Review browser-visible security signals and manage local data.', descriptionId: 'Tinjau sinyal security header browser dan kelola data lokal Anda.', route: '/security-center', category: 'Security', categoryId: 'Keamanan', icon: ShieldCheck, keywords: 'security keamanan privacy headers audit' },
+  { id: 'performance', title: 'Performance Observatory', titleId: 'Observatorium Performa', description: 'Inspect browser timing and available performance signals.', descriptionId: 'Pantau navigation timing dan sinyal Web Vitals di sesi browser.', route: '/performance', category: 'Reliability', categoryId: 'Reliabilitas', icon: Gauge, keywords: 'performance vitals timing observability' },
+  { id: 'operations', title: 'Engineering Command Center', titleId: 'Pusat Komando Engineering', description: 'Organize work items, incident notes, and release checklists.', descriptionId: 'Kelola daftar tugas, catatan insiden, dan checklist kesiapan rilis.', route: '/command-center', category: 'Operations', categoryId: 'Operasional', icon: Activity, keywords: 'command center incident release work queue' },
+  { id: 'workspace', title: 'Engineering Workspace', titleId: 'Workspace Engineering', description: 'Search and launch the broader engineering toolkit.', descriptionId: 'Cari dan jalankan seluruh ekosistem tool rekayasa terpadu.', route: '/workspace', category: 'Developer Experience', categoryId: 'Pengalaman Developer', icon: Workflow, keywords: 'workspace tools search developer' },
+  { id: 'learning', title: 'Learning Hub', titleId: 'Pusat Pembelajaran', description: 'Follow curated paths and strengthen engineering fundamentals.', descriptionId: 'Ikuti jalur belajar terstruktur dan kuasai fondasi rekayasa modern.', route: '/learn', category: 'Knowledge', categoryId: 'Pengetahuan', icon: Network, keywords: 'learning courses glossary qa automation' },
+]
 
 const checks = [
   { id: 'scope', title: 'Define change scope and acceptance criteria', group: 'Plan' },
@@ -75,7 +88,7 @@ export function EngineeringControlPlanePage() {
   const filteredWorkflows = useMemo(() => {
     const term = query.trim().toLocaleLowerCase()
     if (!term) return workflows
-    return workflows.filter(item => [item.title, item.description, item.category, item.keywords].join(' ').toLocaleLowerCase().includes(term))
+    return workflows.filter(item => [item.title, item.titleId, item.description, item.descriptionId, item.category, item.categoryId, item.keywords].join(' ').toLocaleLowerCase().includes(term))
   }, [query])
   const completed = checks.filter(item => checked[item.id]).length
   const readiness = Math.round(completed / checks.length * 100)
@@ -130,7 +143,7 @@ export function EngineeringControlPlanePage() {
 
     <section className="control-plane-workflows">
       <div className="control-plane-section-heading"><div><span className="section-kicker">{en ? 'ENGINEERING TOOLCHAIN' : 'TOOLCHAIN ENGINEERING'}</span><h2>{en ? 'Choose your next workflow' : 'Pilih workflow berikutnya'}</h2><p>{en ? 'Search across the core capabilities and jump straight into a focused tool.' : 'Cari kemampuan utama dan langsung buka tool yang dibutuhkan.'}</p></div><label className="control-plane-search"><Search size={17} /><input type="search" aria-label={en ? 'Search engineering workflows' : 'Cari workflow engineering'} placeholder={en ? 'Search tools and workflows…' : 'Cari tools dan workflow…'} value={query} onChange={event => setQuery(event.target.value)} /><kbd>/</kbd></label></div>
-      <div className="control-plane-grid">{filteredWorkflows.map((item, index) => { const Icon = item.icon; return <Link key={item.id} to={item.route} className="control-plane-card"><div className="control-plane-card-top"><span className="control-plane-icon"><Icon size={19} /></span><span>{String(index + 1).padStart(2, '0')}</span></div><small>{item.category}</small><h3>{item.title}</h3><p>{item.description}</p><span className="control-plane-card-link">{en ? 'Open workflow' : 'Buka workflow'} <ArrowRight size={15} /></span></Link> })}</div>
+      <div className="control-plane-grid">{filteredWorkflows.map((item, index) => { const Icon = item.icon; return <Link key={item.id} to={item.route} className="control-plane-card"><div className="control-plane-card-top"><span className="control-plane-icon"><Icon size={19} /></span><span>{String(index + 1).padStart(2, '0')}</span></div><small>{en ? item.category : item.categoryId}</small><h3>{en ? item.title : item.titleId}</h3><p>{en ? item.description : item.descriptionId}</p><span className="control-plane-card-link">{en ? 'Open workflow' : 'Buka workflow'} <ArrowRight size={15} /></span></Link> })}</div>
       {filteredWorkflows.length === 0 && <p className="control-plane-empty">{en ? 'No workflows match that search. Try another keyword.' : 'Tidak ada workflow yang cocok. Coba kata kunci lain.'}</p>}
     </section>
 

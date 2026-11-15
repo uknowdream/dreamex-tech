@@ -599,6 +599,7 @@ function Home() {
   const featured = articles[0]
   const featuredTranslation = language === 'en' ? articleTranslations[featured.slug] : undefined
   const featuredCover = getArticleCover(featured.slug, language)
+  const [digestBusy, setDigestBusy] = useState(false)
   const submitDigest = (event: React.FormEvent) => {
     event.preventDefault()
     const clean = digestEmail.trim()
@@ -609,8 +610,31 @@ function Home() {
     try {
       window.localStorage.setItem('dreamex-digest-subscriber-v1', JSON.stringify({ email: clean, savedAt: new Date().toISOString() }))
     } catch { /* Safe fallback when storage is disabled */ }
-    setDigestStatus(language === 'en' ? `Saved local radar alert for ${clean}. Follow live updates via /rss.` : `Preferensi radar dicatat lokal untuk ${clean}. Ikuti rilis langsung via /rss.`)
     setDigestEmail('')
+    setDigestBusy(true)
+    void (async () => {
+      try {
+        const res = await fetch('/api/radar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({ email: clean, locale: language }),
+        })
+        const data = (await res.json().catch(() => ({}))) as { mode?: string; ok?: boolean }
+        if (res.ok && data.ok) {
+          setDigestStatus(
+            data.mode === 'persisted'
+              ? (language === 'en' ? `Subscribed ${clean} via Edge Radar API.` : `${clean} terdaftar di Edge Radar API.`)
+              : (language === 'en' ? `Validated ${clean} on Radar API & saved local alert. Follow live updates via /rss.` : `${clean} tervalidasi di Radar API & tersimpan lokal. Ikuti rilis via /rss.`),
+          )
+        } else {
+          setDigestStatus(language === 'en' ? `Saved local radar alert for ${clean}. Follow live updates via /rss.` : `Preferensi radar dicatat lokal untuk ${clean}. Ikuti rilis langsung via /rss.`)
+        }
+      } catch {
+        setDigestStatus(language === 'en' ? `Saved local radar alert for ${clean}. Follow live updates via /rss.` : `Preferensi radar dicatat lokal untuk ${clean}. Ikuti rilis langsung via /rss.`)
+      } finally {
+        setDigestBusy(false)
+      }
+    })()
   }
 
   useEffect(() => {
@@ -679,7 +703,7 @@ function Home() {
       <div className="results-meta"><span>{filtered.length} {t('found')}{selectedTag ? ` · #${selectedTag.replaceAll(' ', '')}` : ''}</span>{(query || selectedTag) && <button onClick={() => { setQuery(''); setSelectedTag('') }}>{t('clearSearch')} <span>×</span></button>}</div>
       {filtered.length ? <div className="article-grid">{filtered.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} activeTag={selectedTag} onSelectTag={setSelectedTag} />)}</div> : <div className="empty-state"><Search size={22} /><strong>{t('noResults')}</strong><span>{t('tryOther')}</span></div>}
     </div></section>
-    <section className="newsletter"><div className="container newsletter-inner"><div><span className="section-kicker">{t('buildInPublic')}</span><h2>Ship with clarity.<br /><span>Iterate with AI precision.</span></h2><p>{t('buildDescription')}</p><form className="newsletter-form" onSubmit={submitDigest}><input type="email" value={digestEmail} onChange={e => setDigestEmail(e.target.value)} placeholder={language === 'en' ? 'you@company.dev — Release & AI Radar' : 'anda@tim.dev — Radar Rilis & AI'} aria-label={language === 'en' ? 'Email for engineering radar updates' : 'Email untuk pembaruan radar engineering'} /><button type="submit" className="button button-primary">{language === 'en' ? 'Save Radar' : 'Simpan Radar'} <ArrowRight size={15} /></button><Link className="button button-ghost" to="/rss"><Rss size={15} /> RSS</Link></form>{digestStatus && <p className="newsletter-status" role="status">{digestStatus}</p>}</div><a className="button button-ghost" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer"><Github size={16} /> {t('exploreCode')} <ArrowRight size={17} /></a></div></section>
+    <section className="newsletter"><div className="container newsletter-inner"><div><span className="section-kicker">{t('buildInPublic')}</span><h2>Ship with clarity.<br /><span>Iterate with AI precision.</span></h2><p>{t('buildDescription')}</p><form className="newsletter-form" onSubmit={submitDigest}><input type="email" value={digestEmail} onChange={e => setDigestEmail(e.target.value)} placeholder={language === 'en' ? 'you@company.dev — Release & AI Radar' : 'anda@tim.dev — Radar Rilis & AI'} aria-label={language === 'en' ? 'Email for engineering radar updates' : 'Email untuk pembaruan radar engineering'} /><button type="submit" className="button button-primary" disabled={digestBusy}>{digestBusy ? (language === 'en' ? 'Saving…' : 'Menyimpan…') : (language === 'en' ? 'Save Radar' : 'Simpan Radar')} <ArrowRight size={15} /></button><Link className="button button-ghost" to="/rss"><Rss size={15} /> RSS</Link></form>{digestStatus && <p className="newsletter-status" role="status">{digestStatus}</p>}</div><a className="button button-ghost" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer"><Github size={16} /> {t('exploreCode')} <ArrowRight size={17} /></a></div></section>
   </main>
 }
 
@@ -2325,7 +2349,8 @@ function ScrollProgress() {
       frame = window.requestAnimationFrame(() => {
         frame = 0
         const scrollable = document.documentElement.scrollHeight - window.innerHeight
-        const next = scrollable > 0 ? Math.min(100, Math.max(0, (window.scrollY / scrollable) * 100)) : 0
+        const atBottom = scrollable > 0 && window.scrollY >= scrollable - 2
+        const next = atBottom ? 100 : (scrollable > 0 ? Math.min(100, Math.max(0, (window.scrollY / scrollable) * 100)) : 0)
         fillRef.current?.style.setProperty('transform', `scaleX(${next / 100})`)
         progressRef.current?.setAttribute('aria-valuenow', String(Math.round(next)))
       })
@@ -2334,10 +2359,13 @@ function ScrollProgress() {
     update()
     window.addEventListener('scroll', update, { passive: true })
     window.addEventListener('resize', update, { passive: true })
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(update) : null
+    ro?.observe(document.documentElement)
     return () => {
       if (frame) window.cancelAnimationFrame(frame)
       window.removeEventListener('scroll', update)
       window.removeEventListener('resize', update)
+      ro?.disconnect()
     }
   }, [])
 
@@ -2481,5 +2509,5 @@ export default function App() {
     stylesheet.dataset.dreamexPremiumExperience = 'true'
     document.head.append(stylesheet)
   }, [location.pathname])
-  return <><a className="skip-link" href="#main-content">{t('skip')}</a><OfflineNotice /><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><ToolRouteBreadcrumbs /><Routes><Route path="/" element={<Home />} /><Route path="/tools" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Sovereign IT Workbench…</div>}><SovereignWorkbenchPage initialPillar="eng" /></Suspense>} /><Route path="/ba-hub" element={<Suspense fallback={<div className="container route-loading" role="status">Loading BA Gherkin & RTM Studio…</div>}><SovereignWorkbenchPage initialPillar="ba" /></Suspense>} /><Route path="/pm-jira-hub" element={<Suspense fallback={<div className="container route-loading" role="status">Loading PM & Jira Automation Hub…</div>}><SovereignWorkbenchPage initialPillar="jira" /></Suspense>} /><Route path="/github-ci" element={<Suspense fallback={<div className="container route-loading" role="status">Loading GitHub CI Activity…</div>}><GitHubIntegrationPage /></Suspense>} /><Route path="/team-workspace" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Shared Team Workspace…</div>}><TeamWorkspacePage /></Suspense>} /><Route path="/observatory" element={<WebQualityObservatoryPage />} /><Route path="/site-audit" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Page Health Audit…</div>}><SiteAuditPage /></Suspense>} /> <Route path="/devtools" element={<DeveloperUtilitiesPage />} /> <Route path="/workspace" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Workspace…</div>}><EngineeringWorkspacePage /></Suspense>} /><Route path="/control-plane" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Control Plane…</div>}><EngineeringControlPlanePage /></Suspense>} /><Route path="/engineering-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Intelligence…</div>}><EngineeringIntelligencePage /></Suspense>} /><Route path="/command-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Command Center…</div>}><EngineeringCommandCenterPage /></Suspense>} /><Route path="/qa-studio" element={<Suspense fallback={<div className="container route-loading" role="status">Loading QA Automation Studio…</div>}><QAAutomationStudioPage /></Suspense>} /><Route path="/quality-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Quality Intelligence…</div>}><QualityIntelligencePage /></Suspense>} /><Route path="/reliability-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Reliability Center…</div>}><ReliabilityCenterPage /></Suspense>} /><Route path="/supply-chain-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Supply Chain Intelligence…</div>}><SupplyChainIntelligencePage /></Suspense>} /><Route path="/security-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Security Center…</div>}><SecurityCenterPage /></Suspense>} /><Route path="/api-playground" element={<Suspense fallback={<div className="container route-loading" role="status">Loading API Playground…</div>}><ApiPlaygroundPage /></Suspense>} /><Route path="/performance" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Performance Observatory…</div>}><PerformanceObservatoryPage /></Suspense>} /><Route path="/knowledge-graph" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Knowledge Graph…</div>}><EngineeringKnowledgeGraphPage /></Suspense>} /><Route path="/roadmap" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Product Roadmap…</div>}><EngineeringRoadmapPage /></Suspense>} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><Footer /><RouteMetadata /></>
+  return <><a className="skip-link" href="#main-content" tabIndex={0}>{t('skip')}</a><OfflineNotice /><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><ToolRouteBreadcrumbs /><Routes><Route path="/" element={<Home />} /><Route path="/tools" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Sovereign IT Workbench…</div>}><SovereignWorkbenchPage initialPillar="eng" /></Suspense>} /><Route path="/ba-hub" element={<Suspense fallback={<div className="container route-loading" role="status">Loading BA Gherkin & RTM Studio…</div>}><SovereignWorkbenchPage initialPillar="ba" /></Suspense>} /><Route path="/pm-jira-hub" element={<Suspense fallback={<div className="container route-loading" role="status">Loading PM & Jira Automation Hub…</div>}><SovereignWorkbenchPage initialPillar="jira" /></Suspense>} /><Route path="/github-ci" element={<Suspense fallback={<div className="container route-loading" role="status">Loading GitHub CI Activity…</div>}><GitHubIntegrationPage /></Suspense>} /><Route path="/team-workspace" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Shared Team Workspace…</div>}><TeamWorkspacePage /></Suspense>} /><Route path="/observatory" element={<WebQualityObservatoryPage />} /><Route path="/site-audit" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Page Health Audit…</div>}><SiteAuditPage /></Suspense>} /> <Route path="/devtools" element={<DeveloperUtilitiesPage />} /> <Route path="/workspace" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Workspace…</div>}><EngineeringWorkspacePage /></Suspense>} /><Route path="/control-plane" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Control Plane…</div>}><EngineeringControlPlanePage /></Suspense>} /><Route path="/engineering-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Intelligence…</div>}><EngineeringIntelligencePage /></Suspense>} /><Route path="/command-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Command Center…</div>}><EngineeringCommandCenterPage /></Suspense>} /><Route path="/qa-studio" element={<Suspense fallback={<div className="container route-loading" role="status">Loading QA Automation Studio…</div>}><QAAutomationStudioPage /></Suspense>} /><Route path="/quality-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Quality Intelligence…</div>}><QualityIntelligencePage /></Suspense>} /><Route path="/reliability-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Reliability Center…</div>}><ReliabilityCenterPage /></Suspense>} /><Route path="/supply-chain-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Supply Chain Intelligence…</div>}><SupplyChainIntelligencePage /></Suspense>} /><Route path="/security-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Security Center…</div>}><SecurityCenterPage /></Suspense>} /><Route path="/api-playground" element={<Suspense fallback={<div className="container route-loading" role="status">Loading API Playground…</div>}><ApiPlaygroundPage /></Suspense>} /><Route path="/performance" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Performance Observatory…</div>}><PerformanceObservatoryPage /></Suspense>} /><Route path="/knowledge-graph" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Knowledge Graph…</div>}><EngineeringKnowledgeGraphPage /></Suspense>} /><Route path="/roadmap" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Product Roadmap…</div>}><EngineeringRoadmapPage /></Suspense>} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><Footer /><RouteMetadata /></>
 }

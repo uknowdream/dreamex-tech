@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react'
+
+const NeuralAiByokDrawer = lazy(() => import('./NeuralAiByokDrawer'))
 import { ArrowRight, Check, Copy, Maximize2, Play, Sparkles, Terminal, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useLanguage } from './i18n'
@@ -238,6 +240,7 @@ export function NeuralAiStudio() {
   const [copiedOutput, setCopiedOutput] = useState(false)
   const [galleryFilter, setGalleryFilter] = useState<GalleryCategory>('all')
   const [lightboxItem, setLightboxItem] = useState<(typeof GALLERY_ITEMS)[number] | null>(null)
+  const [byokOpen, setByokOpen] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const currentRole = ROLE_BLUEPRINTS[rolePreset]
@@ -547,6 +550,14 @@ export function NeuralAiStudio() {
                   {copiedOutput ? (en ? 'Copied Output' : 'Tersalin') : en ? 'Copy Blueprint' : 'Salin Blueprint'}
                 </button>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="button button-ghost"
+                    aria-expanded={byokOpen}
+                    onClick={() => setByokOpen(prev => !prev)}
+                  >
+                    <Sparkles size={15} /> {en ? 'Live AI (BYOK)' : 'AI Langsung (BYOK)'}
+                  </button>
                   <Link className="button button-ghost" to="/ba-hub">
                     BA Gherkin & RTM
                   </Link>
@@ -555,6 +566,16 @@ export function NeuralAiStudio() {
                   </Link>
                 </div>
               </div>
+              {byokOpen && (
+                <Suspense fallback={null}>
+                  <NeuralAiByokDrawer
+                    en={en}
+                    roleLabel={en ? currentRole.labelEn : currentRole.labelId}
+                    commandText={currentRole.command}
+                    promptSeed={effectivePrompt}
+                  />
+                </Suspense>
+              )}
             </div>
           </div>
         </div>

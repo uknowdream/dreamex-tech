@@ -11,12 +11,24 @@ import {
   Database,
   FileCode2,
   Gauge,
+  KeyRound,
   Layers3,
+  Printer,
+  Send,
   ShieldCheck,
+  Sparkles,
   Terminal,
   Zap,
 } from 'lucide-react'
 import { useLanguage } from './i18n'
+import {
+  clearSessionAiConfig,
+  DEFAULT_MODELS,
+  generateWithByokAi,
+  loadSessionAiConfig,
+  saveSessionAiConfig,
+  type AiProviderId,
+} from './aiClient'
 import { articles } from './articles'
 import { articleTranslations } from './articleTranslations'
 import {
@@ -82,6 +94,18 @@ export function SovereignWorkbenchPage({ initialPillar = 'eng' }: { initialPilla
   const en = language === 'en'
   const [activePillar, setActivePillar] = useState<SovereignPillarId>(initialPillar)
   const [copiedKey, setCopiedKey] = useState<string>('')
+  const [aiOpen, setAiOpen] = useState(false)
+  const [aiConfig, setAiConfig] = useState(loadSessionAiConfig)
+  const [aiBusy, setAiBusy] = useState(false)
+  const [aiOutput, setAiOutput] = useState('')
+  const [aiError, setAiError] = useState('')
+  const [aiMeta, setAiMeta] = useState('')
+  const [jiraPushOpen, setJiraPushOpen] = useState(false)
+  const [jiraBaseUrl, setJiraBaseUrl] = useState('')
+  const [jiraUserEmail, setJiraUserEmail] = useState('')
+  const [jiraApiToken, setJiraApiToken] = useState('')
+  const [jiraPushStatus, setJiraPushStatus] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
+  const [jiraPushBusy, setJiraPushBusy] = useState(false)
 
   const copyText = async (key: string, value: string) => {
     try {
@@ -599,7 +623,142 @@ export function SovereignWorkbenchPage({ initialPillar = 'eng' }: { initialPilla
             <span>{en ? `Target: ${monteCarloResult.p85Date}` : `Target: ${monteCarloResult.p85Date}`}</span>
           </div>
         </div>
+        <div className="sovereign-hero-actions">
+          <button
+            type="button"
+            className="sovereign-btn primary"
+            aria-expanded={aiOpen}
+            onClick={() => setAiOpen(prev => !prev)}
+          >
+            <Sparkles size={14} />{' '}
+            {aiConfig.apiKey.trim()
+              ? en ? 'Live AI Co-Pilot (Active)' : 'Ko-Pilot AI Langsung (Aktif)'
+              : en ? 'Configure BYOK Live AI' : 'Aktifkan AI Langsung (BYOK)'}
+          </button>
+          <button type="button" className="sovereign-btn" onClick={() => window.print()}>
+            <Printer size={14} /> {en ? 'Print / Export PDF Spec' : 'Cetak / Ekspor PDF'}
+          </button>
+        </div>
       </section>
+
+      {aiOpen && (
+        <section className="sovereign-copilot-bar" aria-label={en ? 'BYOK Live AI Co-Pilot' : 'Ko-Pilot AI BYOK'}>
+          <div className="sovereign-copilot-head">
+            <div>
+              <span className="sovereign-kicker">BYOK SESSION AI · {aiConfig.provider.toUpperCase()}</span>
+              <strong>
+                {en
+                  ? 'Run real Gemini / OpenAI architectural & QA critique on the active pillar (keys stay in sessionStorage only).'
+                  : 'Jalankan ulasan Gemini / OpenAI nyata pada pilar aktif (kunci hanya tersimpan sementara di sessionStorage).'}
+              </strong>
+            </div>
+            {aiMeta && <span className="sovereign-status-chip ok">{aiMeta}</span>}
+          </div>
+          <div className="sovereign-copilot-grid">
+            <div className="sovereign-field">
+              <label htmlFor="wb-ai-provider">{en ? 'Provider' : 'Penyedia'}</label>
+              <select
+                id="wb-ai-provider"
+                value={aiConfig.provider}
+                onChange={e => {
+                  const provider = e.target.value as AiProviderId
+                  const next = { ...aiConfig, provider, model: DEFAULT_MODELS[provider][0] }
+                  setAiConfig(next)
+                  saveSessionAiConfig(next)
+                }}
+              >
+                <option value="gemini">Google Gemini API</option>
+                <option value="openai">OpenAI Compatible</option>
+              </select>
+            </div>
+            <div className="sovereign-field">
+              <label htmlFor="wb-ai-key">{en ? 'Session API Key (never stored permanently)' : 'API Key Sesi (tidak disimpan permanen)'}</label>
+              <input
+                id="wb-ai-key"
+                type="password"
+                autoComplete="off"
+                placeholder={aiConfig.provider === 'gemini' ? 'AIza...' : 'sk-...'}
+                value={aiConfig.apiKey}
+                onChange={e => {
+                  const next = { ...aiConfig, apiKey: e.target.value }
+                  setAiConfig(next)
+                  saveSessionAiConfig(next)
+                }}
+              />
+            </div>
+            <div className="sovereign-field">
+              <label htmlFor="wb-ai-model">Model</label>
+              <input
+                id="wb-ai-model"
+                value={aiConfig.model}
+                onChange={e => {
+                  const next = { ...aiConfig, model: e.target.value }
+                  setAiConfig(next)
+                  saveSessionAiConfig(next)
+                }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="sovereign-btn primary"
+                disabled={aiBusy}
+                onClick={() => {
+                  setAiError('')
+                  setAiBusy(true)
+                  const pillarContext: Record<SovereignPillarId, string> = {
+                    eng: `Endpoint: ${apiMethod} ${apiEndpoint}\nUSL Peak: ${uslMetrics.nMax} nodes / ${uslMetrics.cMax}x throughput\nPayload:\n${apiPayload}`,
+                    qa: `QA Preset: ${qaFlowPreset}\nSource table: ${sqlSourceTable}\nTarget table: ${sqlTargetTable}\nPassed/Failed/Blocked: ${uatPassed}/${uatFailed}/${uatBlocked}`,
+                    ba: `Gherkin BDD Spec:\n${gherkinSpec}\nRTM Coverage: ${rtmStats.pct}% (${rtmStats.covered}/${rtmStats.total})`,
+                    jira: `Jira Issue Draft:\n${jiraMarkdown}\nRisk Priority: ${jiraRisk.priority} (${jiraRisk.riskScore}/100)\nJQL: ${jqlQuery}`,
+                    pm: `Monte Carlo Forecast: P50=${monteCarloResult.p50Sprints}, P85=${monteCarloResult.p85Sprints}, P95=${monteCarloResult.p95Sprints} sprints (${remainingBacklogPoints} pts remaining)`,
+                    sec: `DevSecOps Compliance Score: ${secScore}/100\nControls: ${Object.entries(secGates).map(([k, v]) => `${k}=${v}`).join(', ')}`,
+                  }
+                  void generateWithByokAi(aiConfig, {
+                    systemPrompt: `You are a Principal Engineering & QA Architect advising in ${en ? 'English' : 'Indonesian'}. Give 4 crisp, actionable production findings and edge-case improvements for the active DreamEx Workbench artifact.`,
+                    userPrompt: `Active Pillar: ${activePillar.toUpperCase()}\n\n${pillarContext[activePillar]}`,
+                  })
+                    .then(res => {
+                      setAiOutput(res.text)
+                      setAiMeta(`${res.provider.toUpperCase()} · ${res.model} · ${res.latencyMs}ms`)
+                    })
+                    .catch(err => {
+                      setAiError(err instanceof Error ? err.message : 'Live AI synthesis failed.')
+                    })
+                    .finally(() => setAiBusy(false))
+                }}
+              >
+                <Sparkles size={14} /> {aiBusy ? (en ? 'Synthesizing…' : 'Menganalisis…') : en ? 'Review Active Pillar' : 'Audit Pilar Aktif'}
+              </button>
+              {aiConfig.apiKey && (
+                <button
+                  type="button"
+                  className="sovereign-btn"
+                  onClick={() => {
+                    clearSessionAiConfig()
+                    setAiConfig(loadSessionAiConfig())
+                    setAiOutput('')
+                    setAiMeta('')
+                  }}
+                >
+                  <KeyRound size={14} /> {en ? 'Clear' : 'Hapus'}
+                </button>
+              )}
+            </div>
+          </div>
+          {aiError && <div className="sovereign-status-note error" role="alert">{aiError}</div>}
+          {aiOutput && (
+            <>
+              <pre className="sovereign-code-box"><code>{aiOutput}</code></pre>
+              <div className="sovereign-action-bar">
+                <button type="button" className="sovereign-btn" onClick={() => copyText('wb-ai-out', aiOutput)}>
+                  {copiedKey === 'wb-ai-out' ? <Check size={14} /> : <Copy size={14} />} {en ? 'Copy AI Review' : 'Salin Hasil AI'}
+                </button>
+              </div>
+            </>
+          )}
+        </section>
+      )}
 
       <div className="sovereign-pillar-tabs" role="tablist" aria-label={en ? 'Sovereign IT ecosystem pillars' : 'Pilar ekosistem IT terpadu'}>
         {pillars.map(pillar => {
@@ -1140,7 +1299,126 @@ export function SovereignWorkbenchPage({ initialPillar = 'eng' }: { initialPilla
               <button type="button" className="sovereign-btn" onClick={() => copyText('jira-curl', jiraCurl)}>
                 {copiedKey === 'jira-curl' ? <Check size={14} /> : <Terminal size={14} />} {en ? 'Copy cURL Webhook' : 'Salin Perintah cURL'}
               </button>
+              <button
+                type="button"
+                className="sovereign-btn"
+                aria-expanded={jiraPushOpen}
+                onClick={() => setJiraPushOpen(prev => !prev)}
+              >
+                <Send size={14} /> {en ? 'Push to Jira Cloud' : 'Kirim ke Jira Cloud'}
+              </button>
             </div>
+            {jiraPushOpen && (
+              <div className="sovereign-jira-push-box">
+                <span className="sovereign-kicker">
+                  {en
+                    ? 'EXPLICIT BROWSER-TO-JIRA REST v3 DISPATCH (EPHEMERAL AUTH, NEVER SAVED)'
+                    : 'PENGIRIMAN LANGSUNG KE JIRA REST v3 (KREDENSIAL TIDAK DISIMPAN)'}
+                </span>
+                <div className="sovereign-form-grid">
+                  <div className="sovereign-field">
+                    <label htmlFor="jira-push-url">Atlassian Site URL (HTTPS)</label>
+                    <input
+                      id="jira-push-url"
+                      placeholder="https://your-org.atlassian.net"
+                      value={jiraBaseUrl}
+                      onChange={e => setJiraBaseUrl(e.target.value)}
+                    />
+                  </div>
+                  <div className="sovereign-field">
+                    <label htmlFor="jira-push-email">Atlassian Account Email</label>
+                    <input
+                      id="jira-push-email"
+                      placeholder="engineer@company.com"
+                      value={jiraUserEmail}
+                      onChange={e => setJiraUserEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="sovereign-field">
+                  <label htmlFor="jira-push-token">Atlassian API Token</label>
+                  <input
+                    id="jira-push-token"
+                    type="password"
+                    autoComplete="off"
+                    placeholder="ATATT3xFf..."
+                    value={jiraApiToken}
+                    onChange={e => setJiraApiToken(e.target.value)}
+                  />
+                </div>
+                <div className="sovereign-action-bar">
+                  <button
+                    type="button"
+                    className="sovereign-btn primary"
+                    disabled={jiraPushBusy}
+                    onClick={() => {
+                      setJiraPushStatus(null)
+                      let endpointUrl: URL
+                      try {
+                        endpointUrl = new URL('/rest/api/3/issue', jiraBaseUrl.trim())
+                        if (endpointUrl.protocol !== 'https:' || endpointUrl.username || endpointUrl.password) {
+                          throw new Error('Use clean HTTPS Atlassian site URL without embedded credentials.')
+                        }
+                      } catch (err) {
+                        setJiraPushStatus({
+                          kind: 'error',
+                          text: err instanceof Error ? err.message : 'Invalid Atlassian URL.',
+                        })
+                        return
+                      }
+                      if (!jiraUserEmail.trim() || !jiraApiToken.trim()) {
+                        setJiraPushStatus({
+                          kind: 'error',
+                          text: en ? 'Provide Atlassian email and API token for explicit dispatch.' : 'Masukkan email Atlassian dan token API.',
+                        })
+                        return
+                      }
+                      setJiraPushBusy(true)
+                      const basicAuth = btoa(`${jiraUserEmail.trim()}:${jiraApiToken.trim()}`)
+                      void fetch(endpointUrl, {
+                        method: 'POST',
+                        credentials: 'omit',
+                        headers: {
+                          Accept: 'application/json',
+                          'Content-Type': 'application/json',
+                          Authorization: `Basic ${basicAuth}`,
+                        },
+                        body: jiraJsonPayload,
+                      })
+                        .then(async res => {
+                          const data = (await res.json().catch(() => ({}))) as { key?: string; errorMessages?: string[] }
+                          if (!res.ok) {
+                            throw new Error(data.errorMessages?.join(' ') || `Jira returned HTTP ${res.status}`)
+                          }
+                          setJiraPushStatus({
+                            kind: 'ok',
+                            text: en
+                              ? `Created Jira issue ${data.key || 'successfully'} via REST v3.`
+                              : `Tiket Jira ${data.key || ''} berhasil dibuat melalui REST v3.`,
+                          })
+                        })
+                        .catch(err => {
+                          const msg = err instanceof Error ? err.message : 'Request failed.'
+                          setJiraPushStatus({
+                            kind: 'error',
+                            text: en
+                              ? `${msg} (Note: Atlassian Cloud may block browser CORS origins; use "Copy cURL Webhook" in terminal if CORS-blocked.)`
+                              : `${msg} (Catatan: Jira Cloud terkadang memblokir CORS browser; gunakan "Salin Perintah cURL" di terminal jika terblokir CORS.)`,
+                          })
+                        })
+                        .finally(() => setJiraPushBusy(false))
+                    }}
+                  >
+                    <Send size={14} /> {jiraPushBusy ? (en ? 'Dispatching…' : 'Mengirim…') : en ? 'Send Issue to Jira' : 'Kirim Tiket ke Jira'}
+                  </button>
+                </div>
+                {jiraPushStatus && (
+                  <div className={`sovereign-status-note ${jiraPushStatus.kind}`} role="status">
+                    {jiraPushStatus.text}
+                  </div>
+                )}
+              </div>
+            )}
           </article>
 
           <article className="sovereign-panel">

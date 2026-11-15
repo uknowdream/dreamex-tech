@@ -56,6 +56,30 @@ export const ARTICLE_COVERS: Record<string, ArticleCoverMeta> = {
     altEn: 'Multi-spectral AI evaluation glass prism splitting neural signals into measurable observability benchmarks.',
     altId: 'Prisma evaluasi AI multispektral yang memecah sinyal neural menjadi metrik observabilitas terukur.',
   },
+  'api-contract-governance-idempotency': {
+    src: '/images/cover-software-arch.jpg',
+    accent: '#38bdf8',
+    badgeEn: 'API GOVERNANCE',
+    badgeId: 'TATA KELOLA API',
+    altEn: 'Distributed service topology connected by idempotent ledger nodes and resilient fiber channels.',
+    altId: 'Topologi layanan terdistribusi yang dihubungkan oleh node idempotent dan saluran serat optik.',
+  },
+  'requirements-traceability-jira-adf': {
+    src: '/images/cover-qa-automation.jpg',
+    accent: '#10b981',
+    badgeEn: 'BA · QA · JIRA',
+    badgeId: 'BA · QA · JIRA',
+    altEn: 'Structured precision verification grid linking requirements matrices directly to Jira automation flows.',
+    altId: 'Grid verifikasi presisi yang menghubungkan matriks kebutuhan dengan alur otomasi Jira.',
+  },
+  'monte-carlo-forecasting-delivery': {
+    src: '/images/spotlight-ai-os.jpg',
+    accent: '#8b5cf6',
+    badgeEn: 'DELIVERY PHYSICS',
+    badgeId: 'ESTIMASI RILIS',
+    altEn: 'Multi-layered holographic spatial command matrix showing probabilistic sprint delivery forecasts.',
+    altId: 'Matriks komando spasial holografik yang menampilkan simulasi probabilitas rilis sprint.',
+  },
 }
 
 const FALLBACK_COVER: ArticleCoverMeta = {

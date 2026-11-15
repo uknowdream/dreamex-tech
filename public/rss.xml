@@ -6,7 +6,7 @@
     <link>https://dreamex.tech/</link>
     <description>Practical notes on software engineering, quality engineering, AI, and modern technology.</description>
     <language>id-ID</language>
-    <lastBuildDate>Sat, 14 Nov 2026 19:36:18 GMT</lastBuildDate>
+    <lastBuildDate>Sun, 15 Nov 2026 13:51:42 GMT</lastBuildDate>
     <atom:link href="https://dreamex.tech/rss.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Merancang Playwright Test Suite yang Stabil</title>
@@ -16,6 +16,13 @@
       <pubDate>Sat, 10 Oct 2026 00:00:00 GMT</pubDate>
     </item>
     <item>
+      <title>Tata Kelola Kontrak API, Idempotency &amp; Outbox Pattern</title>
+      <link>https://dreamex.tech/blog/api-contract-governance-idempotency</link>
+      <guid isPermaLink="true">https://dreamex.tech/blog/api-contract-governance-idempotency</guid>
+      <description>Mencegah transaksi ganda dan pergeseran skema antar microservice melalui kontrak runtime dan idempotency key.</description>
+      <pubDate>Fri, 09 Oct 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
       <title>Checklist Keamanan Dasar untuk Pipeline CI/CD</title>
       <link>https://dreamex.tech/blog/secure-ci-cd-basics</link>
       <guid isPermaLink="true">https://dreamex.tech/blog/secure-ci-cd-basics</guid>
@@ -23,11 +30,25 @@
       <pubDate>Wed, 07 Oct 2026 00:00:00 GMT</pubDate>
     </item>
     <item>
+      <title>Menghubungkan BRD, Gherkin BDD, dan Otomasi Jira REST v3</title>
+      <link>https://dreamex.tech/blog/requirements-traceability-jira-adf</link>
+      <guid isPermaLink="true">https://dreamex.tech/blog/requirements-traceability-jira-adf</guid>
+      <description>Menjaga keterlacakan kebutuhan bisnis hingga test case Playwright dan tiket Jira terstruktur tanpa pekerjaan manual berulang.</description>
+      <pubDate>Tue, 06 Oct 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
       <title>Membangun Evaluasi AI yang Bisa Diulang</title>
       <link>https://dreamex.tech/blog/evaluating-ai-features</link>
       <guid isPermaLink="true">https://dreamex.tech/blog/evaluating-ai-features</guid>
       <description>Rancang dataset, rubrik penilaian, regression checks, dan pemantauan agar perubahan AI dapat dinilai secara objektif.</description>
       <pubDate>Sat, 03 Oct 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Mengganti Tebakan Deadline dengan Simulasi Monte Carlo P85</title>
+      <link>https://dreamex.tech/blog/monte-carlo-forecasting-delivery</link>
+      <guid isPermaLink="true">https://dreamex.tech/blog/monte-carlo-forecasting-delivery</guid>
+      <description>Mengukur kepastian rilis sprint secara kuantitatif menggunakan distribusi throughput historis dan metrik EVM.</description>
+      <pubDate>Fri, 02 Oct 2026 00:00:00 GMT</pubDate>
     </item>
     <item>
       <title>Membangun Fondasi QA Automation yang Andal</title>

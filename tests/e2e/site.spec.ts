@@ -1402,7 +1402,7 @@ test('homepage supports tag filtering and article sorting controls', async ({ pa
 
   await page.getByRole('button', { name: /clear search|hapus pencarian/i }).click()
   await expect(playwrightTag).toHaveAttribute('aria-pressed', 'false')
-  await expect(page.locator('.article-card')).toHaveCount(6)
+  await expect(page.locator('.article-card')).toHaveCount(9)
 
   const sortSelect = page.getByRole('combobox', { name: /Sort articles|Urutkan artikel/i })
   await sortSelect.selectOption('newest')

@@ -78,11 +78,12 @@ test('homepage restores ambient hero motion and moving terminal details', async 
 test('scroll reveals reappear and complete as sections enter the viewport', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.emulateMedia({ reducedMotion: 'no-preference' })
-  await page.goto('/')
+  await page.goto('/', { waitUntil: 'networkidle' })
   const footer = page.locator('.footer-inner')
   await expect(footer).toHaveClass(/motion-reveal/)
   await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }))
   await expect(footer).toHaveClass(/is-visible/)
+  await page.evaluate(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }))
   await expect(page.locator('.site-scroll-progress')).toHaveAttribute('aria-valuenow', '100')
 })
 

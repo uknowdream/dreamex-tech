@@ -21,6 +21,12 @@ export default defineConfig({
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'mobile-chromium', use: { ...devices['Pixel 7'] } },
+    ...(process.env.ENABLE_WEBKIT === '1'
+      ? [
+          { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+          { name: 'mobile-safari', use: { ...devices['iPhone 13'] } },
+        ]
+      : []),
   ],
   webServer: process.env.PLAYWRIGHT_TEST_BASE_URL ? undefined : {
     command: 'npm run build && npm run preview -- --host 127.0.0.1 --port 4173 --strictPort',

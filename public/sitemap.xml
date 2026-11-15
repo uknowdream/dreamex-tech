@@ -132,14 +132,32 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://dreamex.tech/blog/api-contract-governance-idempotency</loc>
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://dreamex.tech/blog/secure-ci-cd-basics</loc>
     <lastmod>2026-10-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://dreamex.tech/blog/requirements-traceability-jira-adf</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://dreamex.tech/blog/evaluating-ai-features</loc>
     <lastmod>2026-10-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dreamex.tech/blog/monte-carlo-forecasting-delivery</loc>
+    <lastmod>2026-10-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

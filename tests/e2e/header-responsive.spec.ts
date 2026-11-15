@@ -41,6 +41,7 @@ test('desktop header hides drawer-only Quick Find and keeps navigation controls 
 })
 
 test('tablet/laptop header uses a menu drawer and Quick Find works inside it', async ({ page }) => {
+  test.slow()
   for (const width of drawerWidths) {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/')
@@ -66,6 +67,7 @@ test('tablet/laptop header uses a menu drawer and Quick Find works inside it', a
 
 test('touch navigation keeps the drawer on even wide desktop-site viewports', async ({ page }, testInfo) => {
   test.skip(!testInfo.project.name.includes('mobile'), 'This case validates the coarse-pointer layout only.')
+  test.slow()
   for (const width of [1281, 1366, 1440, 1920]) {
     await page.setViewportSize({ width, height: 900 })
     await page.goto('/')

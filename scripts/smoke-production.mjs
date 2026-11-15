@@ -19,6 +19,7 @@ const checks = [
   { path: '/api/team-workspace', type: 'protected-api', markers: ['"error"'], expectedStatuses: [401, 503] },
   { path: '/api/team-workspace?resource=members', type: 'protected-api', markers: ['"error"'], expectedStatuses: [401, 503] },
   { path: '/api/team-workspace?resource=audit', type: 'protected-api', markers: ['"error"'], expectedStatuses: [401, 503] },
+  { path: '/api/radar', type: 'json', markers: ['"service"', 'dreamex-radar'] },
   { path: '/qa-studio', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/quality-intelligence', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/supply-chain-intelligence', type: 'html', markers: ['id="root"', '<div'] },

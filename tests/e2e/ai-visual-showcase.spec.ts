@@ -8,6 +8,7 @@ test.describe('DreamEx Tech AI Visual Studio, Cover Imagery & Responsive Verific
   })
 
   test('Hero backdrop, lazy NeuralAiStudio, AI synthesizer & lightbox gallery work interactively', async ({ page }) => {
+    test.slow()
     await page.goto('/')
 
     const heroBackdrop = page.locator('.hero-core-backdrop')

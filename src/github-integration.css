@@ -185,3 +185,58 @@
   .team-workspace-audit-row { grid-template-columns: minmax(0,1fr); }
   .team-workspace-audit-row time { justify-self: start; text-align: left; }
 }
+
+.github-ci-auth-drawer {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid rgba(132, 159, 196, 0.25);
+  border-radius: 12px;
+  background: rgba(8, 13, 25, 0.78);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.github-ci-auth-drawer input {
+  color: #e8ecf5;
+  background: #0a1120;
+  border: 1px solid #34415b;
+  border-radius: 8px;
+  padding: 10px;
+  font: 12px var(--mono);
+}
+
+.github-ci-view-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.github-ci-view-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 8px 14px;
+  border-radius: 9px;
+  border: 1px solid #2b3850;
+  background: #0c1424;
+  color: #a4b3cb;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.github-ci-view-tabs button.active {
+  border-color: rgba(197, 255, 112, 0.48);
+  background: rgba(197, 255, 112, 0.12);
+  color: #c5ff70;
+}
+
+@media (max-width: 640px) {
+  .github-ci-auth-drawer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
