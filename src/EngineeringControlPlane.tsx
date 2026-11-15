@@ -101,11 +101,12 @@ export function EngineeringControlPlanePage() {
   }
 
   return <main id="main-content" className="container control-plane-page">
-    <header className="control-plane-hero">
+    <header className="control-plane-hero control-plane-hero-visual">
+      <img className="workspace-hero-art" src="/images/spotlight-ai-os.jpg" alt="" aria-hidden="true" width={1376} height={768} />
       <div className="control-plane-hero-copy">
-        <span className="section-kicker"><Sparkles size={14} /> DREAMEX ENGINEERING / CONTROL PLANE</span>
+        <span className="section-kicker"><Sparkles size={14} /> DREAMEX AI OS / CONTROL PLANE</span>
         <h1>{en ? <>Engineering, <span>in control.</span></> : <>Engineering, <span>lebih terkendali.</span></>}</h1>
-        <p>{en ? 'A single launchpad for architecture, quality, security, performance, and delivery workflows. Keep the signal honest, the evidence visible, and the next action clear.' : 'Satu pusat untuk workflow arsitektur, kualitas, keamanan, performa, dan delivery. Jaga indikator tetap akurat, bukti terlihat, dan langkah berikutnya jelas.'}</p>
+        <p>{en ? 'Unified command deck for system architecture, self-healing QA evidence, zero-trust security posture, and release governance—client-sovereign by design.' : 'Dek kendali terpadu untuk arsitektur sistem, bukti QA self-healing, postur keamanan zero-trust, dan tata kelola rilis secara privat.'}</p>
         <div className="control-plane-actions">
           <Link className="button button-primary" to="/workspace">{en ? 'Explore all tools' : 'Jelajahi semua tools'} <ArrowRight size={16} /></Link>
           <button className="button button-secondary" type="button" onClick={downloadSnapshot}><Download size={15} /> {en ? 'Export snapshot' : 'Ekspor snapshot'}</button>

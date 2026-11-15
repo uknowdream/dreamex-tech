@@ -178,7 +178,7 @@ export function HeroAiCockpit() {
           <span />
         </div>
         <small className="hero-cockpit-title">
-          <Cpu size={13} /> DreamEx Neural Core · v3.0
+          <Cpu size={13} /> DreamEx Neural Core · v4.0
         </small>
         <span className="terminal-live hero-cockpit-live">
           <i /> {t('terminalLive')}
@@ -213,8 +213,8 @@ export function HeroAiCockpit() {
           <circle className="mesh-node" cx="445" cy="86" r="4" />
         </svg>
         <div className="hero-cockpit-top-hud" aria-hidden="true">
-          <span className="hero-mesh-pill"><i /> NEURAL MESH · 60 FPS</span>
-          <span className="hero-mesh-mode">SOVEREIGN AI</span>
+          <span className="hero-mesh-pill"><i /> SPATIAL ENGINE · 60 FPS</span>
+          <span className="hero-mesh-mode">ZERO-TRUST AI</span>
         </div>
         <div className="hero-cockpit-hud">
           <span className="hero-cockpit-badge">

@@ -3,12 +3,12 @@ import { Link } from 'react-router-dom'
 import { useLanguage } from './i18n'
 
 const destinations = [
-  { href: '/workspace', icon: Workflow, key: 'workspace', en: 'Engineering workspace', id: 'Workspace engineering', detailEn: 'Bring daily engineering workflows into one place.', detailId: 'Satukan alur kerja engineering harian dalam satu tempat.', labelEn: 'WORKFLOW', labelId: 'ALUR KERJA' },
-  { href: '/quality-intelligence', icon: Gauge, key: 'quality', en: 'Quality intelligence', id: 'Quality intelligence', detailEn: 'Read test results, spot flaky patterns, and prioritize fixes.', detailId: 'Analisis hasil tes, temukan pola flaky, dan prioritaskan perbaikan.', labelEn: 'QUALITY', labelId: 'KUALITAS' },
-  { href: '/api-playground', icon: Code2, key: 'api', en: 'API playground', id: 'API playground', detailEn: 'Explore requests and validate API behavior with focus.', detailId: 'Jelajahi request dan validasi perilaku API dengan terarah.', labelEn: 'DEVELOP', labelId: 'PENGEMBANGAN' },
-  { href: '/security-center', icon: ShieldCheck, key: 'security', en: 'Security center', id: 'Security center', detailEn: 'Review practical security checks and defensive guidance.', detailId: 'Tinjau pemeriksaan keamanan praktis dan panduan defensif.', labelEn: 'SECURITY', labelId: 'KEAMANAN' },
-  { href: '/supply-chain-intelligence', icon: Boxes, key: 'supply', en: 'Supply chain', id: 'Supply chain', detailEn: 'Inspect SBOM data and understand dependency exposure.', detailId: 'Periksa data SBOM dan pahami paparan dependensi.', labelEn: 'DEPENDENCIES', labelId: 'DEPENDENSI' },
-  { href: '/roadmap', icon: Wrench, key: 'roadmap', en: 'Platform roadmap', id: 'Roadmap platform', detailEn: 'See what is available now and what is planned next.', detailId: 'Lihat fitur yang tersedia dan rencana pengembangan berikutnya.', labelEn: 'WHAT’S NEXT', labelId: 'BERIKUTNYA' },
+  { href: '/workspace', icon: Workflow, key: 'workspace', en: 'Unified AI workspace', id: 'Workspace AI terpadu', detailEn: '22 integrated toolchains across software design, verification, specs, and operations.', detailId: '22 toolchain terpadu untuk arsitektur software, verifikasi, spesifikasi, dan operasi.', labelEn: 'OS HUB', labelId: 'OS HUB' },
+  { href: '/quality-intelligence', icon: Gauge, key: 'quality', en: 'Quality intelligence', id: 'Quality intelligence', detailEn: 'Parse Playwright & JUnit telemetry, isolate flakiness, and export audit proof.', detailId: 'Analisis telemetri Playwright & JUnit, isolasi tes flaky, dan ekspor bukti audit.', labelEn: 'QA ENGINE', labelId: 'QA ENGINE' },
+  { href: '/api-playground', icon: Code2, key: 'api', en: 'API contract runner', id: 'API contract runner', detailEn: 'Inspect HTTP payloads, validate strict schemas, and verify contract compatibility.', detailId: 'Periksa payload HTTP, validasi skema ketat, dan verifikasi kompatibilitas kontrak.', labelEn: 'API SPEC', labelId: 'API SPEC' },
+  { href: '/security-center', icon: ShieldCheck, key: 'security', en: 'Zero-trust security center', id: 'Pusat keamanan zero-trust', detailEn: 'Evaluate CSP, header hardening, client privacy posture, and OWASP baselines.', detailId: 'Evaluasi CSP, hardening header, privasi klien, dan standar dasar OWASP.', labelEn: 'SECURITY', labelId: 'KEAMANAN' },
+  { href: '/supply-chain-intelligence', icon: Boxes, key: 'supply', en: 'SBOM & supply chain', id: 'SBOM & rantai pasok', detailEn: 'Trace CycloneDX/SPDX graphs, transitive exposure, and license compliance offline.', detailId: 'Telusuri grafik CycloneDX/SPDX, paparan dependensi, dan lisensi secara offline.', labelEn: 'SUPPLY CHAIN', labelId: 'RANTAI PASOK' },
+  { href: '/roadmap', icon: Wrench, key: 'roadmap', en: 'Architecture & release gate', id: 'Gerbang rilis & arsitektur', detailEn: 'Score release readiness, author ADR blueprints, and run STRIDE threat modeling.', detailId: 'Skor kesiapan rilis, susun blueprint ADR, dan lakukan pemodelan ancaman STRIDE.', labelEn: 'GOVERNANCE', labelId: 'TATA KELOLA' },
 ]
 
 export function EngineeringLaunchpad() {
@@ -18,11 +18,11 @@ export function EngineeringLaunchpad() {
     <div className="container">
       <div className="launchpad-heading">
         <div>
-          <span className="section-kicker">{en ? 'THE ENGINEERING PLATFORM' : 'PLATFORM ENGINEERING'}</span>
+          <span className="section-kicker">{en ? 'SPATIAL CAPABILITY MATRIX' : 'MATRIKS KAPABILITAS SPASIAL'}</span>
           <h2 id="launchpad-title">{en ? 'Your next move starts here.' : 'Mulai langkah engineering berikutnya di sini.'}</h2>
-          <p>{en ? 'Purpose-built tools for building, testing, understanding, and shipping better software.' : 'Tools terarah untuk membangun, menguji, memahami, dan merilis software yang lebih baik.'}</p>
+          <p>{en ? 'One AI operating plane uniting every engineering role—from distributed design to production release.' : 'Satu platform AI terpadu untuk setiap peran teknik—dari desain sistem hingga rilis produksi.'}</p>
         </div>
-        <span className="launchpad-status"><i /> {en ? '6 WORKFLOWS · READY TO EXPLORE' : '6 ALUR KERJA · SIAP DIJELAJAHI'}</span>
+        <span className="launchpad-status"><i /> {en ? '6 CORE WORKFLOWS · LIVE TELEMETRY' : '6 ALUR INTI · TELEMETRI AKTIF'}</span>
       </div>
       <div className="launchpad-grid">
         {destinations.map((item, index) => {

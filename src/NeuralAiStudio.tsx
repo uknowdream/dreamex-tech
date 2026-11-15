@@ -194,11 +194,11 @@ const GALLERY_ITEMS: Array<{
   {
     id: 'sovereign-factory',
     category: 'qa',
-    image: '/images/showcase-datacenter-ai.jpg',
-    badgeEn: 'ZERO-TRUST INFRA · 06',
-    badgeId: 'INFRA ZERO-TRUST · 06',
-    titleEn: 'Sovereign Zero-Trust AI Engineering Command Center',
-    titleId: 'Pusat Kendali Rekayasa AI Zero-Trust Mandiri',
+    image: '/images/cover-security-vault.jpg',
+    badgeEn: 'ZERO-TRUST VAULT · 06',
+    badgeId: 'BRANKAS ZERO-TRUST · 06',
+    titleEn: 'Zero-Trust Security Vault & Supply Chain Mesh',
+    titleId: 'Brankas Keamanan Zero-Trust & Supply Chain Mesh',
     descEn: 'Inspect CycloneDX SBOM supply chains, ephemeral OIDC CI gates, and client-sovereign zero-leak workflows.',
     descId: 'Periksa rantai pasok SBOM CycloneDX, gerbang CI OIDC sementara, dan alur kerja browser bebas kebocoran data.',
     altEn: 'Panoramic dark futuristic AI engineering command center atrium with navy glass monoliths and cyan floor rim lights.',
@@ -455,13 +455,14 @@ export function NeuralAiStudio() {
             <div className="dx-neural-canvas-card">
               <img
                 className="dx-neural-bg-img"
-                src="/images/showcase-datacenter-ai.jpg"
-                alt={en ? 'Futuristic AI command center neural compute cluster' : 'Pusat kendali komputasi neural AI futuristik'}
+                src="/images/showcase-neural-mesh.jpg"
+                alt={en ? 'Luminous multi-layer photonic neural tensor core mesh' : 'Jaringan inti tensor fotonik neural berlapis terang'}
                 loading="lazy"
                 decoding="async"
                 width={1200}
                 height={520}
               />
+              <span className="dx-neural-core-halo" aria-hidden="true" />
               <div className="dx-neural-scrim" />
               <canvas ref={canvasRef} className="dx-neural-canvas" aria-hidden="true" />
               <div className="dx-neural-hud-top">
