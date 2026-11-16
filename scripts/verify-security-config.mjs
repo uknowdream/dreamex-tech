@@ -13,10 +13,13 @@ const scriptDirective = csp.toLowerCase().split(';').map(value => value.trim()).
 if (!scriptDirective) errors.push('Enforcing CSP must declare script-src explicitly.')
 else if (scriptDirective.includes("'unsafe-inline'") || scriptDirective.includes("'unsafe-eval'")) errors.push('Enforcing CSP script-src must not allow unsafe-inline or unsafe-eval.')
 if (!reportOnly) errors.push('Keep a report-only policy during staged enforcement monitoring.')
-for (const name of ['Strict-Transport-Security', 'X-Content-Type-Options', 'X-Frame-Options', 'Referrer-Policy', 'Permissions-Policy']) {
+for (const name of ['Strict-Transport-Security', 'X-Content-Type-Options', 'X-Frame-Options', 'Referrer-Policy', 'Permissions-Policy', 'Cross-Origin-Opener-Policy', 'Cross-Origin-Resource-Policy']) {
   if (!header(name)) errors.push('Missing security header: ' + name)
 }
 const api = readFileSync('api/team-workspace.js', 'utf8')
+if (!api.includes('createRateLimiter') || !api.includes('rate_limit_exceeded')) errors.push('Shared workspace must rate-limit repeated invalid authorization attempts.')
+const radarApi = readFileSync('api/radar.js', 'utf8')
+if (!radarApi.includes('createRateLimiter') || !radarApi.includes('rate_limit_exceeded')) errors.push('Radar endpoint must enforce burst rate limiting.')
 if (!api.includes('DREAMEX_WORKSPACE_TOKEN') || !api.includes('timingSafeEqual')) errors.push('Shared workspace must validate its server-only token using timing-safe comparison.')
 if (!api.includes('revision_conflict') || !api.includes('CAS_SCRIPT')) errors.push('Shared workspace must reject stale revisions rather than silently overwriting them.')
 if (!api.includes('MEMBERS_KEY') || !api.includes('tokenHash') || !api.includes('read_only_role')) errors.push('Shared workspace must support server-enforced role-based access with hashed member tokens.')

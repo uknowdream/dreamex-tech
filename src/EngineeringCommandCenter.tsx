@@ -4,7 +4,7 @@ import { useLanguage } from './i18n'
 import { QATraceability } from './QATraceability'
 import { SloErrorBudgetWorksheet } from './SloErrorBudgetWorksheet'
 import { ReleaseEvidencePanel } from './ReleaseEvidencePanel'
-import { AiCopilotPanel, SvgRingGauge, SvgStackedBar } from './DashboardKit'
+import { AiCopilotPanel, SvgRingGauge, SvgStackedBar, SvgTrendArea } from './DashboardKit'
 import './EngineeringCommandCenter.css'
 
 type Task = { id: string; title: string; owner: string; priority: 'P0' | 'P1' | 'P2'; status: 'backlog' | 'active' | 'done' }
@@ -272,13 +272,16 @@ export function EngineeringCommandCenterPage() {
                 { label: 'P2 Normal', value: stats.p2, color: '#38bdf8' },
               ]}
             />
-            <SvgStackedBar
-              title={en ? 'Delivery Flow State' : 'Aliran Status Tugas'}
-              totalLabel={`${stats.done} ${en ? 'done' : 'selesai'}`}
-              segments={[
-                { label: en ? 'Backlog' : 'Antrean', value: stats.backlog, color: '#94a3b8' },
-                { label: en ? 'Active' : 'Dikerjakan', value: stats.active, color: '#38bdf8' },
-                { label: en ? 'Done' : 'Selesai', value: stats.done, color: '#c5ff70' },
+            <SvgTrendArea
+              title={en ? 'Delivery Readiness Trajectory' : 'Trajektori Kesiapan Rilis'}
+              meta={`${releasePct}% · ${stats.done}/${data.tasks.length}`}
+              tone={releasePct >= 80 ? 'emerald' : 'cyan'}
+              points={[
+                { label: en ? 'Queue' : 'Antre', value: stats.backlog },
+                { label: en ? 'Active' : 'Aktif', value: stats.active },
+                { label: en ? 'Done' : 'Selesai', value: stats.done },
+                { label: en ? 'Checks' : 'Cek', value: stats.ready },
+                { label: 'Gate %', value: releasePct },
               ]}
             />
           </div>

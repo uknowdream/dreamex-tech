@@ -11,29 +11,22 @@ import './navigation-panel-v3.css'
 import './performance-motion.css'
 import './quality-motion.css'
 import './immersive-motion.css'
-import './NeuralAiStudio.css'
 import './spatial-ai-system.css'
 
-const root = ReactDOM.createRoot(document.getElementById('root')!)
-const renderApp = () => root.render(
-  <React.StrictMode>
-    <LanguageProvider><BrowserRouter><App /></BrowserRouter></LanguageProvider>
-  </React.StrictMode>,
-)
-
-// Load the homepage visual layer before mounting direct homepage visits to avoid a first-paint restyle.
+// Attach the homepage visual layer synchronously without blocking React boot/hydration.
 if (window.location.pathname === '/') {
   const stylesheet = document.createElement('link')
   stylesheet.rel = 'stylesheet'
   stylesheet.href = '/premium-experience.v2.css'
   stylesheet.dataset.dreamexPremiumExperience = 'true'
-  stylesheet.addEventListener('load', renderApp, { once: true })
-  stylesheet.addEventListener('error', renderApp, { once: true })
   document.head.append(stylesheet)
-} else {
-  renderApp()
 }
 
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <LanguageProvider><BrowserRouter><App /></BrowserRouter></LanguageProvider>
+  </React.StrictMode>,
+)
 
 if (window.location.protocol === 'https:' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {

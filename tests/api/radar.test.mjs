@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import handler from '../../api/radar.js'
+import handler, { resetRadarRateLimiter } from '../../api/radar.js'
 
 const originalFetch = globalThis.fetch
 
@@ -72,5 +72,24 @@ test('POST /api/radar persists hashed subscription via Upstash KV when configure
     globalThis.fetch = originalFetch
     delete process.env.KV_REST_API_URL
     delete process.env.KV_REST_API_TOKEN
+    resetRadarRateLimiter()
+  }
+})
+
+test('POST /api/radar enforces write rate limiting with 429 and Retry-After', async () => {
+  resetRadarRateLimiter()
+  delete process.env.KV_REST_API_URL
+  delete process.env.KV_REST_API_TOKEN
+  try {
+    for (let i = 0; i < 12; i++) {
+      const ok = await invoke('POST', { headers: { 'x-forwarded-for': '198.51.100.77' }, body: { email: `eng${i}@dreamex.tech` } })
+      assert.equal(ok.status, 202)
+    }
+    const limited = await invoke('POST', { headers: { 'x-forwarded-for': '198.51.100.77' }, body: { email: 'overflow@dreamex.tech' } })
+    assert.equal(limited.status, 429)
+    assert.equal(limited.body.error, 'rate_limit_exceeded')
+    assert.ok(Number(limited.headers['retry-after']) >= 1)
+  } finally {
+    resetRadarRateLimiter()
   }
 })

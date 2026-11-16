@@ -7,6 +7,8 @@ export type ArticleCoverMeta = {
   altId: string
 }
 
+const toWebp = (jpgPath: string) => jpgPath.replace(/\.jpg$/i, '.webp')
+
 export const ARTICLE_COVERS: Record<string, ArticleCoverMeta> = {
   'qa-automation-foundations': {
     src: '/images/cover-qa-automation.jpg',
@@ -95,6 +97,7 @@ export function getArticleCover(slug: string, language: 'en' | 'id') {
   const meta = ARTICLE_COVERS[slug] ?? FALLBACK_COVER
   return {
     src: meta.src,
+    webpSrc: toWebp(meta.src),
     accent: meta.accent,
     badge: language === 'en' ? meta.badgeEn : meta.badgeId,
     alt: language === 'en' ? meta.altEn : meta.altId,

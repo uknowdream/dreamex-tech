@@ -29,3 +29,43 @@ test('Page Health Audit stays within narrow mobile viewports', async ({ page }) 
     expect(dimensions.body, `Page audit body overflows at ${width}px`).toBeLessThanOrEqual(dimensions.viewport + 1)
   }
 })
+
+test('Page Health Audit inspects pasted custom HTML snippets offline with DOMParser', async ({ page }) => {
+  await page.goto('/site-audit')
+  await page.getByRole('tab', { name: /Inspect Custom HTML|Audit HTML Eksternal/i }).click()
+  const editor = page.locator('#site-audit-html-input')
+  await expect(editor).toBeVisible()
+  await page.getByRole('button', { name: /Run audit|Jalankan audit/i }).click()
+  await expect(page.getByRole('heading', { name: /Images missing alt attributes|Gambar tanpa atribut alt/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /New-tab links should use noopener|Tautan tab baru disarankan memakai rel="noopener"/i })).toBeVisible()
+})
+
+test('Theme polarity toggle switches cleanly between dark Obsidian and Daylight light modes', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await page.goto('/')
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+
+  const getActiveThemeToggle = async () => {
+    const desktopToggle = page.locator('.nav-desktop-language .theme-toggle-btn')
+    if (await desktopToggle.isVisible()) return desktopToggle
+    const menuToggle = page.locator('.menu-toggle')
+    if (await menuToggle.isVisible()) {
+      const expanded = await menuToggle.getAttribute('aria-expanded')
+      if (expanded !== 'true') await menuToggle.click()
+    }
+    return page.locator('.nav-drawer-footer .theme-toggle-btn')
+  }
+
+  const toggleBtn = await getActiveThemeToggle()
+  await expect(toggleBtn).toBeVisible()
+  await toggleBtn.click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+  await page.reload()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+
+  const toggleAfterReload = await getActiveThemeToggle()
+  await expect(toggleAfterReload).toBeVisible()
+  await toggleAfterReload.focus()
+  await page.keyboard.press('Enter')
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+})

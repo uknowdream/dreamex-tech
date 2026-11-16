@@ -1,8 +1,16 @@
 import { createHash } from 'node:crypto'
+import { applyRateLimitHeaders, clientKey, createRateLimiter } from './_rateLimit.js'
 
 const RADAR_COUNT_KEY = 'dreamex:radar:subscribers:v1:count'
 const RADAR_ITEM_PREFIX = 'dreamex:radar:subscribers:v1:hash:'
 const MAX_BODY_BYTES = 4096
+const radarReadLimiter = createRateLimiter({ maxRequests: 60, windowMs: 60_000 })
+const radarWriteLimiter = createRateLimiter({ maxRequests: 12, windowMs: 60_000 })
+
+export function resetRadarRateLimiter() {
+  radarReadLimiter.reset()
+  radarWriteLimiter.reset()
+}
 
 function send(res, status, payload = null) {
   res.statusCode = status
@@ -88,6 +96,13 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.setHeader('Allow', 'GET, POST, OPTIONS')
     return send(res, 204)
+  }
+
+  const limiter = req.method === 'GET' ? radarReadLimiter : radarWriteLimiter
+  const limitResult = limiter.check(clientKey(req, req.method === 'GET' ? 'radar:get' : 'radar:post'))
+  applyRateLimitHeaders(res, limitResult)
+  if (!limitResult.allowed) {
+    return send(res, 429, { error: 'rate_limit_exceeded', retryAfterSec: limitResult.retryAfterSec })
   }
 
   const config = redisConfiguration()

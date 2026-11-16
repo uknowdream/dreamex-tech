@@ -1,4 +1,5 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
+import { applyRateLimitHeaders, clientKey, createRateLimiter } from './_rateLimit.js'
 
 const WORKSPACE_KEY = 'dreamex:team-workspace:shared:v1'
 const MEMBERS_KEY = 'dreamex:team-workspace:members:v1'
@@ -6,6 +7,13 @@ const AUDIT_KEY = 'dreamex:team-workspace:audit:v1'
 const MAX_AUDIT_ENTRIES = 200
 const MAX_BYTES = 100_000
 const MAX_MEMBERS = 100
+const workspaceRequestLimiter = createRateLimiter({ maxRequests: 160, windowMs: 60_000 })
+const workspaceFailedAuthLimiter = createRateLimiter({ maxRequests: 10, windowMs: 60_000 })
+
+export function resetWorkspaceRateLimiter() {
+  workspaceRequestLimiter.reset()
+  workspaceFailedAuthLimiter.reset()
+}
 const DEFAULT_STATE = { project: 'DreamEx Tech', release: '', tasks: [], decisions: [], notes: '' }
 const VALID_ROLES = new Set(['owner', 'admin', 'editor', 'viewer'])
 const MEMBER_CREATE_SCRIPT = [
@@ -92,7 +100,7 @@ function tokenHash(token) {
 }
 
 function allowedOrigins() {
-  const configured = (process.env.DREAMEX_ALLOWED_ORIGINS || 'https://dreamex.tech,https://www.dreamex.tech')
+  const configured = (process.env.DREAMEX_ALLOWED_ORIGINS || 'https://dreamex.tech,https://www.dreamex.tech,https://dreamex-tech.vercel.app')
     .split(',').map(value => value.trim()).filter(Boolean)
   if (process.env.NODE_ENV !== 'production') configured.push('http://localhost:5173', 'http://localhost:4173', 'http://127.0.0.1:4173')
   return new Set(configured)
@@ -389,13 +397,26 @@ export default async function handler(req, res) {
 
   const authorization = typeof req.headers?.authorization === 'string' ? req.headers.authorization : ''
   const match = authorization.match(/^Bearer\s+(.+)$/i)
+  const keyScope = clientKey(req, 'team-workspace')
+  const limitResult = workspaceRequestLimiter.check(keyScope)
+  applyRateLimitHeaders(res, limitResult)
+  if (!limitResult.allowed) {
+    return send(res, 429, { error: 'rate_limit_exceeded', retryAfterSec: limitResult.retryAfterSec })
+  }
   let principal
   try {
     principal = await authenticate(config, match?.[1] || '', expectedToken)
   } catch {
     return send(res, 502, { error: 'storage_unavailable', message: 'Shared storage is unavailable. No credentials or internal error details were returned.' })
   }
-  if (!principal) return send(res, 401, { error: 'unauthorized' })
+  if (!principal) {
+    const failLimit = workspaceFailedAuthLimiter.check(keyScope)
+    applyRateLimitHeaders(res, failLimit)
+    if (!failLimit.allowed) {
+      return send(res, 429, { error: 'rate_limit_exceeded', retryAfterSec: failLimit.retryAfterSec })
+    }
+    return send(res, 401, { error: 'unauthorized' })
+  }
 
   try {
     if (resource === 'members') return await handleMemberResource(req, res, config, principal)

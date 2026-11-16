@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dreamex-tech-shell-v1'
+const CACHE_NAME = 'dreamex-tech-shell-v2'
 const PRECACHE_URLS = ['/', '/manifest.webmanifest', '/favicon.svg', '/icon-192.png', '/icon-512.png']
 
 self.addEventListener('install', event => {
@@ -29,12 +29,24 @@ self.addEventListener('fetch', event => {
     return
   }
 
-  if (url.pathname.startsWith('/assets/') || /\.(?:css|js|png|svg|woff2?)$/i.test(url.pathname)) {
+  // Immutable hashed Vite bundles under /assets/ can safely stay cache-first.
+  if (url.pathname.startsWith('/assets/')) {
     event.respondWith(
       caches.match(request).then(cached => cached || fetch(request).then(response => {
         if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(request, response.clone()))
         return response
       }))
+    )
+    return
+  }
+
+  // Unhashed assets (e.g. /premium-experience.v2.css, /images/*) use network-first so design updates arrive immediately.
+  if (/\.(?:css|js|png|webp|jpg|svg|woff2?)$/i.test(url.pathname)) {
+    event.respondWith(
+      fetch(request).then(response => {
+        if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(request, response.clone()))
+        return response
+      }).catch(async () => caches.match(request))
     )
   }
 })

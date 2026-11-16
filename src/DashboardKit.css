@@ -254,6 +254,48 @@
   overflow-wrap: anywhere;
 }
 
+/* Pure SVG Animated Area Trend */
+.dx-trend-card {
+  display: grid;
+  gap: 10px;
+  padding: 18px 20px;
+  border: 1px solid rgba(132, 168, 214, 0.2);
+  border-radius: 15px;
+  background: linear-gradient(148deg, rgba(15, 26, 44, 0.9), rgba(7, 13, 24, 0.96));
+  margin: 18px 0;
+}
+
+.dx-trend-svg {
+  width: 100%;
+  height: 112px;
+  display: block;
+}
+
+.dx-trend-line {
+  stroke-dasharray: 520;
+  stroke-dashoffset: 520;
+  animation: dx-trend-draw 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes dx-trend-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.dx-trend-labels {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px 12px;
+  font: 600 10.5px/1.2 var(--mono);
+  color: #8ea5c4;
+}
+
+.dx-trend-labels b {
+  color: #f1f6ff;
+}
+
 /* Pipeline Stage Strip */
 .dx-pipeline-strip {
   display: grid;
@@ -476,6 +518,41 @@
   color: #e6effc;
 }
 
+.dx-copilot-endpoint-field,
+.dx-copilot-trust-check {
+  grid-column: 1 / -1;
+}
+
+.dx-copilot-trust-check {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  color: #fbbf24 !important;
+  cursor: pointer;
+}
+
+.dx-copilot-followup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(132, 168, 214, 0.16);
+}
+
+.dx-copilot-followup input {
+  flex: 1 1 220px;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(132, 168, 214, 0.25);
+  background: rgba(7, 13, 24, 0.88);
+  color: #eff6ff;
+  font-size: 12.5px;
+}
+
 .dx-copilot-error {
   margin: 0;
   font-size: 12px;
@@ -552,7 +629,50 @@
   .dx-pipeline-meter > span {
     transition: none;
   }
+  .dx-trend-line {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
   .dx-kpi-card:hover {
     transform: none;
   }
+}
+
+html[data-theme="light"] .dx-kpi-card,
+html[data-theme="light"] .dx-stacked-card,
+html[data-theme="light"] .dx-spark-card,
+html[data-theme="light"] .dx-trend-card,
+html[data-theme="light"] .dx-copilot-panel {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.14);
+  color: #0f172a;
+}
+
+html[data-theme="light"] .dx-kpi-value,
+html[data-theme="light"] .dx-stacked-head strong,
+html[data-theme="light"] .dx-stacked-legend-item b,
+html[data-theme="light"] .dx-spark-val,
+html[data-theme="light"] .dx-trend-labels b,
+html[data-theme="light"] .dx-copilot-title-wrap h3 {
+  color: #0f172a;
+}
+
+html[data-theme="light"] .dx-kpi-label,
+html[data-theme="light"] .dx-kpi-sub,
+html[data-theme="light"] .dx-stacked-head span,
+html[data-theme="light"] .dx-stacked-legend-item,
+html[data-theme="light"] .dx-spark-lbl,
+html[data-theme="light"] .dx-trend-labels {
+  color: #475569;
+}
+
+html[data-theme="light"] .dx-copilot-ai-output {
+  background: #f8fafc;
+  border-color: rgba(79, 70, 229, 0.28);
+}
+
+html[data-theme="light"] .dx-copilot-ai-output pre,
+html[data-theme="light"] .dx-copilot-followup input {
+  color: #0f172a;
+  background: #ffffff;
 }

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('homepage restores ambient hero motion and moving terminal details', async ({ page }) => {
+test('homepage restores ambient hero motion and moving terminal details', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   await page.goto('/')
@@ -65,18 +65,44 @@ test('homepage restores ambient hero motion and moving terminal details', async 
   expect(motion.signalCardRect.right).toBeLessThanOrEqual(1440)
   expect(motion.signalCardRect.width).toBeLessThanOrEqual(194)
 
-  const sweepTransformBefore = await page.evaluate(() =>
-    getComputedStyle(document.querySelector('.hero-gridlines')!, '::after').transform
-  )
+  const readSweepState = () =>
+    page.evaluate(() => {
+      const grid = document.querySelector('.hero-gridlines')!
+      const sweepAnim = grid
+        .getAnimations({ subtree: true })
+        .find(anim => anim instanceof CSSAnimation && anim.animationName === 'dx-grid-sweep')
+      const keyframeTransforms =
+        sweepAnim?.effect instanceof KeyframeEffect
+          ? sweepAnim.effect.getKeyframes().map(frame => String(frame.transform ?? ''))
+          : []
+      return {
+        transform: getComputedStyle(grid, '::after').transform,
+        state: sweepAnim?.playState ?? null,
+        currentTime: typeof sweepAnim?.currentTime === 'number' ? sweepAnim.currentTime : null,
+        hasTranslateMotion: new Set(keyframeTransforms.filter(Boolean)).size >= 2,
+      }
+    })
+
+  const sweepBefore = await readSweepState()
+  expect(sweepBefore.state).toBe('running')
+  expect(sweepBefore.hasTranslateMotion).toBe(true)
   await expect
     .poll(
-      () =>
-        page.evaluate(() =>
-          getComputedStyle(document.querySelector('.hero-gridlines')!, '::after').transform
-        ),
+      async () => {
+        const current = await readSweepState()
+        const timelineAdvanced =
+          current.state === 'running' &&
+          current.currentTime !== null &&
+          sweepBefore.currentTime !== null &&
+          current.currentTime > sweepBefore.currentTime + 200
+        if (testInfo.project.name === 'mobile-safari') {
+          return current.transform !== sweepBefore.transform || timelineAdvanced
+        }
+        return current.transform !== sweepBefore.transform && timelineAdvanced
+      },
       { timeout: 3000 }
     )
-    .not.toBe(sweepTransformBefore)
+    .toBe(true)
 })
 
 test('scroll reveals reappear and complete as sections enter the viewport', async ({ page }) => {

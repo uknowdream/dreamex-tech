@@ -26,7 +26,8 @@ import {
 } from 'lucide-react'
 import { useLanguage } from './i18n'
 import { ApiContractStudio } from './ApiContractStudio'
-import { AiCopilotPanel, SvgRingGauge, SvgSparkBars, SvgStackedBar, readWorkspacePulse } from './DashboardKit'
+import { AiCopilotPanel, SvgRingGauge, SvgSparkBars, SvgStackedBar } from './DashboardKit'
+import { readWorkspacePulse } from './workspacePulse'
 import './EngineeringPlatform.css'
 
 type RoleFocus = 'all' | 'dev' | 'qa' | 'ba' | 'pm'

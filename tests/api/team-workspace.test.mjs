@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import handler from '../../api/team-workspace.js'
+import handler, { resetWorkspaceRateLimiter } from '../../api/team-workspace.js'
 
 const ownerToken = 'unit-test-workspace-token-32-characters-long'
 const redisToken = 'unit-test-redis-token'
@@ -32,6 +32,7 @@ function invoke(method, options = {}) {
 }
 
 function setConfigured() {
+  resetWorkspaceRateLimiter()
   process.env.DREAMEX_WORKSPACE_TOKEN = ownerToken
   process.env.KV_REST_API_URL = 'https://redis.example.test'
   process.env.KV_REST_API_TOKEN = redisToken
@@ -393,4 +394,22 @@ test('stale admin privileges are revalidated inside atomic role mutations', asyn
     assert.equal(result.body.error, 'forbidden')
     assert.equal(memberRecords.has(hashToken(editor.token)), true)
   } finally { clearConfigured() }
+})
+
+
+test('repeated invalid bearer attempts trigger brute-force rate limiting with 429', async () => {
+  setConfigured()
+  try {
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const denied = await invoke('GET', { headers: { 'x-forwarded-for': '203.0.113.99', authorization: 'Bearer wrong-token' } })
+      assert.equal(denied.status, 401)
+    }
+    const throttled = await invoke('GET', { headers: { 'x-forwarded-for': '203.0.113.99', authorization: 'Bearer wrong-token' } })
+    assert.equal(throttled.status, 429)
+    assert.equal(throttled.body.error, 'rate_limit_exceeded')
+    assert.ok(Number(throttled.headers['retry-after']) >= 1)
+  } finally {
+    resetWorkspaceRateLimiter()
+    clearConfigured()
+  }
 })

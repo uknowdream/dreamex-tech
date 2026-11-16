@@ -1,15 +1,32 @@
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Link, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowDownRight, ArrowRight, BookOpen, Bookmark, BookmarkCheck, Braces, Check, ChevronUp, ChevronDown, Layers3, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap, Rss, Activity, AlertTriangle, CheckCircle2, Download, ClipboardList, Network, Gauge, Clock3 } from 'lucide-react'
+import { Link, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { ArrowDownRight, ArrowRight, BookOpen, Bookmark, Braces, Check, ChevronUp, ChevronDown, Layers3, Command, Copy, Github, Home as HomeIcon, Search, Share2, ShieldCheck, Sparkles, Terminal, X, Zap, Rss, Activity, CheckCircle2, ClipboardList, Network, Gauge, Clock3 } from 'lucide-react'
 import { articles } from './articles'
 import { articleTranslations } from './articleTranslations'
-import { articleEnhancementsEn, articleEnhancementsId } from './articleEnhancements'
 import { getArticleCover } from './articleCovers'
 import { useLanguage } from './i18n'
+import { ThemeToggle } from './ThemeToggle'
+import { useTheme } from './themeUtils'
+import { ArticleCard } from './ArticleCard'
+import { ArticleReaderView } from './ArticleReader'
+import {
+  categoryLabel,
+  READING_LIST_EVENT,
+  READING_LIST_KEY,
+  READING_PROGRESS_EVENT,
+  READING_PROGRESS_KEY,
+  readReadingProgress as readSharedReadingProgress,
+  readSavedSlugs,
+  useReadingList,
+  type ReadingProgressRecord,
+} from './readingUtils'
 import { EngineeringLaunchpad } from './EngineeringLaunchpad'
 import { HeroAiCockpit } from './HeroAiCockpit'
 import { HeroNeuralCanvas } from './HeroNeuralCanvas'
 import { HoloMotionFx } from './HoloMotionFx'
+const LazyEngineeringLab = lazy(() => import('./EngineeringLab').then(module => ({ default: module.EngineeringLabView })))
+const LazyWebQualityObservatory = lazy(() => import('./DevUtilitiesSuite').then(module => ({ default: module.WebQualityObservatoryView })))
+const LazyDeveloperUtilities = lazy(() => import('./DevUtilitiesSuite').then(module => ({ default: module.DeveloperUtilitiesView })))
 const NeuralAiStudio = lazy(() => import('./NeuralAiStudio').then(module => ({ default: module.NeuralAiStudio })))
 const EngineeringControlPlanePage = lazy(() => import('./EngineeringControlPlane').then(module => ({ default: module.EngineeringControlPlanePage })))
 const QualityIntelligencePage = lazy(() => import('./QualityIntelligence').then(module => ({ default: module.QualityIntelligencePage })))
@@ -30,62 +47,12 @@ const SiteAuditPage = lazy(() => import('./SiteAudit').then(module => ({ default
 const SovereignWorkbenchPage = lazy(() => import('./SovereignWorkbench').then(module => ({ default: module.SovereignWorkbenchPage })))
 
 const categories = ['Semua', 'Software Engineering', 'QA Automation', 'AI & Technology']
-const categoryLabel = (category: string, language: 'id' | 'en') => {
-  if (category === 'Semua') return language === 'en' ? 'All' : 'Semua'
-  if (category === 'QA Automation') return language === 'en' ? 'QA Automation' : 'QA Automation'
-  if (category === 'AI & Technology') return language === 'en' ? 'AI & Technology' : 'AI & Technology'
-  return category
-}
 
-const READING_LIST_KEY = 'dreamex-reading-list-v1'
-const READING_LIST_EVENT = 'dreamex-reading-list-updated'
-
-const READING_PROGRESS_KEY = 'dreamex-reading-progress-v1'
-const READING_PROGRESS_EVENT = 'dreamex-reading-progress-updated'
-
-type ReadingProgressRecord = { slug: string; progress: number }
-
+// Keep explicit verification identifiers linked cleanly to shared reading helpers.
+void READING_PROGRESS_KEY
+void READING_LIST_KEY
 function readReadingProgress(): ReadingProgressRecord | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const value: unknown = JSON.parse(window.localStorage.getItem(READING_PROGRESS_KEY) ?? 'null')
-    if (!value || typeof value !== 'object') return null
-    const record = value as Partial<ReadingProgressRecord>
-    if (typeof record.slug !== 'string' || !articles.some(article => article.slug === record.slug)) return null
-    if (typeof record.progress !== 'number' || !Number.isFinite(record.progress) || record.progress < 5 || record.progress >= 100) return null
-    return { slug: record.slug, progress: Math.round(record.progress) }
-  } catch { return null }
-}
-
-function readSavedSlugs(): string[] {
-  if (typeof window === 'undefined') return []
-  try {
-    const value: unknown = JSON.parse(window.localStorage.getItem(READING_LIST_KEY) ?? '[]')
-    return Array.isArray(value) ? value.filter((slug): slug is string => typeof slug === 'string' && articles.some(article => article.slug === slug)) : []
-  } catch {
-    return []
-  }
-}
-
-function useReadingList() {
-  const [savedSlugs, setSavedSlugs] = useState<string[]>(readSavedSlugs)
-  useEffect(() => {
-    const sync = () => setSavedSlugs(readSavedSlugs())
-    window.addEventListener('storage', sync)
-    window.addEventListener(READING_LIST_EVENT, sync)
-    return () => {
-      window.removeEventListener('storage', sync)
-      window.removeEventListener(READING_LIST_EVENT, sync)
-    }
-  }, [])
-  const toggleSaved = (slug: string) => {
-    const current = readSavedSlugs()
-    const next = current.includes(slug) ? current.filter(item => item !== slug) : [...current, slug]
-    try { window.localStorage.setItem(READING_LIST_KEY, JSON.stringify(next)) } catch { /* Keep the current session usable when storage is blocked. */ }
-    setSavedSlugs(next)
-    window.dispatchEvent(new Event(READING_LIST_EVENT))
-  }
-  return { savedSlugs, toggleSaved, isSaved: (slug: string) => savedSlugs.includes(slug) }
+  return readSharedReadingProgress()
 }
 
 type InstallPromptEvent = Event & {
@@ -425,7 +392,10 @@ function Header() {
             <summary><span className="nav-link-icon"><Layers3 size={16}/></span><span><b>{language === 'en' ? 'Engineering platform' : 'Platform engineering'}</b><small>{language === 'en' ? '23 AI workspaces for Dev, QA, BA & PM' : '23 workspace AI untuk Dev, QA, BA & PM'}</small></span><ChevronDown size={15} className="nav-chevron" /></summary>
             <div className="nav-mega-panel">
               <div className="nav-mega-intro">
-                <img className="nav-mega-spotlight-art" src="/images/spotlight-ai-os.jpg" alt="" aria-hidden="true" width={360} height={200} />
+                <picture>
+                  <source srcSet="/images/spotlight-ai-os.webp" type="image/webp" />
+                  <img className="nav-mega-spotlight-art" src="/images/spotlight-ai-os.jpg" alt="" aria-hidden="true" width={360} height={200} />
+                </picture>
                 <span className="nav-mega-kicker">{language === 'en' ? 'SPATIAL AI WORKSPACE · v4.0' : 'RUANG KERJA AI SPASIAL · v4.0'}</span>
                 <strong>{language === 'en' ? 'From architecture to autonomous release.' : 'Dari arsitektur hingga rilis otonom.'}</strong>
                 <p>{language === 'en' ? 'Unify distributed systems design, self-healing QA automation, executable BA specs, and Jira telemetry in one sovereign OS.' : 'Satukan desain sistem, otomasi QA self-healing, spesifikasi BA, dan telemetri Jira dalam satu OS privat.'}</p>
@@ -491,9 +461,9 @@ function Header() {
           <NavLink to="/about" aria-label={language === 'en' ? 'About' : 'Tentang'} onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Sparkles size={16}/></span><span><b>{language === 'en' ? 'About DreamEx' : 'Tentang DreamEx'}</b><small>{language === 'en' ? 'Purpose and project details' : 'Tujuan dan detail proyek'}</small></span></NavLink>
           <a className="nav-github" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Github size={16}/></span><span><b>GitHub</b><small>{language === 'en' ? 'Source code & releases' : 'Kode sumber dan rilis'}</small></span></a>
           <InstallAppButton />
-          <div className="language-switch nav-desktop-language" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div>
+          <div className="language-switch nav-desktop-language" role="group" aria-label={t('language')}><ThemeToggle en={language === 'en'} compact /><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div>
           <div className="nav-drawer-footer">
-            <div className="language-switch" role="group" aria-label={t('language')}><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div>
+            <div className="language-switch" role="group" aria-label={t('language')}><ThemeToggle en={language === 'en'} /><button type="button" className={language === 'id' ? 'language-option active' : 'language-option'} aria-pressed={language === 'id'} onClick={() => setLanguage('id')}>ID</button><button type="button" className={language === 'en' ? 'language-option active' : 'language-option'} aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div>
             <span>{language === 'en' ? 'BUILD WITH EVIDENCE' : 'BANGUN DENGAN BUKTI'}</span>
           </div>
         </nav>
@@ -562,24 +532,6 @@ function Footer() {
   </footer>
 }
 
-function ArticleCard({ article, index = 0, activeTag = '', onSelectTag }: { article: typeof articles[number]; index?: number; activeTag?: string; onSelectTag?: (tag: string) => void }) {
-  const { t, language } = useLanguage()
-  const { isSaved, toggleSaved } = useReadingList()
-  const translated = language === 'en' ? articleTranslations[article.slug] : undefined
-  const saved = isSaved(article.slug)
-  const cover = getArticleCover(article.slug, language)
-  return <article className="article-card" style={{ animationDelay: `${index * 70}ms` }}>
-    <Link className="article-cover-thumb" to={`/blog/${article.slug}`} tabIndex={-1} aria-hidden="true">
-      <img className="article-cover-img" src={cover.src} alt="" width={640} height={360} loading="lazy" decoding="async" />
-      <HoloMotionFx variant={article.category.includes('QA') ? 'qa' : article.category.includes('AI') ? 'neural' : 'arch'} />
-      <span className="article-cover-badge" style={{ borderColor: cover.accent }}>{cover.badge}</span>
-    </Link>
-    <div className="card-top"><span className="category-pill">{categoryLabel(article.category, language)}</span><div className="card-meta-actions"><span className="read-time">{language === 'en' ? article.readTime.replace('menit', 'min') : article.readTime}</span><button className="bookmark-button" type="button" aria-pressed={saved} aria-label={`${saved ? (language === 'en' ? 'Remove saved article' : 'Hapus artikel tersimpan') : (language === 'en' ? 'Save article' : 'Simpan artikel')}: ${translated?.title ?? article.title}`} onClick={() => toggleSaved(article.slug)} title={saved ? (language === 'en' ? 'Remove from reading list' : 'Hapus dari daftar bacaan') : (language === 'en' ? 'Save to reading list' : 'Simpan ke daftar bacaan')}>{saved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}</button></div></div>
-    <h3><Link to={`/blog/${article.slug}`}>{translated?.title ?? article.title}</Link></h3><p>{translated?.excerpt ?? article.excerpt}</p>
-    <div className="tag-row">{article.tags.slice(0, 3).map(tag => onSelectTag ? <button key={tag} type="button" className={activeTag === tag ? 'tag-chip active' : 'tag-chip'} aria-pressed={activeTag === tag} onClick={() => onSelectTag(activeTag === tag ? '' : tag)}>#{tag.replaceAll(' ', '')}</button> : <span key={tag}>#{tag.replaceAll(' ', '')}</span>)}</div>
-    <Link className="read-link" to={`/blog/${article.slug}`}>{t('readArticle')} <ArrowRight size={16} /></Link>
-  </article>
-}
 
 function Home() {
   const { t, language } = useLanguage()
@@ -696,7 +648,7 @@ function Home() {
   }, [language, t])
 
   return <main id="main-content" className="home-page">
-    <section className="hero"><div className="hero-gridlines" /><img className="hero-core-backdrop" src="/images/hero-neural-core.jpg" alt="" aria-hidden="true" width={1408} height={768} /><HeroNeuralCanvas /><div className="container hero-grid">
+    <section className="hero"><div className="hero-gridlines" /><picture><source srcSet="/images/hero-neural-core.webp" type="image/webp" /><img className="hero-core-backdrop" src="/images/hero-neural-core.jpg" alt="" aria-hidden="true" width={1408} height={768} /></picture><HeroNeuralCanvas /><div className="container hero-grid">
       <div className="hero-copy"><div className="eyebrow"><span className="eyebrow-dot" /> {t('heroEyebrow')}</div>
         <h1>{t('heroLine1')}<br /><span>{t('heroLine2')}</span><br />{t('heroLine3')}</h1>
         <p className="hero-description">{t('heroDescription')}</p>
@@ -718,11 +670,11 @@ function Home() {
     <Suspense fallback={null}><NeuralAiStudio /></Suspense>
     <EngineeringLaunchpad />
     <section className="topics-section" id="topics"><div className="container"><div className="topics-heading"><div><span className="section-kicker">{t('topicsEyebrow')}</span><h2>{t('topicsHeading')} <span>{t('topicsHeadingAccent')}</span></h2></div><p>{t('topicsDescription')}</p></div><div className="topics-grid">
-      <a className="topic-card" href="#latest" onClick={() => setCategory('Software Engineering')}><span className="topic-holo-stage" aria-hidden="true"><img className="topic-holo-img" src="/images/cover-software-arch.jpg" alt="" loading="lazy" decoding="async" width={640} height={360} /><HoloMotionFx variant="arch" /></span><span className="topic-number">01</span><span className="topic-icon purple"><Braces /></span><h3>{t('softwareTopic')}</h3><p>{t('softwareDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
-      <a className="topic-card" href="#latest" onClick={() => setCategory('QA Automation')}><span className="topic-holo-stage" aria-hidden="true"><img className="topic-holo-img" src="/images/cover-qa-automation.jpg" alt="" loading="lazy" decoding="async" width={640} height={360} /><HoloMotionFx variant="qa" /></span><span className="topic-number">02</span><span className="topic-icon green"><ShieldCheck /></span><h3>{t('qaTopic')}</h3><p>{t('qaDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
-      <a className="topic-card" href="#latest" onClick={() => setCategory('AI & Technology')}><span className="topic-holo-stage" aria-hidden="true"><img className="topic-holo-img" src="/images/cover-ai-eval.jpg" alt="" loading="lazy" decoding="async" width={640} height={360} /><HoloMotionFx variant="neural" /></span><span className="topic-number">03</span><span className="topic-icon blue"><Sparkles /></span><h3>{t('aiTopic')}</h3><p>{t('aiDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
+      <a className="topic-card" href="#latest" onClick={() => setCategory('Software Engineering')}><span className="topic-holo-stage" aria-hidden="true"><picture><source srcSet="/images/cover-software-arch.webp" type="image/webp" /><img className="topic-holo-img" src="/images/cover-software-arch.jpg" alt="" loading="lazy" decoding="async" width={640} height={360} /></picture><HoloMotionFx variant="arch" /></span><span className="topic-number">01</span><span className="topic-icon purple"><Braces /></span><h3>{t('softwareTopic')}</h3><p>{t('softwareDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
+      <a className="topic-card" href="#latest" onClick={() => setCategory('QA Automation')}><span className="topic-holo-stage" aria-hidden="true"><picture><source srcSet="/images/cover-qa-automation.webp" type="image/webp" /><img className="topic-holo-img" src="/images/cover-qa-automation.jpg" alt="" loading="lazy" decoding="async" width={640} height={360} /></picture><HoloMotionFx variant="qa" /></span><span className="topic-number">02</span><span className="topic-icon green"><ShieldCheck /></span><h3>{t('qaTopic')}</h3><p>{t('qaDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
+      <a className="topic-card" href="#latest" onClick={() => setCategory('AI & Technology')}><span className="topic-holo-stage" aria-hidden="true"><picture><source srcSet="/images/cover-ai-eval.webp" type="image/webp" /><img className="topic-holo-img" src="/images/cover-ai-eval.jpg" alt="" loading="lazy" decoding="async" width={640} height={360} /></picture><HoloMotionFx variant="neural" /></span><span className="topic-number">03</span><span className="topic-icon blue"><Sparkles /></span><h3>{t('aiTopic')}</h3><p>{t('aiDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
     </div></div></section>
-    <section className="featured-section"><div className="container featured-wrap"><div className="featured-label"><span className="section-kicker">{t('featuredHeading')}</span><span className="featured-line" /></div><div className="featured-card"><div className="featured-art"><img className="featured-cover-img" src={featuredCover.src} alt={featuredCover.alt} width={960} height={540} loading="lazy" /><HoloMotionFx variant="qa" /><div className="art-grid" /><div className="art-symbol"><Braces size={72} strokeWidth={1.1} /></div><span className="art-index">DX / 001</span><span className="art-caption">ENGINEERING<br />FOR WHAT'S NEXT</span></div><div className="featured-copy"><span className="category-pill">{categoryLabel(featured.category, language)}</span><p className="featured-overline">{t('featuredInsight')} · {(language === 'en' ? featured.readTime.replace('menit', 'min read') : `${featured.readTime} baca`).toUpperCase()}</p><h2>{featuredTranslation?.title ?? featured.title}</h2><p>{featuredTranslation?.excerpt ?? featured.excerpt}</p><Link className="read-link" to={`/blog/${featured.slug}`}>{t('readFeatured')} <ArrowRight size={16} /></Link></div></div></div></section>
+    <section className="featured-section"><div className="container featured-wrap"><div className="featured-label"><span className="section-kicker">{t('featuredHeading')}</span><span className="featured-line" /></div><div className="featured-card"><div className="featured-art"><picture><source srcSet={featuredCover.webpSrc} type="image/webp" /><img className="featured-cover-img" src={featuredCover.src} alt={featuredCover.alt} width={960} height={540} loading="lazy" /></picture><HoloMotionFx variant="qa" /><div className="art-grid" /><div className="art-symbol"><Braces size={72} strokeWidth={1.1} /></div><span className="art-index">DX / 001</span><span className="art-caption">ENGINEERING<br />FOR WHAT'S NEXT</span></div><div className="featured-copy"><span className="category-pill">{categoryLabel(featured.category, language)}</span><p className="featured-overline">{t('featuredInsight')} · {(language === 'en' ? featured.readTime.replace('menit', 'min read') : `${featured.readTime} baca`).toUpperCase()}</p><h2>{featuredTranslation?.title ?? featured.title}</h2><p>{featuredTranslation?.excerpt ?? featured.excerpt}</p><Link className="read-link" to={`/blog/${featured.slug}`}>{t('readFeatured')} <ArrowRight size={16} /></Link></div></div></div></section>
     <section className="articles-section" id="latest"><div className="container">
       {resumeRecord && (() => {
         const resumeArticle = articles.find(item => item.slug === resumeRecord.slug)
@@ -746,7 +698,7 @@ function Home() {
       <div className="results-meta"><span>{filtered.length} {t('found')}{selectedTag ? ` · #${selectedTag.replaceAll(' ', '')}` : ''}</span>{(query || selectedTag) && <button onClick={() => { setQuery(''); setSelectedTag('') }}>{t('clearSearch')} <span>×</span></button>}</div>
       {filtered.length ? <div className="article-grid">{filtered.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} activeTag={selectedTag} onSelectTag={setSelectedTag} />)}</div> : <div className="empty-state"><Search size={22} /><strong>{t('noResults')}</strong><span>{t('tryOther')}</span></div>}
     </div></section>
-    <section className="newsletter"><div className="container newsletter-inner"><div><span className="section-kicker">{t('buildInPublic')}</span><h2>Ship with clarity.<br /><span>Iterate with AI precision.</span></h2><p>{t('buildDescription')}</p><form className="newsletter-form" onSubmit={submitDigest}><input type="email" value={digestEmail} onChange={e => setDigestEmail(e.target.value)} placeholder={language === 'en' ? 'you@company.dev — Release & AI Radar' : 'anda@tim.dev — Radar Rilis & AI'} aria-label={language === 'en' ? 'Email for engineering radar updates' : 'Email untuk pembaruan radar engineering'} /><button type="submit" className="button button-primary" disabled={digestBusy}>{digestBusy ? (language === 'en' ? 'Saving…' : 'Menyimpan…') : (language === 'en' ? 'Save Radar' : 'Simpan Radar')} <ArrowRight size={15} /></button><Link className="button button-ghost" to="/rss"><Rss size={15} /> RSS</Link></form>{digestStatus && <p className="newsletter-status" role="status">{digestStatus}</p>}</div><a className="button button-ghost" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer"><Github size={16} /> {t('exploreCode')} <ArrowRight size={17} /></a></div></section>
+    <section className="newsletter"><div className="container newsletter-inner"><div><span className="section-kicker">{t('buildInPublic')}</span><h2>{language === 'en' ? <>Ship with clarity.<br /><span>Iterate with AI precision.</span></> : <>Rilis penuh kejelasan.<br /><span>Beriterasi cepat dengan AI.</span></>}</h2><p>{t('buildDescription')}</p><form className="newsletter-form" onSubmit={submitDigest}><input type="email" value={digestEmail} onChange={e => setDigestEmail(e.target.value)} placeholder={language === 'en' ? 'you@company.dev — Release & AI Radar' : 'anda@tim.dev — Radar Rilis & AI'} aria-label={language === 'en' ? 'Email for engineering radar updates' : 'Email untuk pembaruan radar engineering'} /><button type="submit" className="button button-primary" disabled={digestBusy}>{digestBusy ? (language === 'en' ? 'Saving…' : 'Menyimpan…') : (language === 'en' ? 'Save Radar' : 'Simpan Radar')} <ArrowRight size={15} /></button><Link className="button button-ghost" to="/rss"><Rss size={15} /> RSS</Link></form>{digestStatus && <p className="newsletter-status" role="status">{digestStatus}</p>}</div><a className="button button-ghost" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer"><Github size={16} /> {t('exploreCode')} <ArrowRight size={17} /></a></div></section>
   </main>
 }
 
@@ -866,850 +818,32 @@ function ReadingListPage() {
 }
 
 
-type ObservatoryCheck = { id: string; category: string; title: string; description: string; severity: 'high' | 'medium' | 'info'; run: () => Promise<{ status: 'pass' | 'warn' | 'fail'; detail: string }> }
-
 function WebQualityObservatoryPage() {
   const { language } = useLanguage()
-  const en = language === 'en'
-  const [results, setResults] = useState<Record<string, { status: 'pass' | 'warn' | 'fail'; detail: string }>>({})
-  const [running, setRunning] = useState(false)
-  const [ranAt, setRanAt] = useState('')
-  const [copied, setCopied] = useState(false)
-  const checks = useMemo<ObservatoryCheck[]>(() => [
-    { id: 'https', category: en ? 'Security & transport' : 'Keamanan & transport', title: en ? 'HTTPS page context' : 'Konteks halaman HTTPS', description: en ? 'Confirms the current page uses a secure transport context.' : 'Memastikan halaman saat ini menggunakan konteks transport yang aman.', severity: 'high', run: async () => ({ status: window.location.protocol === 'https:' || window.location.hostname === 'localhost' ? 'pass' : 'fail', detail: window.location.protocol + '//' + window.location.host }) },
-    { id: 'viewport', category: en ? 'Responsive experience' : 'Pengalaman responsif', title: en ? 'Viewport configuration' : 'Konfigurasi viewport', description: en ? 'Checks whether a viewport meta tag is present.' : 'Memeriksa keberadaan meta tag viewport.', severity: 'high', run: async () => { const tag = document.querySelector<HTMLMetaElement>('meta[name="viewport"]'); return { status: tag?.content.includes('width=device-width') ? 'pass' : 'fail', detail: tag?.content || (en ? 'Viewport meta tag is missing.' : 'Meta tag viewport tidak ditemukan.') } } },
-    { id: 'title', category: en ? 'Search & metadata' : 'Pencarian & metadata', title: en ? 'Unique page title' : 'Judul halaman', description: en ? 'Checks for a non-empty document title.' : 'Memeriksa judul dokumen yang tidak kosong.', severity: 'high', run: async () => ({ status: document.title.trim() ? 'pass' : 'fail', detail: document.title.trim() || (en ? 'Document title is empty.' : 'Judul dokumen kosong.') }) },
-    { id: 'description', category: en ? 'Search & metadata' : 'Pencarian & metadata', title: en ? 'Meta description' : 'Meta description', description: en ? 'Checks for a non-empty description meta tag.' : 'Memeriksa meta description yang tidak kosong.', severity: 'medium', run: async () => { const value = document.querySelector<HTMLMetaElement>('meta[name="description"]')?.content.trim() || ''; return { status: value.length >= 50 && value.length <= 180 ? 'pass' : value ? 'warn' : 'fail', detail: value ? (en ? value.length + ' characters' : value.length + ' karakter') : (en ? 'Description is missing.' : 'Description tidak ditemukan.') } } },
-    { id: 'canonical', category: en ? 'Search & metadata' : 'Pencarian & metadata', title: en ? 'Canonical URL' : 'URL canonical', description: en ? 'Checks that a canonical link points to an absolute HTTPS URL.' : 'Memeriksa link canonical dengan URL HTTPS absolut.', severity: 'medium', run: async () => { const value = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href || ''; return { status: /^https:\/\//.test(value) ? 'pass' : 'warn', detail: value || (en ? 'Canonical URL is missing.' : 'URL canonical tidak ditemukan.') } } },
-    { id: 'h1', category: en ? 'Accessibility & structure' : 'Aksesibilitas & struktur', title: en ? 'Single primary heading' : 'Satu heading utama', description: en ? 'Checks the current document for exactly one H1.' : 'Memeriksa apakah dokumen memiliki tepat satu H1.', severity: 'medium', run: async () => { const count = document.querySelectorAll('h1').length; return { status: count === 1 ? 'pass' : 'warn', detail: en ? count + ' H1 elements found' : count + ' elemen H1 ditemukan' } } },
-    { id: 'landmarks', category: en ? 'Accessibility & structure' : 'Aksesibilitas & struktur', title: en ? 'Main landmark' : 'Landmark utama', description: en ? 'Checks for a main landmark or main-content target.' : 'Memeriksa landmark main atau target main-content.', severity: 'medium', run: async () => { const found = Boolean(document.querySelector('main, [role="main"], #main-content')); return { status: found ? 'pass' : 'fail', detail: found ? (en ? 'Main content landmark found.' : 'Landmark konten utama ditemukan.') : (en ? 'No main landmark found.' : 'Landmark utama tidak ditemukan.') } } },
-    { id: 'skip-link', category: en ? 'Accessibility & structure' : 'Aksesibilitas & struktur', title: en ? 'Skip navigation link' : 'Tautan lewati navigasi', description: en ? 'Checks for a keyboard-friendly skip link.' : 'Memeriksa tautan untuk melewati navigasi dengan keyboard.', severity: 'medium', run: async () => { const found = Boolean(document.querySelector('a.skip-link[href^="#"]')); return { status: found ? 'pass' : 'warn', detail: found ? (en ? 'Skip link found.' : 'Tautan skip ditemukan.') : (en ? 'No skip link detected.' : 'Tautan skip tidak ditemukan.') } } },
-    { id: 'images', category: en ? 'Accessibility & structure' : 'Aksesibilitas & struktur', title: en ? 'Image alternative text' : 'Teks alternatif gambar', description: en ? 'Flags images that have no alt attribute.' : 'Menandai gambar yang tidak memiliki atribut alt.', severity: 'medium', run: async () => { const images = [...document.images]; const missing = images.filter(image => !image.hasAttribute('alt')).length; return { status: missing === 0 ? 'pass' : 'warn', detail: en ? missing + ' of ' + images.length + ' images missing alt attributes' : missing + ' dari ' + images.length + ' gambar tidak memiliki atribut alt' } } },
-    { id: 'links', category: en ? 'Navigation integrity' : 'Integritas navigasi', title: en ? 'Empty link labels' : 'Label tautan kosong', description: en ? 'Finds links without readable text or an accessible name.' : 'Mencari tautan tanpa teks terbaca atau nama aksesibel.', severity: 'medium', run: async () => { const links = [...document.querySelectorAll<HTMLAnchorElement>('a[href]')]; const missing = links.filter(link => !(link.innerText || link.getAttribute('aria-label') || link.querySelector('img[alt]')?.getAttribute('alt') || '').trim()).length; return { status: missing === 0 ? 'pass' : 'warn', detail: en ? missing + ' of ' + links.length + ' links have no detectable label' : missing + ' dari ' + links.length + ' tautan tidak memiliki label terdeteksi' } } },
-    { id: 'motion', category: en ? 'Accessibility & structure' : 'Aksesibilitas & struktur', title: en ? 'Reduced-motion support' : 'Dukungan reduced-motion', description: en ? 'Checks whether the site defines a reduced-motion CSS preference.' : 'Memeriksa apakah situs mendefinisikan preferensi CSS reduced-motion.', severity: 'info', run: async () => { const rules = [...document.styleSheets].flatMap(sheet => { try { return [...(sheet.cssRules || [])] } catch { return [] } }); const found = rules.some(rule => rule instanceof CSSMediaRule && rule.conditionText.includes('prefers-reduced-motion')); return { status: found ? 'pass' : 'warn', detail: found ? (en ? 'Reduced-motion media rule found in accessible stylesheets.' : 'Aturan media reduced-motion ditemukan pada stylesheet yang dapat dibaca.') : (en ? 'No accessible reduced-motion media rule detected; cross-origin stylesheets may be unreadable.' : 'Aturan reduced-motion tidak terdeteksi; stylesheet lintas origin mungkin tidak dapat dibaca.') } } },
-    { id: 'storage', category: en ? 'Privacy & resilience' : 'Privasi & ketahanan', title: en ? 'Browser storage availability' : 'Ketersediaan penyimpanan browser', description: en ? 'Tests whether local storage can be accessed without writing user data.' : 'Menguji akses local storage tanpa menulis data pengguna.', severity: 'info', run: async () => { try { void window.localStorage.length; return { status: 'pass', detail: en ? 'Local storage is readable.' : 'Local storage dapat dibaca.' } } catch { return { status: 'warn', detail: en ? 'Storage is restricted in this context.' : 'Penyimpanan dibatasi pada konteks ini.' } } } },
-  ], [en])
-  const score = useMemo(() => {
-    const values = checks.map(check => results[check.id]).filter(Boolean)
-    const weights = checks.reduce((sum, check) => sum + (check.severity === 'high' ? 2 : 1), 0)
-    const earned = checks.reduce((sum, check) => sum + (results[check.id]?.status === 'pass' ? (check.severity === 'high' ? 2 : 1) : 0), 0)
-    return { value: Math.round(earned / weights * 100), complete: values.length, pass: values.filter(value => value.status === 'pass').length, warn: values.filter(value => value.status === 'warn').length, fail: values.filter(value => value.status === 'fail').length }
-  }, [results, checks])
-  const runChecks = async () => {
-    setRunning(true)
-    setResults({})
-    const next: Record<string, { status: 'pass' | 'warn' | 'fail'; detail: string }> = {}
-    for (const check of checks) {
-      try { next[check.id] = await check.run() } catch { next[check.id] = { status: 'warn', detail: en ? 'The browser could not complete this check.' : 'Browser tidak dapat menyelesaikan pemeriksaan ini.' } }
-      setResults({ ...next })
-    }
-    setRanAt(new Date().toLocaleString(en ? 'en-US' : 'id-ID'))
-    setCopied(false)
-    setRunning(false)
-  }
-  const report = useMemo(() => [
-    '# DreamEx Tech — Web Quality Observatory',
-    '',
-    '- Page: ' + window.location.href,
-    '- Audited at: ' + (ranAt || (en ? 'Not run yet' : 'Belum dijalankan')),
-    '- Score: ' + score.value + '/100 (weighted heuristic, not a compliance certification)',
-    '- Checks: ' + score.complete + '/' + checks.length,
-    '',
-    ...checks.map(check => '- [' + (results[check.id]?.status === 'pass' ? 'x' : ' ') + '] ' + check.title + ' — ' + (results[check.id]?.status || 'not run').toUpperCase() + ': ' + (results[check.id]?.detail || (en ? 'Not run' : 'Belum dijalankan'))),
-    '',
-    'Note: This is a browser-side heuristic scan. It does not crawl the site, test server headers, run Lighthouse, or certify WCAG conformance.',
-  ].join('\n'), [checks, en, ranAt, results, score])
-  const exportReport = () => {
-    const blob = new Blob([report], { type: 'text/markdown;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = 'dreamex-web-quality-report.md'
-    document.body.appendChild(anchor)
-    anchor.click()
-    anchor.remove()
-    URL.revokeObjectURL(url)
-  }
-  const copyReport = async () => {
-    try { await navigator.clipboard.writeText(report); setCopied(true) }
-    catch { setCopied(false) }
-  }
-  return <main id="main-content" className="container observatory-page">
-    <header className="observatory-header">
-      <span className="section-kicker"><Activity size={14} /> {en ? 'ENGINEERING QUALITY / BROWSER AUDIT' : 'KUALITAS ENGINEERING / AUDIT BROWSER'}</span>
-      <h1>{en ? <>Web Quality <span>Observatory.</span></> : <>Observatory <span>Kualitas Web.</span></>}</h1>
-      <p>{en ? 'A practical, transparent health check for the page you are viewing. Inspect metadata, accessibility signals, navigation, privacy basics, and responsive foundations — without uploading page data.' : 'Pemeriksaan praktis dan transparan untuk halaman yang sedang Anda buka. Periksa metadata, sinyal aksesibilitas, navigasi, privasi dasar, dan fondasi responsif — tanpa mengunggah data halaman.'}</p>
-      <div className="observatory-disclaimer"><ShieldCheck size={16} /><span>{en ? 'Local-only audit · no analytics upload · heuristic results, not a replacement for Lighthouse or a WCAG audit.' : 'Audit lokal · tidak mengunggah analitik · hasil heuristik, bukan pengganti Lighthouse atau audit WCAG.'}</span></div>
-    </header>
-    <section className="observatory-dashboard" aria-label={en ? 'Audit summary' : 'Ringkasan audit'}>
-      <div className="observatory-score" role="img" aria-label={(en ? 'Quality score ' : 'Skor kualitas ') + score.value + ' percent'} style={{ '--observatory-score': score.value } as React.CSSProperties}><div><strong>{score.value}</strong><span>/100</span></div></div>
-      <div className="observatory-summary"><span className="section-kicker">{en ? 'CURRENT PAGE' : 'HALAMAN SAAT INI'}</span><h2>{score.complete === 0 ? (en ? 'Ready for inspection' : 'Siap diperiksa') : score.fail > 0 ? (en ? 'Critical signals need attention' : 'Sinyal kritis perlu ditinjau') : score.warn > 0 ? (en ? 'Review recommended' : 'Disarankan untuk ditinjau') : (en ? 'Healthy signals detected' : 'Sinyal baik terdeteksi')}</h2><p>{en ? 'The score rewards passed checks and weights foundational security and viewport checks more heavily. A completed scan is required before interpreting the score.' : 'Skor menghargai pemeriksaan yang lulus dan memberi bobot lebih besar pada keamanan dasar dan viewport. Jalankan pemindaian sebelum menafsirkan skor.'}</p><div className="observatory-stats"><div><strong>{score.complete}/{checks.length}</strong><span>{en ? 'Checked' : 'Diperiksa'}</span></div><div><strong>{score.pass}</strong><span>{en ? 'Passed' : 'Lulus'}</span></div><div><strong>{score.warn}</strong><span>{en ? 'Warnings' : 'Peringatan'}</span></div><div><strong>{score.fail}</strong><span>{en ? 'Failed' : 'Gagal'}</span></div></div></div>
-    </section>
-    <div className="observatory-toolbar"><div><span className="section-kicker">{en ? 'QUALITY SIGNALS' : 'SINYA KUALITAS'}</span><h2>{en ? 'Audit checklist' : 'Checklist audit'}</h2><p>{ranAt ? (en ? 'Last run: ' : 'Terakhir dijalankan: ') + ranAt : (en ? 'Run the audit to inspect this page.' : 'Jalankan audit untuk memeriksa halaman ini.')}</p></div><div className="observatory-actions"><button className="button button-primary" type="button" onClick={runChecks} disabled={running}><Activity size={16} /> {running ? (en ? 'Scanning…' : 'Memindai…') : (en ? 'Run page audit' : 'Jalankan audit')}</button><button className="copy-link-button" type="button" onClick={copyReport} disabled={score.complete === 0}><Copy size={14} /> {copied ? (en ? 'Copied' : 'Disalin') : (en ? 'Copy report' : 'Salin laporan')}</button><button className="copy-link-button" type="button" onClick={exportReport} disabled={score.complete === 0}><Download size={14} /> {en ? 'Export .md' : 'Ekspor .md'}</button></div></div>
-    <div className="observatory-groups">{[...new Set(checks.map(check => check.category))].map(category => <section className="observatory-group" key={category}><h3>{category}<span>{checks.filter(check => check.category === category && results[check.id]).length}/{checks.filter(check => check.category === category).length}</span></h3>{checks.filter(check => check.category === category).map(check => { const result = results[check.id]; return <article className="observatory-check" key={check.id}><div className="observatory-check-icon"><span className={'observatory-status status-' + (result?.status || 'idle')}>{result?.status === 'pass' ? <CheckCircle2 size={17} /> : result?.status === 'fail' ? <AlertTriangle size={17} /> : result?.status === 'warn' ? <AlertTriangle size={17} /> : <Activity size={17} />}</span></div><div className="observatory-check-copy"><div><h4>{check.title}</h4><span className={'observatory-severity severity-' + check.severity}>{check.severity.toUpperCase()}</span></div><p>{check.description}</p><small>{result?.detail || (en ? 'Not run yet.' : 'Belum dijalankan.')}</small></div><span className={'observatory-result-badge result-' + (result?.status || 'idle')}>{result?.status ? (en ? result.status.toUpperCase() : result.status === 'pass' ? 'LULUS' : result.status === 'warn' ? 'PERINGATAN' : 'GAGAL') : (en ? 'PENDING' : 'MENUNGGU')}</span></article> })}</section>)}</div>
-    <aside className="observatory-note"><AlertTriangle size={17} /><p>{en ? 'Scope limits: this checks the current rendered page only. It does not crawl internal links, measure Core Web Vitals, validate HTTP security headers, test contrast ratios, or guarantee WCAG conformance. Use Lighthouse and a manual keyboard/screen-reader review for deeper validation.' : 'Batasan: pemeriksaan hanya mencakup halaman yang sedang dirender. Tool ini tidak merayapi tautan internal, mengukur Core Web Vitals, memvalidasi security headers HTTP, menguji rasio kontras, atau menjamin kepatuhan WCAG. Gunakan Lighthouse dan tinjauan keyboard/screen reader manual untuk validasi lanjutan.'}</p></aside>
-  </main>
+  return (
+    <Suspense fallback={<div className="container route-loading" role="status">{language === 'en' ? 'Loading Web Quality Observatory…' : 'Memuat Observatory Kualitas Web…'}</div>}>
+      <LazyWebQualityObservatory />
+    </Suspense>
+  )
 }
 
 function EngineeringLabPage() {
   const { language } = useLanguage()
-  const en = language === 'en'
-  const [activeTool, setActiveTool] = useState<'test-cases' | 'bug-report' | 'json' | 'api-matrix' | 'openapi' | 'release-scorecard' | 'postmortem'>('test-cases')
-  const [releaseChecked, setReleaseChecked] = useState<Record<string, boolean>>({})
-  const [feature, setFeature] = useState(en ? 'Login form' : 'Form login')
-  const [generated, setGenerated] = useState(false)
-  const [bugTitle, setBugTitle] = useState('')
-  const [environment, setEnvironment] = useState('Chrome / Windows 11')
-  const [steps, setSteps] = useState('')
-  const [actual, setActual] = useState('')
-  const [expected, setExpected] = useState('')
-  const [severity, setSeverity] = useState('High')
-  const [bugReport, setBugReport] = useState('')
-  const [jsonInput, setJsonInput] = useState('{"status":"ok","data":[1,2,3]}')
-  const [jsonOutput, setJsonOutput] = useState('')
-  const [jsonError, setJsonError] = useState('')
-  const [apiMethod, setApiMethod] = useState('POST')
-  const [apiPath, setApiPath] = useState('/api/v1/users')
-  const [apiAuth, setApiAuth] = useState('required')
-  const [apiPayload, setApiPayload] = useState('json')
-  const [apiMatrixGenerated, setApiMatrixGenerated] = useState(false)
-  const [openApiSpec, setOpenApiSpec] = useState(`{
-  "openapi": "3.0.3",
-  "info": { "title": "Sample Users API", "version": "1.0.0" },
-  "paths": {
-    "/api/v1/users": {
-      "get": { "summary": "List users", "operationId": "listUsers", "responses": { "200": { "description": "Users returned" }, "401": { "description": "Unauthorized" } } },
-      "post": { "summary": "Create a user", "operationId": "createUser", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object" } } } }, "responses": { "201": { "description": "Created" }, "400": { "description": "Invalid input" } } }
-    },
-    "/api/v1/users/{userId}": {
-      "get": { "summary": "Get user by ID", "parameters": [{ "name": "userId", "in": "path", "required": true, "schema": { "type": "string" } }], "responses": { "200": { "description": "User returned" }, "404": { "description": "Not found" } } }
-    }
-  }
-}`)
-  const [openApiError, setOpenApiError] = useState('')
-  const [openApiResults, setOpenApiResults] = useState<Array<{ method: string; path: string; summary: string; operationId: string; responses: string; parameters: string; requestBody: boolean; security: boolean }>>([])
-  const [openApiAnalyzed, setOpenApiAnalyzed] = useState(false)
-  const [openApiIssues, setOpenApiIssues] = useState<Array<{ method: string; path: string; severity: 'error' | 'warning' | 'info'; code: string; message: string }>>([])
-  const [copyStatus, setCopyStatus] = useState('')
-  const [incidentTitle, setIncidentTitle] = useState('')
-  const [incidentSeverity, setIncidentSeverity] = useState('SEV-2')
-  const [incidentStatus, setIncidentStatus] = useState('Resolved')
-  const [incidentStart, setIncidentStart] = useState('')
-  const [incidentEnd, setIncidentEnd] = useState('')
-  const [incidentImpact, setIncidentImpact] = useState('')
-  const [incidentDetection, setIncidentDetection] = useState('')
-  const [incidentTimeline, setIncidentTimeline] = useState('')
-  const [incidentRootCause, setIncidentRootCause] = useState('')
-  const [incidentContributors, setIncidentContributors] = useState('')
-  const [incidentResolution, setIncidentResolution] = useState('')
-  const [incidentFollowUps, setIncidentFollowUps] = useState('')
-  const [postmortemReport, setPostmortemReport] = useState('')
-
-  const releaseChecks = [
-    { id: 'requirements', category: en ? 'Product & scope' : 'Produk & ruang lingkup', title: en ? 'Acceptance criteria are reviewed and traceable' : 'Acceptance criteria telah ditinjau dan dapat ditelusuri', critical: true },
-    { id: 'coverage', category: en ? 'Product & scope' : 'Produk & ruang lingkup', title: en ? 'Critical user journeys and regression coverage are tested' : 'Alur pengguna kritis dan cakupan regresi telah diuji', critical: true },
-    { id: 'accessibility', category: en ? 'Product & scope' : 'Produk & ruang lingkup', title: en ? 'Keyboard navigation and accessible names are verified' : 'Navigasi keyboard dan nama aksesibel telah diverifikasi', critical: false },
-    { id: 'contract', category: en ? 'API & data contracts' : 'Kontrak API & data', title: en ? 'API contract and response schemas are validated' : 'Kontrak API dan schema respons telah divalidasi', critical: true },
-    { id: 'errors', category: en ? 'API & data contracts' : 'Kontrak API & data', title: en ? 'Negative paths, validation, and error responses are covered' : 'Skenario negatif, validasi, dan respons error telah dicakup', critical: true },
-    { id: 'migration', category: en ? 'API & data contracts' : 'Kontrak API & data', title: en ? 'Data migration and backward compatibility are checked' : 'Migrasi data dan kompatibilitas ke belakang telah diperiksa', critical: false },
-    { id: 'security', category: en ? 'Security & privacy' : 'Keamanan & privasi', title: en ? 'Authentication, authorization, and access boundaries are tested' : 'Autentikasi, otorisasi, dan batas akses telah diuji', critical: true },
-    { id: 'privacy', category: en ? 'Security & privacy' : 'Keamanan & privasi', title: en ? 'Sensitive data, secrets, and logs are reviewed for exposure' : 'Data sensitif, secret, dan log telah diperiksa dari risiko kebocoran', critical: true },
-    { id: 'performance', category: en ? 'Reliability & operations' : 'Keandalan & operasional', title: en ? 'Performance and timeout behavior meet agreed thresholds' : 'Performa dan perilaku timeout memenuhi ambang yang disepakati', critical: false },
-    { id: 'monitoring', category: en ? 'Reliability & operations' : 'Keandalan & operasional', title: en ? 'Health checks, alerts, and actionable logs are verified' : 'Health check, alert, dan log yang dapat ditindaklanjuti telah diverifikasi', critical: false },
-    { id: 'rollback', category: en ? 'Release & recovery' : 'Rilis & pemulihan', title: en ? 'Rollback or recovery procedure is documented and viable' : 'Prosedur rollback atau pemulihan terdokumentasi dan layak dijalankan', critical: true },
-    { id: 'signoff', category: en ? 'Release & recovery' : 'Rilis & pemulihan', title: en ? 'Known defects, release notes, and stakeholder sign-off are complete' : 'Defect yang diketahui, catatan rilis, dan persetujuan stakeholder telah lengkap', critical: false },
-  ]
-  const releaseCompleted = releaseChecks.filter(item => releaseChecked[item.id]).length
-  const releaseWeightTotal = releaseChecks.reduce((total, item) => total + (item.critical ? 2 : 1), 0)
-  const releaseScore = Math.round(releaseChecks.reduce((total, item) => total + (releaseChecked[item.id] ? (item.critical ? 2 : 1) : 0), 0) / releaseWeightTotal * 100)
-  const releaseCriticalMissing = releaseChecks.filter(item => item.critical && !releaseChecked[item.id]).length
-  const releaseStatus = releaseScore === 100 ? (en ? 'Ready for release' : 'Siap dirilis') : releaseCriticalMissing > 0 ? (en ? 'Release blocked' : 'Rilis tertahan') : releaseScore >= 80 ? (en ? 'Ready with follow-ups' : 'Siap dengan tindak lanjut') : (en ? 'Needs more evidence' : 'Perlu bukti tambahan')
-
-  const generatedCases = useMemo(() => {
-    const subject = feature.trim() || (en ? 'the feature' : 'fitur ini')
-    return en ? [
-      { title: `Verify the happy path for ${subject}`, steps: 'Provide valid input and submit the primary action.', expected: 'The operation succeeds and the expected result is shown.' },
-      { title: `Validate required fields in ${subject}`, steps: 'Leave each required field empty and submit.', expected: 'Submission is blocked and clear field-level guidance appears.' },
-      { title: `Reject invalid input in ${subject}`, steps: 'Submit malformed or unsupported values.', expected: 'Invalid data is rejected without corrupting application state.' },
-      { title: `Check boundary values in ${subject}`, steps: 'Test minimum, maximum, and just-outside-limit values.', expected: 'Documented limits are enforced consistently.' },
-      { title: `Prevent duplicate submission in ${subject}`, steps: 'Trigger the primary action repeatedly in quick succession.', expected: 'Duplicate processing is prevented or handled idempotently.' },
-      { title: `Verify keyboard accessibility for ${subject}`, steps: 'Navigate controls with Tab, Shift+Tab, Enter, and Space.', expected: 'Focus order is logical and every action is keyboard operable.' },
-      { title: `Handle service failure in ${subject}`, steps: 'Simulate a timeout or server error during submission.', expected: 'A helpful error appears and the user can recover safely.' },
-      { title: `Recover after an error in ${subject}`, steps: 'Correct invalid input or retry after a failed request.', expected: 'The operation can complete without refreshing the page.' },
-    ] : [
-      { title: `Verifikasi alur normal ${subject}`, steps: 'Masukkan data valid lalu jalankan aksi utama.', expected: 'Proses berhasil dan hasil yang diharapkan ditampilkan.' },
-      { title: `Validasi field wajib pada ${subject}`, steps: 'Kosongkan setiap field wajib lalu kirim.', expected: 'Pengiriman dicegah dan petunjuk yang jelas ditampilkan.' },
-      { title: `Tolak input tidak valid pada ${subject}`, steps: 'Kirim nilai dengan format salah atau tidak didukung.', expected: 'Data tidak valid ditolak tanpa merusak state aplikasi.' },
-      { title: `Uji batas nilai pada ${subject}`, steps: 'Uji nilai minimum, maksimum, dan di luar batas.', expected: 'Batas yang didokumentasikan diterapkan secara konsisten.' },
-      { title: `Cegah pengiriman duplikat pada ${subject}`, steps: 'Jalankan aksi utama berulang kali dalam waktu singkat.', expected: 'Pemrosesan duplikat dicegah atau ditangani secara idempoten.' },
-      { title: `Uji aksesibilitas keyboard pada ${subject}`, steps: 'Navigasikan kontrol dengan Tab, Shift+Tab, Enter, dan Space.', expected: 'Urutan fokus logis dan seluruh aksi dapat dijalankan dengan keyboard.' },
-      { title: `Tangani kegagalan layanan pada ${subject}`, steps: 'Simulasikan timeout atau error server saat pengiriman.', expected: 'Pesan error yang membantu muncul dan pengguna dapat pulih dengan aman.' },
-      { title: `Pulihkan proses setelah error pada ${subject}`, steps: 'Perbaiki input atau ulangi setelah request gagal.', expected: 'Proses dapat selesai tanpa memuat ulang halaman.' },
-    ]
-  }, [feature, en])
-  useEffect(() => {
-    document.title = en ? 'Engineering Lab — DreamEx Tech' : 'Lab Engineering — DreamEx Tech'
-    return () => { document.title = 'DreamEx Tech — Engineering, AI & QA' }
-  }, [en])
-  const copyText = async (value: string) => {
-    try {
-      await navigator.clipboard.writeText(value)
-      setCopyStatus(en ? 'Copied to clipboard.' : 'Berhasil disalin.')
-    } catch {
-      setCopyStatus(en ? 'Clipboard unavailable. Select and copy the output manually.' : 'Clipboard tidak tersedia. Pilih dan salin hasil secara manual.')
-    }
-  }
-  const generatePostmortem = () => {
-    const lines = (value: string) => value.trim() ? value.trim().split(/\r?\n/).map(line => line.trim()).filter(Boolean) : []
-    const timeline = lines(incidentTimeline)
-    const followUps = lines(incidentFollowUps)
-    const timelineEvents = timeline.map(line => {
-      const prefix = line.match(/^\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?|\d{1,2}:\d{2}(?:\s+(?:UTC|WIB|WITA|WIT))?)/i)?.[1]
-      if (!prefix) return { line, value: null as number | null, mode: '' }
-      if (/^\d{4}-/.test(prefix)) {
-        const value = Date.parse(prefix)
-        return { line, value: Number.isFinite(value) ? value : null, mode: 'absolute' }
-      }
-      const clock = prefix.match(/^(\d{1,2}):(\d{2})(?:\s+(UTC|WIB|WITA|WIT))?$/i)
-      if (!clock) return { line, value: null as number | null, mode: '' }
-      const offsets: Record<string, number> = { UTC: 0, WIB: 7, WITA: 8, WIT: 9 }
-      const zone = (clock[3] || 'LOCAL').toUpperCase()
-      const value = Number(clock[1]) * 60 + Number(clock[2]) - (offsets[zone] ?? 0) * 60
-      return { line, value, mode: 'clock:' + zone }
-    })
-    const comparableTimeline = timelineEvents.length > 0 && timelineEvents.every(event => event.value !== null && event.mode === timelineEvents[0].mode)
-    const chronological = comparableTimeline && timelineEvents.every((event, index) => index === 0 || (event.value as number) >= (timelineEvents[index - 1].value as number))
-    const timelineStatus = !timeline.length ? 'NOT PROVIDED' : !comparableTimeline ? 'NOT VERIFIED' : chronological ? 'PASS' : 'WARNING'
-    const followUpEntries = followUps.map(line => {
-      const parts = line.split(/\s*(?:\||—|–)\s*/).map(part => part.trim())
-      const action = parts[0] || line
-      const owner = parts[1] || ''
-      const dueDate = parts[2] || ''
-      const parsedDue = /^\d{4}-\d{2}-\d{2}$/.test(dueDate) ? Date.parse(dueDate + 'T00:00:00Z') : NaN
-      const validDueDate = Number.isFinite(parsedDue) && new Date(parsedDue).toISOString().slice(0, 10) === dueDate
-      return { action, owner, dueDate, validDueDate, complete: Boolean(owner && validDueDate) }
-    })
-    const accountableFollowUps = followUpEntries.filter(item => item.complete).length
-    const startMs = incidentStart ? Date.parse(incidentStart) : NaN
-    const endMs = incidentEnd ? Date.parse(incidentEnd) : NaN
-    const invalidIncidentWindow = Number.isFinite(startMs) && Number.isFinite(endMs) && endMs < startMs
-    const warnings = [
-      ...(timelineStatus === 'WARNING' ? ['Timeline events are not in chronological order. Review the supplied timestamps.'] : []),
-      ...(timelineStatus === 'NOT VERIFIED' ? ['Timeline chronology could not be verified. Use consistent ISO 8601 timestamps or HH:mm values with a consistent timezone.'] : []),
-      ...(invalidIncidentWindow ? ['Incident end time is earlier than start time. Correct the incident window before sharing.'] : []),
-      ...(followUpEntries.some(item => !item.complete) ? ['Some follow-up actions are missing an owner or a valid YYYY-MM-DD due date.'] : []),
-    ]
-    const report = [
-      '# ' + (incidentTitle.trim() || (en ? 'Incident postmortem' : 'Postmortem insiden')),
-      '',
-      '> ' + (en ? 'Blameless review: focus on system conditions, learning, and prevention.' : 'Tinjauan tanpa menyalahkan: fokus pada kondisi sistem, pembelajaran, dan pencegahan.'),
-      '',
-      '## Incident summary',
-      '- **Severity:** ' + incidentSeverity,
-      '- **Status:** ' + incidentStatus,
-      '- **Start:** ' + (incidentStart || (en ? 'Not recorded' : 'Belum dicatat')),
-      '- **End:** ' + (incidentEnd || (en ? 'Not recorded' : 'Belum dicatat')),
-      '',
-      '## Customer and business impact',
-      incidentImpact.trim() || (en ? 'Describe affected users, services, duration, and measurable impact.' : 'Jelaskan pengguna/layanan terdampak, durasi, dan dampak terukur.'),
-      '',
-      '## Detection',
-      incidentDetection.trim() || (en ? 'Explain how the incident was detected and why earlier signals did or did not help.' : 'Jelaskan bagaimana insiden terdeteksi dan apakah sinyal sebelumnya membantu.'),
-      '',
-      '## Timeline',
-      ...(timeline.length ? timeline.map(line => '- ' + line) : ['- ' + (en ? 'Add timestamped events in chronological order.' : 'Tambahkan peristiwa bertimestamp secara kronologis.')]),
-      '',
-      '## Timeline integrity',
-      '- Timestamped events: ' + timelineEvents.filter(event => event.value !== null).length + ' / ' + timeline.length,
-      '- Chronology check: ' + timelineStatus,
-      '- Check scope: compares timestamps only when every event uses a supported, consistent format; it does not verify the truth of the events.',
-      '',
-      '## Root cause',
-      incidentRootCause.trim() || (en ? 'Describe the underlying system conditions, not an individual to blame.' : 'Jelaskan kondisi sistem yang mendasari, bukan menyalahkan individu.'),
-      '',
-      '## Contributing factors',
-      ...(lines(incidentContributors).length ? lines(incidentContributors).map(line => '- ' + line) : ['- ' + (en ? 'No contributing factors documented yet.' : 'Belum ada faktor kontribusi yang didokumentasikan.')]),
-      '',
-      '## Resolution and recovery',
-      incidentResolution.trim() || (en ? 'Document mitigation, recovery steps, and validation performed.' : 'Dokumentasikan mitigasi, langkah pemulihan, dan validasi yang dilakukan.'),
-      '',
-      '## Follow-up accountability',
-      '- Actions with owner and valid due date: ' + accountableFollowUps + ' / ' + followUpEntries.length,
-      ...(followUpEntries.length ? followUpEntries.map(item => '- [ ] ' + item.action + ' — Owner: ' + (item.owner || 'UNASSIGNED') + ' — Due: ' + (item.validDueDate ? item.dueDate : 'UNSCHEDULED')) : ['- [ ] ' + (en ? 'Add an action, owner, due date, and measurable completion criteria.' : 'Tambahkan aksi, penanggung jawab, tenggat, dan kriteria penyelesaian terukur.')]),
-      '',
-      '## Completeness warnings',
-      ...(warnings.length ? warnings.map(warning => '- WARNING: ' + warning) : ['- No chronology/window/follow-up completeness warning was detected by these basic checks.']),
-      '',
-      '## Review notes',
-      en ? 'Review this document with relevant stakeholders. Avoid sensitive credentials, personal data, and blame-focused language.' : 'Tinjau dokumen ini bersama stakeholder terkait. Hindari kredensial sensitif, data pribadi, dan bahasa yang menyalahkan individu.',
-    ].join('\n')
-    setPostmortemReport(report)
-    setCopyStatus('')
-  }
-  const downloadPostmortem = () => {
-    if (!postmortemReport) return
-    const blob = new Blob([postmortemReport], { type: 'text/markdown;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    const slug = (incidentTitle.trim() || 'incident-postmortem').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'incident-postmortem'
-    anchor.href = url
-    anchor.download = slug + '-postmortem.md'
-    document.body.appendChild(anchor)
-    anchor.click()
-    anchor.remove()
-    URL.revokeObjectURL(url)
-    setCopyStatus(en ? 'Postmortem Markdown downloaded.' : 'Markdown postmortem berhasil diunduh.')
-  }
-  const generateBugReport = () => setBugReport([
-    `# ${bugTitle.trim() || (en ? 'Bug report title' : 'Judul laporan bug')}`,
-    '',
-    `- Severity: ${severity}`,
-    `- Environment: ${environment.trim() || (en ? 'Not specified' : 'Belum ditentukan')}`,
-    '',
-    '## Steps to Reproduce',
-    steps.trim() || (en ? '1. Add reproduction steps.' : '1. Tambahkan langkah reproduksi.'),
-    '',
-    '## Actual Result',
-    actual.trim() || (en ? 'Describe what happened.' : 'Jelaskan apa yang terjadi.'),
-    '',
-    '## Expected Result',
-    expected.trim() || (en ? 'Describe the expected behavior.' : 'Jelaskan perilaku yang diharapkan.'),
-  ].join('\n'))
-  const formatJson = () => {
-    try {
-      setJsonOutput(JSON.stringify(JSON.parse(jsonInput), null, 2))
-      setJsonError('')
-    } catch (error) {
-      setJsonOutput('')
-      setJsonError(error instanceof Error ? error.message : (en ? 'Invalid JSON.' : 'JSON tidak valid.'))
-    }
-  }
-  const apiScenarios = useMemo(() => {
-    const endpoint = apiPath.trim() || '/api/v1/resource'
-    const method = apiMethod.toUpperCase()
-    const scenarios: { id: string; title: string; steps: string; expected: string }[] = [
-      {
-        id: 'TC-API-01',
-        title: en ? 'Successful request with valid input' : 'Request berhasil dengan input valid',
-        steps: en ? `Send a valid ${method} request to ${endpoint} with valid credentials and a valid payload where applicable.` : `Kirim request ${method} yang valid ke ${endpoint} dengan kredensial dan payload valid jika diperlukan.`,
-        expected: en ? 'The API returns the documented success status and a response matching its schema.' : 'API mengembalikan status sukses yang didokumentasikan dan respons sesuai schema.',
-      },
-      ...(apiAuth === 'required' ? [{
-        id: 'TC-API-02',
-        title: en ? 'Reject missing or invalid credentials' : 'Tolak kredensial yang hilang atau tidak valid',
-        steps: en ? `Send ${method} ${endpoint} without a valid access token.` : `Kirim ${method} ${endpoint} tanpa access token yang valid.`,
-        expected: en ? 'The API returns 401 Unauthorized without exposing protected data.' : 'API mengembalikan 401 Unauthorized tanpa membocorkan data terlindungi.',
-      }] : []),
-      {
-        id: 'TC-API-03',
-        title: en ? 'Enforce resource permissions' : 'Terapkan izin akses resource',
-        steps: en ? 'Authenticate as a user without the required permission and request the resource.' : 'Login sebagai pengguna tanpa izin yang diperlukan lalu akses resource.',
-        expected: en ? 'The API returns 403 Forbidden and does not disclose restricted data.' : 'API mengembalikan 403 Forbidden dan tidak mengungkap data terbatas.',
-      },
-      {
-        id: 'TC-API-04',
-        title: en ? 'Handle an unknown resource' : 'Tangani resource yang tidak ditemukan',
-        steps: en ? 'Request a non-existent identifier or an unknown route.' : 'Minta identifier yang tidak ada atau route yang tidak dikenal.',
-        expected: en ? 'The API returns 404 Not Found with a consistent error structure.' : 'API mengembalikan 404 Not Found dengan struktur error yang konsisten.',
-      },
-      {
-        id: 'TC-API-05',
-        title: en ? 'Reject an unsupported HTTP method' : 'Tolak HTTP method yang tidak didukung',
-        steps: en ? 'Send a method that is not supported by the endpoint contract.' : 'Kirim method yang tidak didukung oleh kontrak endpoint.',
-        expected: en ? 'The API returns 405 Method Not Allowed and documents allowed methods where applicable.' : 'API mengembalikan 405 Method Not Allowed dan mendokumentasikan method yang diizinkan bila relevan.',
-      },
-      ...(apiPayload === 'json' && ['POST', 'PUT', 'PATCH'].includes(method) ? [
-        {
-          id: 'TC-API-06',
-          title: en ? 'Reject malformed JSON' : 'Tolak JSON dengan format salah',
-          steps: en ? 'Send a request body containing malformed JSON.' : 'Kirim request body dengan JSON yang tidak valid.',
-          expected: en ? 'The API returns 400 Bad Request and does not partially persist the request.' : 'API mengembalikan 400 Bad Request dan tidak menyimpan sebagian data.',
-        },
-        {
-          id: 'TC-API-07',
-          title: en ? 'Validate the request content type' : 'Validasi content type request',
-          steps: en ? 'Send a body with a missing or unsupported Content-Type header.' : 'Kirim body tanpa header Content-Type atau dengan nilai yang tidak didukung.',
-          expected: en ? 'The API returns 415 Unsupported Media Type or a clearly documented validation response.' : 'API mengembalikan 415 Unsupported Media Type atau respons validasi yang terdokumentasi.',
-        },
-        {
-          id: 'TC-API-08',
-          title: en ? 'Validate required fields and data types' : 'Validasi field wajib dan tipe data',
-          steps: en ? 'Omit a required field and then submit a value with an incorrect data type.' : 'Hilangkan field wajib lalu kirim nilai dengan tipe data yang salah.',
-          expected: en ? 'The API returns a documented validation response, commonly 422, without persisting invalid data.' : 'API mengembalikan respons validasi yang terdokumentasi, umumnya 422, tanpa menyimpan data invalid.',
-        },
-      ] : []),
-      {
-        id: 'TC-API-09',
-        title: en ? 'Respect rate limits' : 'Patuhi batas rate limit',
-        steps: en ? 'Send requests above the documented rate threshold in a controlled test environment.' : 'Kirim request melebihi ambang rate limit yang didokumentasikan di lingkungan pengujian terkontrol.',
-        expected: en ? 'The API returns 429 Too Many Requests and provides retry guidance where supported.' : 'API mengembalikan 429 Too Many Requests dan memberikan panduan retry bila didukung.',
-      },
-      {
-        id: 'TC-API-10',
-        title: en ? 'Fail safely during a server error' : 'Gagal dengan aman saat server error',
-        steps: en ? 'Simulate a controlled upstream failure or timeout.' : 'Simulasikan kegagalan upstream atau timeout secara terkontrol.',
-        expected: en ? 'The API returns a documented 5xx response, avoids leaking internals, and records diagnostic details securely.' : 'API mengembalikan respons 5xx yang terdokumentasi, tidak membocorkan detail internal, dan mencatat diagnostik secara aman.',
-      },
-    ]
-    return scenarios
-  }, [apiMethod, apiPath, apiAuth, apiPayload, en])
-
-  const downloadReleaseScorecard = () => {
-    const rows = [
-      ['Category', 'Check', 'Critical', 'Status'],
-      ...releaseChecks.map(item => [item.category, item.title, item.critical ? 'Yes' : 'No', releaseChecked[item.id] ? 'Complete' : 'Open']),
-      ['Summary', 'Weighted readiness score', '', String(releaseScore) + '%'],
-      ['Summary', 'Release decision', '', releaseStatus],
-    ]
-    const csv = rows.map(row => row.map(cell => '"' + String(cell).replaceAll('"', '""') + '"').join(',')).join('\r\n')
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = 'dreamex-release-readiness.csv'
-    document.body.appendChild(anchor)
-    anchor.click()
-    anchor.remove()
-    URL.revokeObjectURL(url)
-    setCopyStatus(en ? 'Release readiness scorecard CSV downloaded.' : 'CSV kesiapan rilis berhasil diunduh.')
-  }
-  const copyReleaseScorecard = () => {
-    const report = [
-      '# ' + (en ? 'Release readiness scorecard' : 'Scorecard kesiapan rilis'),
-      '',
-      '- ' + (en ? 'Weighted readiness score' : 'Skor kesiapan berbobot') + ': ' + releaseScore + '%',
-      '- ' + (en ? 'Decision' : 'Keputusan') + ': ' + releaseStatus,
-      '- ' + (en ? 'Critical checks still open' : 'Pemeriksaan kritis yang belum selesai') + ': ' + releaseCriticalMissing,
-      '',
-      ...releaseChecks.map(item => '- [' + (releaseChecked[item.id] ? 'x' : ' ') + '] ' + item.category + ' — ' + item.title + (item.critical ? ' (CRITICAL)' : '')),
-    ].join('\n')
-    copyText(report)
-  }
-  const downloadApiMatrix = () => {
-    const rows = [
-      ['Case ID', 'HTTP Method', 'Endpoint', 'Scenario', 'Steps', 'Expected Result'],
-      ...apiScenarios.map(item => [item.id, apiMethod, apiPath.trim() || '/api/v1/resource', item.title, item.steps, item.expected]),
-    ]
-    const csv = rows.map(row => row.map(cell => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\r\n')
-    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = 'dreamex-api-test-matrix.csv'
-    document.body.appendChild(anchor)
-    anchor.click()
-    anchor.remove()
-    URL.revokeObjectURL(url)
-    setCopyStatus(en ? 'API test matrix CSV downloaded.' : 'CSV matriks pengujian API berhasil diunduh.')
-  }
-  const analyzeOpenApi = () => {
-    try {
-      const document = JSON.parse(openApiSpec) as Record<string, unknown>
-      const version = typeof document.openapi === 'string' ? document.openapi : ''
-      if (!version.startsWith('3.')) throw new Error(en ? 'This analyzer currently supports OpenAPI 3.x JSON documents.' : 'Analyzer ini saat ini mendukung dokumen JSON OpenAPI 3.x.')
-      if (!document.paths || typeof document.paths !== 'object' || Array.isArray(document.paths)) throw new Error(en ? 'The document must contain a valid "paths" object.' : 'Dokumen harus memiliki objek "paths" yang valid.')
-      const paths = document.paths as Record<string, unknown>
-      const methods = ['get', 'post', 'put', 'patch', 'delete', 'options', 'head', 'trace']
-      const results: Array<{ method: string; path: string; summary: string; operationId: string; responses: string; parameters: string; requestBody: boolean; security: boolean }> = []
-      Object.entries(paths).forEach(([path, pathItem]) => {
-        if (!pathItem || typeof pathItem !== 'object' || Array.isArray(pathItem)) return
-        const pathObject = pathItem as Record<string, unknown>
-        methods.forEach(method => {
-          const operation = pathObject[method]
-          if (!operation || typeof operation !== 'object' || Array.isArray(operation)) return
-          const op = operation as Record<string, unknown>
-          const pathParameters = Array.isArray(pathObject.parameters) ? pathObject.parameters : []
-          const operationParameters = Array.isArray(op.parameters) ? op.parameters : []
-          const parameterNames = [...pathParameters, ...operationParameters].flatMap(parameter => {
-            if (!parameter || typeof parameter !== 'object' || Array.isArray(parameter)) return []
-            const item = parameter as Record<string, unknown>
-            return typeof item.name === 'string' ? [item.name + (item.required === true ? ' *' : '')] : []
-          })
-          const responseObject = op.responses && typeof op.responses === 'object' && !Array.isArray(op.responses) ? op.responses as Record<string, unknown> : {}
-          const responseCodes = Object.keys(responseObject).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-          const rootSecurity = Array.isArray(document.security) && document.security.length > 0
-          const operationSecurity = Array.isArray(op.security) ? op.security.length > 0 : rootSecurity
-          results.push({
-            method: method.toUpperCase(),
-            path,
-            summary: typeof op.summary === 'string' ? op.summary : typeof op.description === 'string' ? op.description : (en ? 'No summary provided' : 'Ringkasan belum tersedia'),
-            operationId: typeof op.operationId === 'string' ? op.operationId : '',
-            responses: responseCodes.join(', ') || (en ? 'Undocumented' : 'Belum didokumentasikan'),
-            parameters: parameterNames.join(', '),
-            requestBody: Boolean(op.requestBody),
-            security: operationSecurity,
-          })
-        })
-      })
-
-      const findings: Array<{ method: string; path: string; severity: 'error' | 'warning' | 'info'; code: string; message: string }> = []
-      const addFinding = (method: string, path: string, severity: 'error' | 'warning' | 'info', code: string, english: string, indonesian: string) => {
-        findings.push({ method, path, severity, code, message: en ? english : indonesian })
-      }
-      Object.entries(paths).forEach(([path, rawPathItem]) => {
-        if (!rawPathItem || typeof rawPathItem !== 'object' || Array.isArray(rawPathItem)) return
-        const pathItem = rawPathItem as Record<string, unknown>
-        methods.forEach(method => {
-          const rawOperation = pathItem[method]
-          if (!rawOperation || typeof rawOperation !== 'object' || Array.isArray(rawOperation)) return
-          const operation = rawOperation as Record<string, unknown>
-          const responses = operation.responses && typeof operation.responses === 'object' && !Array.isArray(operation.responses) ? operation.responses as Record<string, unknown> : {}
-          const responseCodes = Object.keys(responses)
-          if (!responseCodes.length) addFinding(method.toUpperCase(), path, 'error', 'RESPONSES_MISSING', 'No responses are documented for this operation.', 'Operasi ini belum mendokumentasikan respons.')
-          else {
-            if (!responseCodes.some(code => code.length === 3 && code.startsWith('2')) && !responseCodes.includes('default')) addFinding(method.toUpperCase(), path, 'warning', 'SUCCESS_RESPONSE_MISSING', 'No 2xx success response or default response is documented.', 'Belum ada respons sukses 2xx atau respons default yang didokumentasikan.')
-            responseCodes.forEach(code => {
-              const response = responses[code]
-              if (response && typeof response === 'object' && !Array.isArray(response) && (typeof (response as Record<string, unknown>).description !== 'string' || !String((response as Record<string, unknown>).description ?? '').trim())) {
-                addFinding(method.toUpperCase(), path, 'warning', 'RESPONSE_DESCRIPTION_MISSING', 'Response "' + code + '" has no description.', 'Respons "' + code + '" belum memiliki deskripsi.')
-              }
-            })
-          }
-          const pathParameters = Array.isArray(pathItem.parameters) ? pathItem.parameters : []
-          const operationParameters = Array.isArray(operation.parameters) ? operation.parameters : []
-          const parameters = [...pathParameters, ...operationParameters].filter(parameter => parameter && typeof parameter === 'object' && !Array.isArray(parameter)) as Record<string, unknown>[]
-          const byName = new Map<string, Record<string, unknown>>()
-          parameters.forEach(parameter => { if (parameter.in === 'path' && typeof parameter.name === 'string') byName.set(parameter.name, parameter) })
-          const variables = path.split('{').slice(1).map(part => part.split('}')[0]).filter(Boolean)
-          variables.forEach(name => {
-            const parameter = byName.get(name)
-            if (!parameter) addFinding(method.toUpperCase(), path, 'error', 'PATH_PARAM_MISSING', 'Path variable "' + name + '" has no declared path parameter.', 'Variabel path "' + name + '" belum memiliki deklarasi parameter path.')
-            else if (parameter.required !== true) addFinding(method.toUpperCase(), path, 'error', 'PATH_PARAM_NOT_REQUIRED', 'Path parameter "' + name + '" must set required: true.', 'Parameter path "' + name + '" harus menetapkan required: true.')
-            else if (!parameter.schema || typeof parameter.schema !== 'object' || Array.isArray(parameter.schema)) addFinding(method.toUpperCase(), path, 'warning', 'PATH_PARAM_SCHEMA_MISSING', 'Path parameter "' + name + '" has no schema.', 'Parameter path "' + name + '" belum memiliki schema.')
-          })
-          if (['post', 'put', 'patch'].includes(method) && operation.requestBody && typeof operation.requestBody === 'object' && !Array.isArray(operation.requestBody)) {
-            const body = operation.requestBody as Record<string, unknown>
-            const content = body.content && typeof body.content === 'object' && !Array.isArray(body.content) ? body.content as Record<string, unknown> : {}
-            const hasRequestSchema = Object.values(content).some(media => media && typeof media === 'object' && !Array.isArray(media) && (media as Record<string, unknown>).schema && typeof (media as Record<string, unknown>).schema === 'object')
-            if (!hasRequestSchema) addFinding(method.toUpperCase(), path, 'warning', 'REQUEST_SCHEMA_MISSING', 'Request body is declared but has no usable schema.', 'Request body dideklarasikan tetapi belum memiliki schema yang dapat digunakan.')
-          } else if (['post', 'put', 'patch'].includes(method) && !operation.requestBody) {
-            addFinding(method.toUpperCase(), path, 'info', 'REQUEST_BODY_UNDECLARED', 'Write operation has no request body; confirm this is intentional.', 'Operasi penulisan tidak memiliki request body; pastikan ini memang disengaja.')
-          }
-          if (typeof operation.operationId !== 'string' || !operation.operationId.trim()) addFinding(method.toUpperCase(), path, 'info', 'OPERATION_ID_MISSING', 'No operationId is declared; generated clients may have less stable names.', 'operationId belum dideklarasikan; nama pada client hasil generasi mungkin kurang stabil.')
-        })
-      })
-      setOpenApiIssues(findings)
-      if (!results.length) throw new Error(en ? 'No HTTP operations were found under "paths".' : 'Tidak ada operasi HTTP yang ditemukan di dalam "paths".')
-      setOpenApiResults(results)
-      setOpenApiError('')
-      setOpenApiAnalyzed(true)
-      setCopyStatus('')
-    } catch (error) {
-      setOpenApiResults([])
-      setOpenApiIssues([])
-      setOpenApiAnalyzed(false)
-      setOpenApiError(error instanceof Error ? error.message : (en ? 'Unable to analyze this document.' : 'Dokumen tidak dapat dianalisis.'))
-    }
-  }
-  const downloadOpenApiMatrix = () => {
-    const rows = [
-      ['Method', 'Path', 'Summary', 'Operation ID', 'Documented Responses', 'Parameters', 'Request Body', 'Security'],
-      ...openApiResults.map(item => [item.method, item.path, item.summary, item.operationId, item.responses, item.parameters, item.requestBody ? 'Yes' : 'No', item.security ? 'Required' : 'Not declared']),
-    ]
-    const csv = rows.map(row => row.map(cell => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\r\n')
-    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = 'dreamex-openapi-contract-matrix.csv'
-    document.body.appendChild(anchor)
-    anchor.click()
-    anchor.remove()
-    URL.revokeObjectURL(url)
-    setCopyStatus(en ? 'OpenAPI contract matrix CSV downloaded.' : 'CSV matriks kontrak OpenAPI berhasil diunduh.')
-  }
-  return <main id="main-content" className="engineering-lab container">
-    <header className="lab-header"><span className="section-kicker">{en ? 'PRACTICAL ENGINEERING TOOLKIT' : 'TOOLKIT ENGINEERING PRAKTIS'}</span><h1>{en ? 'Engineering' : 'Engineering'} <span>Lab.</span></h1><p>{en ? 'Small, useful tools for QA workflows, clearer bug reports, and safer data handling. Processing runs locally in your browser.' : 'Perangkat praktis untuk alur kerja QA, laporan bug yang jelas, dan pengolahan data yang aman. Pemrosesan berjalan lokal di browser Anda.'}</p><div className="lab-local-note"><ShieldCheck size={16} /> {en ? 'No account or backend required — your inputs stay in this browser session.' : 'Tanpa akun atau backend — input Anda tetap diproses di browser ini.'}</div></header>
-    <div className="lab-tool-tabs" role="tablist" aria-label={en ? 'Engineering tools' : 'Tool engineering'}>
-      <button role="tab" aria-selected={activeTool === 'test-cases'} className={activeTool === 'test-cases' ? 'active' : ''} onClick={() => { setActiveTool('test-cases'); setCopyStatus('') }}><ShieldCheck size={16} /> {en ? 'Test Case Builder' : 'Pembuat Test Case'}</button>
-      <button role="tab" aria-selected={activeTool === 'bug-report'} className={activeTool === 'bug-report' ? 'active' : ''} onClick={() => { setActiveTool('bug-report'); setCopyStatus('') }}><BookOpen size={16} /> {en ? 'Bug Report' : 'Laporan Bug'}</button>
-      <button role="tab" aria-selected={activeTool === 'json'} className={activeTool === 'json' ? 'active' : ''} onClick={() => { setActiveTool('json'); setCopyStatus('') }}><Braces size={16} /> JSON {en ? 'Formatter' : 'Formatter'}</button>
-      <button role="tab" aria-selected={activeTool === 'api-matrix'} className={activeTool === 'api-matrix' ? 'active' : ''} onClick={() => { setActiveTool('api-matrix'); setCopyStatus(''); setApiMatrixGenerated(false) }}><ShieldCheck size={16} /> {en ? 'API Test Matrix' : 'Matriks Tes API'}</button>
-      <button role="tab" aria-selected={activeTool === 'openapi'} className={activeTool === 'openapi' ? 'active' : ''} onClick={() => { setActiveTool('openapi'); setCopyStatus(''); setOpenApiError(''); setOpenApiAnalyzed(false) }}><Braces size={16} /> {en ? 'OpenAPI Analyzer' : 'Analyzer OpenAPI'}</button>
-      <button role="tab" aria-selected={activeTool === 'release-scorecard'} className={activeTool === 'release-scorecard' ? 'active' : ''} onClick={() => { setActiveTool('release-scorecard'); setCopyStatus('') }}><ShieldCheck size={16} /> {en ? 'Release Readiness' : 'Kesiapan Rilis'}</button>
-      <button role="tab" aria-selected={activeTool === 'postmortem'} className={activeTool === 'postmortem' ? 'active' : ''} onClick={() => { setActiveTool('postmortem'); setCopyStatus('') }}><BookOpen size={16} /> {en ? 'Incident Postmortem' : 'Postmortem Insiden'}</button>
-    </div>
-    <section className="lab-tool-panel" role="tabpanel">
-      {activeTool === 'test-cases' && <div className="lab-form">
-        <div className="lab-panel-heading"><span className="section-kicker">01 / QA AUTOMATION</span><h2>{en ? 'Test case starter kit' : 'Starter kit test case'}</h2><p>{en ? 'Create a baseline checklist, then refine each case against the product requirements.' : 'Buat checklist awal, lalu sesuaikan setiap kasus dengan kebutuhan produk.'}</p></div>
-        <label className="lab-field"><span>{en ? 'Feature or user journey' : 'Fitur atau alur pengguna'}</span><input value={feature} onChange={event => { setFeature(event.target.value); setGenerated(false) }} placeholder={en ? 'e.g. Password reset' : 'mis. Reset password'} /></label>
-        <button className="button button-primary lab-action" onClick={() => setGenerated(true)}>{en ? 'Generate test cases' : 'Buat test case'} <ArrowRight size={16} /></button>
-        {generated && <div className="lab-generated"><div className="lab-output-heading"><h3>{en ? 'Generated test cases' : 'Test case yang dihasilkan'}</h3><button className="copy-link-button" onClick={() => copyText(generatedCases.map((item, index) => `TC-${String(index + 1).padStart(2, '0')} — ${item.title}\nSteps: ${item.steps}\nExpected: ${item.expected}`).join('\n\n'))}><Copy size={14} /> {en ? 'Copy all' : 'Salin semua'}</button></div><div className="lab-case-list">{generatedCases.map((item, index) => <article className="lab-case" key={item.title}><span className="lab-case-id">TC-{String(index + 1).padStart(2, '0')}</span><div><h4>{item.title}</h4><p><strong>{en ? 'Steps' : 'Langkah'}:</strong> {item.steps}</p><p><strong>{en ? 'Expected' : 'Hasil yang diharapkan'}:</strong> {item.expected}</p></div></article>)}</div></div>}
-      </div>}
-      {activeTool === 'bug-report' && <div className="lab-form">
-        <div className="lab-panel-heading"><span className="section-kicker">02 / DEFECT MANAGEMENT</span><h2>{en ? 'Build a clear bug report' : 'Susun laporan bug yang jelas'}</h2><p>{en ? 'Capture reproducible steps, impact, and expected behavior in a consistent format.' : 'Catat langkah reproduksi, dampak, dan perilaku yang diharapkan dengan format konsisten.'}</p></div>
-        <label className="lab-field"><span>{en ? 'Bug title' : 'Judul bug'}</span><input value={bugTitle} onChange={event => setBugTitle(event.target.value)} placeholder={en ? 'e.g. Login button stays disabled' : 'mis. Tombol login tetap nonaktif'} /></label>
-        <div className="lab-field-row"><label className="lab-field"><span>{en ? 'Severity' : 'Severity'}</span><select value={severity} onChange={event => setSeverity(event.target.value)}><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></label><label className="lab-field"><span>{en ? 'Environment' : 'Lingkungan'}</span><input value={environment} onChange={event => setEnvironment(event.target.value)} /></label></div>
-        <label className="lab-field"><span>{en ? 'Steps to reproduce' : 'Langkah reproduksi'}</span><textarea rows={3} value={steps} onChange={event => setSteps(event.target.value)} placeholder={en ? '1. Open the page…' : '1. Buka halaman…'} /></label>
-        <div className="lab-field-row"><label className="lab-field"><span>{en ? 'Actual result' : 'Hasil aktual'}</span><textarea rows={3} value={actual} onChange={event => setActual(event.target.value)} /></label><label className="lab-field"><span>{en ? 'Expected result' : 'Hasil yang diharapkan'}</span><textarea rows={3} value={expected} onChange={event => setExpected(event.target.value)} /></label></div>
-        <button className="button button-primary lab-action" onClick={generateBugReport}>{en ? 'Generate bug report' : 'Buat laporan bug'} <ArrowRight size={16} /></button>
-        {bugReport && <div className="lab-generated"><div className="lab-output-heading"><h3>{en ? 'Ready-to-copy report' : 'Laporan siap disalin'}</h3><button className="copy-link-button" onClick={() => copyText(bugReport)}><Copy size={14} /> {en ? 'Copy report' : 'Salin laporan'}</button></div><pre className="lab-output">{bugReport}</pre></div>}
-      </div>}
-      {activeTool === 'json' && <div className="lab-form">
-        <div className="lab-panel-heading"><span className="section-kicker">03 / DATA UTILITIES</span><h2>{en ? 'Format and validate JSON' : 'Rapikan dan validasi JSON'}</h2><p>{en ? 'Validate syntax and format JSON locally. No payload is sent to a server.' : 'Validasi sintaks dan rapikan JSON secara lokal. Tidak ada payload yang dikirim ke server.'}</p></div>
-        <label className="lab-field"><span>{en ? 'JSON input' : 'Input JSON'}</span><textarea rows={9} spellCheck={false} value={jsonInput} onChange={event => { setJsonInput(event.target.value); setJsonOutput(''); setJsonError('') }} /></label>
-        <button className="button button-primary lab-action" onClick={formatJson}>{en ? 'Format JSON' : 'Rapikan JSON'} <Braces size={16} /></button>
-        {jsonError && <p className="lab-error" role="alert">{en ? 'Invalid JSON:' : 'JSON tidak valid:'} {jsonError}</p>}
-        {jsonOutput && <div className="lab-generated"><div className="lab-output-heading"><h3>{en ? 'Formatted output' : 'Hasil format'}</h3><button className="copy-link-button" onClick={() => copyText(jsonOutput)}><Copy size={14} /> {en ? 'Copy JSON' : 'Salin JSON'}</button></div><pre className="lab-output" aria-label={en ? 'Formatted JSON output' : 'Hasil JSON terformat'}>{jsonOutput}</pre></div>}
-      </div>}
-      {activeTool === 'api-matrix' && <div className="lab-form api-matrix-form">
-        <div className="lab-panel-heading"><span className="section-kicker">04 / API QUALITY ENGINEERING</span><h2>{en ? 'Design an API test matrix' : 'Rancang matriks pengujian API'}</h2><p>{en ? 'Generate a practical contract-testing checklist for an endpoint, then refine it against your API specification. This tool creates test ideas only; it does not send requests.' : 'Buat checklist contract testing praktis untuk sebuah endpoint, lalu sesuaikan dengan spesifikasi API Anda. Tool ini hanya membuat ide pengujian dan tidak mengirim request.'}</p></div>
-        <div className="api-matrix-fields">
-          <label className="lab-field"><span>{en ? 'HTTP method' : 'HTTP method'}</span><select value={apiMethod} onChange={event => { setApiMethod(event.target.value); setApiMatrixGenerated(false) }}><option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option><option>OPTIONS</option></select></label>
-          <label className="lab-field"><span>{en ? 'Endpoint path' : 'Path endpoint'}</span><input value={apiPath} onChange={event => { setApiPath(event.target.value); setApiMatrixGenerated(false) }} placeholder="/api/v1/users" /></label>
-          <label className="lab-field"><span>{en ? 'Authentication' : 'Autentikasi'}</span><select value={apiAuth} onChange={event => { setApiAuth(event.target.value); setApiMatrixGenerated(false) }}><option value="required">{en ? 'Required' : 'Wajib'}</option><option value="optional">{en ? 'Optional / public' : 'Opsional / publik'}</option></select></label>
-          <label className="lab-field"><span>{en ? 'Request payload' : 'Payload request'}</span><select value={apiPayload} onChange={event => { setApiPayload(event.target.value); setApiMatrixGenerated(false) }}><option value="json">JSON</option><option value="none">{en ? 'No body' : 'Tanpa body'}</option></select></label>
-        </div>
-        <div className="api-matrix-note"><ShieldCheck size={15} /><span>{en ? 'Privacy-first: all inputs stay in your browser. No API endpoint is called.' : 'Mengutamakan privasi: semua input tetap di browser. Tidak ada endpoint API yang dipanggil.'}</span></div>
-        <button className="button button-primary lab-action" onClick={() => { setApiMatrixGenerated(true); setCopyStatus('') }}>{en ? 'Generate API test matrix' : 'Buat matriks tes API'} <ArrowRight size={16} /></button>
-        {apiMatrixGenerated && <div className="lab-generated"><div className="lab-output-heading"><div><h3>{en ? 'Generated API scenarios' : 'Skenario API yang dihasilkan'}</h3><p className="api-matrix-count">{apiScenarios.length} {en ? 'scenarios · review before execution' : 'skenario · tinjau sebelum dijalankan'}</p></div><div className="api-matrix-actions"><button className="copy-link-button" onClick={() => copyText(apiScenarios.map(item => `## ${item.id} — ${item.title}\n\n- Request: ${apiMethod} ${apiPath.trim() || '/api/v1/resource'}\n- Steps: ${item.steps}\n- Expected: ${item.expected}`).join('\n\n'))}><Copy size={14} /> {en ? 'Copy Markdown' : 'Salin Markdown'}</button><button className="copy-link-button" onClick={downloadApiMatrix}><ArrowDownRight size={14} /> {en ? 'Download CSV' : 'Unduh CSV'}</button></div></div><div className="lab-case-list">{apiScenarios.map(item => <article className="lab-case api-matrix-case" key={item.id}><span className="lab-case-id">{item.id}</span><div><h4>{item.title}</h4><p><strong>{en ? 'Request' : 'Request'}:</strong> {apiMethod} {apiPath.trim() || '/api/v1/resource'}</p><p><strong>{en ? 'Steps' : 'Langkah'}:</strong> {item.steps}</p><p><strong>{en ? 'Expected' : 'Hasil yang diharapkan'}:</strong> {item.expected}</p></div></article>)}</div></div>}
-      </div>}
-
-      {activeTool === 'release-scorecard' && <div className="lab-form release-scorecard">
-        <div className="lab-panel-heading"><span className="section-kicker">06 / RELEASE GOVERNANCE</span><h2>{en ? 'Release readiness scorecard' : 'Scorecard kesiapan rilis'}</h2><p>{en ? 'Turn release confidence into an evidence-based checklist across product quality, API contracts, security, reliability, and recovery. This score is a planning aid, not an automatic production approval.' : 'Ubah keyakinan rilis menjadi checklist berbasis bukti untuk kualitas produk, kontrak API, keamanan, keandalan, dan pemulihan. Skor ini membantu perencanaan, bukan persetujuan produksi otomatis.'}</p></div>
-        <div className="release-score-overview">
-          <div className="release-score-ring" style={{ '--release-score': releaseScore } as React.CSSProperties} role="img" aria-label={(en ? 'Readiness score ' : 'Skor kesiapan ') + releaseScore + ' percent'}><div><strong>{releaseScore}%</strong><span>{en ? 'Readiness' : 'Kesiapan'}</span></div></div>
-          <div className="release-score-summary"><span className={'release-status-pill ' + (releaseScore === 100 ? 'status-ready' : releaseCriticalMissing > 0 ? 'status-blocked' : 'status-follow-up')}>{releaseStatus}</span><h3>{releaseCompleted} / {releaseChecks.length} {en ? 'checks complete' : 'pemeriksaan selesai'}</h3><p>{releaseCriticalMissing ? (en ? releaseCriticalMissing + ' critical checks remain open. Treat this as a release blocker until the evidence is reviewed.' : releaseCriticalMissing + ' pemeriksaan kritis masih terbuka. Perlakukan sebagai penghambat rilis sampai buktinya ditinjau.') : (en ? 'All critical checks are complete. Review remaining evidence and obtain the required sign-off.' : 'Semua pemeriksaan kritis selesai. Tinjau bukti yang tersisa dan dapatkan persetujuan yang diperlukan.')}</p><div className="release-progress-track" role="progressbar" aria-label={en ? 'Release checklist completion' : 'Penyelesaian checklist rilis'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(releaseCompleted / releaseChecks.length * 100)}><span style={{ width: Math.round(releaseCompleted / releaseChecks.length * 100) + '%' }} /></div><small>{Math.round(releaseCompleted / releaseChecks.length * 100)}% {en ? 'checklist completion' : 'checklist selesai'} · {en ? 'weighted score' : 'skor berbobot'}</small></div>
-        </div>
-        <div className="release-checklist-heading"><div><h3>{en ? 'Evidence checklist' : 'Checklist bukti'}</h3><p>{en ? 'Mark a check complete only when supporting evidence has been reviewed.' : 'Tandai selesai hanya jika bukti pendukung sudah ditinjau.'}</p></div><div className="release-score-actions"><button className="copy-link-button" onClick={copyReleaseScorecard}><Copy size={14} /> {en ? 'Copy report' : 'Salin laporan'}</button><button className="copy-link-button" onClick={downloadReleaseScorecard}><ArrowDownRight size={14} /> {en ? 'Export CSV' : 'Ekspor CSV'}</button></div></div>
-        <div className="release-check-groups">{[...new Set(releaseChecks.map(item => item.category))].map(category => <section className="release-check-group" key={category}><h4>{category}<span>{releaseChecks.filter(item => item.category === category && releaseChecked[item.id]).length}/{releaseChecks.filter(item => item.category === category).length}</span></h4>{releaseChecks.filter(item => item.category === category).map(item => <label className={'release-check-item ' + (releaseChecked[item.id] ? 'is-complete' : '')} key={item.id}><input type="checkbox" checked={Boolean(releaseChecked[item.id])} onChange={event => setReleaseChecked(current => ({ ...current, [item.id]: event.target.checked }))} /><span className="release-check-copy"><strong>{item.title}</strong><small>{item.critical ? (en ? 'Critical gate' : 'Gerbang kritis') : (en ? 'Quality check' : 'Pemeriksaan kualitas')}</small></span>{item.critical && <span className="release-critical-tag">{en ? 'CRITICAL' : 'KRITIS'}</span>}</label>)}</section>)}</div>
-        <p className="release-score-footnote"><ShieldCheck size={15} /> {en ? 'Local-only checklist: selections stay in this browser session. Export the report before leaving if you need a record.' : 'Checklist lokal: pilihan tersimpan selama sesi browser ini. Ekspor laporan sebelum keluar jika Anda memerlukan catatan.'}</p>
-      </div>}
-      {activeTool === 'postmortem' && <div className="lab-form postmortem-form">
-        <div className="lab-panel-heading"><span className="section-kicker">07 / INCIDENT LEARNING</span><h2>{en ? 'Build a blameless incident postmortem' : 'Susun postmortem insiden tanpa menyalahkan'}</h2><p>{en ? 'Turn an incident into a structured learning record: impact, timeline, root cause, recovery, and accountable follow-ups. Everything is processed locally.' : 'Ubah insiden menjadi catatan pembelajaran terstruktur: dampak, linimasa, akar penyebab, pemulihan, dan tindak lanjut yang jelas. Semua diproses secara lokal.'}</p></div>
-        <div className="api-matrix-note"><ShieldCheck size={15} /><span>{en ? 'Blameless by design · local-only processing · no incident data is uploaded. Avoid entering credentials or personal data.' : 'Dirancang tanpa menyalahkan · pemrosesan lokal · data insiden tidak diunggah. Hindari memasukkan kredensial atau data pribadi.'}</span></div>
-        <div className="postmortem-section"><h3>{en ? 'Incident overview' : 'Ringkasan insiden'}</h3>
-          <label className="lab-field"><span>{en ? 'Incident title' : 'Judul insiden'}</span><input value={incidentTitle} onChange={event => setIncidentTitle(event.target.value)} placeholder={en ? 'e.g. Checkout latency spike' : 'mis. Lonjakan latensi checkout'} /></label>
-          <div className="postmortem-grid">
-            <label className="lab-field"><span>{en ? 'Severity' : 'Tingkat keparahan'}</span><select value={incidentSeverity} onChange={event => setIncidentSeverity(event.target.value)}><option value="SEV-1">SEV-1 — {en ? 'Critical' : 'Kritis'}</option><option value="SEV-2">SEV-2 — {en ? 'High' : 'Tinggi'}</option><option value="SEV-3">SEV-3 — {en ? 'Moderate' : 'Sedang'}</option><option value="SEV-4">SEV-4 — {en ? 'Low' : 'Rendah'}</option></select></label>
-            <label className="lab-field"><span>{en ? 'Current status' : 'Status saat ini'}</span><select value={incidentStatus} onChange={event => setIncidentStatus(event.target.value)}><option value="Investigating">{en ? 'Investigating' : 'Diinvestigasi'}</option><option value="Monitoring">{en ? 'Monitoring' : 'Dipantau'}</option><option value="Resolved">{en ? 'Resolved' : 'Selesai'}</option></select></label>
-          </div>
-          <div className="postmortem-grid">
-            <label className="lab-field"><span>{en ? 'Start time' : 'Waktu mulai'}</span><input type="datetime-local" value={incidentStart} onChange={event => setIncidentStart(event.target.value)} /></label>
-            <label className="lab-field"><span>{en ? 'End time' : 'Waktu berakhir'}</span><input type="datetime-local" value={incidentEnd} onChange={event => setIncidentEnd(event.target.value)} /></label>
-          </div>
-        </div>
-        <div className="postmortem-section"><h3>{en ? 'Impact and detection' : 'Dampak dan deteksi'}</h3>
-          <label className="lab-field"><span>{en ? 'Customer and business impact' : 'Dampak terhadap pelanggan dan bisnis'}</span><textarea rows={3} value={incidentImpact} onChange={event => setIncidentImpact(event.target.value)} placeholder={en ? 'Affected services, users, duration, and measurable impact…' : 'Layanan/pengguna terdampak, durasi, dan dampak terukur…'} /></label>
-          <label className="lab-field"><span>{en ? 'Detection and signals' : 'Deteksi dan sinyal'}</span><textarea rows={2} value={incidentDetection} onChange={event => setIncidentDetection(event.target.value)} placeholder={en ? 'Alert, monitoring signal, or customer report…' : 'Alert, sinyal monitoring, atau laporan pelanggan…'} /></label>
-          <label className="lab-field"><span>{en ? 'Timeline (one event per line)' : 'Linimasa (satu peristiwa per baris)'}</span><textarea rows={4} value={incidentTimeline} onChange={event => setIncidentTimeline(event.target.value)} placeholder={en ? '09:02 UTC — Alert triggered\n09:08 UTC — Mitigation started\n09:21 UTC — Service recovered' : '16:02 WIB — Alert terpicu\n16:08 WIB — Mitigasi dimulai\n16:21 WIB — Layanan pulih'} /></label>
-        </div>
-        <div className="postmortem-section"><h3>{en ? 'Analysis and recovery' : 'Analisis dan pemulihan'}</h3>
-          <label className="lab-field"><span>{en ? 'Root cause' : 'Akar penyebab'}</span><textarea rows={3} value={incidentRootCause} onChange={event => setIncidentRootCause(event.target.value)} placeholder={en ? 'Which system conditions made this incident possible?' : 'Kondisi sistem apa yang memungkinkan insiden ini terjadi?'} /></label>
-          <label className="lab-field"><span>{en ? 'Contributing factors (one per line)' : 'Faktor kontribusi (satu per baris)'}</span><textarea rows={2} value={incidentContributors} onChange={event => setIncidentContributors(event.target.value)} placeholder={en ? 'Missing alert\nInsufficient load test' : 'Alert belum tersedia\nLoad test belum memadai'} /></label>
-          <label className="lab-field"><span>{en ? 'Resolution and recovery' : 'Resolusi dan pemulihan'}</span><textarea rows={3} value={incidentResolution} onChange={event => setIncidentResolution(event.target.value)} placeholder={en ? 'Mitigation, rollback, recovery, and verification…' : 'Mitigasi, rollback, pemulihan, dan verifikasi…'} /></label>
-          <label className="lab-field"><span>{en ? 'Follow-up actions (one per line)' : 'Tindak lanjut (satu per baris)'}</span><textarea rows={3} value={incidentFollowUps} onChange={event => setIncidentFollowUps(event.target.value)} placeholder={en ? 'Add latency alert — Platform — 2026-10-20' : 'Tambah alert latensi — Platform — 2026-10-20'} /></label>
-        </div>
-        <div className="postmortem-actions"><button className="button button-primary lab-action" onClick={generatePostmortem}>{en ? 'Generate postmortem' : 'Buat postmortem'} <ArrowRight size={16} /></button></div>
-        {postmortemReport && <div className="lab-generated"><div className="lab-output-heading"><div><h3>{en ? 'Postmortem report' : 'Laporan postmortem'}</h3><p>{en ? 'Review the report and assign follow-up owners before sharing.' : 'Tinjau laporan dan tetapkan penanggung jawab tindak lanjut sebelum dibagikan.'}</p></div><div className="postmortem-actions"><button className="copy-link-button" onClick={() => copyText(postmortemReport)}><Copy size={14} /> {en ? 'Copy Markdown' : 'Salin Markdown'}</button><button className="copy-link-button" onClick={downloadPostmortem}><ArrowDownRight size={14} /> {en ? 'Download .md' : 'Unduh .md'}</button></div></div><pre className="lab-output postmortem-output" aria-label={en ? 'Postmortem Markdown output' : 'Output Markdown postmortem'}>{postmortemReport}</pre></div>}
-      </div>}
-      {activeTool === 'openapi' && <div className="lab-form openapi-form">
-        <div className="lab-panel-heading"><span className="section-kicker">05 / CONTRACT QUALITY</span><h2>{en ? 'Inspect an OpenAPI contract' : 'Periksa kontrak OpenAPI'}</h2><p>{en ? 'Paste an OpenAPI 3.x JSON document to inventory endpoints, methods, response codes, parameters, request bodies, and declared security. Analysis runs locally; it never calls your API.' : 'Tempel dokumen JSON OpenAPI 3.x untuk memetakan endpoint, method, kode respons, parameter, request body, dan keamanan yang dideklarasikan. Analisis berjalan lokal dan tidak memanggil API Anda.'}</p></div>
-        <label className="lab-field"><span>{en ? 'OpenAPI JSON document' : 'Dokumen JSON OpenAPI'}</span><textarea className="openapi-input" rows={13} spellCheck={false} value={openApiSpec} onChange={event => { setOpenApiSpec(event.target.value); setOpenApiAnalyzed(false); setOpenApiError('') }} /></label>
-        <div className="api-matrix-note"><ShieldCheck size={15} /><span>{en ? 'Local-only parsing · OpenAPI 3.x JSON · no network requests · required path parameters are marked with *' : 'Parsing lokal · JSON OpenAPI 3.x · tanpa request jaringan · parameter path wajib ditandai *'}</span></div>
-        <button className="button button-primary lab-action" onClick={analyzeOpenApi}>{en ? 'Analyze contract' : 'Analisis kontrak'} <ArrowRight size={16} /></button>
-        {openApiError && <p className="lab-error" role="alert">{openApiError}</p>}
-        {openApiAnalyzed && <div className="lab-generated"><div className="lab-output-heading"><div><h3>{en ? 'Endpoint inventory' : 'Inventaris endpoint'}</h3><p className="api-matrix-count">{openApiResults.length} {en ? 'operations discovered' : 'operasi ditemukan'}</p></div><div className="api-matrix-actions"><button className="copy-link-button" onClick={() => copyText(openApiResults.map(item => `## ${item.method} ${item.path}\n\n- Summary: ${item.summary}\n- Operation ID: ${item.operationId || '—'}\n- Responses: ${item.responses}\n- Parameters: ${item.parameters || '—'}\n- Request body: ${item.requestBody ? 'Yes' : 'No'}\n- Security declared: ${item.security ? 'Yes' : 'No'}`).join('\n\n'))}><Copy size={14} /> {en ? 'Copy Markdown' : 'Salin Markdown'}</button><button className="copy-link-button" onClick={downloadOpenApiMatrix}><ArrowDownRight size={14} /> {en ? 'Export CSV' : 'Ekspor CSV'}</button></div></div><div className="openapi-summary-grid"><div><span>{en ? 'Operations' : 'Operasi'}</span><strong>{openApiResults.length}</strong></div><div><span>{en ? 'Errors' : 'Error'}</span><strong>{openApiIssues.filter(issue => issue.severity === 'error').length}</strong></div><div><span>{en ? 'Warnings' : 'Peringatan'}</span><strong>{openApiIssues.filter(issue => issue.severity === 'warning').length}</strong></div><div><span>{en ? 'Info' : 'Info'}</span><strong>{openApiIssues.filter(issue => issue.severity === 'info').length}</strong></div></div><section className="openapi-issues" aria-label={en ? 'Contract validation issues' : 'Temuan validasi kontrak'}><div className="openapi-issues-heading"><div><h3>{en ? 'Contract quality checks' : 'Pemeriksaan kualitas kontrak'}</h3><p>{en ? 'Static checks for response coverage, path parameters, request schemas, and operation metadata.' : 'Pemeriksaan statis untuk cakupan respons, parameter path, schema request, dan metadata operasi.'}</p></div><span className={openApiIssues.some(issue => issue.severity === 'error') ? 'openapi-quality-status has-errors' : openApiIssues.some(issue => issue.severity === 'warning') ? 'openapi-quality-status has-warnings' : 'openapi-quality-status'}>{openApiIssues.length} {en ? 'findings' : 'temuan'}</span></div>{openApiIssues.length ? <div className="openapi-issue-list">{openApiIssues.map((issue, index) => <article className={'openapi-issue issue-' + issue.severity} key={issue.method + issue.path + issue.code + index}><span className="openapi-issue-severity">{issue.severity.toUpperCase()}</span><div><strong>{issue.code}</strong><p>{issue.method} {issue.path} — {issue.message}</p></div></article>)}</div> : <p className="openapi-no-issues"><Check size={16} /> {en ? 'No issues found by the current static checks.' : 'Tidak ada temuan dari pemeriksaan statis saat ini.'}</p>}</section><div className="openapi-endpoint-list">{openApiResults.map((item, index) => <article className="openapi-endpoint" key={item.method + item.path + index}><div className="openapi-endpoint-top"><span className={'openapi-method method-' + item.method.toLowerCase()}>{item.method}</span><code>{item.path}</code></div><h4>{item.summary}</h4>{item.operationId && <p className="openapi-operation">{en ? 'Operation ID' : 'ID Operasi'}: <code>{item.operationId}</code></p>}<div className="openapi-meta"><span>{en ? 'Responses' : 'Respons'}: <strong>{item.responses}</strong></span><span>{en ? 'Body' : 'Body'}: <strong>{item.requestBody ? (en ? 'Yes' : 'Ya') : (en ? 'No' : 'Tidak')}</strong></span><span>{en ? 'Security' : 'Keamanan'}: <strong>{item.security ? (en ? 'Declared' : 'Dideklarasikan') : (en ? 'Not declared' : 'Tidak dideklarasikan')}</strong></span></div>{item.parameters && <p className="openapi-parameters">{en ? 'Parameters' : 'Parameter'}: {item.parameters}</p>}</article>)}</div></div>}
-      </div>}
-      {copyStatus && <p className="lab-copy-status" role="status">{copyStatus}</p>}
-    </section>
-    <p className="lab-disclaimer">{en ? 'Generated checklists are starting points, not a substitute for risk analysis, product requirements, or human review.' : 'Checklist yang dihasilkan adalah titik awal, bukan pengganti analisis risiko, kebutuhan produk, atau review manusia.'}</p>
-  </main>
+  return (
+    <Suspense fallback={<div className="container route-loading" role="status">{language === 'en' ? 'Loading Engineering Lab…' : 'Memuat Lab Engineering…'}</div>}>
+      <LazyEngineeringLab />
+    </Suspense>
+  )
 }
 
-
-function inferJsonSchema(value: unknown): Record<string, unknown> {
-  if (value === null) return { type: 'null' }
-  if (Array.isArray(value)) {
-    const variants = [...new Map(value.map(item => {
-      const schema = inferJsonSchema(item)
-      return [JSON.stringify(schema), schema] as const
-    })).values()]
-    return { type: 'array', items: variants.length === 0 ? {} : variants.length === 1 ? variants[0] : { anyOf: variants } }
-  }
-  if (typeof value === 'object') {
-    const entries = Object.entries(value as Record<string, unknown>)
-    return {
-      type: 'object',
-      properties: Object.fromEntries(entries.map(([key, item]) => [key, inferJsonSchema(item)])),
-      ...(entries.length ? { required: entries.map(([key]) => key) } : {}),
-      additionalProperties: false,
-    }
-  }
-  if (typeof value === 'number') return { type: Number.isInteger(value) ? 'integer' : 'number' }
-  return { type: typeof value }
-}
-
-function decodeJwtPart(part: string): unknown {
-  const base64 = part.replace(/-/g, '+').replace(/_/g, '/')
-  const padded = base64 + '='.repeat((4 - base64.length % 4) % 4)
-  const bytes = Uint8Array.from(atob(padded), character => character.charCodeAt(0))
-  return JSON.parse(new TextDecoder().decode(bytes))
-}
 
 function DeveloperUtilitiesPage() {
   const { language } = useLanguage()
-  const en = language === 'en'
-  const [activeTool, setActiveTool] = useState<'schema' | 'regex' | 'jwt'>('schema')
-  const [sampleJson, setSampleJson] = useState('{\n  "id": 42,\n  "name": "Ada Lovelace",\n  "active": true,\n  "roles": ["admin", "editor"],\n  "profile": { "city": "London", "verified": null }\n}')
-  const [schemaOutput, setSchemaOutput] = useState('')
-  const [schemaError, setSchemaError] = useState('')
-  const [regexPattern, setRegexPattern] = useState('(?<email>[\\w.+-]+@[\\w.-]+\\.[A-Za-z]{2,})')
-  const [regexFlags, setRegexFlags] = useState('g')
-  const [regexSample, setRegexSample] = useState('Contact support@example.com or hello@dreamex.tech for help.')
-  const [regexError, setRegexError] = useState('')
-  const [regexMatches, setRegexMatches] = useState<Array<{ match: string; index: number; groups: Record<string, string> }>>([])
-  const [jwtInput, setJwtInput] = useState('')
-  const [jwtOutput, setJwtOutput] = useState('')
-  const [jwtError, setJwtError] = useState('')
-  const [copyStatus, setCopyStatus] = useState('')
-
-  useEffect(() => {
-    const title = en ? 'Developer Utilities — DreamEx Tech' : 'Utilitas Developer — DreamEx Tech'
-    const description = en
-      ? 'Privacy-first browser tools for JSON Schema generation, regular-expression testing, and JWT inspection.'
-      : 'Tool browser yang mengutamakan privasi untuk membuat JSON Schema, menguji regular expression, dan memeriksa JWT.'
-    document.title = title
-    document.querySelector('meta[name="description"]')?.setAttribute('content', description)
-    document.querySelector('meta[property="og:title"]')?.setAttribute('content', title)
-    document.querySelector('meta[property="og:description"]')?.setAttribute('content', description)
-    document.querySelector('meta[property="og:url"]')?.setAttribute('content', 'https://dreamex.tech/devtools')
-    document.querySelector('link[rel="canonical"]')?.setAttribute('href', 'https://dreamex.tech/devtools')
-    return () => {
-      document.title = 'DreamEx Tech — Engineering, AI & QA'
-      document.querySelector('meta[name="description"]')?.setAttribute('content', 'DreamEx Tech — practical notes on software engineering, quality engineering, AI, and modern technology.')
-      document.querySelector('meta[property="og:title"]')?.setAttribute('content', 'DreamEx Tech — Think deeper. Build smarter.')
-      document.querySelector('meta[property="og:description"]')?.setAttribute('content', 'Ruang eksplorasi software engineering, quality engineering, AI, dan teknologi modern.')
-      document.querySelector('meta[property="og:url"]')?.setAttribute('content', 'https://dreamex.tech/')
-      document.querySelector('link[rel="canonical"]')?.setAttribute('href', 'https://dreamex.tech/')
-    }
-  }, [en])
-
-  const generateSchema = () => {
-    setSchemaError('')
-    setSchemaOutput('')
-    try {
-      const parsed: unknown = JSON.parse(sampleJson)
-      setSchemaOutput(JSON.stringify({
-        $schema: 'https://json-schema.org/draft/2020-12/schema',
-        title: 'Generated schema',
-        ...inferJsonSchema(parsed),
-      }, null, 2))
-    } catch (error) {
-      setSchemaError((en ? 'Invalid JSON: ' : 'JSON tidak valid: ') + (error instanceof Error ? error.message : 'Unknown error'))
-    }
-  }
-
-  const testRegex = () => {
-    setRegexError('')
-    setRegexMatches([])
-    if (regexPattern.length > 160 || regexSample.length > 4000) {
-      setRegexError(en ? 'Keep patterns under 160 characters and sample text under 4,000 characters.' : 'Batasi pola hingga 160 karakter dan teks sampel hingga 4.000 karakter.')
-      return
-    }
-    // Block common catastrophic-backtracking shapes before executing untrusted patterns.
-    if (/\([^)]*[+*][^)]*\)\s*(?:[+*]|\{\d*,?\d*\})/.test(regexPattern) || /\([^)]*\|[^)]*\)\s*(?:[+*]|\{\d*,?\d*\})/.test(regexPattern)) {
-      setRegexError(en ? 'This pattern uses a potentially expensive nested or ambiguous quantifier. Simplify it before testing.' : 'Pola ini memakai quantifier bertingkat atau ambigu yang berpotensi mahal. Sederhanakan sebelum diuji.')
-      return
-    }
-    try {
-      const flags = [...new Set(regexFlags.split('').filter(flag => 'dgimsuvy'.includes(flag)))].join('')
-      const expression = new RegExp(regexPattern, flags)
-      const matches: Array<{ match: string; index: number; groups: Record<string, string> }> = []
-      if (expression.global || expression.sticky) {
-        let match: RegExpExecArray | null
-        while ((match = expression.exec(regexSample)) !== null && matches.length < 100) {
-          matches.push({ match: match[0], index: match.index, groups: match.groups ? Object.fromEntries(Object.entries(match.groups).map(([key, value]) => [key, value ?? ''])) : {} })
-          if (match[0] === '') expression.lastIndex += 1
-        }
-      } else {
-        const match = expression.exec(regexSample)
-        if (match) matches.push({ match: match[0], index: match.index, groups: match.groups ? Object.fromEntries(Object.entries(match.groups).map(([key, value]) => [key, value ?? ''])) : {} })
-      }
-      setRegexMatches(matches)
-    } catch (error) {
-      setRegexError((en ? 'Regex error: ' : 'Kesalahan regex: ') + (error instanceof Error ? error.message : 'Unknown error'))
-    }
-  }
-
-  const decodeJwt = () => {
-    setJwtError('')
-    setJwtOutput('')
-    const parts = jwtInput.trim().split('.')
-    if (parts.length !== 3 || parts.some(part => !part)) {
-      setJwtError(en ? 'A JWT must contain three non-empty dot-separated segments.' : 'JWT harus memiliki tiga segmen tidak kosong yang dipisahkan titik.')
-      return
-    }
-    try {
-      const header = decodeJwtPart(parts[0])
-      const payload = decodeJwtPart(parts[1])
-      setJwtOutput(JSON.stringify({ header, payload, signature: en ? 'Not verified — signature bytes are not validated.' : 'Belum diverifikasi — byte tanda tangan tidak divalidasi.' }, null, 2))
-    } catch {
-      setJwtError(en ? 'The header or payload is not valid base64url-encoded JSON.' : 'Header atau payload bukan JSON base64url yang valid.')
-    }
-  }
-
-  const copyText = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopyStatus(en ? 'Copied to clipboard.' : 'Berhasil disalin.')
-    } catch {
-      setCopyStatus(en ? 'Clipboard access was blocked by the browser.' : 'Akses clipboard diblokir oleh browser.')
-    }
-  }
-
-  const downloadSchema = () => {
-    if (!schemaOutput) return
-    const url = URL.createObjectURL(new Blob([schemaOutput], { type: 'application/schema+json;charset=utf-8' }))
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = 'schema.generated.json'
-    document.body.appendChild(anchor)
-    anchor.click()
-    anchor.remove()
-    URL.revokeObjectURL(url)
-  }
-
-  return <main id="main-content" className="container devtools-page">
-    <header className="devtools-header">
-      <span className="section-kicker"><Braces size={14} /> {en ? 'ENGINEERING TOOLKIT / PRIVACY-FIRST' : 'TOOLKIT ENGINEERING / UTAMAKAN PRIVASI'}</span>
-      <h1>{en ? <>Developer <span>Utilities.</span></> : <>Utilitas <span>Developer.</span></>}</h1>
-      <p>{en ? 'Small, focused tools for everyday engineering workflows. Validate, inspect, and generate locally in your browser — no account or upload required.' : 'Tool ringkas dan fokus untuk alur kerja engineering sehari-hari. Validasi, periksa, dan buat output langsung di browser — tanpa akun atau unggahan.'}</p>
-      <div className="devtools-trust"><ShieldCheck size={16} /><span>{en ? 'Local processing · no telemetry added · never paste production secrets into shared devices.' : 'Pemrosesan lokal · tanpa telemetri tambahan · jangan tempelkan secret produksi pada perangkat bersama.'}</span></div>
-    </header>
-    <nav className="devtools-tabs" aria-label={en ? 'Developer utilities' : 'Utilitas developer'}>
-      <button type="button" className={activeTool === 'schema' ? 'active' : ''} aria-pressed={activeTool === 'schema'} onClick={() => { setActiveTool('schema'); setCopyStatus('') }}><Braces size={16} /><span>JSON Schema</span></button>
-      <button type="button" className={activeTool === 'regex' ? 'active' : ''} aria-pressed={activeTool === 'regex'} onClick={() => { setActiveTool('regex'); setCopyStatus('') }}><Search size={16} /><span>{en ? 'Regex Tester' : 'Penguji Regex'}</span></button>
-      <button type="button" className={activeTool === 'jwt' ? 'active' : ''} aria-pressed={activeTool === 'jwt'} onClick={() => { setActiveTool('jwt'); setCopyStatus('') }}><ShieldCheck size={16} /><span>{en ? 'JWT Inspector' : 'Pemeriksa JWT'}</span></button>
-    </nav>
-
-    {activeTool === 'schema' && <section className="devtools-panel" aria-labelledby="schema-title">
-      <div className="devtools-panel-heading"><span className="devtools-index">01 / GENERATE</span><h2 id="schema-title">{en ? 'JSON Schema Generator' : 'Generator JSON Schema'}</h2><p>{en ? 'Infer a JSON Schema Draft 2020-12 from a sample payload, including nested objects, arrays, nulls, and mixed array types.' : 'Buat inferensi JSON Schema Draft 2020-12 dari payload sampel, termasuk objek bertingkat, array, null, dan tipe array campuran.'}</p></div>
-      <div className="devtools-workspace"><label className="lab-field">{en ? 'Sample JSON' : 'JSON sampel'}<textarea aria-label={en ? 'Sample JSON' : 'JSON sampel'} rows={10} spellCheck={false} value={sampleJson} onChange={event => setSampleJson(event.target.value)} /></label><div className="devtools-output-column"><div className="devtools-output-heading"><strong>{en ? 'Generated schema' : 'Schema hasil'}</strong><span className="devtools-format">DRAFT 2020-12</span></div>{schemaOutput ? <pre className="lab-output" aria-label={en ? 'Generated JSON Schema output' : 'Output JSON Schema'}>{schemaOutput}</pre> : <div className="devtools-empty"><Braces size={22} /><p>{en ? 'Your schema will appear here.' : 'Schema akan muncul di sini.'}</p></div>}{schemaError && <p className="lab-error" role="alert">{schemaError}</p>}</div></div>
-      <div className="devtools-actions"><button type="button" className="button button-primary" onClick={generateSchema}><Sparkles size={15} /> {en ? 'Generate schema' : 'Buat schema'}</button>{schemaOutput && <><button type="button" className="button button-secondary" onClick={() => void copyText(schemaOutput)}><Copy size={15} /> {en ? 'Copy schema' : 'Salin schema'}</button><button type="button" className="button button-secondary" onClick={downloadSchema}><Download size={15} /> {en ? 'Download JSON' : 'Unduh JSON'}</button></>}</div>
-    </section>}
-
-    {activeTool === 'regex' && <section className="devtools-panel" aria-labelledby="regex-title">
-      <div className="devtools-panel-heading"><span className="devtools-index">02 / INSPECT</span><h2 id="regex-title">{en ? 'Regular Expression Tester' : 'Penguji Regular Expression'}</h2><p>{en ? 'Test a pattern against sample text and inspect match offsets and named capture groups.' : 'Uji pola pada teks sampel dan periksa posisi kecocokan serta named capture group.'}</p></div>
-      <div className="devtools-regex-line"><label className="lab-field">{en ? 'Pattern' : 'Pola'}<input aria-label={en ? 'Regex pattern' : 'Pola regex'} value={regexPattern} onChange={event => setRegexPattern(event.target.value)} maxLength={160} /></label><label className="lab-field devtools-flags">{en ? 'Flags' : 'Flags'}<input aria-label={en ? 'Regex flags' : 'Flag regex'} value={regexFlags} onChange={event => setRegexFlags(event.target.value)} maxLength={8} /><small>g i m s u y</small></label></div>
-      <label className="lab-field devtools-sample">{en ? 'Sample text' : 'Teks sampel'}<textarea aria-label={en ? 'Regex sample text' : 'Teks sampel regex'} rows={5} value={regexSample} onChange={event => setRegexSample(event.target.value)} maxLength={4000} /></label>
-      <div className="devtools-actions"><button type="button" className="button button-primary" onClick={testRegex}><Search size={15} /> {en ? 'Test pattern' : 'Uji pola'}</button><span className="devtools-count">{regexMatches.length} {en ? 'matches' : 'kecocokan'} · {en ? 'maximum 100 shown' : 'maksimal 100 ditampilkan'}</span></div>
-      {regexError && <p className="lab-error" role="alert">{regexError}</p>}
-      <div className="devtools-match-list" aria-live="polite">{regexMatches.length ? regexMatches.map((item, index) => <article className="devtools-match" key={item.index + ':' + index}><span className="devtools-match-index">#{index + 1} · {en ? 'offset' : 'posisi'} {item.index}</span><code>{item.match || (en ? '(empty match)' : '(kecocokan kosong)')}</code>{Object.keys(item.groups).length > 0 && <pre className="lab-output">{JSON.stringify(item.groups, null, 2)}</pre>}</article>) : <div className="devtools-empty"><Search size={22} /><p>{en ? 'Run the test to see matches.' : 'Jalankan pengujian untuk melihat kecocokan.'}</p></div>}</div>
-      <p className="devtools-footnote">{en ? 'Safety guard: pattern and input length are capped, and common nested/ambiguous quantifiers are rejected. This is a convenience tool, not a complete ReDoS defense.' : 'Pengaman: panjang pola dan input dibatasi serta quantifier bertingkat/ambigu yang umum ditolak. Ini alat bantu, bukan pertahanan ReDoS lengkap.'}</p>
-    </section>}
-
-    {activeTool === 'jwt' && <section className="devtools-panel" aria-labelledby="jwt-title">
-      <div className="devtools-panel-heading"><span className="devtools-index">03 / DECODE</span><h2 id="jwt-title">{en ? 'JWT Inspector' : 'Pemeriksa JWT'}</h2><p>{en ? 'Decode the header and payload of a JSON Web Token for debugging. The token stays in this browser session.' : 'Dekode header dan payload JSON Web Token untuk debugging. Token tetap diproses di sesi browser ini.'}</p></div>
-      <label className="lab-field">{en ? 'JWT token' : 'Token JWT'}<textarea aria-label={en ? 'JWT token' : 'Token JWT'} rows={4} spellCheck={false} value={jwtInput} onChange={event => setJwtInput(event.target.value)} placeholder="eyJhbGciOi...eyJzdWIiOi..." /></label>
-      <div className="devtools-actions"><button type="button" className="button button-primary" onClick={decodeJwt}><ShieldCheck size={15} /> {en ? 'Decode token' : 'Dekode token'}</button>{jwtOutput && <button type="button" className="button button-secondary" onClick={() => void copyText(jwtOutput)}><Copy size={15} /> {en ? 'Copy decoded JSON' : 'Salin JSON hasil'}</button>}</div>
-      {jwtError && <p className="lab-error" role="alert">{jwtError}</p>}
-      {jwtOutput ? <pre className="lab-output devtools-jwt-output" aria-label={en ? 'Decoded JWT output' : 'Output JWT hasil dekode'}>{jwtOutput}</pre> : <div className="devtools-empty"><ShieldCheck size={22} /><p>{en ? 'Decoded header and payload will appear here.' : 'Header dan payload hasil dekode akan muncul di sini.'}</p></div>}
-      <aside className="devtools-warning"><AlertTriangle size={16} /><p>{en ? 'Decoding is not verification. This tool does not validate signatures, issuer, audience, expiry, or trust. Never use decoded claims alone to authorize a request.' : 'Dekode bukan verifikasi. Tool ini tidak memvalidasi tanda tangan, issuer, audience, kedaluwarsa, atau kepercayaan. Jangan gunakan klaim hasil dekode saja untuk mengotorisasi permintaan.'}</p></aside>
-    </section>}
-    {copyStatus && <p className="lab-copy-status" role="status">{copyStatus}</p>}
-    <p className="devtools-disclaimer">{en ? 'Everything runs client-side in this page. Outputs are generated from the input you provide and should be reviewed before production use.' : 'Semua proses berjalan di sisi klien pada halaman ini. Output dibuat dari input Anda dan harus ditinjau sebelum digunakan di produksi.'}</p>
-  </main>
+  return (
+    <Suspense fallback={<div className="container route-loading" role="status">{language === 'en' ? 'Loading Developer Utilities…' : 'Memuat Utilitas Developer…'}</div>}>
+      <LazyDeveloperUtilities />
+    </Suspense>
+  )
 }
 
 
@@ -1894,197 +1028,13 @@ function RssPage() {
 }
 
 function ArticlePage() {
-  const { t, language } = useLanguage()
-  const { slug } = useParams()
-  const articleIndex = articles.findIndex(item => item.slug === slug)
-  const article = articleIndex >= 0 ? articles[articleIndex] : undefined
-  const prevArticle = articleIndex > 0 ? articles[articleIndex - 1] : undefined
-  const nextArticle = articleIndex >= 0 && articleIndex < articles.length - 1 ? articles[articleIndex + 1] : undefined
-  const translated = article && language === 'en' ? articleTranslations[article.slug] : undefined
-  const enhancement = article ? (language === 'en' ? articleEnhancementsEn[article.slug] : articleEnhancementsId[article.slug]) : undefined
-  const [progress, setProgress] = useState(0)
-  const lastSavedProgress = useRef(-1)
-  const { isSaved, toggleSaved } = useReadingList()
-  const [linkCopied, setLinkCopied] = useState(false)
-  const [citationCopied, setCitationCopied] = useState(false)
-  const [codeCopied, setCodeCopied] = useState(false)
-  const [copyError, setCopyError] = useState(false)
-  const relatedArticles = useMemo(() => article ? articles
-    .filter(item => item.slug !== article.slug)
-    .map(item => ({ item, score: (item.category === article.category ? 3 : 0) + item.tags.filter(tag => article.tags.includes(tag)).length }))
-    .sort((left, right) => right.score - left.score)
-    .slice(0, 2)
-    .map(result => result.item) : [], [article])
-  const copyArticleLink = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href)
-      setLinkCopied(true)
-      setCopyError(false)
-    } catch {
-      setCopyError(true)
-    }
-  }
-  const copyCitation = async () => {
-    if (!article) return
-    const title = translated?.title ?? article.title
-    const citation = `[${title}](https://dreamex.tech/blog/${article.slug}) — DreamEx Tech (${article.date})`
-    try {
-      await navigator.clipboard.writeText(citation)
-      setCitationCopied(true)
-      setCopyError(false)
-    } catch {
-      setCopyError(true)
-    }
-  }
-  const copyCodeSnippet = async () => {
-    if (!enhancement) return
-    try {
-      await navigator.clipboard.writeText(enhancement.snippet.code)
-      setCodeCopied(true)
-      setCopyError(false)
-      window.setTimeout(() => setCodeCopied(false), 2400)
-    } catch {
-      setCopyError(true)
-    }
-  }
-  const shareArticle = async () => {
-    if (!article) return
-    const title = `${translated?.title ?? article.title} — DreamEx Tech`
-    const shareData = { title, text: translated?.excerpt ?? article.excerpt, url: window.location.href }
-    if (typeof navigator.share === 'function') {
-      try {
-        await navigator.share(shareData)
-        setCopyError(false)
-        return
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') return
-      }
-    }
-    await copyArticleLink()
-  }
-  useEffect(() => {
-    document.title = article ? `${translated?.title ?? article.title} — DreamEx Tech` : `${t('articleNotFound')} — DreamEx Tech`
-    const setMeta = (selector: string, attribute: string, value: string) => {
-      const element = document.querySelector(selector)
-      if (element) element.setAttribute(attribute, value)
-    }
-    if (article) {
-      const canonicalUrl = `https://dreamex.tech/blog/${article.slug}`
-      setMeta('meta[name="description"]', 'content', translated?.excerpt ?? article.excerpt)
-      setMeta('meta[property="og:title"]', 'content', `${translated?.title ?? article.title} — DreamEx Tech`)
-      setMeta('meta[property="og:description"]', 'content', translated?.excerpt ?? article.excerpt)
-      setMeta('meta[property="og:url"]', 'content', canonicalUrl)
-      setMeta('meta[name="twitter:title"]', 'content', `${translated?.title ?? article.title} — DreamEx Tech`)
-      setMeta('meta[name="twitter:description"]', 'content', translated?.excerpt ?? article.excerpt)
-      const canonical = document.querySelector('link[rel="canonical"]')
-      canonical?.setAttribute('href', canonicalUrl)
-      const structuredData = document.createElement('script')
-      structuredData.type = 'application/ld+json'
-      structuredData.dataset.articleSchema = 'true'
-      structuredData.textContent = JSON.stringify({
-        '@context': 'https://schema.org', '@type': 'Article', headline: translated?.title ?? article.title,
-        description: translated?.excerpt ?? article.excerpt, datePublished: article.date,
-        dateModified: enhancement?.updatedAt ?? article.date,
-        author: { '@type': 'Organization', name: 'DreamEx Tech' },
-        publisher: { '@type': 'Organization', name: 'DreamEx Tech' },
-        mainEntityOfPage: canonicalUrl,
-      })
-      document.head.appendChild(structuredData)
-      const breadcrumbData = document.createElement('script')
-      breadcrumbData.type = 'application/ld+json'
-      breadcrumbData.dataset.breadcrumbSchema = 'true'
-      breadcrumbData.textContent = JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'DreamEx Tech', item: 'https://dreamex.tech/' },
-          { '@type': 'ListItem', position: 2, name: categoryLabel(article.category, language), item: 'https://dreamex.tech/#latest' },
-          { '@type': 'ListItem', position: 3, name: translated?.title ?? article.title, item: canonicalUrl },
-        ],
-      })
-      document.head.appendChild(breadcrumbData)
-    }
-    const updateProgress = () => {
-      const scrollable = document.documentElement.scrollHeight - window.innerHeight
-      const nextProgress = scrollable > 0 ? Math.min(100, Math.round(window.scrollY / scrollable * 100)) : 0
-      setProgress(nextProgress)
-      if (!article || nextProgress === lastSavedProgress.current) return
-      lastSavedProgress.current = nextProgress
-      try {
-        if (nextProgress >= 100) window.localStorage.removeItem(READING_PROGRESS_KEY)
-        else if (nextProgress >= 5) window.localStorage.setItem(READING_PROGRESS_KEY, JSON.stringify({ slug: article.slug, progress: nextProgress }))
-        window.dispatchEvent(new Event(READING_PROGRESS_EVENT))
-      } catch { /* Reading progress is optional when browser storage is unavailable. */ }
-    }
-    lastSavedProgress.current = -1
-    const savedProgress = readReadingProgress()
-    if (article && savedProgress?.slug === article.slug) {
-      window.requestAnimationFrame(() => {
-        const scrollable = document.documentElement.scrollHeight - window.innerHeight
-        if (scrollable > 0) window.scrollTo({ top: scrollable * savedProgress.progress / 100, behavior: 'auto' })
-      })
-    }
-    updateProgress()
-    window.addEventListener('scroll', updateProgress, { passive: true })
-    return () => {
-      window.removeEventListener('scroll', updateProgress)
-      document.querySelector('script[data-article-schema="true"]')?.remove()
-      document.querySelector('script[data-breadcrumb-schema="true"]')?.remove()
-      const canonical = document.querySelector('link[rel="canonical"]')
-      canonical?.setAttribute('href', 'https://dreamex.tech/')
-      setMeta('meta[property="og:title"]', 'content', 'DreamEx Tech — Think deeper. Build smarter.')
-      setMeta('meta[property="og:description"]', 'content', 'Ruang eksplorasi software engineering, quality engineering, AI, dan teknologi modern.')
-      setMeta('meta[property="og:url"]', 'content', 'https://dreamex.tech/')
-      setMeta('meta[name="twitter:title"]', 'content', 'DreamEx Tech — Think deeper. Build smarter.')
-      setMeta('meta[name="twitter:description"]', 'content', 'Ruang eksplorasi software engineering, quality engineering, AI, dan teknologi modern.')
-      setMeta('meta[name="description"]', 'content', 'DreamEx Tech — practical notes on software engineering, quality engineering, AI, and modern technology.')
-    }
-  }, [article, enhancement?.updatedAt, language, t, translated?.excerpt, translated?.title])
-  if (!article) return <main id="main-content" className="container not-found"><h1>{t('articleNotFound')}</h1><p>{t('articleMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>
-  const paragraphs = translated?.body ?? article.body
-  const articleCover = getArticleCover(article.slug, language)
-  return <main id="main-content" className="article-page"><div className="reading-progress" role="progressbar" aria-label={language === 'en' ? 'Article reading progress' : 'Progres membaca artikel'} aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><span style={{ transform: `scaleX(${progress / 100})` }} /></div><div className="container article-container">
-    <Link className="back-link" to="/">{t('backAll')}</Link>
-    <div className="article-header"><span className="category-pill">{categoryLabel(article.category, language)}</span><h1>{translated?.title ?? article.title}</h1><p>{translated?.excerpt ?? article.excerpt}</p><div className="article-meta"><span>{new Date(article.date + 'T00:00:00').toLocaleDateString(language === 'en' ? 'en-US' : 'id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>{enhancement?.updatedAt && <><span>•</span><span>{language === 'en' ? `Updated ${enhancement.updatedAt}` : `Diperbarui ${enhancement.updatedAt}`}</span></>}<span>•</span><span>{language === 'en' ? article.readTime.replace('menit', 'min') : article.readTime}</span><span>•</span><span>{enhancement ? `${enhancement.author} (${enhancement.authorRole})` : t('editorial')}</span></div></div>
-    <figure className="article-hero-figure"><img src={articleCover.src} alt={articleCover.alt} width={1200} height={630} /><figcaption>{articleCover.badge}</figcaption></figure>
-    {enhancement && enhancement.sections.length > 0 && <nav className="article-toc" aria-label={language === 'en' ? 'Table of contents' : 'Daftar isi'}>
-      <strong><BookOpen size={15} /> {language === 'en' ? 'Table of contents' : 'Daftar isi'}</strong>
-      <ol>
-        {enhancement.sections.map(section => <li key={section.id}><a href={`#${section.id}`}>{section.heading}</a></li>)}
-      </ol>
-    </nav>}
-    <div className="article-body">
-      {paragraphs.map((paragraph, index) => {
-        const sectionHeading = enhancement?.sections.find(section => section.startParagraphIndex === index)
-        return <div key={index} className="article-paragraph-group">
-          {sectionHeading && <h2 id={sectionHeading.id} className="article-section-heading">{sectionHeading.heading}</h2>}
-          <p>{paragraph}</p>
-        </div>
-      })}
-      {enhancement && <section className="article-code-block" aria-label={language === 'en' ? 'Reference implementation' : 'Implementasi referensi'}>
-        <div className="article-code-header">
-          <div className="article-code-meta"><Terminal size={14} /> <code>{enhancement.snippet.filename}</code> <span className="article-code-lang">{enhancement.snippet.language}</span></div>
-          <button type="button" className="copy-link-button article-copy-code" onClick={copyCodeSnippet} aria-label={language === 'en' ? 'Copy code snippet' : 'Salin potongan kode'}><Copy size={13} /> {codeCopied ? (language === 'en' ? 'Code copied' : 'Kode disalin') : (language === 'en' ? 'Copy code' : 'Salin kode')}</button>
-        </div>
-        <pre><code>{enhancement.snippet.code}</code></pre>
-        <p className="article-code-caption">{enhancement.snippet.caption}</p>
-      </section>}
-      <div className="article-note"><strong><ShieldCheck size={16} /> {t('engineeringNote')}</strong><p>{t('noteDescription')}</p></div>
-    </div>
-    <div className="article-end"><span>{t('topicsLabel')}</span><div className="tag-row">{article.tags.map(tag => <span key={tag}>#{tag.replaceAll(' ', '')}</span>)}</div><button className="copy-link-button" onClick={() => toggleSaved(article.slug)} aria-pressed={isSaved(article.slug)}><Bookmark size={14} /> {isSaved(article.slug) ? (language === 'en' ? 'Saved to reading list' : 'Tersimpan di daftar bacaan') : (language === 'en' ? 'Save to reading list' : 'Simpan ke daftar bacaan')}</button><button className="copy-link-button" onClick={shareArticle}><Share2 size={14} /> {language === 'en' ? 'Share article' : 'Bagikan artikel'}</button><button className="copy-link-button" onClick={copyCitation}><Copy size={14} /> {citationCopied ? (language === 'en' ? 'Citation copied' : 'Sitasi disalin') : (language === 'en' ? 'Copy Markdown citation' : 'Salin sitasi Markdown')}</button><button className="copy-link-button" onClick={copyArticleLink}><Copy size={14} /> {linkCopied ? t('copied') : t('copyLink')}</button></div>
-    {copyError && <p className="copy-error" role="status">{t('copyError')}</p>}
-    {(prevArticle || nextArticle) && <nav className="article-prev-next" aria-label={language === 'en' ? 'Previous and next articles' : 'Artikel sebelumnya dan berikutnya'}>
-      {prevArticle ? <Link className="article-sequence-card prev" to={`/blog/${prevArticle.slug}`}><span className="section-kicker">← {language === 'en' ? 'PREVIOUS ARTICLE' : 'ARTIKEL SEBELUMNYA'}</span><strong>{(language === 'en' ? articleTranslations[prevArticle.slug]?.title : undefined) ?? prevArticle.title}</strong></Link> : <div />}
-      {nextArticle ? <Link className="article-sequence-card next" to={`/blog/${nextArticle.slug}`}><span className="section-kicker">{language === 'en' ? 'NEXT ARTICLE' : 'ARTIKEL BERIKUTNYA'} →</span><strong>{(language === 'en' ? articleTranslations[nextArticle.slug]?.title : undefined) ?? nextArticle.title}</strong></Link> : <div />}
-    </nav>}
-    {relatedArticles.length > 0 && <section className="related-section"><div className="related-heading"><span className="section-kicker">{t('nextLearning')}</span><h2>{t('continueExploring')}</h2></div><div className="related-grid">{relatedArticles.map((related, index) => <ArticleCard key={related.slug} article={related} index={index} />)}</div></section>}
-    <div className="article-next"><div><span className="section-kicker">{t('keepExploring')}</span><h2>{t('shareKnowledge')}</h2></div><Link className="button button-primary" to="/">{t('exploreArticles')} <ArrowRight size={16} /></Link></div>
-  </div></main>
+  return <ArticleReaderView />
 }
 
 
 function CommandPalette() {
   const { language } = useLanguage()
+  const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
   const [open, setOpen] = useState(false)
@@ -2125,9 +1075,10 @@ function CommandPalette() {
     { id: 'tools', label: isEnglish ? 'Sovereign IT Workbench (6-Pillar Suite)' : 'Workbench IT Sovereign (6-Pilar)', detail: isEnglish ? 'SE, QA/UAT, BA Gherkin/RTM, PM Monte Carlo & Jira API v3' : 'SE, QA/UAT, BA Gherkin/RTM, PM Monte Carlo & Jira API v3', icon: Zap, run: () => navigate('/tools') },
     { id: 'ba-hub', label: isEnglish ? 'BA Requirement, Gherkin & RTM Studio' : 'Studio BA Requirement, Gherkin & RTM', detail: isEnglish ? 'BRD-to-Gherkin compiler & bi-directional RTM gap detector' : 'Kompilator BRD ke Gherkin & detektor celah RTM', icon: ClipboardList, run: () => navigate('/ba-hub') },
     { id: 'pm-jira-hub', label: isEnglish ? 'PM Monte Carlo & Jira Neural Hub' : 'Hub PM Monte Carlo & Otomasi Jira', detail: isEnglish ? 'Jira REST API v3 ADF synthesizer, JQL Studio & 10,000-trial Monte Carlo' : 'Generator JSON Jira REST API v3 ADF, Studio JQL & Monte Carlo', icon: Gauge, run: () => navigate('/pm-jira-hub') },
+    { id: 'toggle-theme', label: isEnglish ? `Switch to ${theme === 'dark' ? 'Daylight Light' : 'Obsidian Dark'} Theme` : `Ubah ke Tema ${theme === 'dark' ? 'Terang Daylight' : 'Gelap Obsidian'}`, detail: isEnglish ? 'Adaptive theme polarity · Shortcut Alt+T' : 'Polaritas tema adaptif · Pintasan Alt+T', icon: Sparkles, run: () => toggleTheme() },
   ]
   const actionCategory: Record<string, string> = {
-    home: 'learn', about: 'learn', topics: 'learn', articles: 'learn', 'reading-list': 'learn', workspace: 'learn', 'knowledge-graph': 'learn', learn: 'learn',
+    home: 'learn', about: 'learn', topics: 'learn', articles: 'learn', 'reading-list': 'learn', workspace: 'learn', 'knowledge-graph': 'learn', learn: 'learn', 'toggle-theme': 'learn',
     lab: 'qa', 'qa-studio': 'qa', 'quality-intelligence': 'qa', tools: 'qa', 'ba-hub': 'qa',
     'api-playground': 'api', 'engineering-intelligence': 'api',
     devtools: 'security', 'security-center': 'security', 'supply-chain-intelligence': 'security',
@@ -2260,7 +1211,7 @@ function CommandPalette() {
             return <button key={item.id} type="button" aria-label={String('accessibleLabel' in item ? item.accessibleLabel : item.label)} className={index === activeIndex ? 'command-item active' : 'command-item'} onMouseEnter={() => setActiveIndex(index)} onClick={() => runItem(item)}><span className="command-item-icon"><Icon size={16} /></span><span className="command-item-copy"><strong>{item.label}</strong><small>{item.detail}</small></span><ArrowRight size={14} className="command-item-arrow" /></button>
           }) : <div className="command-empty">{isEnglish ? 'No matches. Try another keyword.' : 'Tidak ada hasil. Coba kata kunci lain.'}</div>}
         </div>
-        <footer className="command-footer"><span><kbd>↑</kbd><kbd>↓</kbd> {isEnglish ? 'Navigate' : 'Navigasi'}</span><span><kbd>↵</kbd> {isEnglish ? 'Open' : 'Buka'}</span><span><kbd>Esc</kbd> {isEnglish ? 'Close' : 'Tutup'}</span></footer>
+        <footer className="command-footer"><span><kbd>↑</kbd><kbd>↓</kbd> {isEnglish ? 'Navigate' : 'Navigasi'}</span><span><kbd>↵</kbd> {isEnglish ? 'Open' : 'Buka'}</span><span><kbd>Alt</kbd>+<kbd>T</kbd> {isEnglish ? 'Theme' : 'Tema'}</span><span><kbd>Esc</kbd> {isEnglish ? 'Close' : 'Tutup'}</span></footer>
       </section>
     </div>}
   </>
@@ -2619,7 +1570,11 @@ function ToolRouteBreadcrumbs() {
 }
 
 export default function App() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
+  const en = language === 'en'
+  const loadingBox = (labelEn: string, labelId: string) => (
+    <div className="container route-loading" role="status">{en ? labelEn : labelId}</div>
+  )
   const location = useLocation()
 
   useLayoutEffect(() => {
@@ -2633,5 +1588,5 @@ export default function App() {
     stylesheet.dataset.dreamexPremiumExperience = 'true'
     document.head.append(stylesheet)
   }, [location.pathname])
-  return <><a className="skip-link" href="#main-content" tabIndex={0}>{t('skip')}</a><OfflineNotice /><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><ToolRouteBreadcrumbs /><Routes><Route path="/" element={<Home />} /><Route path="/tools" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Sovereign IT Workbench…</div>}><SovereignWorkbenchPage initialPillar="eng" /></Suspense>} /><Route path="/ba-hub" element={<Suspense fallback={<div className="container route-loading" role="status">Loading BA Gherkin & RTM Studio…</div>}><SovereignWorkbenchPage initialPillar="ba" /></Suspense>} /><Route path="/pm-jira-hub" element={<Suspense fallback={<div className="container route-loading" role="status">Loading PM & Jira Automation Hub…</div>}><SovereignWorkbenchPage initialPillar="jira" /></Suspense>} /><Route path="/github-ci" element={<Suspense fallback={<div className="container route-loading" role="status">Loading GitHub CI Activity…</div>}><GitHubIntegrationPage /></Suspense>} /><Route path="/team-workspace" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Shared Team Workspace…</div>}><TeamWorkspacePage /></Suspense>} /><Route path="/observatory" element={<WebQualityObservatoryPage />} /><Route path="/site-audit" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Page Health Audit…</div>}><SiteAuditPage /></Suspense>} /> <Route path="/devtools" element={<DeveloperUtilitiesPage />} /> <Route path="/workspace" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Workspace…</div>}><EngineeringWorkspacePage /></Suspense>} /><Route path="/control-plane" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Control Plane…</div>}><EngineeringControlPlanePage /></Suspense>} /><Route path="/engineering-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Intelligence…</div>}><EngineeringIntelligencePage /></Suspense>} /><Route path="/command-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Command Center…</div>}><EngineeringCommandCenterPage /></Suspense>} /><Route path="/qa-studio" element={<Suspense fallback={<div className="container route-loading" role="status">Loading QA Automation Studio…</div>}><QAAutomationStudioPage /></Suspense>} /><Route path="/quality-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Quality Intelligence…</div>}><QualityIntelligencePage /></Suspense>} /><Route path="/reliability-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Reliability Center…</div>}><ReliabilityCenterPage /></Suspense>} /><Route path="/supply-chain-intelligence" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Supply Chain Intelligence…</div>}><SupplyChainIntelligencePage /></Suspense>} /><Route path="/security-center" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Security Center…</div>}><SecurityCenterPage /></Suspense>} /><Route path="/api-playground" element={<Suspense fallback={<div className="container route-loading" role="status">Loading API Playground…</div>}><ApiPlaygroundPage /></Suspense>} /><Route path="/performance" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Performance Observatory…</div>}><PerformanceObservatoryPage /></Suspense>} /><Route path="/knowledge-graph" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Engineering Knowledge Graph…</div>}><EngineeringKnowledgeGraphPage /></Suspense>} /><Route path="/roadmap" element={<Suspense fallback={<div className="container route-loading" role="status">Loading Product Roadmap…</div>}><EngineeringRoadmapPage /></Suspense>} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><Footer /><RouteMetadata /></>
+  return <><a className="skip-link" href="#main-content" tabIndex={0}>{t('skip')}</a><OfflineNotice /><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><ToolRouteBreadcrumbs /><Routes><Route path="/" element={<Home />} /><Route path="/tools" element={<Suspense fallback={loadingBox('Loading Sovereign IT Workbench…', 'Memuat Workbench IT Sovereign…')}><SovereignWorkbenchPage initialPillar="eng" /></Suspense>} /><Route path="/ba-hub" element={<Suspense fallback={loadingBox('Loading BA Gherkin & RTM Studio…', 'Memuat Studio BA Gherkin & RTM…')}><SovereignWorkbenchPage initialPillar="ba" /></Suspense>} /><Route path="/pm-jira-hub" element={<Suspense fallback={loadingBox('Loading PM & Jira Automation Hub…', 'Memuat Hub PM & Otomasi Jira…')}><SovereignWorkbenchPage initialPillar="jira" /></Suspense>} /><Route path="/github-ci" element={<Suspense fallback={loadingBox('Loading GitHub CI Activity…', 'Memuat Aktivitas CI GitHub…')}><GitHubIntegrationPage /></Suspense>} /><Route path="/team-workspace" element={<Suspense fallback={loadingBox('Loading Shared Team Workspace…', 'Memuat Workspace Tim Bersama…')}><TeamWorkspacePage /></Suspense>} /><Route path="/observatory" element={<WebQualityObservatoryPage />} /><Route path="/site-audit" element={<Suspense fallback={loadingBox('Loading Page Health Audit…', 'Memuat Audit Kesehatan Halaman…')}><SiteAuditPage /></Suspense>} /> <Route path="/devtools" element={<DeveloperUtilitiesPage />} /> <Route path="/workspace" element={<Suspense fallback={loadingBox('Loading Engineering Workspace…', 'Memuat Engineering Workspace…')}><EngineeringWorkspacePage /></Suspense>} /><Route path="/control-plane" element={<Suspense fallback={loadingBox('Loading Engineering Control Plane…', 'Memuat Engineering Control Plane…')}><EngineeringControlPlanePage /></Suspense>} /><Route path="/engineering-intelligence" element={<Suspense fallback={loadingBox('Loading Engineering Intelligence…', 'Memuat Engineering Intelligence…')}><EngineeringIntelligencePage /></Suspense>} /><Route path="/command-center" element={<Suspense fallback={loadingBox('Loading Command Center…', 'Memuat Command Center…')}><EngineeringCommandCenterPage /></Suspense>} /><Route path="/qa-studio" element={<Suspense fallback={loadingBox('Loading QA Automation Studio…', 'Memuat Studio Otomasi QA…')}><QAAutomationStudioPage /></Suspense>} /><Route path="/quality-intelligence" element={<Suspense fallback={loadingBox('Loading Quality Intelligence…', 'Memuat Quality Intelligence…')}><QualityIntelligencePage /></Suspense>} /><Route path="/reliability-center" element={<Suspense fallback={loadingBox('Loading Reliability Center…', 'Memuat Pusat Reliability…')}><ReliabilityCenterPage /></Suspense>} /><Route path="/supply-chain-intelligence" element={<Suspense fallback={loadingBox('Loading Supply Chain Intelligence…', 'Memuat Supply Chain Intelligence…')}><SupplyChainIntelligencePage /></Suspense>} /><Route path="/security-center" element={<Suspense fallback={loadingBox('Loading Security Center…', 'Memuat Pusat Keamanan…')}><SecurityCenterPage /></Suspense>} /><Route path="/api-playground" element={<Suspense fallback={loadingBox('Loading API Playground…', 'Memuat API Playground…')}><ApiPlaygroundPage /></Suspense>} /><Route path="/performance" element={<Suspense fallback={loadingBox('Loading Performance Observatory…', 'Memuat Observatory Performa…')}><PerformanceObservatoryPage /></Suspense>} /><Route path="/knowledge-graph" element={<Suspense fallback={loadingBox('Loading Engineering Knowledge Graph…', 'Memuat Graf Pengetahuan Engineering…')}><EngineeringKnowledgeGraphPage /></Suspense>} /><Route path="/roadmap" element={<Suspense fallback={loadingBox('Loading Product Roadmap…', 'Memuat Roadmap Produk…')}><EngineeringRoadmapPage /></Suspense>} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><Footer /><RouteMetadata /></>
 }

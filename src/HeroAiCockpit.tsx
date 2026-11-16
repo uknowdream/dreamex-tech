@@ -17,7 +17,7 @@ interface CockpitMode {
   href: string
   ctaEn: string
   ctaId: string
-  metrics: Array<{ label: string; value: string }>
+  metrics: Array<{ labelEn: string; labelId: string; value: string }>
   linesEn: string[]
   linesId: string[]
 }
@@ -36,9 +36,9 @@ const COCKPIT_MODES: Record<CockpitModeId, CockpitMode> = {
     ctaEn: 'Open 6-Pillar Workbench',
     ctaId: 'Buka Workbench 6-Pilar',
     metrics: [
-      { label: 'CEILING', value: '34 Nodes' },
-      { label: 'DB POOL', value: '34 Conn' },
-      { label: 'LATENCY', value: '0.04 ms' },
+      { labelEn: 'CEILING', labelId: 'BATAS SKALA', value: '34 Nodes' },
+      { labelEn: 'DB POOL', labelId: 'POOL DB', value: '34 Conn' },
+      { labelEn: 'LATENCY', labelId: 'LATENSI', value: '0.04 ms' },
     ],
     linesEn: [
       '▶ dreamex neural synthesize --mode=architect --usl',
@@ -66,9 +66,9 @@ const COCKPIT_MODES: Record<CockpitModeId, CockpitMode> = {
     ctaEn: 'Launch QA Studio',
     ctaId: 'Buka Studio QA',
     metrics: [
-      { label: 'SELECTOR', value: '99 / 100' },
-      { label: 'ORPHANS', value: '0 Rows' },
-      { label: 'UAT GATE', value: 'PASSED' },
+      { labelEn: 'SELECTOR', labelId: 'SELEKTOR', value: '99 / 100' },
+      { labelEn: 'ORPHANS', labelId: 'ORPHAN SQL', value: '0 Rows' },
+      { labelEn: 'UAT GATE', labelId: 'GERBANG UAT', value: 'PASSED' },
     ],
     linesEn: [
       '▶ dreamex qa self-heal --playwright --sql-recon',
@@ -96,9 +96,9 @@ const COCKPIT_MODES: Record<CockpitModeId, CockpitMode> = {
     ctaEn: 'Open BA & Jira Hub',
     ctaId: 'Buka Hub BA & Jira',
     metrics: [
-      { label: 'RTM LINK', value: '100%' },
-      { label: 'P85 ETA', value: '4 Sprints' },
-      { label: 'EVM SPI', value: '1.04 OK' },
+      { labelEn: 'RTM LINK', labelId: 'TAUTAN RTM', value: '100%' },
+      { labelEn: 'P85 ETA', labelId: 'ESTIMASI P85', value: '4 Sprints' },
+      { labelEn: 'EVM SPI', labelId: 'INDEKS SPI', value: '1.04 OK' },
     ],
     linesEn: [
       '▶ dreamex compile-brd --gherkin --jira-adf --trials=10000',
@@ -186,14 +186,17 @@ export function HeroAiCockpit() {
       </div>
 
       <div className="hero-cockpit-visual">
-        <img
-          src={mode.image}
-          alt={en ? mode.altEn : mode.altId}
-          width={640}
-          height={360}
-          loading="eager"
-          decoding="async"
-        />
+        <picture>
+          <source srcSet={mode.image.replace(/\.jpg$/i, '.webp')} type="image/webp" />
+          <img
+            src={mode.image}
+            alt={en ? mode.altEn : mode.altId}
+            width={640}
+            height={360}
+            loading="eager"
+            decoding="async"
+          />
+        </picture>
         <div className="hero-cockpit-visual-scrim" aria-hidden="true" />
         <div className="hero-cockpit-scanbeam" aria-hidden="true" />
         <svg className="hero-cockpit-mesh" viewBox="0 0 600 220" preserveAspectRatio="none" aria-hidden="true">
@@ -255,7 +258,7 @@ export function HeroAiCockpit() {
 
       <div className="terminal-content hero-cockpit-stream">
         <p className="hero-cockpit-subline">
-          {en ? 'MODE' : 'MODE'}: {en ? mode.badgeEn : mode.badgeId} · 100% CLIENT SOVEREIGN
+          {en ? 'MODE' : 'MODE'}: {en ? mode.badgeEn : mode.badgeId} · {en ? '100% CLIENT SOVEREIGN' : '100% PRIVAT DI KLIEN'}
         </p>
         <pre className="hero-cockpit-output" data-testid="hero-cockpit-output">
           <code>
@@ -266,8 +269,8 @@ export function HeroAiCockpit() {
 
         <div className="hero-cockpit-metrics">
           {mode.metrics.map(metric => (
-            <div className="hero-cockpit-metric" key={metric.label}>
-              <span>{metric.label}</span>
+            <div className="hero-cockpit-metric" key={metric.labelEn}>
+              <span>{en ? metric.labelEn : metric.labelId}</span>
               <strong>{metric.value}</strong>
             </div>
           ))}

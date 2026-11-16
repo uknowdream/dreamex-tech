@@ -1,6 +1,14 @@
-import { useState, type FormEvent } from 'react'
-import { Check, Copy, KeyRound, Sparkles, Wand2 } from 'lucide-react'
-import { DEFAULT_MODELS, generateWithByokAi, loadSessionAiConfig, saveSessionAiConfig, type AiProviderId } from './aiClient'
+import { useId, useRef, useState, type FormEvent } from 'react'
+import { Check, Copy, KeyRound, Send, Sparkles, Square, Wand2 } from 'lucide-react'
+import {
+  DEFAULT_MODELS,
+  generateWithByokAiStream,
+  inspectEndpointTrust,
+  loadSessionAiConfig,
+  saveSessionAiConfig,
+  type AiProviderId,
+} from './aiClient'
+import { useLanguage } from './i18n'
 import './engineering-page-system.css'
 import './DashboardKit.css'
 
@@ -138,6 +146,62 @@ export function SvgSparkBars({
   )
 }
 
+export function SvgTrendArea({
+  title,
+  meta,
+  points,
+  tone = 'cyan',
+}: {
+  title: string
+  meta?: string
+  points: Array<{ label: string; value: number }>
+  tone?: GaugeTone
+}) {
+  const gradId = useId()
+  const safePoints = points.length >= 2 ? points : [{ label: 'T0', value: 0 }, { label: 'T1', value: 0 }]
+  const width = 340
+  const height = 104
+  const padX = 12
+  const padY = 14
+  const max = Math.max(1, ...safePoints.map(p => p.value))
+  const min = Math.min(0, ...safePoints.map(p => p.value))
+  const span = Math.max(1, max - min)
+
+  const coords = safePoints.map((pt, index) => {
+    const x = padX + (index / (safePoints.length - 1)) * (width - padX * 2)
+    const y = height - padY - ((pt.value - min) / span) * (height - padY * 2)
+    return { x, y, ...pt }
+  })
+  const linePath = coords.map((pt, idx) => `${idx === 0 ? 'M' : 'L'} ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`).join(' ')
+  const areaPath = `${linePath} L ${coords[coords.length - 1].x.toFixed(1)} ${(height - padY).toFixed(1)} L ${coords[0].x.toFixed(1)} ${(height - padY).toFixed(1)} Z`
+  const color = TONE_COLORS[tone]
+
+  return (
+    <div className="dx-trend-card">
+      <div className="dx-stacked-head">
+        <strong>{title}</strong>
+        {meta && <span>{meta}</span>}
+      </div>
+      <svg className="dx-trend-svg" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${title}: ${safePoints.map(p => `${p.label} ${p.value}`).join(', ')}`}>
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.34" />
+            <stop offset="100%" stopColor={color} stopOpacity="0.01" />
+          </linearGradient>
+        </defs>
+        <path d={areaPath} fill={`url(#${gradId})`} />
+        <path className="dx-trend-line" d={linePath} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        {coords.map(pt => (
+          <circle key={pt.label} cx={pt.x} cy={pt.y} r="3.2" fill="#071021" stroke={color} strokeWidth="2" />
+        ))}
+      </svg>
+      <div className="dx-trend-labels" aria-hidden="true">
+        {safePoints.map(pt => <span key={pt.label}>{pt.label} <b>{pt.value}</b></span>)}
+      </div>
+    </div>
+  )
+}
+
 export function PipelineStageStrip({
   stages,
   ariaLabel,
@@ -168,57 +232,6 @@ export function PipelineStageStrip({
   )
 }
 
-export interface WorkspacePulseSummary {
-  commandTasksOpen: number
-  commandTasksActive: number
-  commandIncidentsOpen: number
-  controlPlaneDone: number
-  controlPlaneTotal: number
-  reliabilityIncidents: number
-  qualityReportsCount: number
-  sbomSnapshotsCount: number
-  catalogServicesCount: number
-  roadmapDoneCount: number
-  hasSessionByok: boolean
-}
-
-function safeParseJson<T>(key: string, fallback: T): T {
-  if (typeof window === 'undefined') return fallback
-  try {
-    const raw = window.localStorage.getItem(key)
-    return raw ? (JSON.parse(raw) as T) : fallback
-  } catch {
-    return fallback
-  }
-}
-
-export function readWorkspacePulse(): WorkspacePulseSummary {
-  const command = safeParseJson<{ tasks?: Array<{ status?: string }>; incidents?: Array<{ status?: string }> }>('dreamex-command-center-v1', {})
-  const tasks = Array.isArray(command.tasks) ? command.tasks : []
-  const cmdIncidents = Array.isArray(command.incidents) ? command.incidents : []
-  const checklist = safeParseJson<Record<string, unknown>>('dreamex-control-plane-checklist-v1', {})
-  const relIncidents = safeParseJson<unknown[]>('dreamex-reliability-incidents-v1', [])
-  const qiHistory = safeParseJson<unknown[]>('dreamex-quality-intelligence-history-v1', [])
-  const scHistory = safeParseJson<unknown[]>('dreamex-supply-chain-history-v1', [])
-  const catalog = safeParseJson<unknown[]>('dreamex-engineering-catalog-v1', [])
-  const roadmap = safeParseJson<Record<string, unknown>>('dreamex-roadmap-v1', {})
-  const byok = typeof window !== 'undefined' ? loadSessionAiConfig() : null
-
-  return {
-    commandTasksOpen: tasks.filter(t => t?.status !== 'done').length,
-    commandTasksActive: tasks.filter(t => t?.status === 'active').length,
-    commandIncidentsOpen: cmdIncidents.filter(i => i?.status !== 'resolved').length,
-    controlPlaneDone: Object.values(checklist).filter(v => v === true).length,
-    controlPlaneTotal: 6,
-    reliabilityIncidents: Array.isArray(relIncidents) ? relIncidents.length : 0,
-    qualityReportsCount: Array.isArray(qiHistory) ? qiHistory.length : 0,
-    sbomSnapshotsCount: Array.isArray(scHistory) ? scHistory.length : 0,
-    catalogServicesCount: Array.isArray(catalog) ? catalog.length : 3,
-    roadmapDoneCount: Object.values(roadmap).filter(v => v === true).length,
-    hasSessionByok: Boolean(byok?.apiKey?.trim()),
-  }
-}
-
 export function AiCopilotPanel({
   title,
   kicker,
@@ -226,7 +239,7 @@ export function AiCopilotPanel({
   recommendations,
   systemPrompt,
   userPrompt,
-  en,
+  en: explicitEn,
 }: {
   title: string
   kicker?: string
@@ -234,14 +247,19 @@ export function AiCopilotPanel({
   recommendations: string[]
   systemPrompt: string
   userPrompt: string
-  en: boolean
+  en?: boolean
 }) {
+  const { language } = useLanguage()
+  const en = explicitEn ?? language === 'en'
   const [byok, setByok] = useState(loadSessionAiConfig)
   const [showKeyForm, setShowKeyForm] = useState(false)
-  const [aiResult, setAiResult] = useState<{ text: string; model: string; latencyMs: number } | null>(null)
+  const [followUp, setFollowUp] = useState('')
+  const [aiResult, setAiResult] = useState<{ text: string; model: string; latencyMs: number; streamed?: boolean } | null>(null)
   const [aiError, setAiError] = useState('')
   const [busy, setBusy] = useState(false)
   const [copied, setCopied] = useState(false)
+  const abortRef = useRef<AbortController | null>(null)
+  const endpointStatus = inspectEndpointTrust(byok.customEndpoint ?? '')
 
   const handleCopy = async () => {
     const markdown = [
@@ -263,25 +281,39 @@ export function AiCopilotPanel({
     }
   }
 
-  const runLiveAi = async () => {
+  const runLiveAi = async (customFollowUp?: string) => {
     setAiError('')
     const current = loadSessionAiConfig()
-    if (!current.apiKey.trim()) {
+    const trust = inspectEndpointTrust(current.customEndpoint ?? '')
+    const isLocalhost = trust.host === 'localhost' || trust.host === '127.0.0.1' || trust.host === '[::1]'
+    if (!current.apiKey.trim() && !isLocalhost) {
       setShowKeyForm(true)
       return
     }
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
     setBusy(true)
+    const composedPrompt = customFollowUp?.trim()
+      ? `${userPrompt}\n\nPrior AI brief:\n${aiResult?.text ?? '(none)'}\n\nFollow-up engineering question:\n${customFollowUp.trim()}`
+      : userPrompt
+
     try {
-      const result = await generateWithByokAi(current, {
-        systemPrompt,
-        userPrompt,
-        temperature: 0.3,
-        maxTokens: 900,
-      })
-      setAiResult({ text: result.text, model: result.model, latencyMs: result.latencyMs })
+      setAiResult({ text: '', model: current.model, latencyMs: 0, streamed: true })
+      const result = await generateWithByokAiStream(
+        current,
+        { systemPrompt, userPrompt: composedPrompt, temperature: 0.3, maxTokens: 900 },
+        accumulated => {
+          setAiResult({ text: accumulated, model: current.model, latencyMs: 0, streamed: true })
+        },
+        controller.signal,
+      )
+      setAiResult({ text: result.text, model: result.model, latencyMs: result.latencyMs, streamed: result.streamed })
+      if (customFollowUp?.trim()) setFollowUp('')
     } catch (cause) {
       setAiError(cause instanceof Error ? cause.message : (en ? 'Live AI synthesis failed.' : 'Sintesis AI gagal.'))
     } finally {
+      abortRef.current = null
       setBusy(false)
     }
   }
@@ -290,7 +322,7 @@ export function AiCopilotPanel({
     event.preventDefault()
     saveSessionAiConfig(byok)
     setShowKeyForm(false)
-    if (byok.apiKey.trim()) {
+    if (byok.apiKey.trim() || byok.customEndpoint?.trim()) {
       void runLiveAi()
     }
   }
@@ -299,7 +331,7 @@ export function AiCopilotPanel({
     <section className="dx-copilot-panel" aria-label={title}>
       <div className="dx-copilot-head">
         <div className="dx-copilot-title-wrap">
-          <span className="dx-copilot-kicker"><Sparkles size={13} /> {kicker ?? (en ? 'AI CO-PILOT · LOCAL + BYOK SYNTHESIS' : 'KO-PILOT AI · ANALISIS LOKAL + BYOK')}</span>
+          <span className="dx-copilot-kicker"><Sparkles size={13} /> {kicker ?? (en ? 'AI CO-PILOT · LOCAL + BYOK SSE STREAMING' : 'KO-PILOT AI · ANALISIS LOKAL + STREAMING SSE BYOK')}</span>
           <h3>{title}</h3>
         </div>
         <div className="dx-copilot-actions">
@@ -311,10 +343,15 @@ export function AiCopilotPanel({
             <KeyRound size={14} />
             {byok.apiKey.trim() ? (en ? 'Session key set' : 'Key sesi aktif') : (en ? 'BYOK key' : 'Atur key BYOK')}
           </button>
-          <button type="button" className="button button-primary" disabled={busy} onClick={() => void runLiveAi()}>
-            <Wand2 size={14} />
-            {busy ? (en ? 'Synthesizing…' : 'Menyintesis…') : (en ? 'AI Deep Brief' : 'Brief AI Mendalam')}
-          </button>
+          {busy ? (
+            <button type="button" className="button button-secondary" onClick={() => abortRef.current?.abort()}>
+              <Square size={14} /> {en ? 'Stop' : 'Hentikan'}
+            </button>
+          ) : (
+            <button type="button" className="button button-primary" onClick={() => void runLiveAi()}>
+              <Wand2 size={14} /> {en ? 'AI Deep Brief' : 'Brief AI Mendalam'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -329,8 +366,8 @@ export function AiCopilotPanel({
                 setByok(curr => ({ ...curr, provider, model: DEFAULT_MODELS[provider][0] }))
               }}
             >
-              <option value="gemini">Google Gemini</option>
-              <option value="openai">OpenAI / Compatible</option>
+              <option value="gemini">Google Gemini (SSE)</option>
+              <option value="openai">OpenAI / Compatible (SSE)</option>
             </select>
           </label>
           <label>
@@ -351,8 +388,26 @@ export function AiCopilotPanel({
               placeholder={DEFAULT_MODELS[byok.provider][0]}
             />
           </label>
+          <label className="dx-copilot-endpoint-field">
+            {en ? 'Optional endpoint (trusted HTTPS or localhost Ollama)' : 'Endpoint opsional (HTTPS tepercaya atau Ollama lokal)'}
+            <input
+              value={byok.customEndpoint ?? ''}
+              onChange={event => setByok(curr => ({ ...curr, customEndpoint: event.target.value }))}
+              placeholder="http://127.0.0.1:11434/v1/chat/completions"
+            />
+          </label>
+          {!endpointStatus.trusted && endpointStatus.host && (
+            <label className="dx-copilot-trust-check">
+              <input
+                type="checkbox"
+                checked={Boolean(byok.allowUntrustedEndpoint)}
+                onChange={event => setByok(curr => ({ ...curr, allowUntrustedEndpoint: event.target.checked }))}
+              />
+              <span>{en ? `Confirm sending session key to custom host "${endpointStatus.host}"` : `Konfirmasi pengiriman key sesi ke host "${endpointStatus.host}"`}</span>
+            </label>
+          )}
           <button type="submit" className="button button-primary">
-            {en ? 'Save & Run' : 'Simpan & Jalankan'}
+            {en ? 'Save & Stream' : 'Simpan & Stream'}
           </button>
         </form>
       )}
@@ -376,10 +431,27 @@ export function AiCopilotPanel({
       {aiResult && (
         <div className="dx-copilot-ai-output">
           <div className="dx-copilot-ai-meta">
-            <span>{en ? 'LIVE BYOK AI BRIEF' : 'RINGKASAN AI BYOK LANGSUNG'} · {aiResult.model}</span>
-            <span>{aiResult.latencyMs}ms</span>
+            <span>{aiResult.streamed ? (en ? 'LIVE SSE STREAM' : 'STREAM SSE LANGSUNG') : (en ? 'LIVE BYOK AI BRIEF' : 'RINGKASAN AI BYOK')} · {aiResult.model}</span>
+            <span>{busy ? (en ? 'Streaming…' : 'Mengalirkan…') : `${aiResult.latencyMs}ms`}</span>
           </div>
-          <pre>{aiResult.text}</pre>
+          <pre>{aiResult.text || (busy ? '▍' : '')}</pre>
+          <form
+            className="dx-copilot-followup"
+            onSubmit={event => {
+              event.preventDefault()
+              if (followUp.trim() && !busy) void runLiveAi(followUp)
+            }}
+          >
+            <input
+              value={followUp}
+              onChange={event => setFollowUp(event.target.value)}
+              placeholder={en ? 'Ask a follow-up question about this telemetry…' : 'Ajukan pertanyaan lanjutan tentang telemetri ini…'}
+              aria-label={en ? 'Follow-up AI prompt' : 'Pertanyaan lanjutan AI'}
+            />
+            <button type="submit" className="button button-secondary" disabled={busy || !followUp.trim()}>
+              <Send size={13} /> {en ? 'Ask' : 'Tanya'}
+            </button>
+          </form>
         </div>
       )}
     </section>
