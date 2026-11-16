@@ -211,3 +211,96 @@
     padding: 10px 12px;
   }
 }
+
+html[data-theme="light"] .workspace-role-pill {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.16);
+  color: #334155;
+}
+
+html[data-theme="light"] .workspace-role-pill:hover {
+  color: #0f172a;
+}
+
+html[data-theme="light"] .workspace-role-pill.active {
+  background: #047857;
+  border-color: #047857;
+  color: #ffffff;
+}
+
+html[data-theme="light"] .kg-visual-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+html[data-theme="light"] .kg-toolbar {
+  background: #f1f5f9;
+  border-bottom-color: rgba(15, 23, 42, 0.12);
+}
+
+html[data-theme="light"] .kg-toolbar-title,
+html[data-theme="light"] .kg-mermaid-status {
+  color: #047857;
+}
+
+html[data-theme="light"] .kg-tool-btn {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.18);
+  color: #0f172a;
+}
+
+html[data-theme="light"] .kg-tool-btn.primary {
+  background: #047857;
+  border-color: #047857;
+  color: #ffffff;
+}
+
+html[data-theme="light"] .kg-edge {
+  stroke: rgba(15, 23, 42, 0.24);
+}
+
+html[data-theme="light"] .kg-edge.is-active {
+  stroke: #0369a1;
+}
+
+html[data-theme="light"] .kg-node-rect {
+  fill: #ffffff;
+  stroke: rgba(15, 23, 42, 0.24);
+}
+
+html[data-theme="light"] .kg-node-group.kind-tool .kg-node-rect {
+  stroke: rgba(4, 120, 87, 0.55);
+}
+
+html[data-theme="light"] .kg-node-group.kind-article .kg-node-rect {
+  stroke: rgba(3, 105, 161, 0.55);
+}
+
+html[data-theme="light"] .kg-node-group.kind-concept .kg-node-rect {
+  stroke: rgba(109, 40, 217, 0.55);
+}
+
+html[data-theme="light"] .kg-node-group.is-selected .kg-node-rect {
+  fill: #ecfdf5;
+  stroke: #047857;
+}
+
+html[data-theme="light"] .kg-node-kind {
+  fill: #475569;
+}
+
+html[data-theme="light"] .kg-node-title {
+  fill: #0f172a;
+}
+
+html[data-theme="light"] .workspace-role-label {
+  color: #475569;
+}
+
+html[data-theme="light"] .workspace-open {
+  color: #047857;
+}
+
+html[data-theme="light"] .workspace-open svg {
+  color: #047857;
+}

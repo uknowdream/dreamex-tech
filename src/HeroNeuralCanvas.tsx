@@ -30,16 +30,18 @@ export function HeroNeuralCanvas() {
     syncDimensions()
 
     const nodeCount = (canvas.clientWidth || window.innerWidth) < 700 ? 14 : 22
-    const palette = ['rgba(56, 189, 248, 0.9)', 'rgba(197, 255, 112, 0.85)', 'rgba(167, 139, 250, 0.88)']
-    const bloomPalette = ['rgba(56, 189, 248, 0.13)', 'rgba(197, 255, 112, 0.13)', 'rgba(167, 139, 250, 0.13)']
+    const isLight = () => document.documentElement.dataset.theme === 'light'
+    const darkPalette = ['rgba(56, 189, 248, 0.9)', 'rgba(197, 255, 112, 0.85)', 'rgba(167, 139, 250, 0.88)']
+    const lightPalette = ['rgba(2, 132, 199, 0.72)', 'rgba(4, 120, 87, 0.72)', 'rgba(109, 40, 217, 0.72)']
+    const darkBloom = ['rgba(56, 189, 248, 0.13)', 'rgba(197, 255, 112, 0.13)', 'rgba(167, 139, 250, 0.13)']
+    const lightBloom = ['rgba(2, 132, 199, 0.14)', 'rgba(4, 120, 87, 0.14)', 'rgba(109, 40, 217, 0.14)']
     const nodes = Array.from({ length: nodeCount }, (_, idx) => ({
       x: ((idx * 79 + 19) % 100) * 0.01 * width,
       y: ((idx * 47 + 11) % 100) * 0.01 * height,
       vx: (((idx % 7) - 3) * 0.16) || 0.16,
       vy: (((idx % 5) - 2) * 0.15) || -0.14,
       r: idx % 5 === 0 ? 2.8 : 1.9,
-      color: palette[idx % palette.length],
-      bloom: bloomPalette[idx % bloomPalette.length],
+      idx,
     }))
 
     let frame = 0
@@ -59,6 +61,10 @@ export function HeroNeuralCanvas() {
       tick += animate ? 0.036 : 0
       const linkDist = width < 520 ? 105 : 140
 
+      const light = isLight()
+      const palette = light ? lightPalette : darkPalette
+      const bloomPalette = light ? lightBloom : darkBloom
+
       for (let i = 0; i < nodes.length; i++) {
         const a = nodes[i]
         if (animate) {
@@ -72,11 +78,13 @@ export function HeroNeuralCanvas() {
           const b = nodes[j]
           const dist = Math.hypot(a.x - b.x, a.y - b.y)
           if (dist < linkDist) {
-            const alpha = (1 - dist / linkDist) * 0.28
+            const alpha = (1 - dist / linkDist) * (light ? 0.22 : 0.28)
             ctx.beginPath()
             ctx.moveTo(a.x, a.y)
             ctx.lineTo(b.x, b.y)
-            ctx.strokeStyle = `rgba(125, 211, 252, ${alpha.toFixed(3)})`
+            ctx.strokeStyle = light
+              ? `rgba(2, 132, 199, ${alpha.toFixed(3)})`
+              : `rgba(125, 211, 252, ${alpha.toFixed(3)})`
             ctx.lineWidth = 1
             ctx.stroke()
 
@@ -87,7 +95,9 @@ export function HeroNeuralCanvas() {
               const py = a.y + (b.y - a.y) * t
               ctx.beginPath()
               ctx.arc(px, py, 2.2, 0, Math.PI * 2)
-              ctx.fillStyle = j % 2 === 0 ? 'rgba(197, 255, 112, 0.92)' : 'rgba(56, 189, 248, 0.95)'
+              ctx.fillStyle = light
+                ? (j % 2 === 0 ? 'rgba(4, 120, 87, 0.86)' : 'rgba(2, 132, 199, 0.88)')
+                : (j % 2 === 0 ? 'rgba(197, 255, 112, 0.92)' : 'rgba(56, 189, 248, 0.95)')
               ctx.fill()
             }
           }
@@ -97,13 +107,13 @@ export function HeroNeuralCanvas() {
         if (a.r > 2.4) {
           ctx.beginPath()
           ctx.arc(a.x, a.y, 7.5, 0, Math.PI * 2)
-          ctx.fillStyle = a.bloom
+          ctx.fillStyle = bloomPalette[a.idx % bloomPalette.length]
           ctx.fill()
         }
 
         ctx.beginPath()
         ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2)
-        ctx.fillStyle = a.color
+        ctx.fillStyle = palette[a.idx % palette.length]
         ctx.fill()
       }
 
@@ -141,12 +151,23 @@ export function HeroNeuralCanvas() {
       drawFrame(!motionQuery.matches && inViewport)
     }
 
+    const onThemeChange = () => {
+      if (motionQuery.matches || !inViewport) drawFrame(false)
+    }
+
+    const themeObserver =
+      typeof MutationObserver !== 'undefined'
+        ? new MutationObserver(onThemeChange)
+        : null
+    themeObserver?.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+
     window.addEventListener('resize', onResize, { passive: true })
     motionQuery.addEventListener?.('change', onMotionChange)
 
     return () => {
       window.cancelAnimationFrame(frame)
       observer?.disconnect()
+      themeObserver?.disconnect()
       window.removeEventListener('resize', onResize)
       motionQuery.removeEventListener?.('change', onMotionChange)
     }

@@ -3,3 +3,28 @@
 @media(max-width:700px){.roadmap-page{padding-top:30px}.roadmap-summary{grid-template-columns:1fr;gap:8px}.roadmap-summary>div{padding:12px}.roadmap-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.roadmap-tabs button{justify-content:flex-start;padding:10px 8px;font-size:.7rem}.roadmap-phase,.roadmap-tool-panel{padding:14px}.roadmap-phase-head{grid-template-columns:32px minmax(0,1fr) auto;gap:9px}.roadmap-phase-number{width:30px;height:30px}.roadmap-task{gap:9px}.roadmap-principles{flex-wrap:wrap}.roadmap-principles .button{margin-left:30px}.roadmap-form-grid,.stride-grid{grid-template-columns:1fr}.roadmap-form-grid .field-wide{grid-column:auto}.roadmap-section-heading{gap:10px}.readiness-check{gap:9px}.readiness-state{font-size:.57rem}}
 @media(prefers-reduced-motion:reduce){.roadmap-overall-track>span{transition:none}}
 
+html[data-theme="light"] .roadmap-summary>div,
+html[data-theme="light"] .roadmap-phase,
+html[data-theme="light"] .roadmap-tool-panel,
+html[data-theme="light"] .stride-card{background:#ffffff;border-color:rgba(15,23,42,.14);color:#0f172a}
+html[data-theme="light"] .roadmap-overall-track{background:rgba(15,23,42,.1)}
+html[data-theme="light"] .roadmap-tabs{background:#f1f5f9;border-color:rgba(15,23,42,.14)}
+html[data-theme="light"] .roadmap-tabs button{color:#334155}
+html[data-theme="light"] .roadmap-tabs button.active{background:#0f172a;border-color:#0f172a;color:#ffffff}
+html[data-theme="light"] .roadmap-phase-head,
+html[data-theme="light"] .roadmap-task,
+html[data-theme="light"] .readiness-check{border-bottom-color:rgba(15,23,42,.1)}
+html[data-theme="light"] .roadmap-phase-number{background:#ecfdf5;border-color:rgba(4,120,87,.3);color:#047857}
+html[data-theme="light"] .roadmap-task.is-done .roadmap-task-copy strong{color:#64748b}
+html[data-theme="light"] .priority-p0{color:#991b1b;border-color:#fca5a5;background:#fee2e2}
+html[data-theme="light"] .priority-p1{color:#0369a1;border-color:#7dd3fc;background:#e0f2fe}
+html[data-theme="light"] .priority-p2{color:#5b21b6;border-color:#c4b5fd;background:#ede9fe}
+html[data-theme="light"] .roadmap-principles,
+html[data-theme="light"] .roadmap-notice{background:#ecfdf5;border-color:rgba(4,120,87,.3);color:#047857}
+html[data-theme="light"] .roadmap-field>span{color:#334155}
+html[data-theme="light"] .roadmap-field input,
+html[data-theme="light"] .roadmap-field textarea,
+html[data-theme="light"] .roadmap-preview{background:#f8fafc;border-color:rgba(15,23,42,.18);color:#0f172a}
+html[data-theme="light"] .stride-card-copy em{color:#334155}
+html[data-theme="light"] .stride-card.is-selected{background:#fef2f2;border-color:#fca5a5}
+

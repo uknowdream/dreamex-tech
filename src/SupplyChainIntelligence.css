@@ -81,3 +81,50 @@
 @media(max-width:700px){.supply-chain-page{padding-top:28px;padding-bottom:55px}.supply-chain-hero{grid-template-columns:1fr;padding:22px;border-radius:14px}.supply-chain-hero h1{font-size:clamp(33px,9.5vw,46px);letter-spacing:-1.7px}.supply-chain-summary,.supply-chain-components,.supply-chain-vulnerabilities,.supply-chain-history{padding:17px;margin-top:17px}.supply-chain-heading{flex-direction:column}.supply-chain-exports{width:100%}.supply-chain-exports .button{flex:1}.supply-chain-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.supply-chain-section-head{align-items:stretch;flex-direction:column;gap:10px}.supply-chain-filters{flex-direction:column}.supply-chain-filters label select{width:100%}.supply-chain-empty-state{grid-template-columns:1fr;padding:22px}.supply-chain-history-list article{grid-template-columns:minmax(0,1fr) auto}.supply-chain-history-list article>span{grid-column:1/-1}}
 @media(prefers-reduced-motion:reduce){.supply-chain-page *{scroll-behavior:auto!important;transition:none!important}}
 
+html[data-theme="light"] .supply-chain-hero h1 span{background:linear-gradient(95deg,#0369a1,#047857 52%,#1d4ed8);background-clip:text;-webkit-background-clip:text;color:transparent}
+html[data-theme="light"] .supply-chain-import,
+html[data-theme="light"] .supply-chain-summary,
+html[data-theme="light"] .supply-chain-components,
+html[data-theme="light"] .supply-chain-vulnerabilities,
+html[data-theme="light"] .supply-chain-history,
+html[data-theme="light"] .supply-chain-metrics article,
+html[data-theme="light"] .supply-chain-empty-state,
+html[data-theme="light"] .supply-chain-filters label{background:#ffffff;border-color:rgba(15,23,42,.14);color:#0f172a}
+html[data-theme="light"] .supply-chain-import>strong,
+html[data-theme="light"] .supply-chain-metrics article>strong,
+html[data-theme="light"] .supply-chain-empty-state h2,
+html[data-theme="light"] .supply-chain-table td{color:#0f172a}
+html[data-theme="light"] .supply-chain-hero>div:first-child>p,
+html[data-theme="light"] .supply-chain-trust,
+html[data-theme="light"] .supply-chain-import>p,
+html[data-theme="light"] .supply-chain-heading p,
+html[data-theme="light"] .supply-chain-section-head p,
+html[data-theme="light"] .supply-chain-metrics article>span,
+html[data-theme="light"] .supply-chain-metrics article>small,
+html[data-theme="light"] .supply-chain-disclaimer{color:#334155}
+html[data-theme="light"] .supply-chain-section-head>span,
+html[data-theme="light"] .supply-chain-table td code,
+html[data-theme="light"] .supply-chain-history-list article>strong{color:#0369a1}
+html[data-theme="light"] .supply-chain-table th{background:#f1f5f9;color:#334155}
+html[data-theme="light"] .supply-chain-table td{border-top-color:rgba(15,23,42,.1)}
+html[data-theme="light"] .supply-chain-table td small{color:#475569}
+html[data-theme="light"] .supply-chain-risk.risk-critical,
+html[data-theme="light"] .supply-chain-risk.risk-high,
+html[data-theme="light"] .supply-chain-alert{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+html[data-theme="light"] .supply-chain-risk.risk-medium{background:#fef3c7;border-color:#fcd34d;color:#92400e}
+html[data-theme="light"] .supply-chain-risk.risk-low,
+html[data-theme="light"] .supply-chain-clean,
+html[data-theme="light"] .supply-chain-notice{background:#d1fae5;border-color:#6ee7b7;color:#065f46}
+html[data-theme="light"] .supply-chain-risk.risk-review{background:#e0f2fe;border-color:#7dd3fc;color:#075985}
+html[data-theme="light"] .supply-chain-empty-state p,
+html[data-theme="light"] .supply-chain-empty-state>div:last-child span,
+html[data-theme="light"] .supply-chain-history-list article small,
+html[data-theme="light"] .supply-chain-history-list article>span,
+html[data-theme="light"] .supply-chain-vuln-list p,
+html[data-theme="light"] .supply-chain-vuln-list small{color:#334155}
+html[data-theme="light"] .supply-chain-vuln-list h3,
+html[data-theme="light"] .supply-chain-history-list article strong{color:#0f172a}
+html[data-theme="light"] .supply-chain-history-list article{background:#ffffff;border-color:rgba(15,23,42,.14)}
+html[data-theme="light"] .supply-chain-empty-state>div:first-child>svg,
+html[data-theme="light"] .supply-chain-empty-state>div:last-child svg{color:#0369a1}
+

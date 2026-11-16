@@ -59,3 +59,19 @@
 @media (prefers-reduced-motion: reduce) {
   .playwright-starter * { scroll-behavior: auto !important; transition-duration: 0s !important; }
 }
+
+html[data-theme="light"] .playwright-starter { background: #ffffff; border-color: rgba(15,23,42,.14); color: #0f172a; }
+html[data-theme="light"] .playwright-starter-heading p,
+html[data-theme="light"] .playwright-starter-inputs > label,
+html[data-theme="light"] .playwright-starter-inputs legend,
+html[data-theme="light"] .playwright-starter-inputs fieldset label,
+html[data-theme="light"] .playwright-starter-output-head > span,
+html[data-theme="light"] .playwright-starter-note,
+html[data-theme="light"] .playwright-starter-guardrail p { color: #334155; }
+html[data-theme="light"] .playwright-starter-inputs fieldset { border-color: rgba(15,23,42,.14); }
+html[data-theme="light"] .playwright-starter-local,
+html[data-theme="light"] .playwright-starter-guardrail { background: #ecfdf5; border-color: rgba(4,120,87,.28); color: #047857; }
+html[data-theme="light"] .playwright-starter-guardrail svg,
+html[data-theme="light"] .playwright-starter-note svg { color: #047857; }
+html[data-theme="light"] .playwright-starter-output textarea { background: #f8fafc !important; border-color: rgba(15,23,42,.18) !important; color: #0f172a !important; }
+html[data-theme="light"] .playwright-starter-error { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }

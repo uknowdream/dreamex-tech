@@ -25,6 +25,10 @@ function applyThemeToDocument(theme: ThemeMode) {
   colorScheme?.setAttribute('content', theme === 'light' ? 'light dark' : 'dark')
 }
 
+export function applyInitialThemeBeforeRender() {
+  applyThemeToDocument(readInitialTheme())
+}
+
 export function useTheme() {
   const [theme, setThemeState] = useState<ThemeMode>(readInitialTheme)
 

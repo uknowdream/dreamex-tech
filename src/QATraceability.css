@@ -101,3 +101,27 @@
 @media (prefers-reduced-motion: reduce) {
   .qa-traceability * { scroll-behavior: auto !important; transition-duration: 0s !important; }
 }
+
+html[data-theme="light"] .qa-traceability,
+html[data-theme="light"] .qa-traceability-stats > div,
+html[data-theme="light"] .qa-traceability-form,
+html[data-theme="light"] .qa-traceability-row { background: #ffffff; border-color: rgba(15,23,42,.14); color: #0f172a; }
+html[data-theme="light"] .qa-traceability-heading p,
+html[data-theme="light"] .qa-traceability-list-head p,
+html[data-theme="light"] .qa-traceability-stats span,
+html[data-theme="light"] .qa-traceability-fields label,
+html[data-theme="light"] .qa-traceability-list-head > label,
+html[data-theme="light"] .qa-traceability-row-fields label,
+html[data-theme="light"] .qa-traceability-release,
+html[data-theme="light"] .qa-traceability-test,
+html[data-theme="light"] .qa-traceability-foot { color: #334155; }
+html[data-theme="light"] .qa-traceability-test strong,
+html[data-theme="light"] .qa-traceability-empty strong { color: #0f172a; }
+html[data-theme="light"] .qa-traceability-local,
+html[data-theme="light"] .qa-traceability-foot,
+html[data-theme="light"] .qa-traceability-status.status-passed { background: #ecfdf5; border-color: rgba(4,120,87,.3); color: #047857; }
+html[data-theme="light"] .qa-traceability-status.status-failed { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+html[data-theme="light"] .qa-traceability-status.status-blocked,
+html[data-theme="light"] .qa-traceability-warning { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
+html[data-theme="light"] .qa-traceability-stats .has-gaps strong { color: #b45309; }
+html[data-theme="light"] .qa-traceability-delete { background: #f8fafc; border-color: rgba(15,23,42,.18); color: #475569; }

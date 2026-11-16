@@ -60,3 +60,32 @@
   .api-contract-change > span { font-size: 8px; }
 }
 @media (prefers-reduced-motion: reduce) { .api-contract-studio * { scroll-behavior: auto !important; transition-duration: 0s !important; } }
+
+html[data-theme="light"] .api-contract-studio,
+html[data-theme="light"] .api-contract-upload,
+html[data-theme="light"] .api-contract-summary article,
+html[data-theme="light"] .api-contract-change { background: #ffffff; border-color: rgba(15,23,42,.14); color: #0f172a; }
+html[data-theme="light"] .api-contract-upload input[type="file"] { background: #f8fafc; border-color: rgba(15,23,42,.22); color: #334155; }
+html[data-theme="light"] .api-contract-summary strong,
+html[data-theme="light"] .api-contract-change strong,
+html[data-theme="light"] .api-contract-loaded strong { color: #0f172a; }
+html[data-theme="light"] .api-contract-heading p,
+html[data-theme="light"] .api-contract-step,
+html[data-theme="light"] .api-contract-upload > label,
+html[data-theme="light"] .api-contract-loaded span,
+html[data-theme="light"] .api-contract-summary span,
+html[data-theme="light"] .api-contract-results-head p,
+html[data-theme="light"] .api-contract-change p,
+html[data-theme="light"] .api-contract-change > span,
+html[data-theme="light"] .api-contract-guardrail { color: #475569; }
+html[data-theme="light"] .api-contract-local,
+html[data-theme="light"] .api-contract-clean,
+html[data-theme="light"] .api-contract-loaded { background: #ecfdf5; border-color: rgba(4,120,87,.3); color: #047857; }
+html[data-theme="light"] .api-contract-error,
+html[data-theme="light"] .api-contract-change.breaking { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+html[data-theme="light"] .api-contract-change.breaking > svg,
+html[data-theme="light"] .api-contract-change.breaking > span { color: #991b1b; }
+html[data-theme="light"] .api-contract-change.warning > svg,
+html[data-theme="light"] .api-contract-change.warning > span { color: #92400e; }
+html[data-theme="light"] .api-contract-change.info > svg,
+html[data-theme="light"] .api-contract-change.info > span { color: #0369a1; }

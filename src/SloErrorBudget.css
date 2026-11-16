@@ -34,3 +34,20 @@
 @media (max-width: 720px) { .slo-worksheet-heading { flex-direction: column; } .slo-worksheet-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 420px) { .slo-worksheet-metrics { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) { .slo-worksheet * { scroll-behavior: auto !important; transition-duration: 0s !important; } }
+
+html[data-theme="light"] .slo-worksheet,
+html[data-theme="light"] .slo-worksheet-metrics article { background: #ffffff; border-color: rgba(15,23,42,.14); color: #0f172a; }
+html[data-theme="light"] .slo-worksheet-heading p,
+html[data-theme="light"] .slo-worksheet-fields label,
+html[data-theme="light"] .slo-worksheet-status span,
+html[data-theme="light"] .slo-worksheet-status small,
+html[data-theme="light"] .slo-worksheet-metrics article span,
+html[data-theme="light"] .slo-worksheet-note { color: #475569; }
+html[data-theme="light"] .slo-worksheet-metrics article strong { color: #0f172a; }
+html[data-theme="light"] .slo-worksheet-local,
+html[data-theme="light"] .slo-worksheet-status,
+html[data-theme="light"] .slo-worksheet-status strong,
+html[data-theme="light"] .slo-worksheet-verdict.meets,
+html[data-theme="light"] .slo-worksheet-note svg { color: #047857; border-color: rgba(4,120,87,.3); background: #ecfdf5; }
+html[data-theme="light"] .slo-worksheet-verdict.misses { background: #fffbeb; border-color: #fcd34d; color: #92400e; }
+html[data-theme="light"] .slo-worksheet-error { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }

@@ -93,3 +93,16 @@
 @media (prefers-reduced-motion: reduce) {
   .qa-data-builder * { scroll-behavior: auto !important; transition-duration: 0s !important; }
 }
+
+html[data-theme="light"] .qa-data-builder,
+html[data-theme="light"] .qa-data-summary > div { background: #ffffff; border-color: rgba(15,23,42,.14); color: #0f172a; }
+html[data-theme="light"] .qa-data-summary strong { color: #0f172a; }
+html[data-theme="light"] .qa-data-heading p,
+html[data-theme="light"] .qa-data-preview-head p,
+html[data-theme="light"] .qa-data-controls label,
+html[data-theme="light"] .qa-data-summary span,
+html[data-theme="light"] .qa-data-guardrail p { color: #334155; }
+html[data-theme="light"] .qa-data-local,
+html[data-theme="light"] .qa-data-guardrail { background: #ecfdf5; border-color: rgba(4,120,87,.28); color: #047857; }
+html[data-theme="light"] .qa-data-guardrail svg { color: #047857; }
+html[data-theme="light"] .qa-data-output { background: #f8fafc !important; border-color: rgba(15,23,42,.18) !important; color: #0f172a !important; }

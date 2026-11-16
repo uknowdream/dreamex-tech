@@ -34,3 +34,13 @@
 .threat-model-guardrail svg{flex-shrink:0;margin-top:2px;color:var(--accent,#c5ff70)}
 @media(max-width:700px){.threat-model-heading{flex-direction:column}.threat-model-list{grid-template-columns:minmax(0,1fr)}.threat-model-form{grid-template-columns:minmax(0,1fr)}.threat-model-wide{grid-column:auto}}
 @media(prefers-reduced-motion:reduce){.threat-model *{scroll-behavior:auto!important;transition-duration:0s!important}}
+
+html[data-theme="light"] .threat-model,
+html[data-theme="light"] .threat-model-toolbar,
+html[data-theme="light"] .threat-model-row{background:#ffffff;border-color:rgba(15,23,42,.14);color:#0f172a}
+html[data-theme="light"] .threat-model-local{background:#ecfdf5;border-color:rgba(4,120,87,.3);color:#047857}
+html[data-theme="light"] .threat-model-boundary{background:#f1f5f9;color:#0f172a}
+html[data-theme="light"] .threat-model-severity.critical{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+html[data-theme="light"] .threat-model-severity.high{background:#fef3c7;border-color:#fcd34d;color:#92400e}
+html[data-theme="light"] .threat-model-severity.medium{background:#fef9c3;border-color:#fde047;color:#854d0e}
+html[data-theme="light"] .threat-model-severity.low{background:#d1fae5;border-color:#6ee7b7;color:#065f46}

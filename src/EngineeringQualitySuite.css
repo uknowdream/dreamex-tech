@@ -64,3 +64,22 @@
 .quality-privacy-list span{flex-shrink:0;color:var(--muted);font-size:.68rem}
 @media(max-width:560px){.quality-privacy-panel{padding:13px}.quality-privacy-summary{gap:6px}.quality-privacy-summary>div{padding:10px 8px}.quality-privacy-summary span{font-size:.63rem}.quality-privacy-summary strong{font-size:.83rem}.quality-privacy-list>div{align-items:flex-start;flex-direction:column;gap:5px}}
 
+html[data-theme="light"] .quality-suite-grid>div,
+html[data-theme="light"] .quality-suite-inputs,
+html[data-theme="light"] .quality-suite-output,
+html[data-theme="light"] .quality-suite-saved,
+html[data-theme="light"] .quality-privacy-panel,
+html[data-theme="light"] .quality-privacy-summary>div,
+html[data-theme="light"] .quality-privacy-list>div{background:#ffffff;border-color:rgba(15,23,42,.14);color:#0f172a}
+html[data-theme="light"] .quality-suite-preview{background:#f8fafc !important;border-color:rgba(15,23,42,.18) !important;color:#0f172a !important}
+html[data-theme="light"] .quality-suite-status.pass{background:#d1fae5;border-color:#6ee7b7;color:#065f46}
+html[data-theme="light"] .quality-suite-status.warn{background:#fef3c7;border-color:#fcd34d;color:#92400e}
+html[data-theme="light"] .quality-suite-status.fail{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+html[data-theme="light"] .quality-suite-disclaimer{background:#fffbeb;border-color:#fcd34d;color:#78350f}
+html[data-theme="light"] .quality-suite-disclaimer svg{color:#b45309}
+html[data-theme="light"] .quality-privacy-panel strong,
+html[data-theme="light"] .quality-privacy-panel code{color:#0f172a}
+html[data-theme="light"] .quality-privacy-summary span,
+html[data-theme="light"] .quality-privacy-list span,
+html[data-theme="light"] .quality-suite-hint{color:#475569}
+

@@ -644,3 +644,120 @@
     transform: none !important;
   }
 }
+
+html[data-theme="light"] .dx-ai-suite {
+  background: linear-gradient(180deg, #f4f7fb 0%, #eef3fa 100%);
+  color: #0f172a;
+}
+
+html[data-theme="light"] .dx-marquee-band {
+  background: #ffffff;
+  border-block: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+html[data-theme="light"] .dx-marquee-pill {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.14);
+  color: #0f172a;
+}
+
+html[data-theme="light"] .dx-studio-head h2 {
+  color: #0f172a;
+}
+
+html[data-theme="light"] .dx-studio-head h2 span {
+  background: linear-gradient(95deg, #047857 0%, #0369a1 55%, #6d28d9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+html[data-theme="light"] .dx-studio-head p {
+  color: #334155;
+}
+
+html[data-theme="light"] .dx-neural-canvas-card {
+  background: #e2e8f0;
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+html[data-theme="light"] .dx-neural-scrim {
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.08) 0%, rgba(248, 250, 252, 0.35) 55%, rgba(255, 255, 255, 0.92) 100%);
+}
+
+html[data-theme="light"] .dx-live-pill,
+html[data-theme="light"] .dx-neural-stat,
+html[data-theme="light"] .dx-gallery-media-badge,
+html[data-theme="light"] .dx-gallery-zoom-chip {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(15, 23, 42, 0.16);
+  color: #0f172a;
+}
+
+html[data-theme="light"] .dx-live-pill i {
+  background: #047857;
+}
+
+html[data-theme="light"] .dx-neural-stat span {
+  color: #475569;
+}
+
+html[data-theme="light"] .dx-neural-stat strong,
+html[data-theme="light"] .dx-gallery-body h3,
+html[data-theme="light"] .dx-lightbox-top strong {
+  color: #0f172a;
+}
+
+html[data-theme="light"] .dx-synth-panel,
+html[data-theme="light"] .dx-gallery-card,
+html[data-theme="light"] .dx-lightbox-dialog {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.14);
+  color: #0f172a;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme="light"] .dx-role-tab {
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.14);
+  color: #334155;
+}
+
+html[data-theme="light"] .dx-role-tab.active {
+  background: #047857;
+  border-color: #047857;
+  color: #ffffff;
+}
+
+html[data-theme="light"] .dx-synth-input-row input,
+html[data-theme="light"] .dx-synth-terminal {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.16);
+  color: #0f172a;
+}
+
+html[data-theme="light"] .dx-synth-terminal-bar {
+  background: #eef2f7;
+  border-bottom-color: rgba(15, 23, 42, 0.12);
+  color: #334155;
+}
+
+html[data-theme="light"] .dx-synth-output,
+html[data-theme="light"] .dx-gallery-body p,
+html[data-theme="light"] .dx-lightbox-footer p {
+  color: #1e293b;
+}
+
+html[data-theme="light"] .dx-gallery-link {
+  color: #047857;
+}
+
+html[data-theme="light"] .dx-lightbox-backdrop {
+  background: rgba(15, 23, 42, 0.56);
+}
+
+html[data-theme="light"] .dx-lightbox-close {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.18);
+}

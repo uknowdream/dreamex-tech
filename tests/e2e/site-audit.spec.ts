@@ -69,3 +69,69 @@ test('Theme polarity toggle switches cleanly between dark Obsidian and Daylight 
   await page.keyboard.press('Enter')
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
 })
+
+test('Light mode applies high-contrast light surfaces across home, dashboards, editorial, and overlays', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem('dreamex-theme-v1', 'light')
+  })
+
+  const checks: Array<{ path: string; surface: string; text: string }> = [
+    { path: '/', surface: '.hero-ai-cockpit', text: '.hero h1' },
+    { path: '/', surface: '.articles-section', text: '.article-card h3 a' },
+    { path: '/tools', surface: 'body', text: 'main#main-content h1' },
+    { path: '/command-center', surface: '.command-center-hero', text: 'main#main-content h1' },
+    { path: '/quality-intelligence', surface: '.quality-intelligence-empty-state', text: '.quality-intelligence-empty-state h2' },
+    { path: '/rss', surface: '.rss-article-card', text: '.rss-list-heading h2' },
+    { path: '/about', surface: '.about-hero', text: '.about-prose p' },
+    { path: '/blog/qa-automation-foundations', surface: '.article-toc', text: '.article-toc a' },
+  ]
+
+  for (const item of checks) {
+    await page.goto(item.path)
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+    const result = await page.evaluate(({ surfaceSel, textSel }) => {
+      const parseColor = (str: string): [number, number, number] | null => {
+        const m = str.match(/rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\s*\)/i)
+        if (!m || (m[4] !== undefined && Number(m[4]) <= 0.1)) return null
+        return [Number(m[1]), Number(m[2]), Number(m[3])]
+      }
+      const lum = ([r, g, b]: [number, number, number]) => {
+        const chan = [r, g, b].map(v => {
+          const n = v / 255
+          return n <= 0.03928 ? n / 12.92 : ((n + 0.055) / 1.055) ** 2.4
+        })
+        return 0.2126 * chan[0] + 0.7152 * chan[1] + 0.0722 * chan[2]
+      }
+      const surface = document.querySelector(surfaceSel)
+      const textEl = document.querySelector(textSel)
+      const sStyle = surface ? getComputedStyle(surface) : getComputedStyle(document.body)
+      const gradRgb = sStyle.backgroundImage?.match(/linear-gradient[^;]+rgba?\(\s*\d+,\s*\d+,\s*\d+[^)]*\)/i)?.[0]
+      const parsedSurface = parseColor(sStyle.backgroundColor) ?? (gradRgb ? parseColor(gradRgb) : null) ?? parseColor(getComputedStyle(document.body).backgroundColor)
+      const parsedBody = parseColor(getComputedStyle(document.body).backgroundColor)
+      const parsedFg = parseColor(textEl ? getComputedStyle(textEl).color : getComputedStyle(document.body).color)
+      return {
+        bodyLum: parsedBody ? lum(parsedBody) : 0,
+        surfaceLum: parsedSurface ? lum(parsedSurface) : 0,
+        textLum: parsedFg ? lum(parsedFg) : 1,
+      }
+    }, { surfaceSel: item.surface, textSel: item.text })
+
+    expect(result.bodyLum, `${item.path} body should be light`).toBeGreaterThan(0.75)
+    expect(result.surfaceLum, `${item.path} (${item.surface}) surface should be light`).toBeGreaterThan(0.65)
+    expect(result.textLum, `${item.path} (${item.text}) text should be dark`).toBeLessThan(0.25)
+  }
+
+  // Verify Command Palette & Mega-Menu open cleanly in Light Mode
+  await page.goto('/')
+  const trigger = page.locator('.command-trigger').first()
+  if (await trigger.isVisible()) {
+    await trigger.click()
+    await expect(page.locator('.command-dialog')).toBeVisible()
+    const paletteLum = await page.evaluate(() => {
+      const m = getComputedStyle(document.querySelector('.command-dialog')!).backgroundColor.match(/(\d+),\s*(\d+),\s*(\d+)/)
+      return m ? (+m[1] + +m[2] + +m[3]) / 3 : 0
+    })
+    expect(paletteLum).toBeGreaterThan(220)
+    await page.keyboard.press('Escape')
+  }
+})

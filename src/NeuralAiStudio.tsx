@@ -4,6 +4,7 @@ const NeuralAiByokDrawer = lazy(() => import('./NeuralAiByokDrawer'))
 import { ArrowRight, Check, Copy, Maximize2, Play, Sparkles, Terminal, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useLanguage } from './i18n'
+import { useTheme } from './themeUtils'
 import { HoloMotionFx } from './HoloMotionFx'
 import './NeuralAiStudio.css'
 
@@ -231,6 +232,7 @@ const MARQUEE_ROW_2 = [
 
 export function NeuralAiStudio() {
   const { language } = useLanguage()
+  const { theme } = useTheme()
   const en = language === 'en'
 
   const [rolePreset, setRolePreset] = useState<AiRolePreset>('architect')
@@ -300,10 +302,12 @@ export function NeuralAiStudio() {
       bloom: idx % 3 === 0 ? 'rgba(56, 189, 248, 0.16)' : idx % 3 === 1 ? 'rgba(197, 255, 112, 0.16)' : 'rgba(167, 139, 250, 0.16)',
     }))
 
+    const isLight = () => document.documentElement.dataset.theme === 'light'
     let phase = 0
     const draw = (scheduleNext: boolean) => {
       phase += 0.025
       ctx.clearRect(0, 0, width, height)
+      const light = isLight()
       for (let i = 0; i < nodes.length; i++) {
         const a = nodes[i]
         a.x += a.vx
@@ -320,7 +324,9 @@ export function NeuralAiStudio() {
             ctx.beginPath()
             ctx.moveTo(a.x, a.y)
             ctx.lineTo(b.x, b.y)
-            ctx.strokeStyle = `rgba(139, 220, 255, ${(1 - dist / 142) * 0.34})`
+            ctx.strokeStyle = light
+              ? `rgba(2, 132, 199, ${((1 - dist / 142) * 0.28).toFixed(3)})`
+              : `rgba(139, 220, 255, ${(1 - dist / 142) * 0.34})`
             ctx.lineWidth = 1.05
             ctx.stroke()
 
@@ -330,22 +336,31 @@ export function NeuralAiStudio() {
               const py = a.y + (b.y - a.y) * t
               ctx.beginPath()
               ctx.arc(px, py, 2.2, 0, Math.PI * 2)
-              ctx.fillStyle = j % 2 === 0 ? 'rgba(197, 255, 112, 0.95)' : 'rgba(56, 189, 248, 0.95)'
+              ctx.fillStyle = light
+                ? (j % 2 === 0 ? 'rgba(4, 120, 87, 0.92)' : 'rgba(2, 132, 199, 0.92)')
+                : (j % 2 === 0 ? 'rgba(197, 255, 112, 0.95)' : 'rgba(56, 189, 248, 0.95)')
               ctx.fill()
             }
           }
         }
 
+        const nodeColor = light
+          ? (i % 3 === 0 ? 'rgba(2, 132, 199, 0.85)' : i % 3 === 1 ? 'rgba(4, 120, 87, 0.85)' : 'rgba(109, 40, 217, 0.85)')
+          : a.color
+        const nodeBloom = light
+          ? (i % 3 === 0 ? 'rgba(2, 132, 199, 0.14)' : i % 3 === 1 ? 'rgba(4, 120, 87, 0.14)' : 'rgba(109, 40, 217, 0.14)')
+          : a.bloom
+
         if (a.r > 2.6) {
           ctx.beginPath()
           ctx.arc(a.x, a.y, 8, 0, Math.PI * 2)
-          ctx.fillStyle = a.bloom
+          ctx.fillStyle = nodeBloom
           ctx.fill()
         }
 
         ctx.beginPath()
         ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2)
-        ctx.fillStyle = a.color
+        ctx.fillStyle = nodeColor
         ctx.fill()
       }
       if (scheduleNext && inViewport) {
@@ -424,12 +439,15 @@ export function NeuralAiStudio() {
           ))}
         </div>
         <div className="dx-marquee-track reverse">
-          {[...MARQUEE_ROW_2, ...MARQUEE_ROW_2].map((item, idx) => (
-            <span className="dx-marquee-pill" key={`r2-${idx}`}>
-              <i style={{ background: item.color, boxShadow: `0 0 8px ${item.color}` }} />
-              {item.text}
-            </span>
-          ))}
+          {[...MARQUEE_ROW_2, ...MARQUEE_ROW_2].map((item, idx) => {
+            const dotColor = theme === 'light' && item.color === '#c5ff70' ? '#047857' : item.color
+            return (
+              <span className="dx-marquee-pill" key={`r2-${idx}`}>
+                <i style={{ background: dotColor, boxShadow: `0 0 8px ${dotColor}` }} />
+                {item.text}
+              </span>
+            )
+          })}
         </div>
       </div>
 

@@ -99,4 +99,47 @@
 .intelligence-footnote p{font-size:10px;line-height:1.8;margin:0}
 @media(max-width:900px){.intelligence-service-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.intelligence-overview{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.intelligence-page{padding-top:24px;padding-bottom:54px}.intelligence-hero{padding:22px 18px;border-radius:13px}.intelligence-hero h1{font-size:clamp(34px,10vw,48px);letter-spacing:-1.8px}.intelligence-hero>p{font-size:13px}.intelligence-principles{gap:6px}.intelligence-principles span{font-size:9px;padding:7px}.intelligence-overview{gap:8px}.intelligence-stat{padding:13px;gap:6px}.intelligence-stat strong{font-size:25px}.intelligence-stat small{font-size:10px}.intelligence-tabs{width:100%}.intelligence-tabs button{flex:1;justify-content:center;padding-inline:8px;font-size:10px}.intelligence-panel{padding:14px;border-radius:11px}.intelligence-panel-heading{flex-direction:column;gap:12px}.intelligence-panel-heading>.button{width:100%}.intelligence-toolbar{align-items:stretch;flex-direction:column}.intelligence-toolbar select{width:100%}.intelligence-service-grid{grid-template-columns:1fr}.intelligence-service-card>p{min-height:0}.intelligence-workbench-grid,.intelligence-contract-grid{grid-template-columns:1fr}.intelligence-form-row{grid-template-columns:1fr}.intelligence-contract-editor textarea{min-height:220px}.intelligence-contract-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.intelligence-operation{grid-template-columns:58px minmax(0,1fr);gap:9px}.intelligence-auth{grid-column:2}.intelligence-finding{grid-template-columns:65px minmax(0,1fr)}.intelligence-notice{flex-wrap:wrap}.intelligence-notice button{margin-left:0}.intelligence-inline-actions .button{flex:1}}
+html[data-theme="light"] .intelligence-hero h1 span{background:linear-gradient(95deg,#047857,#0369a1 52%,#6d28d9);-webkit-background-clip:text;background-clip:text;color:transparent}
+html[data-theme="light"] .intelligence-principles span,
+html[data-theme="light"] .intelligence-stat,
+html[data-theme="light"] .intelligence-search,
+html[data-theme="light"] .intelligence-service-card,
+html[data-theme="light"] .intelligence-remove,
+html[data-theme="light"] .intelligence-footnote{background:#ffffff;border-color:rgba(15,23,42,.14);color:#0f172a}
+html[data-theme="light"] .intelligence-stat strong,
+html[data-theme="light"] .intelligence-service-card h3,
+html[data-theme="light"] .intelligence-service-card dd,
+html[data-theme="light"] .intelligence-empty strong,
+html[data-theme="light"] .intelligence-search input{color:#0f172a}
+html[data-theme="light"] .intelligence-hero>p,
+html[data-theme="light"] .intelligence-principles span,
+html[data-theme="light"] .intelligence-stat>span,
+html[data-theme="light"] .intelligence-stat small,
+html[data-theme="light"] .intelligence-panel-heading p,
+html[data-theme="light"] .intelligence-service-card>p,
+html[data-theme="light"] .intelligence-service-card dt,
+html[data-theme="light"] .intelligence-tags span,
+html[data-theme="light"] .intelligence-footnote{color:#334155}
+html[data-theme="light"] .intelligence-service-icon{background:#ecfdf5;border-color:rgba(4,120,87,.24);color:#047857}
+html[data-theme="light"] .intelligence-criticality{background:#f8fafc;border-color:rgba(15,23,42,.15);color:#334155}
+html[data-theme="light"] .intelligence-criticality.high,
+html[data-theme="light"] .intelligence-criticality.critical{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+html[data-theme="light"] .intelligence-criticality.medium{background:#fef3c7;border-color:#fcd34d;color:#92400e}
+html[data-theme="light"] .intelligence-notice,
+html[data-theme="light"] .intelligence-status{background:#ecfdf5;border-color:rgba(4,120,87,.28);color:#065f46}
+html[data-theme="light"] .intelligence-error{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+html[data-theme="light"] .intelligence-form label,
+html[data-theme="light"] .intelligence-contract-editor,
+html[data-theme="light"] .intelligence-help,
+html[data-theme="light"] .intelligence-subheading>span,
+html[data-theme="light"] .intelligence-empty,
+html[data-theme="light"] .intelligence-operation p,
+html[data-theme="light"] .intelligence-operation small,
+html[data-theme="light"] .intelligence-finding p{color:#334155}
+html[data-theme="light"] .intelligence-operation,
+html[data-theme="light"] .intelligence-finding,
+html[data-theme="light"] .intelligence-contract-summary>div{background:#ffffff;border-color:rgba(15,23,42,.14);color:#0f172a}
+html[data-theme="light"] .intelligence-operation strong,
+html[data-theme="light"] .intelligence-contract-summary strong{color:#0f172a}
+html[data-theme="light"] .intelligence-success{background:#ecfdf5;border-color:rgba(4,120,87,.28);color:#065f46}
 

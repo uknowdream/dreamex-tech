@@ -70,3 +70,37 @@
 @media(max-width:700px){.control-plane-page{padding-top:28px;padding-bottom:55px}.control-plane-hero{grid-template-columns:1fr;gap:22px;padding:23px;border-radius:15px}.control-plane-hero h1{font-size:clamp(35px,10vw,48px);letter-spacing:-1.9px}.control-plane-hero-copy>p{font-size:13px}.control-plane-score{padding:19px}.control-plane-score-value strong{font-size:46px}.control-plane-signals{grid-template-columns:1fr;gap:9px;margin-bottom:38px}.control-plane-signals>p{grid-column:auto}.control-plane-section-heading{align-items:stretch;flex-direction:column;gap:15px}.control-plane-search{width:100%}.control-plane-grid{grid-template-columns:1fr}.control-plane-card{min-height:190px}.control-plane-checklist{padding:18px}.control-plane-check-list{grid-template-columns:1fr}.control-plane-check-count{align-self:flex-start}}
 @media(prefers-reduced-motion:reduce){.control-plane-card,.control-plane-progress span{transition:none}}
 
+html[data-theme="light"] .control-plane-hero h1 span{background:linear-gradient(95deg,#047857,#0369a1 52%,#6d28d9);color:transparent;background-clip:text;-webkit-background-clip:text}
+html[data-theme="light"] .control-plane-score,
+html[data-theme="light"] .control-plane-signal,
+html[data-theme="light"] .control-plane-search,
+html[data-theme="light"] .control-plane-card,
+html[data-theme="light"] .control-plane-checklist,
+html[data-theme="light"] .control-plane-check{background:#ffffff;border-color:rgba(15,23,42,.14);color:#0f172a}
+html[data-theme="light"] .control-plane-signal strong,
+html[data-theme="light"] .control-plane-card h3,
+html[data-theme="light"] .control-plane-search input,
+html[data-theme="light"] .control-plane-score>p,
+html[data-theme="light"] .control-plane-check.is-checked .control-plane-check-copy strong{color:#0f172a}
+html[data-theme="light"] .control-plane-hero-copy>p,
+html[data-theme="light"] .control-plane-score-label,
+html[data-theme="light"] .control-plane-score-value span,
+html[data-theme="light"] .control-plane-score>small,
+html[data-theme="light"] .control-plane-signal small,
+html[data-theme="light"] .control-plane-signals>p,
+html[data-theme="light"] .control-plane-section-heading p,
+html[data-theme="light"] .control-plane-card>small,
+html[data-theme="light"] .control-plane-card p,
+html[data-theme="light"] .control-plane-card-top>span:last-child,
+html[data-theme="light"] .control-plane-disclaimer{color:#475569}
+html[data-theme="light"] .control-plane-progress{background:rgba(15,23,42,.1)}
+html[data-theme="light"] .control-plane-progress span{background:linear-gradient(90deg,#047857,#0369a1)}
+html[data-theme="light"] .control-plane-icon{background:#ecfdf5;border-color:rgba(4,120,87,.24);color:#047857}
+html[data-theme="light"] .control-plane-card-link,
+html[data-theme="light"] .control-plane-check-count,
+html[data-theme="light"] .control-plane-notice{color:#047857;border-color:rgba(4,120,87,.28)}
+html[data-theme="light"] .control-plane-check.is-checked{background:#ecfdf5;border-color:rgba(4,120,87,.35)}
+html[data-theme="light"] .control-plane-check.is-checked .control-plane-checkbox{background:#047857;border-color:#047857;color:#ffffff}
+html[data-theme="light"] .control-plane-check-copy strong{color:#0f172a}
+html[data-theme="light"] .control-plane-check-copy small{color:#475569}
+

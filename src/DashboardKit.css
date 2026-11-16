@@ -642,37 +642,109 @@ html[data-theme="light"] .dx-kpi-card,
 html[data-theme="light"] .dx-stacked-card,
 html[data-theme="light"] .dx-spark-card,
 html[data-theme="light"] .dx-trend-card,
-html[data-theme="light"] .dx-copilot-panel {
-  background: #ffffff;
-  border-color: rgba(15, 23, 42, 0.14);
-  color: #0f172a;
+html[data-theme="light"] .dx-copilot-panel,
+html[data-theme="light"] .dx-pipeline-stage {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  color: #0f172a !important;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05) !important;
+}
+
+html[data-theme="light"] .dx-pipeline-stage.is-complete {
+  background: #ecfdf5 !important;
+  border-color: rgba(4, 120, 87, 0.34) !important;
 }
 
 html[data-theme="light"] .dx-kpi-value,
+html[data-theme="light"] .dx-ring-wrap .dx-ring-center > strong,
 html[data-theme="light"] .dx-stacked-head strong,
 html[data-theme="light"] .dx-stacked-legend-item b,
 html[data-theme="light"] .dx-spark-val,
 html[data-theme="light"] .dx-trend-labels b,
-html[data-theme="light"] .dx-copilot-title-wrap h3 {
-  color: #0f172a;
+html[data-theme="light"] .dx-pipeline-stage strong,
+html[data-theme="light"] .dx-pipeline-ratio,
+html[data-theme="light"] .dx-copilot-title-wrap h3,
+html[data-theme="light"] .dx-copilot-box li {
+  color: #0f172a !important;
 }
 
 html[data-theme="light"] .dx-kpi-label,
 html[data-theme="light"] .dx-kpi-sub,
+html[data-theme="light"] .dx-ring-wrap .dx-ring-center > small,
 html[data-theme="light"] .dx-stacked-head span,
 html[data-theme="light"] .dx-stacked-legend-item,
 html[data-theme="light"] .dx-spark-lbl,
-html[data-theme="light"] .dx-trend-labels {
-  color: #475569;
+html[data-theme="light"] .dx-trend-labels,
+html[data-theme="light"] .dx-pipeline-stage small,
+html[data-theme="light"] .dx-copilot-box > span,
+html[data-theme="light"] .dx-copilot-byok-bar label {
+  color: #475569 !important;
+}
+
+html[data-theme="light"] .dx-copilot-kicker,
+html[data-theme="light"] .dx-pipeline-step,
+html[data-theme="light"] .dx-copilot-status {
+  color: #047857 !important;
+}
+
+html[data-theme="light"] .dx-ring-track {
+  stroke: rgba(15, 23, 42, 0.14);
+}
+
+html[data-theme="light"] .dx-stacked-track,
+html[data-theme="light"] .dx-pipeline-meter {
+  background: rgba(15, 23, 42, 0.1);
+}
+
+html[data-theme="light"] .dx-spark-bar-shell,
+html[data-theme="light"] .dx-copilot-box,
+html[data-theme="light"] .dx-copilot-byok-bar {
+  background: #f8fafc !important;
+  border-color: rgba(15, 23, 42, 0.13) !important;
+}
+
+html[data-theme="light"] .dx-copilot-byok-bar input,
+html[data-theme="light"] .dx-copilot-byok-bar select,
+html[data-theme="light"] .dx-copilot-followup input {
+  color: #0f172a !important;
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.2) !important;
 }
 
 html[data-theme="light"] .dx-copilot-ai-output {
-  background: #f8fafc;
-  border-color: rgba(79, 70, 229, 0.28);
+  background: #f8fafc !important;
+  border-color: rgba(79, 70, 229, 0.28) !important;
 }
 
-html[data-theme="light"] .dx-copilot-ai-output pre,
-html[data-theme="light"] .dx-copilot-followup input {
+html[data-theme="light"] .dx-copilot-ai-meta {
+  color: #4338ca !important;
+}
+
+html[data-theme="light"] .dx-copilot-ai-output pre {
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] .dx-copilot-trust-check {
+  color: #b45309 !important;
+}
+
+html[data-theme="light"] .dx-copilot-error {
+  color: #b91c1c !important;
+}
+
+html[data-theme="light"] .dx-filter-pill {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.15);
+  color: #334155;
+}
+
+html[data-theme="light"] .dx-filter-pill:hover {
+  border-color: rgba(3, 105, 161, 0.42);
   color: #0f172a;
-  background: #ffffff;
+}
+
+html[data-theme="light"] .dx-filter-pill.active {
+  background: #047857;
+  border-color: #047857;
+  color: #ffffff;
 }

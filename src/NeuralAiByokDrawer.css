@@ -125,3 +125,48 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+html[data-theme="light"] .byok-drawer {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.14);
+  color: #0f172a;
+}
+
+html[data-theme="light"] .byok-meta-badge {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+html[data-theme="light"] .byok-field {
+  color: #334155;
+}
+
+html[data-theme="light"] .byok-trust-consent {
+  color: #b45309;
+}
+
+html[data-theme="light"] .byok-field input,
+html[data-theme="light"] .byok-field select,
+html[data-theme="light"] .byok-output-wrap {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.18);
+  color: #0f172a;
+}
+
+html[data-theme="light"] .byok-output-head {
+  color: #0369a1;
+}
+
+html[data-theme="light"] .byok-copy-btn {
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.18);
+}
+
+html[data-theme="light"] .byok-output {
+  color: #0f172a;
+}
+
+html[data-theme="light"] .byok-error {
+  background: #fee2e2;
+  color: #991b1b;
+}

@@ -28,3 +28,16 @@
 @media (max-width: 720px) { .release-evidence-heading,.release-evidence-footer { align-items: stretch; flex-direction: column; } .release-evidence-candidates,.release-evidence-notes { grid-template-columns: minmax(0, 1fr); } .release-evidence-notes label:last-child { grid-column: auto; } .release-evidence-footer button { width: 100%; justify-content: center; } }
 @media (max-width: 420px) { .release-evidence-diff-table { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) { .release-evidence-panel * { scroll-behavior: auto !important; transition-duration: 0s !important; } }
+
+html[data-theme="light"] .release-evidence-panel,
+html[data-theme="light"] .release-evidence-card,
+html[data-theme="light"] .release-evidence-diff-table > div { background: #ffffff; border-color: rgba(15,23,42,.14); color: #0f172a; }
+html[data-theme="light"] .release-evidence-count,
+html[data-theme="light"] .release-evidence-notice { color: #047857; border-color: rgba(4,120,87,.3); }
+html[data-theme="light"] .release-evidence-footer p svg { color: #047857; }
+html[data-theme="light"] .release-evidence-card label,
+html[data-theme="light"] .release-evidence-notes label,
+html[data-theme="light"] .release-evidence-overline,
+html[data-theme="light"] .release-evidence-diff-table span { color: #475569; }
+html[data-theme="light"] .release-evidence-diff-table strong { color: #0f172a; }
+html[data-theme="light"] .release-evidence-error { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }

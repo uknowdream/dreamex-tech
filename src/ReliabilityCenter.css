@@ -76,3 +76,40 @@
 @media(max-width:700px){.reliability-center-page{padding-top:28px;padding-bottom:55px}.reliability-center-hero{grid-template-columns:1fr;padding:22px;border-radius:14px}.reliability-center-hero h1{font-size:clamp(35px,9.5vw,47px);letter-spacing:-1.8px}.reliability-metrics-section,.reliability-incident-editor,.reliability-history{padding:17px;margin-top:17px}.reliability-section-heading{align-items:stretch;flex-direction:column;gap:12px}.reliability-window{min-width:0;width:100%}.reliability-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.reliability-metric-card{padding:12px}.reliability-metric-card>span{align-items:flex-start}.reliability-metric-card input{font-size:26px}.reliability-form-grid{grid-template-columns:1fr;gap:13px}.reliability-timeline{padding:13px}.reliability-timeline-add{grid-template-columns:1fr}.reliability-timeline-note{grid-column:auto}.reliability-timeline-add .button{width:100%}.reliability-timeline-list li>div>div{flex-direction:column;gap:5px}.reliability-timeline-list li time{text-align:left}.reliability-history-open{grid-template-columns:1fr}.reliability-history-open>small{grid-column:auto}.reliability-history-open .reliability-severity{justify-self:start}}
 @media(prefers-reduced-motion:reduce){.reliability-center-page *{scroll-behavior:auto!important;transition:none!important}}
 
+html[data-theme="light"] .reliability-center-hero h1 span{background:linear-gradient(95deg,#b45309,#047857 58%,#0369a1);background-clip:text;-webkit-background-clip:text;color:transparent}
+html[data-theme="light"] .reliability-center-summary,
+html[data-theme="light"] .reliability-metrics-section,
+html[data-theme="light"] .reliability-incident-editor,
+html[data-theme="light"] .reliability-history,
+html[data-theme="light"] .reliability-metric-card,
+html[data-theme="light"] .reliability-timeline,
+html[data-theme="light"] .reliability-timeline-list li>div,
+html[data-theme="light"] .reliability-history-list article{background:#ffffff;border-color:rgba(15,23,42,.14);color:#0f172a}
+html[data-theme="light"] .reliability-center-summary>strong,
+html[data-theme="light"] .reliability-timeline .reliability-section-heading>span,
+html[data-theme="light"] .reliability-timeline-list li strong,
+html[data-theme="light"] .reliability-history-count{color:#b45309}
+html[data-theme="light"] .reliability-center-hero>div:first-child>p,
+html[data-theme="light"] .reliability-center-summary>p,
+html[data-theme="light"] .reliability-center-summary>small,
+html[data-theme="light"] .reliability-section-heading p,
+html[data-theme="light"] .reliability-metric-card>span,
+html[data-theme="light"] .reliability-metric-card>p,
+html[data-theme="light"] .reliability-timeline-list li p,
+html[data-theme="light"] .reliability-disclaimer{color:#334155}
+html[data-theme="light"] .reliability-metric-card input{color:#0f172a !important;border-bottom-color:rgba(15,23,42,.24) !important;background:transparent !important}
+html[data-theme="light"] .reliability-history-open>strong{color:#0f172a}
+html[data-theme="light"] .reliability-timeline-marker{background:#ffffff;border-color:#b45309}
+html[data-theme="light"] .reliability-timeline-list li button{background:#f8fafc;border-color:rgba(15,23,42,.18);color:#334155}
+html[data-theme="light"] .reliability-notice{background:#ecfdf5;border-color:rgba(4,120,87,.3);color:#047857}
+html[data-theme="light"] .reliability-error{background:#fee2e2;border-color:#fca5a5;color:#991b1b}
+html[data-theme="light"] .reliability-history-empty,
+html[data-theme="light"] .reliability-empty-timeline{background:#f8fafc;border-color:rgba(15,23,42,.2);color:#334155}
+html[data-theme="light"] .reliability-window>span,
+html[data-theme="light"] .reliability-incident-form label>span,
+html[data-theme="light"] .reliability-timeline-add label>span,
+html[data-theme="light"] .reliability-metric-card small,
+html[data-theme="light"] .reliability-history-open>small,
+html[data-theme="light"] .reliability-history-empty p,
+html[data-theme="light"] .reliability-timeline-list li time{color:#334155}
+

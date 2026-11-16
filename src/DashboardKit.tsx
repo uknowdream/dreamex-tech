@@ -9,16 +9,24 @@ import {
   type AiProviderId,
 } from './aiClient'
 import { useLanguage } from './i18n'
+import { useTheme } from './themeUtils'
 import './engineering-page-system.css'
 import './DashboardKit.css'
 
 export type GaugeTone = 'emerald' | 'cyan' | 'amber' | 'rose'
 
-const TONE_COLORS: Record<GaugeTone, string> = {
+const DARK_TONE_COLORS: Record<GaugeTone, string> = {
   emerald: '#c5ff70',
   cyan: '#38bdf8',
   amber: '#fbbf24',
   rose: '#fb7185',
+}
+
+const LIGHT_TONE_COLORS: Record<GaugeTone, string> = {
+  emerald: '#047857',
+  cyan: '#0284c7',
+  amber: '#b45309',
+  rose: '#be123c',
 }
 
 export function SvgRingGauge({
@@ -38,6 +46,8 @@ export function SvgRingGauge({
   size?: number
   unit?: string
 }) {
+  const { theme } = useTheme()
+  const tonePalette = theme === 'light' ? LIGHT_TONE_COLORS : DARK_TONE_COLORS
   const safeMax = max > 0 ? max : 100
   const clamped = Math.max(0, Math.min(safeMax, Number.isFinite(value) ? value : 0))
   const ratio = clamped / safeMax
@@ -59,7 +69,7 @@ export function SvgRingGauge({
           cy={size / 2}
           r={radius}
           strokeWidth={stroke}
-          stroke={TONE_COLORS[tone]}
+          stroke={tonePalette[tone]}
           strokeDasharray={circumference}
           strokeDashoffset={dashOffset}
         />
@@ -120,6 +130,8 @@ export function SvgSparkBars({
   meta?: string
   items: Array<{ label: string; value: number; tone?: GaugeTone; suffix?: string }>
 }) {
+  const { theme } = useTheme()
+  const tonePalette = theme === 'light' ? LIGHT_TONE_COLORS : DARK_TONE_COLORS
   const maxVal = Math.max(1, ...items.map(item => Math.max(0, item.value)))
   return (
     <div className="dx-spark-card">
@@ -130,7 +142,7 @@ export function SvgSparkBars({
       <div className="dx-spark-grid" role="img" aria-label={`${title}: ${items.map(item => `${item.label} ${item.value}${item.suffix ?? ''}`).join(', ')}`}>
         {items.map(item => {
           const pct = Math.max(6, Math.round((Math.max(0, item.value) / maxVal) * 100))
-          const color = TONE_COLORS[item.tone ?? 'cyan']
+          const color = tonePalette[item.tone ?? 'cyan']
           return (
             <div key={item.label} className="dx-spark-col">
               <span className="dx-spark-val">{item.value}{item.suffix ?? ''}</span>
@@ -157,6 +169,8 @@ export function SvgTrendArea({
   points: Array<{ label: string; value: number }>
   tone?: GaugeTone
 }) {
+  const { theme } = useTheme()
+  const tonePalette = theme === 'light' ? LIGHT_TONE_COLORS : DARK_TONE_COLORS
   const gradId = useId()
   const safePoints = points.length >= 2 ? points : [{ label: 'T0', value: 0 }, { label: 'T1', value: 0 }]
   const width = 340
@@ -174,7 +188,7 @@ export function SvgTrendArea({
   })
   const linePath = coords.map((pt, idx) => `${idx === 0 ? 'M' : 'L'} ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`).join(' ')
   const areaPath = `${linePath} L ${coords[coords.length - 1].x.toFixed(1)} ${(height - padY).toFixed(1)} L ${coords[0].x.toFixed(1)} ${(height - padY).toFixed(1)} Z`
-  const color = TONE_COLORS[tone]
+  const color = tonePalette[tone]
 
   return (
     <div className="dx-trend-card">
@@ -192,7 +206,7 @@ export function SvgTrendArea({
         <path d={areaPath} fill={`url(#${gradId})`} />
         <path className="dx-trend-line" d={linePath} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
         {coords.map(pt => (
-          <circle key={pt.label} cx={pt.x} cy={pt.y} r="3.2" fill="#071021" stroke={color} strokeWidth="2" />
+          <circle key={pt.label} cx={pt.x} cy={pt.y} r="3.2" fill="var(--dx-dot-bg, #071021)" stroke={color} strokeWidth="2" />
         ))}
       </svg>
       <div className="dx-trend-labels" aria-hidden="true">

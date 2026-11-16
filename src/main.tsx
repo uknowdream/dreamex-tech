@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { LanguageProvider } from './i18n'
+import { applyInitialThemeBeforeRender } from './themeUtils'
 import './styles.css'
 import './navigation-motion.css'
 import './design-refinement.css'
@@ -21,6 +22,8 @@ if (window.location.pathname === '/') {
   stylesheet.dataset.dreamexPremiumExperience = 'true'
   document.head.append(stylesheet)
 }
+
+applyInitialThemeBeforeRender()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

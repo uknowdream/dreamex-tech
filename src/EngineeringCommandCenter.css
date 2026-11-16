@@ -67,3 +67,22 @@
 @media(max-width:760px){.command-center-stats{grid-template-columns:1fr;gap:10px}}
 @media(max-width:560px){.command-center-page{padding-top:28px}.command-center-stat-card{padding:14px}.command-center-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.command-center-tabs button{justify-content:flex-start;padding:10px 8px;font-size:.72rem}.command-center-overview-grid{grid-template-columns:1fr}.command-center-panel p{min-height:0}.command-center-form,.command-center-form-wide{grid-template-columns:minmax(0,1fr);padding:12px}.command-center-form .field-wide{grid-column:auto}.command-center-form .button{width:100%}.command-center-record{gap:9px;padding:11px}.command-center-record-main{grid-template-columns:max-content minmax(0,1fr);flex-basis:100%}.command-center-status{min-width:0;flex:1}.command-center-delete{margin-left:auto}.command-center-actions{align-items:stretch;flex-direction:column}.command-center-action-btns{width:100%}.command-center-action-btns .button{flex:1;justify-content:center}}
 @media(prefers-reduced-motion:reduce){.command-center-release-progress span{transition:none}}
+
+html[data-theme="light"] .command-center-advance{background:#ecfdf5;border-color:rgba(4,120,87,.35);color:#047857}
+html[data-theme="light"] .command-center-tabs{background:#f1f5f9;border-color:rgba(15,23,42,.14)}
+html[data-theme="light"] .command-center-tabs button{color:#334155}
+html[data-theme="light"] .command-center-tabs button.active{background:#0f172a;border-color:#0f172a;color:#ffffff}
+html[data-theme="light"] .command-center-stat-card,
+html[data-theme="light"] .command-center-panel,
+html[data-theme="light"] .command-center-form,
+html[data-theme="light"] .command-center-record,
+html[data-theme="light"] .command-center-search-mini,
+html[data-theme="light"] .command-center-footer{background:#ffffff;border-color:rgba(15,23,42,.14);color:#0f172a}
+html[data-theme="light"] .command-center-search-mini input{color:#0f172a}
+html[data-theme="light"] .command-center-priority.p0{color:#991b1b;border-color:#fca5a5;background:#fee2e2}
+html[data-theme="light"] .command-center-priority.p1{color:#92400e;border-color:#fcd34d;background:#fef3c7}
+html[data-theme="light"] .command-center-priority.p2,
+html[data-theme="light"] .command-center-priority.accepted{color:#065f46;border-color:#6ee7b7;background:#d1fae5}
+html[data-theme="light"] .command-center-release-progress{background:rgba(15,23,42,.1)}
+html[data-theme="light"] .command-center-release-list label{background:#ffffff;color:#0f172a}
+html[data-theme="light"] .command-center-release-list label.is-checked{background:#ecfdf5;border-color:rgba(4,120,87,.35)}

@@ -32,3 +32,15 @@
 @media (prefers-reduced-motion: reduce) {
   .supply-chain-integrity * { scroll-behavior: auto !important; transition-duration: 0s !important; }
 }
+
+html[data-theme="light"] .supply-chain-integrity,
+html[data-theme="light"] .supply-chain-provenance-grid article { background: #ffffff; border-color: rgba(15,23,42,.14); color: #0f172a; }
+html[data-theme="light"] .supply-chain-provenance-grid article span,
+html[data-theme="light"] .supply-chain-integrity-head p,
+html[data-theme="light"] .supply-chain-provenance-note { color: #475569; }
+html[data-theme="light"] .supply-chain-provenance-grid article strong { color: #0f172a; }
+html[data-theme="light"] .supply-chain-duplicate-count,
+html[data-theme="light"] .supply-chain-provenance-note svg { color: #047857; border-color: rgba(4,120,87,.3); }
+html[data-theme="light"] .supply-chain-duplicate-count.has-duplicates,
+html[data-theme="light"] .supply-chain-duplicate-alert { background: #fffbeb; border-color: #fcd34d; color: #92400e; }
+html[data-theme="light"] .supply-chain-duplicate-alert code { color: #78350f; }

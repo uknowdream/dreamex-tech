@@ -623,3 +623,93 @@
     white-space: pre-wrap !important;
   }
 }
+
+html[data-theme="light"] .sovereign-workbench {
+  --neural-slate: linear-gradient(155deg, #ffffff, #f8fafc);
+  --elevated-wb: linear-gradient(155deg, #ffffff, #eef4fc);
+  --wb-border: rgba(15, 23, 42, 0.14);
+  --wb-border-strong: rgba(3, 105, 161, 0.36);
+}
+
+html[data-theme="light"] .sovereign-hero {
+  background: radial-gradient(56% 52% at 14% 12%, rgba(4, 120, 87, 0.08), transparent 60%), linear-gradient(155deg, #ffffff, #eef4fc) !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] .sovereign-hero h1,
+html[data-theme="light"] .sovereign-telemetry-card strong,
+html[data-theme="light"] .sovereign-pillar-tab strong,
+html[data-theme="light"] .sovereign-panel-head h2,
+html[data-theme="light"] .sovereign-field label,
+html[data-theme="light"] .sovereign-metric-box strong,
+html[data-theme="light"] .sovereign-table td {
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] .sovereign-hero p,
+html[data-theme="light"] .sovereign-telemetry-card small,
+html[data-theme="light"] .sovereign-telemetry-card span,
+html[data-theme="light"] .sovereign-pillar-tab,
+html[data-theme="light"] .sovereign-pillar-tab-top,
+html[data-theme="light"] .sovereign-pillar-tab small,
+html[data-theme="light"] .sovereign-panel-head p,
+html[data-theme="light"] .sovereign-metric-box span,
+html[data-theme="light"] .sovereign-metric-box small {
+  color: #334155 !important;
+}
+
+html[data-theme="light"] .sovereign-kicker {
+  color: #047857 !important;
+}
+
+html[data-theme="light"] .sovereign-role-pill {
+  background: #f1f5f9 !important;
+}
+
+html[data-theme="light"] .sovereign-role-pill.eng { color: #047857 !important; }
+html[data-theme="light"] .sovereign-role-pill.qa { color: #0369a1 !important; }
+html[data-theme="light"] .sovereign-role-pill.ba { color: #6d28d9 !important; }
+html[data-theme="light"] .sovereign-role-pill.pm { color: #b45309 !important; }
+html[data-theme="light"] .sovereign-role-pill.sec { color: #be123c !important; }
+
+html[data-theme="light"] .sovereign-telemetry-card,
+html[data-theme="light"] .sovereign-pillar-tab,
+html[data-theme="light"] .sovereign-panel,
+html[data-theme="light"] .sovereign-copilot-bar {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06) !important;
+}
+
+html[data-theme="light"] .sovereign-pillar-tab.active {
+  background: #eef6ff !important;
+  box-shadow: 0 6px 18px rgba(3, 105, 161, 0.12) !important;
+}
+
+html[data-theme="light"] .sovereign-metric-box,
+html[data-theme="light"] .sovereign-code-box,
+html[data-theme="light"] .sovereign-table th,
+html[data-theme="light"] .sovereign-jira-push-box,
+html[data-theme="light"] .sovereign-status-note {
+  background: #f8fafc !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] .sovereign-btn {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.2) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] .sovereign-btn.primary {
+  background: linear-gradient(135deg, #047857 0%, #0369a1 100%) !important;
+  border-color: #047857 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="light"] .sovereign-status-chip.ok { background: #dcfce7; color: #065f46; }
+html[data-theme="light"] .sovereign-status-chip.warn { background: #fef3c7; color: #92400e; }
+html[data-theme="light"] .sovereign-status-chip.err { background: #fee2e2; color: #991b1b; }
+html[data-theme="light"] .sovereign-bar-track { background: #e2e8f0; }
