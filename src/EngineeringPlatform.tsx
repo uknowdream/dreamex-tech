@@ -410,7 +410,7 @@ export function EngineeringWorkspacePage() {
   }
 
   const roleOptions: Array<{ id: RoleFocus; labelEn: string; labelId: string }> = [
-    { id: 'all', labelEn: 'All Roles (22)', labelId: 'Semua Peran (22)' },
+    { id: 'all', labelEn: `All Roles (${items.length})`, labelId: `Semua Peran (${items.length})` },
     { id: 'dev', labelEn: 'Software & Architecture', labelId: 'Software & Arsitektur' },
     { id: 'qa', labelEn: 'QA & Automation', labelId: 'QA & Otomasi' },
     { id: 'ba', labelEn: 'Business Analyst', labelId: 'Business Analyst' },

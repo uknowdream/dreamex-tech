@@ -498,7 +498,7 @@ export function TeamWorkspacePage() {
       </section>}
 
       <section className="team-workspace-panel" aria-labelledby="team-workspace-editor-title">
-        <div className="team-workspace-panel-head"><div><span className="section-kicker">{en ? '03 / SNAPSHOT' : '03 / SNAPSHOT'}</span><h2 id="team-workspace-editor-title">{en ? 'Workspace JSON' : 'JSON workspace'}</h2></div><FileJson size={20} /></div>
+        <div className="team-workspace-panel-head"><div><span className="section-kicker">{connected && role && (role === 'owner' || role === 'admin') ? '03 / SNAPSHOT' : '02 / SNAPSHOT'}</span><h2 id="team-workspace-editor-title">{en ? 'Workspace JSON' : 'JSON workspace'}</h2></div><FileJson size={20} /></div>
         <p className="team-workspace-connection-state">{en ? 'Revision ' + revision + (updatedAt ? ' · Updated ' + new Date(updatedAt).toLocaleString('en-GB') : ' · No remote save recorded in this session') + (connected ? ' · Connected' : ' · Local editing mode') : 'Revisi ' + revision + (updatedAt ? ' · Diperbarui ' + new Date(updatedAt).toLocaleString('id-ID') : ' · Belum ada penyimpanan remote yang tercatat di sesi ini') + (connected ? ' · Terhubung' : ' · Mode edit lokal')}</p>
         <label className="team-workspace-field team-workspace-editor" htmlFor="team-workspace-json">{en ? 'Editable JSON object (maximum 100 KB)' : 'Objek JSON yang dapat diedit (maksimum 100 KB)'}
           <textarea id="team-workspace-json" spellCheck={false} autoCapitalize="off" autoCorrect="off" value={jsonText} onChange={event => setJsonText(event.target.value)} />

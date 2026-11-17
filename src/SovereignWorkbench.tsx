@@ -21,6 +21,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { useLanguage } from './i18n'
+import { useTheme } from './themeUtils'
 import {
   clearSessionAiConfig,
   DEFAULT_MODELS,
@@ -91,6 +92,7 @@ const INITIAL_RTM_ROWS: ReadonlyArray<RtmRow> = [
 
 export function SovereignWorkbenchPage({ initialPillar = 'eng' }: { initialPillar?: SovereignPillarId }) {
   const { language } = useLanguage()
+  const { theme } = useTheme()
   const en = language === 'en'
   const [activePillar, setActivePillar] = useState<SovereignPillarId>(initialPillar)
   const [copiedKey, setCopiedKey] = useState<string>('')
@@ -189,7 +191,7 @@ export function SovereignWorkbenchPage({ initialPillar = 'eng' }: { initialPilla
   // PILLAR 02: QA & UAT STUDIO (TEST MATRIX, SELECTOR SCORER & SQL RECON)
   // =========================================================================
   const [qaFlowPreset, setQaFlowPreset] = useState<'payment' | 'auth' | 'migration' | 'approval'>('payment')
-  const [rawSelector, setRawSelector] = useState('div.checkout-card > ul > li:nth-child(2) > button.bg-emerald-500')
+  const [rawSelector, setRawSelector] = useState('button[data-testid="approve-settlement"]')
   const [targetRoleName, setTargetRoleName] = useState('Approve Settlement')
   const [sqlSourceTable, setSqlSourceTable] = useState('legacy_core.dbo.transactions')
   const [sqlTargetTable, setSqlTargetTable] = useState('modern_ledger.public.settlements')
@@ -568,7 +570,13 @@ export function SovereignWorkbenchPage({ initialPillar = 'eng' }: { initialPilla
       <section className="sovereign-hero" aria-labelledby="sovereign-workbench-title">
         <div className="sovereign-hero-top">
           <span className="sovereign-kicker">
-            {en ? 'QUANTUM OBSIDIAN v3.0 · CLIENT-SOVEREIGN IT WORKBENCH' : 'QUANTUM OBSIDIAN v3.0 · WORKBENCH IT OTONOM DI BROWSER'}
+            {theme === 'light'
+              ? en
+                ? 'DAYLIGHT ALABASTER v6.0 · CLIENT-SOVEREIGN IT WORKBENCH'
+                : 'DAYLIGHT ALABASTER v6.0 · WORKBENCH IT OTONOM DI BROWSER'
+              : en
+                ? 'QUANTUM OBSIDIAN v6.0 · CLIENT-SOVEREIGN IT WORKBENCH'
+                : 'QUANTUM OBSIDIAN v6.0 · WORKBENCH IT OTONOM DI BROWSER'}
           </span>
           <div className="sovereign-badge-row">
             <span className="sovereign-role-pill eng">SE / Architect</span>
@@ -579,7 +587,27 @@ export function SovereignWorkbenchPage({ initialPillar = 'eng' }: { initialPilla
           </div>
         </div>
         <h1 id="sovereign-workbench-title" data-testid="sovereign-workbench-title">
-          {en ? (
+          {initialPillar === 'ba' ? (
+            en ? (
+              <>
+                BA Requirement, Gherkin & <span>Bi-Directional RTM Studio.</span>
+              </>
+            ) : (
+              <>
+                Studio BA Requirement, <span>Gherkin & Matriks RTM.</span>
+              </>
+            )
+          ) : initialPillar === 'jira' ? (
+            en ? (
+              <>
+                PM Monte Carlo & <span>Jira v3 Neural Hub.</span>
+              </>
+            ) : (
+              <>
+                Hub PM Monte Carlo & <span>Otomasi Jira v3.</span>
+              </>
+            )
+          ) : en ? (
             <>
               Sovereign IT, QA, BA, PM & Jira <span>Automation Workbench.</span>
             </>

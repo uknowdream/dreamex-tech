@@ -165,6 +165,7 @@ function Header() {
     const platform = nav.querySelector<HTMLDetailsElement>('.nav-platform')
     const summary = platform?.querySelector<HTMLElement>('summary')
     const intro = platform?.querySelector<HTMLElement>('.nav-mega-intro')
+    const pillars = platform?.querySelector<HTMLElement>('.nav-mega-pillars')
     const groups = Array.from(nav.querySelectorAll<HTMLElement>('.nav-mega-group'))
     const empty = nav.querySelector<HTMLElement>('.nav-search-empty')
     const resultCount = nav.querySelector<HTMLElement>('.nav-search-count')
@@ -174,6 +175,7 @@ function Header() {
       recentLinks.forEach(link => { link.hidden = false })
       groups.forEach(group => { group.hidden = false })
       if (intro) intro.hidden = false
+      if (pillars) pillars.hidden = false
       if (summary) summary.hidden = false
       if (platform) platform.hidden = false
       if (empty) empty.hidden = true
@@ -183,17 +185,19 @@ function Header() {
     }
 
     links.forEach(link => { link.hidden = !link.textContent?.toLocaleLowerCase().includes(query) })
-    // Recent tools are intentionally excluded from Quick Find results; hide each link
-    // as well as the section so legacy display rules cannot expose stale destinations.
+    // Recent tools and spotlight promo card are excluded from Quick Find results so matching links appear first.
     recentLinks.forEach(link => { link.hidden = true })
+    if (intro) {
+      intro.hidden = true
+      intro.querySelectorAll<HTMLAnchorElement>('a[href]').forEach(link => { link.hidden = true })
+    }
+    if (pillars) pillars.hidden = true
     groups.forEach(group => {
       group.hidden = !Array.from(group.querySelectorAll<HTMLAnchorElement>('a[href]')).some(link => !link.hidden)
     })
-    if (intro) intro.hidden = !intro.textContent?.toLocaleLowerCase().includes(query)
     if (summary) summary.hidden = !summary.textContent?.toLocaleLowerCase().includes(query)
     if (platform) {
-      const platformHasMatches = Boolean(platform.querySelector('.nav-mega-intro:not([hidden])')) ||
-        Boolean(platform.querySelector('.nav-mega-group:not([hidden])'))
+      const platformHasMatches = Boolean(platform.querySelector('.nav-mega-group:not([hidden])'))
       platform.hidden = !platformHasMatches
       if (platformHasMatches) platform.open = true
     }
@@ -342,13 +346,13 @@ function Header() {
     {menuOpen && <button className="nav-backdrop" type="button" aria-label={language === 'en' ? 'Close navigation' : 'Tutup navigasi'} onClick={closeDrawer} />}
     <header className={menuOpen ? 'site-header navigation-open' : 'site-header'}>
       <div className="container nav-wrap">
-        <Link className="brand" to="/" aria-label="DreamEx Tech beranda">
+        <Link className="brand" to="/" aria-label={language === 'en' ? 'DreamEx Tech home' : 'Beranda DreamEx Tech'}>
           <span className="brand-mark"><Braces size={21} /></span>
           <span>DreamEx<span className="brand-muted"> Tech</span></span>
-          <span className="brand-beta">AI ENGINEERING OS</span>
+          <span className="brand-beta">{language === 'en' ? 'AI ENGINEERING OS' : 'OS REKAYASA AI'}</span>
         </Link>
         <button className="command-trigger" type="button" aria-keyshortcuts="Control+K Meta+K" aria-label={language === 'en' ? 'Search tools and articles' : 'Cari tools dan artikel'} onClick={() => { setDrawerOpen(false); document.querySelector('.nav-platform')?.removeAttribute('open'); window.dispatchEvent(new Event('dreamex-open-command-palette')) }}>
-          <Search size={16} /><span>{language === 'en' ? 'Search tools' : 'Cari tools'}</span><kbd>{typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl'} K</kbd>
+          <Search size={16} /><span>{language === 'en' ? 'Search tools' : 'Cari fitur'}</span><kbd>{typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl'} K</kbd>
         </button>
         <button ref={menuButtonRef} className="menu-toggle" type="button" aria-label={menuOpen ? (language === 'en' ? 'Close navigation' : 'Tutup navigasi') : t('openMenu')} aria-expanded={menuOpen} aria-controls="primary-navigation" onClick={() => setDrawerOpen(!menuOpenRef.current)}>
           <span /><span /><span className="menu-toggle-label">{language === 'en' ? 'MENU' : 'MENU'}</span>
@@ -360,7 +364,7 @@ function Header() {
           }
         }}>
           <div className="nav-drawer-head">
-            <div><span className="nav-drawer-eyebrow">{language === 'en' ? 'DREAMEX ENGINEERING SUITE' : 'DREAMEX ENGINEERING SUITE'}</span><strong id="mobile-navigation-title">{language === 'en' ? 'Navigation' : 'Navigasi'}</strong></div>
+            <div><span className="nav-drawer-eyebrow">{language === 'en' ? 'DREAMEX ENGINEERING SUITE' : 'SUITE REKAYASA DREAMEX'}</span><strong id="mobile-navigation-title">{language === 'en' ? 'Navigation' : 'Navigasi'}</strong></div>
             <button className="nav-drawer-close" type="button" data-drawer-close onClick={closeDrawer} aria-label={language === 'en' ? 'Close navigation' : 'Tutup navigasi'}><X size={18}/></button>
           </div>
           <div className="nav-drawer-search">
@@ -396,9 +400,9 @@ function Header() {
               if (!event.currentTarget.open) setActiveMegaPillar('all')
             }}
           >
-            <summary><span className="nav-link-icon"><Layers3 size={16}/></span><span><b>{language === 'en' ? 'Engineering platform' : 'Platform engineering'}</b><small>{language === 'en' ? '25 AI workspaces for Dev, QA, BA & PM' : '25 workspace AI untuk Dev, QA, BA & PM'}</small></span><ChevronDown size={15} className="nav-chevron" /></summary>
+            <summary><span className="nav-link-icon"><Layers3 size={16}/></span><span><b>{language === 'en' ? 'Engineering platform' : 'Platform rekayasa'}</b><small>{language === 'en' ? '24 AI suites for Dev, QA, BA & PM' : '24 suite AI untuk Dev, QA, BA & PM'}</small></span><ChevronDown size={15} className="nav-chevron" /></summary>
             <div className="nav-mega-panel">
-              <div className="nav-mega-intro">
+              <div className="nav-mega-intro" hidden={Boolean(navQuery.trim())}>
                 <picture>
                   <source srcSet="/images/spotlight-ai-os.webp" type="image/webp" />
                   <img className="nav-mega-spotlight-art" src="/images/spotlight-ai-os.jpg" alt="" aria-hidden="true" width={360} height={200} />
@@ -406,20 +410,20 @@ function Header() {
                 <span className="nav-mega-kicker">{language === 'en' ? 'AUTONOMOUS AI WORKSPACE · v6.0' : 'RUANG KERJA AI OTONOM · v6.0'}</span>
                 <strong>{language === 'en' ? 'From live prototype to autonomous release.' : 'Dari prototipe hidup hingga rilis otonom.'}</strong>
                 <p>{language === 'en' ? 'Unify 5-agent UI prototyping, AI/Security URL grading, USL architecture, self-healing QA, BA specs, and Jira telemetry in one OS.' : 'Satukan prototipe UI 5-agen, audit URL AI/Keamanan, arsitektur USL, QA self-healing, spesifikasi BA, dan telemetri Jira.'}</p>
-                <div className="nav-mega-badges" aria-hidden="true"><span>25 Suites</span><span>MCP + BYOK</span><span>Zero-Trust</span></div>
+                <div className="nav-mega-badges" aria-hidden="true"><span>24 Suites</span><span>MCP + BYOK</span><span>Zero-Trust</span></div>
                 <div className="nav-mega-intro-stats" aria-hidden="true">
-                  <div><b>01–05</b><span>{language === 'en' ? 'Agent stages' : 'Tahap agen'}</span></div>
-                  <div><b>100%</b><span>{language === 'en' ? 'Browser-first' : 'Berbasis browser'}</span></div>
+                  <div><b>01–05</b>{' '}<span>{language === 'en' ? 'Agent stages' : 'Tahap agen'}</span></div>
+                  <div><b>100%</b>{' '}<span>{language === 'en' ? 'Browser-first' : 'Berbasis browser'}</span></div>
                 </div>
                 <Link to="/workspace" onClick={() => setDrawerOpen(false)}>{language === 'en' ? 'Open workspace' : 'Buka workspace'} <ArrowRight size={14}/></Link>
                 <span className="nav-mega-orbit" aria-hidden="true"><span /><span /><span /></span>
               </div>
-              <div className="nav-mega-pillars" role="group" aria-label={language === 'en' ? 'Filter platform pillar' : 'Filter pilar platform'}>
+              <div className="nav-mega-pillars" hidden={Boolean(navQuery.trim())} role="group" aria-label={language === 'en' ? 'Filter platform pillar' : 'Filter pilar platform'}>
                 {([
-                  { id: 'all', en: 'All Suites (23)', idLabel: 'Semua Suite (23)' },
+                  { id: 'all', en: 'All Suites (24)', idLabel: 'Semua Suite (24)' },
                   { id: 'plan', en: 'Control & Ops (9)', idLabel: 'Kendali & Ops (9)' },
                   { id: 'build', en: 'Build & QA (9)', idLabel: 'Bangun & QA (9)' },
-                  { id: 'secure', en: 'Security & Learn (5)', idLabel: 'Keamanan & Edukasi (5)' },
+                  { id: 'secure', en: 'Security & Learn (6)', idLabel: 'Keamanan & Edukasi (6)' },
                 ] as const).map(pillar => (
                   <button
                     key={pillar.id}
@@ -434,13 +438,13 @@ function Header() {
               </div>
               <div className={activeMegaPillar !== 'all' && activeMegaPillar !== 'plan' && !navQuery.trim() ? 'nav-mega-group is-pillar-filtered' : 'nav-mega-group'} data-pillar="plan">
                 <span className="nav-group-label">{language === 'en' ? 'PLAN & OPERATE' : 'RENCANAKAN & KELOLA'}</span>
-                <NavLink to="/prototype" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Sparkles size={15}/></span><span><b>{language === 'en' ? 'AI Prototype Studio' : 'Studio Prototipe AI'}</b><small>{language === 'en' ? '5-agent DAG, live UI sandbox & token ROI' : 'DAG 5-agen, sandbox UI hidup & token ROI'}</small></span><i className="nav-item-tag" aria-hidden="true">v5</i></NavLink>
+                <NavLink to="/prototype" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Sparkles size={15}/></span><span><b>{language === 'en' ? 'AI Prototype Studio' : 'Studio Prototipe AI'}</b><small>{language === 'en' ? '5-agent DAG, live UI sandbox & token ROI' : 'DAG 5-agen, sandbox UI hidup & token ROI'}</small></span><i className="nav-item-tag" aria-hidden="true">v6</i></NavLink>
                 <NavLink to="/control-plane" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Activity size={15}/></span><span><b>Control Plane</b><small>{language === 'en' ? 'Unified release & governance plane' : 'Bidang kendali rilis & tata kelola'}</small></span></NavLink>
                 <NavLink to="/team-workspace" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Layers3 size={15}/></span><span><b>{language === 'en' ? 'Shared Team Workspace' : 'Workspace Tim Bersama'}</b><small>{language === 'en' ? 'Revision-controlled team snapshots' : 'Snapshot tim dengan kontrol revisi'}</small></span></NavLink>
                 <NavLink to="/engineering-intelligence" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Activity size={15}/></span><span><b>Engineering Intelligence</b><small>{language === 'en' ? 'Service catalog & schema diff' : 'Katalog layanan & diff skema API'}</small></span></NavLink>
                 <NavLink to="/command-center" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><ClipboardList size={15}/></span><span><b>Command Center</b><small>{language === 'en' ? 'Live incidents, ADRs & gates' : 'Insiden aktif, ADR & gate rilis'}</small></span></NavLink>
                 <NavLink to="/roadmap" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><ArrowDownRight size={15}/></span><span><b>{language === 'en' ? 'Product Roadmap' : 'Roadmap Produk'}</b><small>{language === 'en' ? 'STRIDE threats & delivery readiness' : 'Ancaman STRIDE & kesiapan rilis'}</small></span></NavLink>
-                <NavLink to="/tools" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Zap size={15}/></span><span><b>{language === 'en' ? 'Sovereign IT Suite (v3)' : 'Suite IT Sovereign (v3)'}</b><small>{language === 'en' ? '6-pillar AI Workbench for Dev, QA, BA, PM' : 'Workbench AI 6-pilar Dev, QA, BA, PM'}</small></span><i className="nav-item-tag" aria-hidden="true">AI</i></NavLink>
+                <NavLink to="/tools" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Zap size={15}/></span><span><b>{language === 'en' ? 'Sovereign IT Suite (v6)' : 'Suite IT Sovereign (v6)'}</b><small>{language === 'en' ? '6-pillar AI Workbench for Dev, QA, BA, PM' : 'Workbench AI 6-pilar Dev, QA, BA, PM'}</small></span><i className="nav-item-tag" aria-hidden="true">AI</i></NavLink>
                 <NavLink to="/ba-hub" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><ClipboardList size={15}/></span><span><b>{language === 'en' ? 'BA & Gherkin Studio' : 'Studio BA & Gherkin'}</b><small>{language === 'en' ? 'Executable specs & RTM matrices' : 'Spesifikasi BDD & matriks RTM'}</small></span></NavLink>
                 <NavLink to="/pm-jira-hub" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Gauge size={15}/></span><span><b>{language === 'en' ? 'PM & Jira Automation' : 'Otomasi PM & Jira'}</b><small>{language === 'en' ? 'Jira ADF payloads, JQL & Monte Carlo' : 'Jira API v3 ADF, JQL & Monte Carlo'}</small></span></NavLink>
               </div>
@@ -462,6 +466,7 @@ function Header() {
                 <NavLink to="/security-center" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><ShieldCheck size={15}/></span><span><b>{language === 'en' ? 'Security Center' : 'Pusat Keamanan'}</b><small>{language === 'en' ? 'Zero-trust headers & CSP auditing' : 'Audit header zero-trust & CSP'}</small></span><i className="nav-item-tag" aria-hidden="true">SEC</i></NavLink>
                 <NavLink to="/supply-chain-intelligence" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Network size={15}/></span><span><b>Supply Chain</b><small>{language === 'en' ? 'CycloneDX/SPDX SBOM intelligence' : 'Intelijen SBOM CycloneDX & SPDX'}</small></span></NavLink>
                 <NavLink to="/observatory" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Activity size={15}/></span><span><b>Web Quality Observatory</b><small>{language === 'en' ? 'Accessibility, SEO & DOM signals' : 'Audit aksesibilitas, SEO & DOM'}</small></span></NavLink>
+                <NavLink to="/site-audit" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><ShieldCheck size={15}/></span><span><b>{language === 'en' ? 'Page Health Audit' : 'Audit Kesehatan Halaman'}</b><small>{language === 'en' ? 'Offline DOM, SEO & a11y scanner' : 'Pemindai DOM, SEO & aksesibilitas'}</small></span></NavLink>
                 <NavLink to="/learn" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><BookOpen size={15}/></span><span><b>{language === 'en' ? 'Learning Hub' : 'Pusat Belajar'}</b><small>{language === 'en' ? 'Interactive engineering roadmaps' : 'Jalur belajar engineering interaktif'}</small></span></NavLink>
               </div>
             </div>
@@ -553,7 +558,12 @@ function Home() {
   const [digestEmail, setDigestEmail] = useState('')
   const [digestStatus, setDigestStatus] = useState('')
   const searchInput = useRef<HTMLInputElement>(null)
+  const [showAllTags, setShowAllTags] = useState(false)
   const allTags = useMemo(() => [...new Set(articles.flatMap(item => item.tags))], [])
+  const visibleTags = useMemo(
+    () => (showAllTags ? allTags : [...new Set([...allTags.slice(0, 9), ...(selectedTag ? [selectedTag] : [])])]),
+    [allTags, showAllTags, selectedTag],
+  )
 
 
   const [resumeRecord, setResumeRecord] = useState<ReadingProgressRecord | null>(readReadingProgress)
@@ -664,7 +674,7 @@ function Home() {
         <h1>{t('heroLine1')}<br /><span>{t('heroLine2')}</span><br />{t('heroLine3')}</h1>
         <p className="hero-description">{t('heroDescription')}</p>
         <div className="hero-actions"><Link className="button button-primary" to="/tools"><Sparkles size={17} /> {language === 'en' ? 'Launch AI Workbench' : 'Buka Workbench AI'}</Link><Link className="button button-ghost hero-proto-btn" to="/prototype"><Layers3 size={17} /> {language === 'en' ? 'Interactive AI Prototype' : 'Prototipe AI Interaktif'}</Link><button type="button" className="button button-ghost" data-testid="open-guided-tour" onClick={() => window.dispatchEvent(new CustomEvent('dreamex-open-guided-tour'))}><Clock3 size={17} /> {language === 'en' ? '60s Product Tour' : 'Tur Produk 60d'}</button><a className="button button-ghost hero-github-btn" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer"><Github size={17} /> {t('sourceCode')}</a></div>
-        <div className="hero-stats"><div><strong>25<i>+</i></strong><span>{t('engineeringNotes')}</span></div><div><strong>04</strong><span>{t('coreDisciplines')}</span></div><div><strong>0.04<i>ms</i></strong><span>{t('ideasExplore')}</span></div></div>
+        <div className="hero-stats"><div><strong>24<i>+</i></strong><span>{t('engineeringNotes')}</span></div><div><strong>04</strong><span>{t('coreDisciplines')}</span></div><div><strong>0.04<i>ms</i></strong><span>{t('ideasExplore')}</span></div></div>
       </div>
       <div className="hero-visual"><div className="visual-orbit orbit-one" /><div className="visual-orbit orbit-two" /><HeroAiCockpit /><div className="hero-bento-meta"><div className="hero-chips-rack"><div className="floating-chip chip-top"><ShieldCheck size={16} /> {t('visualChipQuality')}</div><div className="floating-chip chip-bottom"><Sparkles size={16} /> {t('visualChipCuriosity')}</div></div><div className="hero-signal-card" aria-hidden="true">
         <div className="hero-signal-head"><span>{language === 'en' ? 'ENGINEERING LOOP' : 'SIKLUS ENGINEERING'}</span><span>03</span></div>
@@ -687,6 +697,7 @@ function Home() {
           <Link className="role-funnel-pill" to="/qa-studio"><b>03</b> {language === 'en' ? 'QA / SDET · Self-Healing Playwright' : 'QA / SDET · Playwright Auto-Heal'}</Link>
           <Link className="role-funnel-pill" to="/ba-hub"><b>04</b> {language === 'en' ? 'Business Analyst · Gherkin & RTM' : 'Business Analyst · Gherkin & RTM'}</Link>
           <Link className="role-funnel-pill" to="/pm-jira-hub"><b>05</b> {language === 'en' ? 'PM Lead · Monte Carlo & Jira v3' : 'PM Lead · Monte Carlo & Jira v3'}</Link>
+          <Link className="role-funnel-pill" to="/supply-chain-intelligence"><b>06</b> {language === 'en' ? 'DevSecOps · SBOM & Supply Chain' : 'DevSecOps · SBOM & Rantai Pasok'}</Link>
         </div>
       </div>
     </section>
@@ -718,11 +729,11 @@ function Home() {
 
       <div className="section-heading"><div><span className="section-kicker">{t('articlesEyebrow')}</span><h2>{t('articlesHeading')} <span>{t('articlesHeadingAccent')}</span></h2><p>{t('latestDescription')}</p></div><div className="discovery-toolbar"><label className="search-box"><Search size={18} /><input ref={searchInput} value={query} onChange={event => setQuery(event.target.value)} placeholder={t('searchPlaceholder')} aria-label={t('searchLabel')} /><kbd>/</kbd></label><label className="article-sort-control"><span>{language === 'en' ? 'Sort' : 'Urutkan'}</span><select value={sortBy} onChange={event => setSortBy(event.target.value as typeof sortBy)} aria-label={language === 'en' ? 'Sort articles' : 'Urutkan artikel'}><option value="default">{language === 'en' ? 'Featured order' : 'Urutan utama'}</option><option value="newest">{language === 'en' ? 'Newest first' : 'Terbaru'}</option><option value="oldest">{language === 'en' ? 'Oldest first' : 'Terlama'}</option><option value="shortest">{language === 'en' ? 'Shortest read' : 'Waktu baca tercepat'}</option><option value="title">{language === 'en' ? 'Title A–Z' : 'Judul A–Z'}</option></select></label></div></div>
       <div className="filter-row" aria-label={t('topics')}>{categories.map(item => <button key={item} className={category === item ? 'filter active' : 'filter'} aria-pressed={category === item} onClick={() => setCategory(item)}>{categoryLabel(item, language)}</button>)}</div>
-      <div className="tag-filter-row" role="group" aria-label={language === 'en' ? 'Filter by tag' : 'Filter berdasarkan tag'}>{allTags.map(tag => <button key={tag} type="button" className={selectedTag === tag ? 'tag-filter-pill active' : 'tag-filter-pill'} aria-pressed={selectedTag === tag} onClick={() => setSelectedTag(current => current === tag ? '' : tag)}>#{tag.replaceAll(' ', '')}</button>)}</div>
-      <div className="results-meta"><span>{filtered.length} {t('found')}{selectedTag ? ` · #${selectedTag.replaceAll(' ', '')}` : ''}</span>{(query || selectedTag) && <button onClick={() => { setQuery(''); setSelectedTag('') }}>{t('clearSearch')} <span>×</span></button>}</div>
+      <div className="tag-filter-row" role="group" aria-label={language === 'en' ? 'Filter by tag' : 'Filter berdasarkan tag'}>{visibleTags.map(tag => <button key={tag} type="button" className={selectedTag === tag ? 'tag-filter-pill active' : 'tag-filter-pill'} aria-pressed={selectedTag === tag} onClick={() => setSelectedTag(current => current === tag ? '' : tag)}>#{tag.replaceAll(' ', '')}</button>)}{allTags.length > 9 && <button type="button" className="tag-filter-pill" aria-expanded={showAllTags} onClick={() => setShowAllTags(current => !current)}>{showAllTags ? (language === 'en' ? 'Show less' : 'Ringkas') : (language === 'en' ? `+${allTags.length - visibleTags.length} more` : `+${allTags.length - visibleTags.length} lainnya`)}</button>}</div>
+      <div className="results-meta"><span>{filtered.length} {filtered.length === 1 && language === 'en' ? 'article found' : t('found')}{selectedTag ? ` · #${selectedTag.replaceAll(' ', '')}` : ''}</span>{(query || selectedTag) && <button onClick={() => { setQuery(''); setSelectedTag('') }}>{t('clearSearch')} <span>×</span></button>}</div>
       {filtered.length ? <div className="article-grid">{filtered.map((article, index) => <ArticleCard key={article.slug} article={article} index={index} activeTag={selectedTag} onSelectTag={setSelectedTag} />)}</div> : <div className="empty-state"><Search size={22} /><strong>{t('noResults')}</strong><span>{t('tryOther')}</span></div>}
     </div></section>
-    <section className="newsletter"><div className="container newsletter-inner"><div><span className="section-kicker">{t('buildInPublic')}</span><h2>{language === 'en' ? <>Ship with clarity.<br /><span>Iterate with AI precision.</span></> : <>Rilis penuh kejelasan.<br /><span>Beriterasi cepat dengan AI.</span></>}</h2><p>{t('buildDescription')}</p><form className="newsletter-form" onSubmit={submitDigest}><input type="email" value={digestEmail} onChange={e => setDigestEmail(e.target.value)} placeholder={language === 'en' ? 'you@company.dev — Release & AI Radar' : 'anda@tim.dev — Radar Rilis & AI'} aria-label={language === 'en' ? 'Email for engineering radar updates' : 'Email untuk pembaruan radar engineering'} /><button type="submit" className="button button-primary" disabled={digestBusy}>{digestBusy ? (language === 'en' ? 'Saving…' : 'Menyimpan…') : (language === 'en' ? 'Save Radar' : 'Simpan Radar')} <ArrowRight size={15} /></button><Link className="button button-ghost" to="/rss"><Rss size={15} /> RSS</Link></form>{digestStatus && <p className="newsletter-status" role="status">{digestStatus}</p>}</div><a className="button button-ghost" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer"><Github size={16} /> {t('exploreCode')} <ArrowRight size={17} /></a></div></section>
+    <section className="newsletter"><div className="container newsletter-inner"><div><span className="section-kicker">{t('buildInPublic')}</span><h2>{language === 'en' ? <>Ship with clarity.<br /><span>Iterate with AI precision.</span></> : <>Rilis penuh kejelasan.<br /><span>Beriterasi cepat dengan AI.</span></>}</h2><p>{t('buildDescription')}</p><form className="newsletter-form" onSubmit={submitDigest}><input type="email" value={digestEmail} onChange={e => setDigestEmail(e.target.value)} placeholder={language === 'en' ? 'you@company.dev' : 'anda@tim.dev'} aria-label={language === 'en' ? 'Email for engineering radar updates' : 'Email untuk pembaruan radar engineering'} /><button type="submit" className="button button-primary" disabled={digestBusy}>{digestBusy ? (language === 'en' ? 'Saving…' : 'Menyimpan…') : (language === 'en' ? 'Save Radar' : 'Simpan Radar')} <ArrowRight size={15} /></button><Link className="button button-ghost" to="/rss"><Rss size={15} /> RSS</Link></form>{digestStatus && <p className="newsletter-status" role="status">{digestStatus}</p>}</div><a className="button button-ghost" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer"><Github size={16} /> {t('exploreCode')} <ArrowRight size={17} /></a></div></section>
   </main>
 }
 
@@ -1105,15 +1116,19 @@ function CommandPalette() {
     { id: 'toggle-theme', label: isEnglish ? `Switch to ${theme === 'dark' ? 'Daylight Light' : 'Obsidian Dark'} Theme` : `Ubah ke Tema ${theme === 'dark' ? 'Terang Daylight' : 'Gelap Obsidian'}`, detail: isEnglish ? 'Adaptive theme polarity · Shortcut Alt+T' : 'Polaritas tema adaptif · Pintasan Alt+T', icon: Sparkles, run: () => toggleTheme() },
   ]
   const actionCategory: Record<string, string> = {
-    home: 'learn', about: 'learn', topics: 'learn', articles: 'learn', 'reading-list': 'learn', workspace: 'learn', 'knowledge-graph': 'learn', learn: 'learn', 'toggle-theme': 'learn', 'guided-tour': 'learn',
-    lab: 'qa', 'qa-studio': 'qa', 'quality-intelligence': 'qa', prototype: 'qa', tools: 'qa', 'ba-hub': 'qa',
+    home: 'learn', about: 'learn', topics: 'learn', articles: 'learn', 'reading-list': 'learn', workspace: 'learn', 'knowledge-graph': 'learn', learn: 'learn', 'toggle-theme': 'learn',
+    prototype: 'ai', tools: 'ai', 'guided-tour': 'ai',
+    'ba-hub': 'ba', 'pm-jira-hub': 'ba', 'command-center': 'ba',
+    lab: 'qa', 'qa-studio': 'qa', 'quality-intelligence': 'qa',
     'api-playground': 'api', 'engineering-intelligence': 'api',
     devtools: 'security', 'security-center': 'security', 'supply-chain-intelligence': 'security', grader: 'security',
-    observatory: 'reliability', 'control-plane': 'reliability', 'command-center': 'reliability', performance: 'reliability', 'pm-jira-hub': 'reliability',
+    observatory: 'reliability', 'control-plane': 'reliability', 'reliability-center': 'reliability', performance: 'reliability',
   }
   const categories = [
     { id: 'all', label: isEnglish ? 'All tools' : 'Semua tools' },
+    { id: 'ai', label: 'AI & Proto' },
     { id: 'qa', label: 'QA' },
+    { id: 'ba', label: 'BA & PM' },
     { id: 'api', label: 'API' },
     { id: 'security', label: isEnglish ? 'Security' : 'Keamanan' },
     { id: 'reliability', label: isEnglish ? 'Reliability' : 'Reliabilitas' },
@@ -1508,6 +1523,10 @@ const TOOL_BREADCRUMB_LABELS: Record<string, { id: string; en: string }> = {
   '/tools': { id: 'Workbench IT Sovereign (6-Pilar)', en: 'Sovereign IT Workbench (6-Pillar)' },
   '/ba-hub': { id: 'Studio BA Gherkin & RTM', en: 'BA Gherkin & RTM Studio' },
   '/pm-jira-hub': { id: 'Hub PM Monte Carlo & Jira', en: 'PM Monte Carlo & Jira Hub' },
+  '/observatory': { id: 'Web Quality Observatory', en: 'Web Quality Observatory' },
+  '/site-audit': { id: 'Audit Kesehatan Halaman', en: 'Page Health Audit' },
+  '/devtools': { id: 'Utilitas Developer', en: 'Developer Utilities' },
+  '/learn': { id: 'Pusat Belajar', en: 'Learning Hub' },
 }
 
 const TOOL_SUBNAV_CLUSTERS = [
@@ -1515,13 +1534,13 @@ const TOOL_SUBNAV_CLUSTERS = [
     id: 'plan',
     en: '01 Plan & Govern',
     idLabel: '01 Rencana & Kendali',
-    routes: ['/control-plane', '/command-center', '/roadmap', '/engineering-intelligence', '/team-workspace', '/workspace'],
+    routes: ['/control-plane', '/command-center', '/roadmap', '/engineering-intelligence', '/team-workspace', '/knowledge-graph', '/workspace'],
   },
   {
     id: 'build',
     en: '02 Build & Verify',
     idLabel: '02 Bangun & Uji',
-    routes: ['/qa-studio', '/quality-intelligence', '/reliability-center', '/performance', '/knowledge-graph', '/api-playground', '/github-ci', '/lab', '/devtools'],
+    routes: ['/qa-studio', '/quality-intelligence', '/reliability-center', '/performance', '/api-playground', '/github-ci', '/lab', '/devtools'],
   },
   {
     id: 'secure',

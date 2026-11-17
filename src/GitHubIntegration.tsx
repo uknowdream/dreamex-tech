@@ -231,6 +231,24 @@ export function GitHubIntegrationPage() {
     [runs],
   )
 
+  const latestHeadCounts = useMemo(() => {
+    const seen = new Set<string>()
+    const latest: WorkflowRun[] = []
+    for (const run of runs) {
+      if (seen.has(run.name)) continue
+      seen.add(run.name)
+      latest.push(run)
+    }
+    return latest.reduce(
+      (result, run) => {
+        result.total += 1
+        result[runState(run)] += 1
+        return result
+      },
+      { total: 0, running: 0, success: 0, failure: 0, other: 0 },
+    )
+  }, [runs])
+
   const visibleRuns = useMemo(() => runs.filter(run => filter === 'all' || runState(run) === filter), [filter, runs])
   const dateLabel = (value: string) => {
     const date = new Date(value)
@@ -334,14 +352,14 @@ export function GitHubIntegrationPage() {
         <div className="dx-split-grid">
           <div className="dx-kpi-card">
             <div className="dx-kpi-copy">
-              <span className="dx-kpi-label">{en ? 'SAMPLE CI PASS RATE' : 'PASS RATE SAMPEL CI'}</span>
-              <strong className="dx-kpi-value">{Math.round((counts.success / Math.max(1, counts.success + counts.failure)) * 100)}%</strong>
-              <span className="dx-kpi-sub">{en ? `${counts.success} passed · ${counts.failure} failed · ${counts.running} running` : `${counts.success} lulus · ${counts.failure} gagal · ${counts.running} berjalan`}</span>
+              <span className="dx-kpi-label">{en ? 'ACTIVE WORKFLOW HEAD HEALTH' : 'KESEHATAN WORKFLOW TERBARU'}</span>
+              <strong className="dx-kpi-value">{Math.round((latestHeadCounts.success / Math.max(1, latestHeadCounts.success + latestHeadCounts.failure)) * 100)}%</strong>
+              <span className="dx-kpi-sub">{en ? `Latest run per workflow: ${latestHeadCounts.success} passing · ${latestHeadCounts.running} running` : `Run terbaru tiap workflow: ${latestHeadCounts.success} lulus · ${latestHeadCounts.running} berjalan`}</span>
             </div>
             <SvgRingGauge
-              value={Math.round((counts.success / Math.max(1, counts.success + counts.failure)) * 100)}
+              value={Math.round((latestHeadCounts.success / Math.max(1, latestHeadCounts.success + latestHeadCounts.failure)) * 100)}
               label={en ? 'CI workflow pass rate gauge' : 'Indikator pass rate workflow CI'}
-              tone={counts.failure > 0 ? 'amber' : 'emerald'}
+              tone={latestHeadCounts.failure > 0 ? 'amber' : 'emerald'}
               size={64}
             />
           </div>

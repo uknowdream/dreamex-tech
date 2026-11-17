@@ -71,6 +71,8 @@ function renderMetadata(page, canonical, type = 'website', publishedAt = '', ind
   if (type === 'article' && publishedAt) {
     html = replaceMeta(html, 'property', 'article:published_time', publishedAt)
   }
+  const semanticShell = `<div id="root"><main id="main-content" class="prerender-seo-shell"><h1>${escapeHtml(page.title)}</h1><p>${escapeHtml(page.description)}</p></main></div>`
+  html = html.replace(/<div\s+id=["']root["']\s*><\/div>/i, semanticShell)
   return html
 }
 

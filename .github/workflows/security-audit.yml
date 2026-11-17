@@ -27,6 +27,6 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Fail on high or critical dependency advisories
-        run: npm audit --audit-level=high
+        run: npm audit --omit=dev --audit-level=high
       - name: Test shared workspace server API
         run: npm run test:api

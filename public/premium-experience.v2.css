@@ -1047,18 +1047,17 @@
 }
 
 .home-page .hero-cockpit-tab{
-  min-height: 36px;
-  padding: 6px 8px;
+  min-height: 38px;
+  padding: 6px 5px;
   border-radius: 9px;
   border: 1px solid rgba(139, 176, 224, .2);
   background: rgba(14, 24, 44, .78);
   color: #a8bddc;
-  font: 600 11px/1.2 var(--sans);
+  font: 600 10.5px/1.22 var(--sans);
   cursor: pointer;
   transition: all .2s ease;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  text-align: center;
 }
 
 .home-page .hero-cockpit-tab:hover{
@@ -1409,10 +1408,8 @@
 }
 
 .home-page .role-funnel-inner{
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px 14px;
+  display: grid;
+  gap: 10px;
 }
 
 .home-page .role-funnel-label{
@@ -1422,9 +1419,38 @@
 }
 
 .home-page .role-funnel-pills{
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+}
+
+@media (max-width: 1340px){
+  .home-page .hero-cockpit-tabs{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1200px){
+  .home-page .hero-grid{
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+  .home-page .hero-visual,
+  .home-page .hero-ai-cockpit{
+    min-width: 0;
+    width: 100%;
+    max-width: 680px;
+    margin-inline: auto;
+  }
+  .home-page .role-funnel-pills{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px){
+  .home-page .role-funnel-pills{
+    grid-template-columns: 1fr;
+  }
 }
 
 .home-page .role-funnel-pill{

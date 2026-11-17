@@ -384,6 +384,14 @@
   border-bottom: 1px solid rgba(148, 163, 184, 0.1);
   text-align: left;
   vertical-align: top;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.sovereign-table th:first-child,
+.sovereign-table td:first-child {
+  min-width: 112px;
+  white-space: nowrap;
 }
 
 .sovereign-table th {

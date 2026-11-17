@@ -2269,3 +2269,14 @@ html[data-theme="light"] #root .home-page .role-funnel-pill b { color: #047857; 
 .os-context-bus-actions button { width: 22px; height: 22px; border-radius: 6px; border: 1px solid rgba(148, 163, 184, .3); background: transparent; color: inherit; cursor: pointer; }
 html[data-theme="light"] .os-context-bus-bar { background: #ecfdf5; border-color: rgba(4, 120, 87, .3); color: #065f46; }
 html[data-theme="light"] .os-context-bus-actions a { color: #0369a1; }
+html[data-theme="light"], html[data-theme="light"] * { color-scheme: light; }
+html[data-theme="light"] .workspace-hero-art { opacity: .04 !important; -webkit-mask-image: radial-gradient(circle at 80% 50%, #000 8%, transparent 62%); mask-image: radial-gradient(circle at 80% 50%, #000 8%, transparent 62%); }
+.tool-context-shell { margin: 18px auto 22px; position: relative; z-index: 4; }
+.team-workspace-page, .github-ci-page { padding-top: 8px; padding-bottom: 72px; }
+#nav-drawer-search-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; display: none; }
+.nav-mega-intro-stats > div { display: flex; flex-direction: column; gap: 3px; }
+.button-primary:disabled, .button-primary[disabled], html[data-theme="light"] .button-primary:disabled, html[data-theme="light"] .button-primary[disabled] { opacity: .46 !important; filter: grayscale(.38); cursor: not-allowed; box-shadow: none !important; transform: none !important; }
+:is(summary, button, a):focus:not(:focus-visible) { outline: none; }
+@media (max-width: 1280px) {
+  .nav-drawer-close, .nav-drawer-footer .language-option, .nav-drawer-footer .theme-toggle-btn { min-width: 44px; min-height: 44px; }
+}

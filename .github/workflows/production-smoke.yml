@@ -27,4 +27,6 @@ jobs:
         with:
           node-version: 22
       - name: Check production routes and feeds
+        env:
+          SMOKE_BASE_URL: https://dreamex-tech.vercel.app
         run: node scripts/smoke-production.mjs

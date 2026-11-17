@@ -982,10 +982,17 @@ export default function AiPrototypeStudioPage() {
                   <button
                     type="button"
                     data-testid="proto-dispatch-one"
-                    className="button button-primary"
+                    className={rbacRole === 'auditor' ? 'button button-ghost' : 'button button-primary'}
                     onClick={() => simulateRequests(1)}
                   >
-                    <Zap size={14} /> {en ? blueprint.actionLabelEn : blueprint.actionLabelId}
+                    {rbacRole === 'auditor' ? <ShieldAlert size={14} /> : <Zap size={14} />}
+                    {rbacRole === 'auditor'
+                      ? en
+                        ? 'Read-Only (Test RBAC Block)'
+                        : 'Hanya-Baca (Uji Blokir RBAC)'
+                      : en
+                        ? blueprint.actionLabelEn
+                        : blueprint.actionLabelId}
                   </button>
                   <button type="button" className="button button-ghost" onClick={() => simulateRequests(10)}>
                     +10 {en ? 'Burst' : 'Lonjakan'}

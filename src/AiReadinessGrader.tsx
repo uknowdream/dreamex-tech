@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Award, Check, Copy, ExternalLink, Globe, Printer, RefreshCw, Share2, ShieldCheck, Sparkles, Terminal } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useLanguage } from './i18n'
@@ -125,8 +125,9 @@ export default function AiReadinessGraderPage() {
   const [report, setReport] = useState<GraderReport>(() => buildOfflineHeuristicReport(initialDomain))
   const [copyNote, setCopyNote] = useState('')
   const [activeSnippet, setActiveSnippet] = useState<'headers' | 'llms' | 'mcp'>('headers')
+  const autoScannedRef = useRef(false)
 
-  const executeScan = async (domainToScan: string) => {
+  const executeScan = async (domainToScan: string, syncUrl = true) => {
     const trimmed = domainToScan.trim()
     if (!trimmed) return
     setBusy(true)
@@ -152,7 +153,9 @@ export default function AiReadinessGraderPage() {
             checks: data.checks,
             badgeUrl: `/api/badge?domain=${encodeURIComponent(data.domain)}&score=${data.score}&grade=${encodeURIComponent(data.grade || 'A')}`,
           })
-          setSearchParams({ domain: data.domain }, { replace: true })
+          if (syncUrl && searchParams.get('domain') !== data.domain) {
+            setSearchParams({ domain: data.domain }, { replace: true })
+          }
           setBusy(false)
           return
         }
@@ -162,13 +165,17 @@ export default function AiReadinessGraderPage() {
     }
     const fallback = buildOfflineHeuristicReport(trimmed)
     setReport(fallback)
-    setSearchParams({ domain: fallback.domain }, { replace: true })
+    if (syncUrl && searchParams.get('domain') !== fallback.domain) {
+      setSearchParams({ domain: fallback.domain }, { replace: true })
+    }
     setBusy(false)
   }
 
   useEffect(() => {
+    if (autoScannedRef.current) return
+    autoScannedRef.current = true
     if (initialDomain && initialDomain !== 'dreamex.tech') {
-      void executeScan(initialDomain)
+      void executeScan(initialDomain, false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

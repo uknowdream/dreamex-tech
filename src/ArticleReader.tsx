@@ -213,7 +213,7 @@ export function ArticleReaderView() {
           <p>{translated?.excerpt ?? article.excerpt}</p>
           <div className="article-meta">
             <span>{new Date(article.date + 'T00:00:00').toLocaleDateString(language === 'en' ? 'en-US' : 'id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-            {enhancement?.updatedAt && <><span>•</span><span>{language === 'en' ? `Updated ${enhancement.updatedAt}` : `Diperbarui ${enhancement.updatedAt}`}</span></>}
+            {enhancement?.updatedAt && <><span>•</span><span>{language === 'en' ? `Updated ${new Date(enhancement.updatedAt + 'T00:00:00').toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}` : `Diperbarui ${new Date(enhancement.updatedAt + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`}</span></>}
             <span>•</span>
             <span>{language === 'en' ? article.readTime.replace('menit', 'min') : article.readTime}</span>
             <span>•</span>
