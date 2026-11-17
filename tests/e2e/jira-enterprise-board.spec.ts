@@ -102,10 +102,18 @@ test.describe('DreamEx Jira Agile & Sprint OS (/jira)', () => {
     await page.getByTestId('jira-confirm-complete-sprint-btn').click()
     await expect(page.getByTestId('jira-active-sprint-name')).toContainText('Sprint 25')
 
-    // Daylight Light Mode + Mobile 320px zero horizontal document overflow
+    // Daylight Light Mode + Mobile 320px zero horizontal document overflow (supports both desktop & coarse-pointer mobile-chromium)
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.getByTestId('jira-tab-board').click()
-    await page.locator('.nav-desktop-language .theme-toggle-btn').click()
+    const desktopToggle = page.locator('.nav-desktop-language .theme-toggle-btn')
+    if (await desktopToggle.isVisible()) {
+      await desktopToggle.click()
+    } else {
+      const menuToggle = page.locator('.menu-toggle')
+      if ((await menuToggle.getAttribute('aria-expanded')) !== 'true') await menuToggle.click()
+      await page.locator('.nav-drawer-footer .theme-toggle-btn').click()
+      await page.keyboard.press('Escape')
+    }
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
     const lightCardBg = await page.locator('.jira-card').first().evaluate(el => getComputedStyle(el).backgroundColor)
     expect(lightCardBg).toBe('rgb(255, 255, 255)')
