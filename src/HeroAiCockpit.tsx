@@ -3,7 +3,7 @@ import { ArrowRight, Check, Copy, Cpu, Play, ShieldCheck, Sparkles } from 'lucid
 import { Link } from 'react-router-dom'
 import { useLanguage } from './i18n'
 
-type CockpitModeId = 'arch' | 'qa' | 'bpm'
+type CockpitModeId = 'arch' | 'qa' | 'bpm' | 'proto'
 
 interface CockpitMode {
   id: CockpitModeId
@@ -113,6 +113,36 @@ const COCKPIT_MODES: Record<CockpitModeId, CockpitMode> = {
       '✓ Simulasi 10.000×: P50 = 3 Sprint · P85 Komitmen = 4 Sprint',
     ],
   },
+  proto: {
+    id: 'proto',
+    labelEn: '04 · Proto AI',
+    labelId: '04 · Proto AI',
+    badgeEn: '5-AGENT LIVE UI PROTOTYPE',
+    badgeId: 'PROTOTIPE UI HIDUP 5-AGEN',
+    image: '/images/cover-agentic-prototype.jpg',
+    altEn: 'Autonomous multi-agent spatial UI prototype synthesizer',
+    altId: 'Sintesis prototipe UI spasial multi-agen otonom',
+    href: '/prototype',
+    ctaEn: 'Launch Prototype Studio',
+    ctaId: 'Buka Studio Prototipe',
+    metrics: [
+      { labelEn: 'DAG NODES', labelId: 'NODE DAG', value: '5 Agents' },
+      { labelEn: 'RBAC GATE', labelId: 'GERBANG RBAC', value: 'ENFORCED' },
+      { labelEn: 'FAILOVER', labelId: 'FAILOVER', value: '18 ms' },
+    ],
+    linesEn: [
+      '▶ dreamex agent-dag --stages=5 --sandbox=live-ui --chaos-ready',
+      '✓ 01 BA -> 02 Arch -> 03 Spatial UI -> 04 Auto-QA -> 05 SRE',
+      '✓ Interactive Viewport Frame (Desktop/Tablet/Mobile) + RBAC Live',
+      '✓ Token Economics + Little’s Law Concurrency Verified',
+    ],
+    linesId: [
+      '▶ dreamex agent-dag --stages=5 --sandbox=live-ui --chaos-ready',
+      '✓ 01 BA -> 02 Arsitek -> 03 UI Spasial -> 04 QA -> 05 SRE',
+      '✓ Bingkai Viewport Interaktif (Desktop/Tablet/Mobile) + RBAC Aktif',
+      '✓ Ekonomi Token LLM + Konkurensi Little’s Law Tervalidasi',
+    ],
+  },
 }
 
 export function HeroAiCockpit() {
@@ -178,7 +208,7 @@ export function HeroAiCockpit() {
           <span />
         </div>
         <small className="hero-cockpit-title">
-          <Cpu size={13} /> DreamEx Neural Core · v4.0
+          <Cpu size={13} /> DreamEx Neural Core · v5.0
         </small>
         <span className="terminal-live hero-cockpit-live">
           <i /> {t('terminalLive')}

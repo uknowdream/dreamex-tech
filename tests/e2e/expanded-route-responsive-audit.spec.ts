@@ -4,6 +4,7 @@ import { expect, test } from '@playwright/test'
 // public engineering tools so responsive regressions are caught beyond the homepage.
 const auditedRoutes = [
   '/',
+  '/prototype',
   '/workspace',
   '/control-plane',
   '/engineering-intelligence',

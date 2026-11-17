@@ -8,7 +8,7 @@ type Messages = Record<string, string>
 const messages: Record<Language, Messages> = {
   id: {
     home: 'Beranda', blog: 'Blog', topics: 'Topik', articles: 'Artikel', github: 'GitHub',
-    heroEyebrow: 'AI ENGINEERING OPERATING SYSTEM · v4.0', heroLine1: 'Rekayasa dengan tujuan.', heroLine2: 'Skalakan dengan AI.', heroLine3: 'Rilis penuh presisi.',
+    heroEyebrow: 'AUTONOMOUS AI ENGINEERING OS · v5.0', heroLine1: 'Rekayasa dengan tujuan.', heroLine2: 'Skalakan dengan AI.', heroLine3: 'Rilis penuh presisi.',
     topicsEyebrow: '01 — PILAR KAPABILITAS', topicsHeading: 'Ide yang layak', topicsHeadingAccent: 'diarsitekturkan.', featuredHeading: 'SOROTAN RISET', articlesEyebrow: '02 — ARSIP PENGETAHUAN', articlesHeading: 'Arsitektur &', articlesHeadingAccent: 'wawasan terbaru.',
     trustKnowledge: 'AI-FIRST ARCHITECTURE', trustQuality: 'SELF-HEALING QA', trustEngineering: 'SPEC EXECUTABLE BA', trustAI: 'ZERO-TRUST TELEMETRY',
     softwareTopic: 'Software Engineering', qaTopic: 'Quality Engineering', aiTopic: 'AI & Teknologi Baru',
@@ -46,7 +46,7 @@ const messages: Record<Language, Messages> = {
   },
   en: {
     home: 'Home', blog: 'Blog', topics: 'Topics', articles: 'Articles', github: 'GitHub',
-    heroEyebrow: 'AI ENGINEERING OPERATING SYSTEM · v4.0', heroLine1: 'Engineer with intent.', heroLine2: 'Scale with intelligence.', heroLine3: 'Ship with certainty.',
+    heroEyebrow: 'AUTONOMOUS AI ENGINEERING OS · v5.0', heroLine1: 'Engineer with intent.', heroLine2: 'Scale with intelligence.', heroLine3: 'Ship with certainty.',
     topicsEyebrow: '01 — CORE CAPABILITIES', topicsHeading: 'Ideas worth', topicsHeadingAccent: 'architecting.', featuredHeading: 'RESEARCH SPOTLIGHT', articlesEyebrow: '02 — ARCHITECTURE & FIELD NOTES', articlesHeading: 'Engineering', articlesHeadingAccent: 'intelligence.',
     trustKnowledge: 'AI-FIRST ARCHITECTURE', trustQuality: 'SELF-HEALING QA', trustEngineering: 'EXECUTABLE SPECS', trustAI: 'ZERO-TRUST RUNTIME',
     softwareTopic: 'Software Engineering', qaTopic: 'Quality Engineering', aiTopic: 'AI & Emerging Tech',

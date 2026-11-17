@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test'
 
 const routes = [
   { path: '/', heading: /Engineer with intent|Rekayasa dengan tujuan/i },
+  { path: '/prototype', heading: /From system intent|Dari visi arsitektur/i },
   { path: '/api-playground', heading: /Explore APIs|Understand responses|Jelajahi API/i },
   { path: '/command-center', heading: /Operate with clarity|Kelola dengan jelas/i },
   { path: '/security-center', heading: /Security|Keamanan/i },

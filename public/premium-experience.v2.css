@@ -1039,7 +1039,7 @@
 
 .home-page .hero-cockpit-tabs{
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 6px;
   padding: 10px 12px;
   background: rgba(7, 13, 25, .86);
@@ -1189,6 +1189,9 @@
   .home-page .hero-actions .button{
     white-space: normal;
     max-width: 100%;
+  }
+  .home-page .hero-cockpit-tabs{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .home-page .hero-visual > .hero-ai-cockpit{
     order: 0;
@@ -1385,6 +1388,18 @@
 .home-page .newsletter-form input:focus{
   border-color: rgba(110, 243, 197, .6);
   box-shadow: 0 0 0 3px rgba(110, 243, 197, .12);
+}
+
+.home-page .hero-proto-btn{
+  border-color: rgba(56, 189, 248, .42);
+  background: linear-gradient(135deg, rgba(56, 189, 248, .12), rgba(110, 243, 197, .08));
+  color: #e0f2fe;
+}
+
+.home-page .hero-proto-btn:hover{
+  border-color: rgba(110, 243, 197, .68);
+  background: linear-gradient(135deg, rgba(56, 189, 248, .22), rgba(110, 243, 197, .14));
+  color: #ffffff;
 }
 
 @media (max-width: 720px){

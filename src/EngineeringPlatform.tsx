@@ -48,6 +48,19 @@ interface WorkspaceToolItem {
 
 const items: WorkspaceToolItem[] = [
   {
+    id: 'prototype',
+    title: 'Autonomous AI Prototype Studio',
+    titleId: 'Studio Prototipe AI Otonom',
+    description: 'Orchestrate a 5-agent DAG, interact with live RBAC & failover UI prototypes, and model token ROI.',
+    descriptionId: 'Orkestrasi DAG 5-agen, uji prototipe UI interaktif dengan RBAC & failover, serta hitung token ROI.',
+    category: 'AI Architecture',
+    categoryId: 'Arsitektur AI',
+    route: '/prototype',
+    keywords: 'ai prototype multi-agent dag live sandbox rbac token economics v5',
+    roles: ['dev', 'qa', 'ba', 'pm'],
+    icon: Zap,
+  },
+  {
     id: 'lab',
     title: 'Engineering Lab',
     titleId: 'Lab Engineering',

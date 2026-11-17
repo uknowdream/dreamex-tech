@@ -2258,3 +2258,4 @@ html[data-theme="light"] #root .home-page .hero-signal-track > span { background
 html[data-theme="light"] #root .home-page :is(.tag-chip, .tag-filter-pill) { background: #f1f5f9; border-color: rgba(15, 23, 42, .16); color: #334155; }
 html[data-theme="light"] #root .home-page :is(.tag-chip, .tag-filter-pill):hover { background: #e0f2fe; border-color: rgba(3, 105, 161, .35); color: #0369a1; }
 html[data-theme="light"] #root .home-page :is(.tag-chip, .tag-filter-pill).active { background: #047857; border-color: #047857; color: #ffffff; }
+html[data-theme="light"] #root .home-page .hero-proto-btn { background: linear-gradient(135deg, #f0f9ff, #ecfdf5); border-color: rgba(3, 105, 161, .34); color: #0369a1; }
