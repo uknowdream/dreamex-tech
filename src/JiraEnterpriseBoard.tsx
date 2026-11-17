@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   BarChart3,
   Bot,
+  BrainCircuit,
   CalendarRange,
   CheckCircle2,
   ClipboardCheck,
@@ -13,6 +14,7 @@ import {
   Kanban,
   Layers3,
   ListChecks,
+  PackageCheck,
   Plus,
   RotateCcw,
   Sparkles,
@@ -22,14 +24,24 @@ import {
   Zap,
 } from 'lucide-react'
 import { useLanguage } from './i18n'
+import { generateWithByokAi, loadSessionAiConfig } from './aiClient'
 import { useProjectContextBus } from './projectContextBus'
+import {
+  analyzeForwardHorizon,
+  buildReleaseNotesMarkdown,
+  compileGoalIntoAutonomousSprintPlan,
+  computeIssueSlaState,
+  executeAutonomousSelfHeal,
+  INITIAL_RELEASES,
+  type JiraReleaseVersion,
+} from './jiraAutonomousBrain'
 import './JiraEnterpriseBoard.css'
 
 export type JiraStatusId = 'todo' | 'in_progress' | 'review' | 'blocked' | 'done'
 export type JiraIssueKind = 'story' | 'bug' | 'task' | 'security'
 export type JiraPriorityLevel = 'Highest' | 'High' | 'Medium' | 'Low'
 export type JiraSprintId = 'sprint-24' | 'sprint-25' | 'backlog'
-export type JiraViewTab = 'board' | 'backlog' | 'roadmap' | 'navigator' | 'reports' | 'automation'
+export type JiraViewTab = 'board' | 'autopilot' | 'backlog' | 'roadmap' | 'releases' | 'navigator' | 'reports' | 'automation'
 export type JiraSwimlaneMode = 'none' | 'epic' | 'assignee' | 'priority'
 
 export interface JiraSubtask {
@@ -649,6 +661,20 @@ export default function JiraEnterpriseBoardPage() {
   const [bulkPriority, setBulkPriority] = useState<JiraPriorityLevel>('High')
   const [bulkAssignee, setBulkAssignee] = useState<string>('Rizky')
 
+  // v7.1 Autonomous Brain, Releases & Custom Rule state
+  const [autopilotEnabled, setAutopilotEnabled] = useState(false)
+  const [goalPrompt, setGoalPrompt] = useState('')
+  const [aiReasoningTrace, setAiReasoningTrace] = useState<string[]>([
+    '[BRAIN-INIT] Multi-horizon graph analyzer online (T+7d Sprint, T+21d Next Sprint, T+42d Release).',
+  ])
+  const [byokForecast, setByokForecast] = useState('')
+  const [byokBusy, setByokBusy] = useState(false)
+  const [releases, setReleases] = useState<JiraReleaseVersion[]>(INITIAL_RELEASES)
+  const [selectedReleaseId, setSelectedReleaseId] = useState<JiraReleaseVersion['id']>('v7.1.0')
+  const [customRuleName, setCustomRuleName] = useState('')
+  const [customRuleTrigger, setCustomRuleTrigger] = useState('WHEN Issue Priority = Highest')
+  const [customRuleAction, setCustomRuleAction] = useState('THEN Notify On-Call Channel & Attach Rollback Checklist')
+
   // Persist to localStorage
   useEffect(() => {
     try {
@@ -699,6 +725,15 @@ export default function JiraEnterpriseBoardPage() {
         let updatedRules = prev.rules
 
         const updatedIssues = prev.issues.map(item => {
+          // Reactive dependency unblocker: if upstream blocker just moved to Done, auto-unblock downstream!
+          if (item.id !== issueId && nextStatus === 'done' && item.blockedByKey === target.key && item.status === 'blocked') {
+            extraLogs.push(`[AUTOPILOT-CASCADE] ${target.key} completed -> downstream ${item.key} auto-unblocked to In Progress.`)
+            return {
+              ...item,
+              status: 'in_progress' as JiraStatusId,
+              updatedAt: new Date().toISOString(),
+            }
+          }
           if (item.id !== issueId) return item
           let nextSubtasks = [...item.subtasks]
           const nextComments: JiraComment[] = [
@@ -798,7 +833,14 @@ export default function JiraEnterpriseBoardPage() {
         sprintId: newSprint,
         labels: parsedLabels.length ? parsedLabels : ['sprint-work'],
         dueDate: '2026-11-28',
-        subtasks: [],
+        subtasks:
+          autopilotEnabled && newPoints >= 8
+            ? [
+                { id: uid('st'), title: `[Autopilot] Domain contract & schema validation (${key})`, done: false },
+                { id: uid('st'), title: `[Autopilot] Core implementation & telemetry spans`, done: false },
+                { id: uid('st'), title: `[Autopilot] Playwright E2E regression gate`, done: false },
+              ]
+            : [],
         comments: [
           {
             id: uid('act'),
@@ -1060,6 +1102,93 @@ export default function JiraEnterpriseBoardPage() {
     [state.issues, selectedIssueId],
   )
 
+  const horizonReport = useMemo(
+    () => analyzeForwardHorizon(state.issues, state.velocityHistory, state.wipLimits),
+    [state.issues, state.velocityHistory, state.wipLimits],
+  )
+
+  const runAutonomousOptimization = useCallback(() => {
+    setState(prev => {
+      const result = executeAutonomousSelfHeal(prev.issues, prev.velocityHistory, prev.nextSequence, en)
+      setAiReasoningTrace(old => [...result.reasoningLogs, ...old].slice(0, 18))
+      return {
+        ...prev,
+        issues: result.updatedIssues,
+        nextSequence: result.nextSequence,
+        automationLogs: [...result.reasoningLogs, ...prev.automationLogs].slice(0, 24),
+      }
+    })
+    flashNotice(
+      en
+        ? 'Autonomous AI Brain rebalanced workload, unblocked critical path, decomposed 8+ SP stories & pre-planned Sprint 25!'
+        : 'AI Autopilot berhasil menyeimbangkan beban tim, membuka blocker kritis, memecah subtask & menjadwalkan Sprint 25 otomatis!',
+    )
+  }, [en, flashNotice])
+
+  const handleCompileGoalToSprint = (e: FormEvent) => {
+    e.preventDefault()
+    setState(prev => {
+      const compiled = compileGoalIntoAutonomousSprintPlan(goalPrompt, prev.nextSequence, en)
+      setAiReasoningTrace(old => [...compiled.reasoningTrace, ...old].slice(0, 18))
+      return {
+        ...prev,
+        issues: [...compiled.generatedIssues, ...prev.issues],
+        nextSequence: compiled.nextSequence,
+        automationLogs: [
+          `[AI-PLANNER] Synthesized 4 multi-horizon sprint tickets for goal "${(goalPrompt || 'Autonomous Engine').slice(0, 40)}".`,
+          ...prev.automationLogs,
+        ].slice(0, 24),
+      }
+    })
+    setGoalPrompt('')
+    flashNotice(
+      en
+        ? 'AI Planner thought ahead and generated 4 sequenced Architecture, Security, QA & Canary tickets across Sprint 24 & 25!'
+        : 'AI Planner merancang 4 tiket berurutan (Arsitektur, Keamanan, QA & Canary) lintas Sprint 24 & 25 secara otomatis!',
+    )
+  }
+
+  const runLiveByokForesight = async () => {
+    const cfg = loadSessionAiConfig()
+    if (!cfg.apiKey && !cfg.customEndpoint) {
+      setByokForecast(
+        en
+          ? [
+              'Deterministic Strategic Foresight (No BYOK API key required):',
+              `• Delivery Confidence: ${horizonReport.confidenceScore}% (Predicted Spillover: ${horizonReport.predictedSpilloverSp} SP).`,
+              `• Next-Sprint Recommendation: Pre-allocate ${horizonReport.optimalNextSprintPullSp} SP from Backlog and reserve 15% buffer for security/chaos hardening.`,
+              '• Tip: Configure an optional Gemini or OpenAI session key in Sovereign Workbench / AI Studio to stream live LLM reasoning.',
+            ].join('\n')
+          : [
+              'Analisis Prediktif Deterministik (Aktif otomatis tanpa API key):',
+              `• Keyakinan Delivery: ${horizonReport.confidenceScore}% (Prediksi Spillover: ${horizonReport.predictedSpilloverSp} SP).`,
+              `• Strategi Sprint Depan: Tarik ${horizonReport.optimalNextSprintPullSp} SP dari Backlog & siapkan cadangan kapasitas 15% untuk mitigasi keamanan/chaos.`,
+              '• Info: Anda juga dapat memasukkan API key Gemini/OpenAI opsional untuk inferensi LLM langsung.',
+            ].join('\n'),
+      )
+      return
+    }
+    setByokBusy(true)
+    try {
+      const summary = state.issues
+        .slice(0, 10)
+        .map(i => `${i.key} [${i.status}, ${i.priority}, ${i.points}SP, @${i.assignee}] ${i.title}`)
+        .join('\n')
+      const res = await generateWithByokAi(cfg, {
+        systemPrompt:
+          'You are a Principal Agile & Distributed Systems Architect. Analyze the sprint board, predict bottlenecks 2 sprints ahead, and give 4 concrete autonomous actions.',
+        userPrompt: `Active Sprint: ${state.activeSprintName}\nIssues:\n${summary}`,
+        temperature: 0.3,
+        maxTokens: 550,
+      })
+      setByokForecast(res.text)
+    } catch (err) {
+      setByokForecast(err instanceof Error ? err.message : 'Unable to reach BYOK endpoint.')
+    } finally {
+      setByokBusy(false)
+    }
+  }
+
   const synthesizeAiGherkinAndSubtasks = (issue: JiraIssue) => {
     const synthesizedDesc = [
       `Feature: ${issue.title}`,
@@ -1298,15 +1427,94 @@ export default function JiraEnterpriseBoardPage() {
         </article>
       </section>
 
-      {/* 6-View Workspace Switcher */}
+      {/* Autonomous AI Forward-Thinking Command Strip */}
+      <section
+        className="jira-autopilot-strip"
+        data-testid="jira-autopilot-strip"
+        aria-label={en ? 'Autonomous AI Sprint Autopilot' : 'AI Autopilot Sprint Otonom'}
+      >
+        <div className="jira-autopilot-main">
+          <span className={autopilotEnabled ? 'jira-autopilot-pulse is-live' : 'jira-autopilot-pulse'} />
+          <div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+              <strong style={{ fontSize: 13.5 }}>
+                <BrainCircuit size={15} style={{ verticalAlign: 'middle', marginRight: 5 }} />
+                {en
+                  ? `AI Forward-Thinking Brain · Confidence ${horizonReport.confidenceScore}%`
+                  : `Otak Prediktif AI Otonom · Keyakinan ${horizonReport.confidenceScore}%`}
+              </strong>
+              <span className={horizonReport.recommendations.length > 0 ? 'jira-kpi-badge is-warn' : 'jira-kpi-badge'}>
+                {horizonReport.recommendations.length === 0
+                  ? en
+                    ? 'OPTIMAL HORIZON'
+                    : 'HORIZON OPTIMAL'
+                  : en
+                    ? `${horizonReport.recommendations.length} PROACTIVE INSIGHTS`
+                    : `${horizonReport.recommendations.length} PREDIKSI PROAKTIF`}
+              </span>
+            </div>
+            <div className="jira-kpi-sub" style={{ marginTop: 3 }}>
+              {horizonReport.recommendations[0]
+                ? en
+                  ? `Next Action: ${horizonReport.recommendations[0].titleEn}`
+                  : `Saran Otomatis Berikutnya: ${horizonReport.recommendations[0].titleId}`
+                : en
+                  ? 'Sprint 24 & Sprint 25 capacity, SLA windows, and engineer workloads are balanced.'
+                  : 'Kapasitas Sprint 24 & 25, target SLA, dan beban kerja engineer sudah seimbang otomatis.'}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+          <button
+            type="button"
+            className="button button-primary"
+            data-testid="jira-auto-optimize-btn"
+            onClick={runAutonomousOptimization}
+          >
+            <Zap size={15} /> {en ? 'Auto-Optimize & Plan Ahead' : 'Optimasi & Rencanakan Otomatis'}
+          </button>
+          <button
+            type="button"
+            className={autopilotEnabled ? 'button button-primary' : 'button button-ghost'}
+            data-testid="jira-autopilot-toggle"
+            aria-pressed={autopilotEnabled}
+            onClick={() => {
+              const next = !autopilotEnabled
+              setAutopilotEnabled(next)
+              if (next) runAutonomousOptimization()
+            }}
+          >
+            <Bot size={15} />{' '}
+            {autopilotEnabled
+              ? en
+                ? 'Autopilot: ON (Self-Driving)'
+                : 'Autopilot: AKTIF'
+              : en
+                ? 'Enable Self-Driving Mode'
+                : 'Aktifkan Mode Otonom'}
+          </button>
+          <button
+            type="button"
+            className="button button-ghost"
+            onClick={() => setActiveTab('autopilot')}
+          >
+            <Sparkles size={14} /> {en ? 'Open AI Brain' : 'Buka Ruang AI'}
+          </button>
+        </div>
+      </section>
+
+      {/* 8-View Enterprise Workspace Switcher */}
       <div className="jira-tabs-bar" role="tablist" aria-label={en ? 'Jira workspace views' : 'Tampilan workspace Jira'}>
         {(
           [
             { id: 'board', icon: Kanban, en: 'Active Sprint Board', idLabel: 'Board Sprint Aktif', count: activeSprintIssues.length },
+            { id: 'autopilot', icon: BrainCircuit, en: 'AI Autopilot & Future', idLabel: 'AI Autopilot & Prediksi', count: horizonReport.recommendations.length },
             { id: 'backlog', icon: Layers3, en: 'Backlog & Sprints', idLabel: 'Backlog & Sprint', count: state.issues.length },
             { id: 'roadmap', icon: CalendarRange, en: 'Epic Gantt Roadmap', idLabel: 'Roadmap Gantt Epic', count: EPICS.length },
+            { id: 'releases', icon: PackageCheck, en: 'Releases & Versions', idLabel: 'Rilis & Versi', count: releases.length },
             { id: 'navigator', icon: ListChecks, en: 'Issue Navigator & Bulk', idLabel: 'Navigator & Edit Massal', count: filteredIssues.length },
-            { id: 'reports', icon: BarChart3, en: 'Burndown & Velocity', idLabel: 'Burndown & Velocity', count: 4 },
+            { id: 'reports', icon: BarChart3, en: 'Burndown & Retro', idLabel: 'Burndown & Retro', count: 5 },
             { id: 'automation', icon: Bot, en: 'Automation & Jira Sync', idLabel: 'Otomasi & Sinkron Jira', count: state.rules.length },
           ] as const
         ).map(tab => {
@@ -1566,6 +1774,7 @@ export default function JiraEnterpriseBoardPage() {
                             {colIssues.map(issue => {
                               const doneSub = issue.subtasks.filter(s => s.done).length
                               const member = TEAM_MEMBERS.find(m => m.id === issue.assignee)
+                              const sla = computeIssueSlaState(issue)
                               return (
                                 <article
                                   key={issue.id}
@@ -1585,6 +1794,9 @@ export default function JiraEnterpriseBoardPage() {
                                     <span className="jira-key-group">
                                       <span className={`jira-type-badge jira-type-${issue.type}`}>{issue.type}</span>
                                       <span className="jira-issue-key">{issue.key}</span>
+                                      <span className={`jira-sla-pill jira-sla-${sla.status}`}>
+                                        {en ? sla.labelEn : sla.labelId}
+                                      </span>
                                     </span>
                                     <span className={`jira-priority-pill jira-prio-${issue.priority}`}>{issue.priority}</span>
                                   </div>
@@ -1663,6 +1875,146 @@ export default function JiraEnterpriseBoardPage() {
               </div>
             ))}
           </div>
+        </section>
+      )}
+
+      {/* ====================================================================
+          VIEW 1B: AI AUTOPILOT & MULTI-HORIZON PREDICTIVE BRAIN
+         ==================================================================== */}
+      {activeTab === 'autopilot' && (
+        <section
+          className="jira-backlog-stack"
+          data-testid="jira-autopilot-panel"
+          aria-label={en ? 'AI Autopilot and Predictive Brain' : 'AI Autopilot dan Otak Prediktif'}
+        >
+          {/* 3-Horizon Trajectory */}
+          <div className="jira-horizon-grid">
+            {horizonReport.horizons.map(h => (
+              <article
+                key={h.id}
+                className={`jira-horizon-card${h.health === 'watch' ? ' is-watch' : h.health === 'risk' ? ' is-risk' : ''}`}
+              >
+                <span className="jira-kpi-label">{en ? h.windowEn : h.windowId}</span>
+                <strong style={{ fontSize: 15.5 }}>{en ? h.headlineEn : h.headlineId}</strong>
+                <span className="jira-kpi-sub">{en ? h.detailEn : h.detailId}</span>
+              </article>
+            ))}
+          </div>
+
+          {/* Autonomous Natural-Language Goal -> Multi-Sprint Plan Compiler */}
+          <article className="jira-panel-card">
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
+              <div>
+                <span className="jira-kpi-label">
+                  {en ? 'AUTONOMOUS GOAL -> MULTI-SPRINT & EPIC COMPILER' : 'KOMPILATOR TUJUAN -> SPRINT & EPIC OTONOM'}
+                </span>
+                <h2 style={{ margin: '4px 0 0', fontSize: 18 }}>
+                  {en
+                    ? 'Give Any Product Goal — AI Thinks Ahead & Builds Your Sprint Plan Automatically'
+                    : 'Masukkan Tujuan Produk — AI Berpikir ke Depan & Menyusun Sprint Secara Otomatis'}
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="button button-ghost"
+                disabled={byokBusy}
+                onClick={() => void runLiveByokForesight()}
+              >
+                <Sparkles size={14} />{' '}
+                {byokBusy
+                  ? en
+                    ? 'Reasoning…'
+                    : 'Menganalisis…'
+                  : en
+                    ? 'Deep Strategic Foresight'
+                    : 'Analisis Strategis Mendalam'}
+              </button>
+            </div>
+
+            <form className="jira-goal-compiler" onSubmit={handleCompileGoalToSprint}>
+              <input
+                type="text"
+                data-testid="jira-goal-input"
+                value={goalPrompt}
+                onChange={e => setGoalPrompt(e.target.value)}
+                placeholder={
+                  en
+                    ? 'e.g. Build cross-border QRIS instant settlement with AI fraud shield & canary rollout…'
+                    : 'mis. Bangun sistem pembayaran QRIS real-time lintas negara dengan anti-fraud AI & canary rollout…'
+                }
+                aria-label={en ? 'Product goal for autonomous sprint synthesis' : 'Tujuan produk untuk sintesis sprint otonom'}
+              />
+              <button type="submit" className="button button-primary" data-testid="jira-compile-goal-btn">
+                <BrainCircuit size={15} />{' '}
+                {en ? 'Auto-Plan Epics & Sprints' : 'Susun Tiket & Sprint Otomatis'}
+              </button>
+            </form>
+
+            {byokForecast && <pre className="jira-code-pre">{byokForecast}</pre>}
+          </article>
+
+          {/* Proactive Forward-Thinking Recommendations Queue */}
+          <article className="jira-panel-card">
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
+              <div>
+                <span className="jira-kpi-label">
+                  {en ? 'PROACTIVE RISK & BOTTLENECK FORESIGHT' : 'DETEKSI DINI RISIKO & BOTTLENECK MASA DEPAN'}
+                </span>
+                <h2 style={{ margin: '4px 0 0', fontSize: 18 }}>
+                  {en
+                    ? `Autonomous Recommendations (${horizonReport.recommendations.length})`
+                    : `Rekomendasi Tindakan Otonom (${horizonReport.recommendations.length})`}
+                </h2>
+              </div>
+              <button type="button" className="button button-primary" onClick={runAutonomousOptimization}>
+                <Zap size={15} /> {en ? 'Execute All Autonomous Fixes' : 'Jalankan Semua Perbaikan Otomatis'}
+              </button>
+            </div>
+
+            <div className="jira-rule-list">
+              {horizonReport.recommendations.length === 0 ? (
+                <div className="jira-rule-item">
+                  <strong>
+                    {en
+                      ? 'All sprint horizons, workloads, subtasks, and SLA windows are operating at peak health!'
+                      : 'Seluruh horizon sprint, beban tim, subtask, dan target SLA sudah berjalan pada kondisi optimal!'}
+                  </strong>
+                  <span className="jira-kpi-badge">100% HEALTHY</span>
+                </div>
+              ) : (
+                horizonReport.recommendations.map(rec => (
+                  <div className="jira-rule-item" key={rec.id}>
+                    <div style={{ maxWidth: 700 }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+                        <span className={rec.severity === 'critical' ? 'jira-kpi-badge is-warn' : 'jira-kpi-badge'}>
+                          {en ? rec.horizonLabelEn : rec.horizonLabelId}
+                        </span>
+                        <strong>{en ? rec.titleEn : rec.titleId}</strong>
+                      </div>
+                      <div className="jira-kpi-sub" style={{ marginTop: 4 }}>
+                        {en ? rec.rationaleEn : rec.rationaleId}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span className="jira-kpi-badge">{en ? rec.impactEn : rec.impactId}</span>
+                      <button type="button" className="button button-primary" onClick={runAutonomousOptimization}>
+                        {en ? 'Auto-Fix' : 'Perbaiki Otomatis'}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div>
+              <span className="jira-kpi-label">
+                {en ? 'CHAIN-OF-THOUGHT AUTONOMOUS DECISION LEDGER' : ' CATATAN KEPUTUSAN OTONOM (CHAIN-OF-THOUGHT)'}
+              </span>
+              <pre className="jira-code-pre" style={{ marginTop: 8 }} data-testid="jira-ai-reasoning-log">
+                {aiReasoningTrace.join('\n')}
+              </pre>
+            </div>
+          </article>
         </section>
       )}
 
@@ -1926,6 +2278,106 @@ export default function JiraEnterpriseBoardPage() {
       )}
 
       {/* ====================================================================
+          VIEW 3B: RELEASES, FIX VERSIONS & CHANGELOG HUB
+         ==================================================================== */}
+      {activeTab === 'releases' && (
+        <section
+          className="jira-backlog-stack"
+          data-testid="jira-releases-panel"
+          aria-label={en ? 'Releases and Fix Versions Hub' : 'Hub Rilis dan Versi'}
+        >
+          <div className="jira-release-grid">
+            {releases.map(rel => {
+              const scopeIssues = state.issues.filter(i =>
+                rel.id === 'v7.0.0'
+                  ? i.status === 'done'
+                  : rel.id === 'v7.1.0'
+                    ? i.sprintId === 'sprint-24'
+                    : i.sprintId !== 'sprint-24',
+              )
+              const doneCount = scopeIssues.filter(i => i.status === 'done').length
+              const pct = scopeIssues.length > 0 ? Math.round((doneCount / scopeIssues.length) * 100) : 100
+              return (
+                <article className="jira-panel-card" key={rel.id}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                    <span className={rel.status === 'released' ? 'jira-kpi-badge' : 'jira-kpi-badge is-warn'}>
+                      {rel.status.toUpperCase()}
+                    </span>
+                    <span className="jira-kpi-sub">{rel.targetDate}</span>
+                  </div>
+                  <strong style={{ fontSize: 16 }}>{rel.name}</strong>
+                  <span className="jira-kpi-sub">{en ? rel.summaryEn : rel.summaryId}</span>
+                  <div className="jira-progress-track">
+                    <span style={{ width: `${pct}%` }} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                    <span className="jira-kpi-sub">
+                      {doneCount}/{scopeIssues.length} {en ? 'issues done' : 'tiket selesai'} ({pct}%)
+                    </span>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        type="button"
+                        className="button button-ghost"
+                        onClick={() => setSelectedReleaseId(rel.id)}
+                      >
+                        {en ? 'Notes' : 'Catatan'}
+                      </button>
+                      {rel.status !== 'released' && (
+                        <button
+                          type="button"
+                          className="button button-primary"
+                          onClick={() => {
+                            setReleases(prev =>
+                              prev.map(r => (r.id === rel.id ? { ...r, status: 'released' } : r)),
+                            )
+                            flashNotice(
+                              en
+                                ? `Shipped ${rel.name} and generated signed release notes!`
+                                : `${rel.name} resmi dirilis beserta catatan changelog otomatis!`,
+                            )
+                          }}
+                        >
+                          {en ? 'Ship' : 'Rilis'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+
+          {(() => {
+            const activeRel = releases.find(r => r.id === selectedReleaseId) ?? releases[0]
+            const notesMd = buildReleaseNotesMarkdown(activeRel, state.issues, en)
+            return (
+              <article className="jira-panel-card">
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
+                  <div>
+                    <span className="jira-kpi-label">
+                      {en ? 'AUTO-GENERATED RELEASE NOTES (MARKDOWN)' : 'CATATAN RILIS OTOMATIS (MARKDOWN)'}
+                    </span>
+                    <h2 style={{ margin: '4px 0 0', fontSize: 18 }}>{activeRel.name}</h2>
+                  </div>
+                  <button
+                    type="button"
+                    className="button button-primary"
+                    onClick={() => {
+                      void navigator.clipboard?.writeText(notesMd)
+                      flashNotice(en ? 'Copied Markdown release notes!' : 'Catatan rilis Markdown disalin!')
+                    }}
+                  >
+                    <Copy size={14} /> {en ? 'Copy Release Notes' : 'Salin Catatan Rilis'}
+                  </button>
+                </div>
+                <pre className="jira-code-pre">{notesMd}</pre>
+              </article>
+            )
+          })()}
+        </section>
+      )}
+
+      {/* ====================================================================
           VIEW 4: ISSUE NAVIGATOR & BULK OPERATIONS
          ==================================================================== */}
       {activeTab === 'navigator' && (
@@ -2170,6 +2622,92 @@ export default function JiraEnterpriseBoardPage() {
               })}
             </div>
           </article>
+
+          {/* Autonomous Sprint Retrospective & Continuous Improvement Synthesizer */}
+          <article className="jira-panel-card" style={{ gridColumn: '1 / -1' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
+              <div>
+                <span className="jira-kpi-label">
+                  {en ? 'AUTONOMOUS SPRINT RETROSPECTIVE -> ACTION TICKETS' : 'RETROSPEKTIF SPRINT OTONOM -> TIKET TINDAK LANJUT'}
+                </span>
+                <h2 style={{ margin: '4px 0 0', fontSize: 18 }}>
+                  {en
+                    ? 'Self-Learning Sprint Retro Insights'
+                    : 'Pembelajaran Otomatis Sprint & Aksi Perbaikan Sprint Depan'}
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="button button-primary"
+                onClick={() => {
+                  setState(prev => {
+                    const key = `DX-${prev.nextSequence}`
+                    const retroIssue: JiraIssue = {
+                      id: uid('retro'),
+                      key,
+                      title: en
+                        ? '[Retro Action] Automate contract stubbing for cross-service dependencies'
+                        : '[Aksi Retro] Otomasi contract stubbing untuk mencegah blocker lintas layanan',
+                      description: 'Auto-created from Sprint 24 Retrospective to eliminate upstream blocker wait time.',
+                      type: 'task',
+                      status: 'todo',
+                      priority: 'High',
+                      points: 3,
+                      assignee: 'Nadia',
+                      epicKey: 'DX-EPIC-3',
+                      sprintId: 'sprint-25',
+                      labels: ['retro-action', 'continuous-improvement'],
+                      dueDate: '2026-12-04',
+                      subtasks: [],
+                      comments: [],
+                      updatedAt: new Date().toISOString(),
+                    }
+                    return {
+                      ...prev,
+                      nextSequence: prev.nextSequence + 1,
+                      issues: [retroIssue, ...prev.issues],
+                    }
+                  })
+                  flashNotice(
+                    en
+                      ? 'Converted Sprint Retro insight into actionable Sprint 25 ticket!'
+                      : 'Temuan Retrospektif berhasil dijadikan tiket tindak lanjut di Sprint 25!',
+                  )
+                }}
+              >
+                <Plus size={15} /> {en ? 'Convert Retro Insight to Ticket' : 'Jadikan Tiket Sprint 25'}
+              </button>
+            </div>
+            <div className="jira-horizon-grid">
+              <div className="jira-horizon-card">
+                <span className="jira-kpi-label">{en ? 'WHAT WENT WELL' : 'YANG BERJALAN SANGAT BAIK'}</span>
+                <strong>{en ? 'Zero escaped security regressions' : 'Nol kebocoran regresi keamanan'}</strong>
+                <span className="jira-kpi-sub">
+                  {en
+                    ? 'AUTO-01 & AUTO-02 rules automatically enforced security triage and Playwright subtasks.'
+                    : 'Aturan AUTO-01 & AUTO-02 otomatis menjaga triase keamanan dan cakupan tes Playwright.'}
+                </span>
+              </div>
+              <div className="jira-horizon-card is-watch">
+                <span className="jira-kpi-label">{en ? 'FRICTION DETECTED' : 'HAMBATAN TERDETEKSI'}</span>
+                <strong>{en ? 'Upstream schema dependency wait' : 'Waktu tunggu skema dependensi hulu'}</strong>
+                <span className="jira-kpi-sub">
+                  {en
+                    ? 'Coupled FX cache & Outbox migrations caused temporary blocker state on DX-104.'
+                    : 'Ketergantungan skema antara migrasi Outbox & FX cache sempat menahan DX-104.'}
+                </span>
+              </div>
+              <div className="jira-horizon-card">
+                <span className="jira-kpi-label">{en ? 'NEXT SPRINT COMMITMENT' : 'KOMITMEN OTOMATIS BERIKUTNYA'}</span>
+                <strong>{en ? 'Contract-first mock stubs in CI' : 'Contract-first mock stub di CI'}</strong>
+                <span className="jira-kpi-sub">
+                  {en
+                    ? 'Decouple consumer stories via OpenAPI mock servers on Day 1 of every sprint.'
+                    : 'Pisahkan ketergantungan antar-tim lewat mock server OpenAPI sejak hari pertama sprint.'}
+                </span>
+              </div>
+            </div>
+          </article>
         </section>
       )}
 
@@ -2182,9 +2720,60 @@ export default function JiraEnterpriseBoardPage() {
             <div>
               <span className="jira-kpi-label">{en ? 'NO-CODE JIRA AUTOMATION RULES' : 'ATURAN OTOMASI JIRA TANPA KODE'}</span>
               <h2 style={{ margin: '4px 0 0', fontSize: 18 }}>
-                {en ? 'Live Event-Driven Workflow Rules' : 'Aturan Workflow Berbasis Event Aktif'}
+                {en ? 'Live Event-Driven Workflow Rules & Custom Builder' : 'Aturan Workflow Otomatis & Pembuat Aturan Baru'}
               </h2>
             </div>
+
+            <form
+              className="jira-goal-compiler"
+              onSubmit={e => {
+                e.preventDefault()
+                const cleanName = customRuleName.trim()
+                if (!cleanName) return
+                const code = `AUTO-0${state.rules.length + 1}`
+                setState(prev => ({
+                  ...prev,
+                  rules: [
+                    ...prev.rules,
+                    {
+                      id: uid('rule'),
+                      code,
+                      nameEn: cleanName,
+                      nameId: cleanName,
+                      triggerEn: customRuleTrigger,
+                      triggerId: customRuleTrigger,
+                      actionEn: customRuleAction,
+                      actionId: customRuleAction,
+                      enabled: true,
+                      runs: 1,
+                    },
+                  ],
+                  automationLogs: [`[${code}] Custom rule "${cleanName}" registered & armed.`, ...prev.automationLogs],
+                }))
+                setCustomRuleName('')
+                flashNotice(en ? `Added custom automation rule ${code}!` : `Aturan otomasi baru ${code} diaktifkan!`)
+              }}
+            >
+              <input
+                value={customRuleName}
+                onChange={e => setCustomRuleName(e.target.value)}
+                placeholder={en ? 'New rule name (e.g. Auto-assign P0 incidents)…' : 'Nama aturan baru (mis. Eskalasi otomatis P0)…'}
+                aria-label={en ? 'Custom automation rule name' : 'Nama aturan otomasi baru'}
+              />
+              <input
+                value={customRuleTrigger}
+                onChange={e => setCustomRuleTrigger(e.target.value)}
+                aria-label="Rule WHEN trigger"
+              />
+              <input
+                value={customRuleAction}
+                onChange={e => setCustomRuleAction(e.target.value)}
+                aria-label="Rule THEN action"
+              />
+              <button type="submit" className="button button-primary">
+                <Plus size={15} /> {en ? 'Add Rule' : 'Tambah Aturan'}
+              </button>
+            </form>
 
             <div className="jira-rule-list">
               {state.rules.map(rule => (

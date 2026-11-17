@@ -83,6 +83,19 @@ test.describe('DreamEx Jira Agile & Sprint OS (/jira)', () => {
     await page.getByTestId('jira-tab-automation').click()
     await expect(page.locator('.jira-code-pre').first()).toContainText('[AUTO-')
 
+    // v7.1 AI Autopilot & Forward-Thinking Brain + Goal Compiler + Releases Hub
+    await page.getByTestId('jira-tab-autopilot').click()
+    await expect(page.getByTestId('jira-autopilot-panel')).toBeVisible()
+    await page.getByTestId('jira-goal-input').fill('Cross-border QRIS instant settlement with AI fraud shield')
+    await page.getByTestId('jira-compile-goal-btn').click()
+    await expect(page.getByTestId('jira-ai-reasoning-log')).toContainText('01 ·')
+
+    await page.getByTestId('jira-auto-optimize-btn').click()
+    await expect(page.getByTestId('jira-ai-reasoning-log')).toContainText('[AUTOPILOT-')
+
+    await page.getByTestId('jira-tab-releases').click()
+    await expect(page.getByTestId('jira-releases-panel')).toContainText('v7.1.0')
+
     // Complete Sprint roll-forward
     await page.getByTestId('jira-complete-sprint-btn').click()
     await expect(page.getByTestId('jira-complete-sprint-modal')).toBeVisible()

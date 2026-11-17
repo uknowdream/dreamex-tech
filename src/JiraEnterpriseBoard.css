@@ -1277,3 +1277,165 @@ html[data-theme="light"] .jira-notice-toast {
     padding: 18px 16px 32px;
   }
 }
+
+
+/* ==========================================================================
+   v7.1 Autonomous Forward-Thinking Brain, SLA & Releases Hub
+   ========================================================================== */
+.jira-autopilot-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 15px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(197, 255, 112, 0.34);
+  background:
+    radial-gradient(ellipse 55% 80% at 8% 50%, rgba(197, 255, 112, 0.12), transparent 70%),
+    linear-gradient(145deg, rgba(11, 22, 39, 0.96), rgba(7, 15, 29, 0.98));
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.32);
+}
+
+.jira-autopilot-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.jira-autopilot-pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #94a3b8;
+  flex-shrink: 0;
+}
+
+.jira-autopilot-pulse.is-live {
+  background: #4ade80;
+  box-shadow: 0 0 14px #4ade80;
+}
+
+.jira-horizon-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.jira-horizon-card {
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  background: linear-gradient(160deg, rgba(14, 25, 46, 0.92), rgba(8, 15, 29, 0.96));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.jira-horizon-card.is-watch {
+  border-color: rgba(251, 191, 36, 0.42);
+}
+
+.jira-horizon-card.is-risk {
+  border-color: rgba(248, 113, 113, 0.5);
+}
+
+.jira-goal-compiler {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(6, 12, 24, 0.78);
+  border: 1px solid rgba(125, 211, 252, 0.24);
+}
+
+.jira-goal-compiler input {
+  flex: 1 1 280px;
+  min-height: 40px;
+  padding: 8px 13px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: #081223;
+  color: #f1f6ff;
+  font-size: 13px;
+}
+
+.jira-sla-pill {
+  padding: 2px 6px;
+  border-radius: 5px;
+  font: 700 9.5px/1.2 var(--mono, ui-monospace, monospace);
+}
+
+.jira-sla-ok,
+.jira-sla-met {
+  background: rgba(16, 185, 129, 0.14);
+  color: #6ee7b7;
+}
+
+.jira-sla-at_risk {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+}
+
+.jira-sla-breached {
+  background: rgba(239, 68, 68, 0.22);
+  color: #fca5a5;
+}
+
+.jira-release-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+html[data-theme="light"] .jira-autopilot-strip {
+  background:
+    radial-gradient(ellipse 55% 80% at 8% 50%, rgba(16, 185, 129, 0.1), transparent 70%),
+    linear-gradient(145deg, #ffffff, #f0f9ff);
+  border-color: rgba(5, 150, 105, 0.34);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+  color: #0f172a;
+}
+
+html[data-theme="light"] .jira-horizon-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+
+html[data-theme="light"] .jira-goal-compiler {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+html[data-theme="light"] .jira-goal-compiler input {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.18);
+  color: #0f172a;
+}
+
+html[data-theme="light"] .jira-sla-ok,
+html[data-theme="light"] .jira-sla-met {
+  background: rgba(16, 185, 129, 0.14);
+  color: #065f46;
+}
+
+html[data-theme="light"] .jira-sla-at_risk {
+  background: rgba(245, 158, 11, 0.16);
+  color: #92400e;
+}
+
+html[data-theme="light"] .jira-sla-breached {
+  background: rgba(239, 68, 68, 0.16);
+  color: #991b1b;
+}
+
+@media (max-width: 1120px) {
+  .jira-horizon-grid,
+  .jira-release-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
