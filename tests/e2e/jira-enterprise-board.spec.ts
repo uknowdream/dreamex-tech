@@ -116,4 +116,39 @@ test.describe('DreamEx Jira Agile & Sprint OS (/jira)', () => {
       expect(overflow, `No document horizontal overflow at ${width}px`).toBeLessThanOrEqual(1)
     }
   })
+
+  test('v8.0 Full Atlassian Cloud parity: Homepage showcase, Multi-Project switcher, Product Discovery RICE, JSM Incidents, Confluence Wiki & Shortcuts', async ({ page }) => {
+    await page.goto('/')
+    const showcase = page.getByTestId('home-jira-showcase')
+    await expect(showcase).toBeVisible()
+    await page.getByTestId('home-jira-autopilot-demo-btn').click()
+    await expect(showcase).toContainText(/98% Confidence|Keyakinan 98%/i)
+
+    await page.goto('/jira')
+    await expect(page.getByTestId('jira-project-switcher')).toBeVisible()
+    await page.getByTestId('jira-project-pill-FIN').click()
+
+    // Product Discovery RICE -> Promote IDEA-01
+    await page.getByTestId('jira-tab-discovery').click()
+    await expect(page.getByTestId('jira-discovery-panel')).toBeVisible()
+    await page.getByTestId('jira-promote-IDEA-01').click()
+    await expect(page.getByTestId('jira-discovery-panel')).toContainText('FIN-')
+
+    // JSM Service Desk -> Escalate INC-501
+    await page.getByTestId('jira-tab-jsm').click()
+    await expect(page.getByTestId('jira-jsm-panel')).toBeVisible()
+    await page.getByTestId('jira-escalate-INC-501').click()
+    await expect(page.getByTestId('jira-jsm-panel')).toContainText('Linked: FIN-')
+
+    // Confluence Wiki -> Extract Action Item
+    await page.getByTestId('jira-tab-wiki').click()
+    await expect(page.getByTestId('jira-wiki-panel')).toBeVisible()
+    await page.getByTestId('jira-wiki-extract-btn').click()
+
+    // Keyboard Shortcuts Modal
+    await page.getByTestId('jira-shortcuts-btn').click()
+    await expect(page.getByTestId('jira-shortcuts-modal')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('jira-shortcuts-modal')).toHaveCount(0)
+  })
 })

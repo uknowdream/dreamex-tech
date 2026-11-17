@@ -48,6 +48,7 @@ const SiteAuditPage = lazy(() => import('./SiteAudit').then(module => ({ default
 const SovereignWorkbenchPage = lazy(() => import('./SovereignWorkbench').then(module => ({ default: module.SovereignWorkbenchPage })))
 const AiPrototypeStudioPage = lazy(() => import('./AiPrototypeStudio'))
 const HomePrototypeStage = lazy(() => import('./HomePrototypeStage'))
+const HomeJiraShowcase = lazy(() => import('./HomeJiraShowcase'))
 const AiReadinessGraderPage = lazy(() => import('./AiReadinessGrader'))
 const GuidedProductTour = lazy(() => import('./GuidedProductTour'))
 const JiraEnterpriseBoardPage = lazy(() => import('./JiraEnterpriseBoard'))
@@ -138,6 +139,7 @@ function Header() {
   const { language, setLanguage, t } = useLanguage()
   const [menuOpen, setMenuOpen] = useState(false)
   const [navQuery, setNavQuery] = useState('')
+  const [desktopMegaQuery, setDesktopMegaQuery] = useState('')
   const [activeMegaPillar, setActiveMegaPillar] = useState<'all' | 'plan' | 'build' | 'secure'>('all')
   const [recentRoutes, setRecentRoutes] = useState<string[]>(() => {
     if (typeof window === 'undefined') return []
@@ -218,6 +220,7 @@ function Header() {
     previousPathRef.current = location.pathname
     setDrawerOpen(false)
     setNavQuery('')
+    setDesktopMegaQuery('')
     setActiveMegaPillar('all')
     document.querySelector('.nav-platform')?.removeAttribute('open')
   }, [location.pathname, setDrawerOpen])
@@ -399,17 +402,71 @@ function Header() {
           <details
             className={NAV_DESTINATIONS[location.pathname] ? 'nav-platform nav-platform-current' : 'nav-platform'}
             onToggle={event => {
-              if (!event.currentTarget.open) setActiveMegaPillar('all')
+              if (!event.currentTarget.open) {
+                setActiveMegaPillar('all')
+                setDesktopMegaQuery('')
+              }
             }}
           >
             <summary><span className="nav-link-icon"><Layers3 size={16}/></span><span><b>{language === 'en' ? 'Engineering platform' : 'Platform rekayasa'}</b><small>{language === 'en' ? '25 AI suites for Dev, QA, BA & PM' : '25 suite AI untuk Dev, QA, BA & PM'}</small></span><ChevronDown size={15} className="nav-chevron" /></summary>
-            <div className="nav-mega-panel">
-              <div className="nav-mega-intro" hidden={Boolean(navQuery.trim())}>
+            <div
+              className="nav-mega-panel"
+              ref={el => {
+                if (!el || menuOpen) return
+                const q = desktopMegaQuery.trim().toLocaleLowerCase()
+                const groupEls = Array.from(el.querySelectorAll<HTMLElement>('.nav-mega-group'))
+                groupEls.forEach(group => {
+                  const groupLinks = Array.from(group.querySelectorAll<HTMLAnchorElement>('a[href]'))
+                  groupLinks.forEach(a => {
+                    a.hidden = Boolean(q) && !a.textContent?.toLocaleLowerCase().includes(q)
+                  })
+                  group.hidden = Boolean(q) && !groupLinks.some(a => !a.hidden)
+                })
+              }}
+            >
+              <div className="nav-mega-desktop-bar" hidden={Boolean(navQuery.trim())}>
+                <label className="nav-mega-desktop-search">
+                  <Search size={14} aria-hidden="true" />
+                  <input
+                    type="text"
+                    value={desktopMegaQuery}
+                    onChange={e => setDesktopMegaQuery(e.target.value)}
+                    placeholder={language === 'en' ? 'Instant filter 25 suites (e.g. Jira, Playwright, SBOM)…' : 'Filter cepat 25 suite (mis. Jira, Playwright, SBOM)…'}
+                    aria-label={language === 'en' ? 'Filter platform suites' : 'Filter suite platform'}
+                  />
+                  {desktopMegaQuery && (
+                    <button type="button" onClick={() => setDesktopMegaQuery('')} aria-label="Clear filter">
+                      ×
+                    </button>
+                  )}
+                </label>
+                <div className="nav-mega-featured-strip">
+                  <Link to="/jira" onClick={() => document.querySelector('.nav-platform')?.removeAttribute('open')}>
+                    ⚡ {language === 'en' ? 'Jira Cloud v8' : 'Jira Cloud v8'}
+                  </Link>
+                  <Link to="/prototype" onClick={() => document.querySelector('.nav-platform')?.removeAttribute('open')}>
+                    🤖 {language === 'en' ? '5-Agent Studio' : 'Studio 5-Agen'}
+                  </Link>
+                  <Link to="/grader" onClick={() => document.querySelector('.nav-platform')?.removeAttribute('open')}>
+                    🛡️ {language === 'en' ? 'URL Grader' : 'Audit URL'}
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      document.querySelector('.nav-platform')?.removeAttribute('open')
+                      window.dispatchEvent(new CustomEvent('dreamex-open-guided-tour'))
+                    }}
+                  >
+                    🎬 {language === 'en' ? '60s Tour' : 'Tur 60d'}
+                  </button>
+                </div>
+              </div>
+              <div className="nav-mega-intro" hidden={Boolean(navQuery.trim() || desktopMegaQuery.trim())}>
                 <picture>
                   <source srcSet="/images/spotlight-ai-os.webp" type="image/webp" />
                   <img className="nav-mega-spotlight-art" src="/images/spotlight-ai-os.jpg" alt="" aria-hidden="true" width={360} height={200} />
                 </picture>
-                <span className="nav-mega-kicker">{language === 'en' ? 'AUTONOMOUS AI WORKSPACE · v7.0' : 'RUANG KERJA AI OTONOM · v7.0'}</span>
+                <span className="nav-mega-kicker">{language === 'en' ? 'AUTONOMOUS AI WORKSPACE · v8.0' : 'RUANG KERJA AI OTONOM · v8.0'}</span>
                 <strong>{language === 'en' ? 'From live prototype to autonomous release.' : 'Dari prototipe hidup hingga rilis otonom.'}</strong>
                 <p>{language === 'en' ? 'Unify 5-agent UI prototyping, full Jira Agile & Sprint boards, AI/Security URL grading, USL architecture, and self-healing QA.' : 'Satukan prototipe UI 5-agen, board Jira Agile & Sprint lengkap, audit URL AI/Keamanan, arsitektur USL, dan QA self-healing.'}</p>
                 <div className="nav-mega-badges" aria-hidden="true"><span>25 Suites</span><span>MCP + BYOK</span><span>Zero-Trust</span></div>
@@ -706,6 +763,7 @@ function Home() {
       </div>
     </section>
     <Suspense fallback={null}><HomePrototypeStage /></Suspense>
+    <Suspense fallback={null}><HomeJiraShowcase /></Suspense>
     <Suspense fallback={null}><NeuralAiStudio /></Suspense>
     <EngineeringLaunchpad />
     <section className="topics-section" id="topics"><div className="container"><div className="topics-heading"><div><span className="section-kicker">{t('topicsEyebrow')}</span><h2>{t('topicsHeading')} <span>{t('topicsHeadingAccent')}</span></h2></div><p>{t('topicsDescription')}</p></div><div className="topics-grid">
@@ -1536,30 +1594,39 @@ const TOOL_BREADCRUMB_LABELS: Record<string, { id: string; en: string }> = {
   '/learn': { id: 'Pusat Belajar', en: 'Learning Hub' },
 }
 
+const PINNED_SUITES_KEY = 'dreamex-pinned-suites-v8'
+const DEFAULT_PINNED_SUITES = ['/jira', '/prototype', '/grader']
+
 const TOOL_SUBNAV_CLUSTERS = [
   {
+    id: 'agile',
+    en: '01 Agile & Jira (5)',
+    idLabel: '01 Agile & Jira (5)',
+    routes: ['/jira', '/pm-jira-hub', '/ba-hub', '/roadmap', '/command-center'],
+  },
+  {
     id: 'plan',
-    en: '01 Plan & Govern',
-    idLabel: '01 Rencana & Kendali',
-    routes: ['/control-plane', '/command-center', '/roadmap', '/engineering-intelligence', '/team-workspace', '/knowledge-graph', '/workspace'],
+    en: '02 Plan & Govern (5)',
+    idLabel: '02 Rencana & Kendali (5)',
+    routes: ['/control-plane', '/engineering-intelligence', '/team-workspace', '/knowledge-graph', '/workspace'],
   },
   {
     id: 'build',
-    en: '02 Build & Verify',
-    idLabel: '02 Bangun & Uji',
+    en: '03 Build & QA (8)',
+    idLabel: '03 Bangun & Uji (8)',
     routes: ['/qa-studio', '/quality-intelligence', '/reliability-center', '/performance', '/api-playground', '/github-ci', '/lab', '/devtools'],
   },
   {
     id: 'secure',
-    en: '03 SecOps & Intel',
-    idLabel: '03 Keamanan & Audit',
+    en: '04 SecOps & Audit (6)',
+    idLabel: '04 Keamanan & Audit (6)',
     routes: ['/grader', '/security-center', '/supply-chain-intelligence', '/observatory', '/site-audit', '/learn'],
   },
   {
     id: 'workbench',
-    en: '04 Agentic & AI',
-    idLabel: '04 Agen & AI',
-    routes: ['/prototype', '/jira', '/tools', '/ba-hub', '/pm-jira-hub'],
+    en: '05 Agentic AI (2)',
+    idLabel: '05 Agen & AI (2)',
+    routes: ['/prototype', '/tools'],
   },
 ] as const
 
@@ -1572,12 +1639,38 @@ function ToolRouteBreadcrumbs() {
   const cleanPath = pathname.replace(/\/+$/, '') || '/'
   const label = TOOL_BREADCRUMB_LABELS[cleanPath]
   const detectedCluster: SubnavClusterId =
-    TOOL_SUBNAV_CLUSTERS.find(cluster => (cluster.routes as readonly string[]).includes(cleanPath))?.id ?? 'plan'
+    TOOL_SUBNAV_CLUSTERS.find(cluster => (cluster.routes as readonly string[]).includes(cleanPath))?.id ?? 'agile'
   const [selectedCluster, setSelectedCluster] = useState<SubnavClusterId>(detectedCluster)
+  const [pinnedSuites, setPinnedSuites] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return DEFAULT_PINNED_SUITES
+    try {
+      const raw = JSON.parse(window.localStorage.getItem(PINNED_SUITES_KEY) || 'null')
+      return Array.isArray(raw) && raw.length > 0
+        ? raw.filter((p): p is string => typeof p === 'string' && Boolean(NAV_DESTINATIONS[p]))
+        : DEFAULT_PINNED_SUITES
+    } catch {
+      return DEFAULT_PINNED_SUITES
+    }
+  })
 
   useEffect(() => {
     setSelectedCluster(detectedCluster)
   }, [detectedCluster])
+
+  const togglePinCurrent = () => {
+    if (!NAV_DESTINATIONS[cleanPath]) return
+    setPinnedSuites(prev => {
+      const next = prev.includes(cleanPath)
+        ? prev.filter(p => p !== cleanPath)
+        : [cleanPath, ...prev].slice(0, 6)
+      try {
+        window.localStorage.setItem(PINNED_SUITES_KEY, JSON.stringify(next))
+      } catch {
+        /* Safe fallback */
+      }
+      return next
+    })
+  }
 
   const activeGroup = TOOL_SUBNAV_CLUSTERS.find(cluster => cluster.id === selectedCluster) ?? TOOL_SUBNAV_CLUSTERS[0]
   const hasClusterRoute = TOOL_SUBNAV_CLUSTERS.some(cluster => (cluster.routes as readonly string[]).includes(cleanPath))
@@ -1586,20 +1679,40 @@ function ToolRouteBreadcrumbs() {
   const en = language === 'en'
   const homeLabel = en ? 'Home' : 'Beranda'
   const currentLabel = label ? (en ? label.en : label.id) : (NAV_DESTINATIONS[cleanPath]?.[en ? 'en' : 'id'] ?? cleanPath)
+  const isPinned = pinnedSuites.includes(cleanPath)
 
   return <div className="tool-context-shell">
     <div className="tool-context-top">
-      {label ? (
-        <nav className="tool-route-breadcrumbs" aria-label={en ? 'Breadcrumb' : 'Navigasi lokasi'}>
-          <ol>
-            <li><Link to="/">{homeLabel}</Link></li>
-            <li aria-hidden="true" className="tool-route-breadcrumb-separator">/</li>
-            <li aria-current="page"><span>{currentLabel}</span></li>
-          </ol>
-        </nav>
-      ) : (
-        <span className="tool-context-kicker">{en ? 'ENGINEERING OS MODULE' : 'MODUL OS ENGINEERING'}</span>
-      )}
+      <div className="tool-breadcrumb-wrap">
+        {label ? (
+          <nav className="tool-route-breadcrumbs" aria-label={en ? 'Breadcrumb' : 'Navigasi lokasi'}>
+            <ol>
+              <li><Link to="/">{homeLabel}</Link></li>
+              <li aria-hidden="true" className="tool-route-breadcrumb-separator">/</li>
+              <li aria-current="page"><span>{currentLabel}</span></li>
+            </ol>
+          </nav>
+        ) : (
+          <span className="tool-context-kicker">{en ? 'ENGINEERING OS MODULE' : 'MODUL OS ENGINEERING'}</span>
+        )}
+        {NAV_DESTINATIONS[cleanPath] && (
+          <button
+            type="button"
+            className={isPinned ? 'tool-pin-btn is-pinned' : 'tool-pin-btn'}
+            aria-pressed={isPinned}
+            onClick={togglePinCurrent}
+          >
+            {isPinned ? (en ? '★ Pinned' : '★ Disematkan') : en ? '☆ Pin Suite' : '☆ Sematkan'}
+          </button>
+        )}
+        <button
+          type="button"
+          className="tool-pin-btn"
+          onClick={() => window.dispatchEvent(new Event('dreamex-open-command-palette'))}
+        >
+          Ctrl+K
+        </button>
+      </div>
       <div className="tool-context-clusters" role="group" aria-label={en ? 'Switch OS pillar submenu' : 'Ganti submenu pilar OS'}>
         {TOOL_SUBNAV_CLUSTERS.map(cluster => (
           <button
@@ -1631,6 +1744,24 @@ function ToolRouteBreadcrumbs() {
         )
       })}
     </nav>
+    {pinnedSuites.length > 0 && (
+      <div className="tool-pinned-strip" aria-label={en ? 'Pinned favorite suites' : 'Suite favorit disematkan'}>
+        <span className="tool-pinned-label">★ {en ? 'PINNED:' : 'FAVORIT:'}</span>
+        {pinnedSuites.map(routePath => {
+          const dest = NAV_DESTINATIONS[routePath]
+          if (!dest) return null
+          return (
+            <Link
+              key={routePath}
+              to={routePath}
+              className={cleanPath === routePath ? 'tool-pinned-chip is-active' : 'tool-pinned-chip'}
+            >
+              {en ? dest.en : dest.id}
+            </Link>
+          )
+        })}
+      </div>
+    )}
     {syncedProject && (
       <div className="os-context-bus-bar" data-testid="os-context-pill">
         <span>

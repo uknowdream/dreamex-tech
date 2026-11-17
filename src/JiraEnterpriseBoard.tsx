@@ -1,23 +1,32 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import {
   AlertTriangle,
   BarChart3,
+  BookOpen,
   Bot,
   BrainCircuit,
   CalendarRange,
   CheckCircle2,
   ClipboardCheck,
+  Clock,
   Copy,
   Download,
+  Eye,
   Filter,
+  FolderKanban,
   GitBranch,
+  HelpCircle,
   Kanban,
   Layers3,
+  Lightbulb,
   ListChecks,
   PackageCheck,
   Plus,
   RotateCcw,
+  ShieldAlert,
   Sparkles,
+  Star,
   Trash2,
   Upload,
   X,
@@ -35,14 +44,41 @@ import {
   INITIAL_RELEASES,
   type JiraReleaseVersion,
 } from './jiraAutonomousBrain'
+import {
+  buildAutonomousStandupDigest,
+  computeRiceScore,
+  estimatePokerStoryPoints,
+  INITIAL_CONFLUENCE_DOCS,
+  INITIAL_DISCOVERY_IDEAS,
+  INITIAL_JSM_TICKETS,
+  INITIAL_PROJECTS,
+  INITIAL_SAVED_FILTERS,
+  JIRA_COMPONENTS,
+  type ConfluenceSpecDoc,
+  type JiraProjectMeta,
+  type JsmServiceTicket,
+  type ProductDiscoveryIdea,
+  type SavedJqlFilter,
+} from './jiraEnterpriseModules'
 import './JiraEnterpriseBoard.css'
 
 export type JiraStatusId = 'todo' | 'in_progress' | 'review' | 'blocked' | 'done'
 export type JiraIssueKind = 'story' | 'bug' | 'task' | 'security'
 export type JiraPriorityLevel = 'Highest' | 'High' | 'Medium' | 'Low'
 export type JiraSprintId = 'sprint-24' | 'sprint-25' | 'backlog'
-export type JiraViewTab = 'board' | 'autopilot' | 'backlog' | 'roadmap' | 'releases' | 'navigator' | 'reports' | 'automation'
-export type JiraSwimlaneMode = 'none' | 'epic' | 'assignee' | 'priority'
+export type JiraViewTab =
+  | 'board'
+  | 'autopilot'
+  | 'backlog'
+  | 'roadmap'
+  | 'discovery'
+  | 'jsm'
+  | 'wiki'
+  | 'releases'
+  | 'navigator'
+  | 'reports'
+  | 'automation'
+export type JiraSwimlaneMode = 'none' | 'epic' | 'assignee' | 'priority' | 'component'
 
 export interface JiraSubtask {
   id: string
@@ -86,6 +122,11 @@ export interface JiraIssue {
   prRef?: string
   playwrightSpec?: string
   dueDate: string
+  estHours?: number
+  loggedHours?: number
+  component?: string
+  fixVersion?: string
+  watching?: boolean
   subtasks: JiraSubtask[]
   comments: JiraComment[]
   updatedAt: string
@@ -675,6 +716,38 @@ export default function JiraEnterpriseBoardPage() {
   const [customRuleTrigger, setCustomRuleTrigger] = useState('WHEN Issue Priority = Highest')
   const [customRuleAction, setCustomRuleAction] = useState('THEN Notify On-Call Channel & Attach Rollback Checklist')
 
+  // v8.0 Full Atlassian Cloud Parity state (Projects, Density, Discovery, JSM, Wiki, Saved Filters, Poker, Shortcuts)
+  const jqlInputRef = useRef<HTMLInputElement>(null)
+  const [projects, setProjects] = useState<JiraProjectMeta[]>(INITIAL_PROJECTS)
+  const [activeProjectKey, setActiveProjectKey] = useState<string>('DX')
+  const [newProjectKeyInput, setNewProjectKeyInput] = useState('')
+  const [newProjectNameInput, setNewProjectNameInput] = useState('')
+  const [showNewProjectForm, setShowNewProjectForm] = useState(false)
+  const [cardDensity, setCardDensity] = useState<'comfortable' | 'compact'>('comfortable')
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [colQuickDrafts, setColQuickDrafts] = useState<Record<JiraStatusId, string>>({
+    todo: '',
+    in_progress: '',
+    review: '',
+    blocked: '',
+    done: '',
+  })
+  const [epicsList, setEpicsList] = useState<JiraEpic[]>(() => [...EPICS])
+  const [newEpicTitle, setNewEpicTitle] = useState('')
+  const [savedFilters, setSavedFilters] = useState<SavedJqlFilter[]>(INITIAL_SAVED_FILTERS)
+  const [saveFilterName, setSaveFilterName] = useState('')
+  const [ideas, setIdeas] = useState<ProductDiscoveryIdea[]>(INITIAL_DISCOVERY_IDEAS)
+  const [newIdeaTitle, setNewIdeaTitle] = useState('')
+  const [newIdeaReach, setNewIdeaReach] = useState(500)
+  const [newIdeaImpact, setNewIdeaImpact] = useState<1 | 2 | 3>(3)
+  const [newIdeaEffort, setNewIdeaEffort] = useState(3)
+  const [jsmTickets, setJsmTickets] = useState<JsmServiceTicket[]>(INITIAL_JSM_TICKETS)
+  const [wikiDocs, setWikiDocs] = useState<ConfluenceSpecDoc[]>(INITIAL_CONFLUENCE_DOCS)
+  const [activeWikiId, setActiveWikiId] = useState<string>(INITIAL_CONFLUENCE_DOCS[0].id)
+  const [pokerComplexity, setPokerComplexity] = useState<1 | 2 | 3 | 5>(3)
+  const [pokerUncertainty, setPokerUncertainty] = useState<1 | 2 | 3>(2)
+  const [pokerQa, setPokerQa] = useState<1 | 2 | 3>(2)
+
   // Persist to localStorage
   useEffect(() => {
     try {
@@ -684,11 +757,12 @@ export default function JiraEnterpriseBoardPage() {
     }
   }, [state])
 
-  // Keyboard shortcuts: 'c' opens Create Issue, 'Escape' closes modals/drawer
+  // Keyboard shortcuts: 'c' Create, '/' Focus JQL, '?' Shortcuts modal, 'Escape' closes modals/drawer
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (createOpen) setCreateOpen(false)
+        if (shortcutsOpen) setShortcutsOpen(false)
+        else if (createOpen) setCreateOpen(false)
         else if (completeSprintOpen) setCompleteSprintOpen(false)
         else if (selectedIssueId) setSelectedIssueId(null)
         return
@@ -699,14 +773,21 @@ export default function JiraEnterpriseBoardPage() {
         target instanceof HTMLTextAreaElement ||
         target instanceof HTMLSelectElement ||
         (target instanceof HTMLElement && target.isContentEditable)
-      if (!isInput && !e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === 'c') {
+      if (isInput || e.ctrlKey || e.metaKey || e.altKey) return
+      if (e.key.toLowerCase() === 'c') {
         e.preventDefault()
         setCreateOpen(true)
+      } else if (e.key === '?') {
+        e.preventDefault()
+        setShortcutsOpen(prev => !prev)
+      } else if (e.key.toLowerCase() === 'a') {
+        e.preventDefault()
+        setAssigneeFilter(prev => (prev === 'Rizky' ? 'ALL' : 'Rizky'))
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [createOpen, completeSprintOpen, selectedIssueId])
+  }, [createOpen, completeSprintOpen, selectedIssueId, shortcutsOpen])
 
   const flashNotice = useCallback((msg: string) => {
     setNotice(msg)
@@ -805,7 +886,7 @@ export default function JiraEnterpriseBoardPage() {
       .filter(Boolean)
 
     setState(prev => {
-      const key = `DX-${prev.nextSequence}`
+      const key = `${activeProjectKey}-${prev.nextSequence}`
       const secRuleEnabled = prev.rules.find(r => r.id === 'rule-sec-escalate')?.enabled
       const isSecTrigger = newType === 'security' || parsedLabels.includes('security')
 
@@ -1074,10 +1155,19 @@ export default function JiraEnterpriseBoardPage() {
       return [{ id: 'all', title: '', issues: activeSprintIssues }]
     }
     if (swimlane === 'epic') {
-      return EPICS.map(ep => ({
-        id: ep.key,
-        title: `${ep.key} · ${en ? ep.nameEn : ep.nameId}`,
-        issues: activeSprintIssues.filter(i => i.epicKey === ep.key),
+      return epicsList
+        .map(ep => ({
+          id: ep.key,
+          title: `${ep.key} · ${en ? ep.nameEn : ep.nameId}`,
+          issues: activeSprintIssues.filter(i => i.epicKey === ep.key),
+        }))
+        .filter(g => g.issues.length > 0)
+    }
+    if (swimlane === 'component') {
+      return JIRA_COMPONENTS.map(comp => ({
+        id: comp,
+        title: `${en ? 'Component' : 'Komponen'}: ${comp}`,
+        issues: activeSprintIssues.filter(i => (i.component || 'Ledger Core') === comp),
       })).filter(g => g.issues.length > 0)
     }
     if (swimlane === 'assignee') {
@@ -1095,7 +1185,7 @@ export default function JiraEnterpriseBoardPage() {
         issues: activeSprintIssues.filter(i => i.priority === p),
       }))
       .filter(g => g.issues.length > 0)
-  }, [swimlane, activeSprintIssues, en])
+  }, [swimlane, activeSprintIssues, en, epicsList])
 
   const selectedIssue = useMemo(
     () => state.issues.find(i => i.id === selectedIssueId) ?? null,
@@ -1248,12 +1338,171 @@ export default function JiraEnterpriseBoardPage() {
 
   const epicLookup = useCallback(
     (epicKey: string) => {
-      const ep = EPICS.find(e => e.key === epicKey)
+      const ep = epicsList.find(e => e.key === epicKey)
       if (!ep) return epicKey
       return en ? ep.nameEn : ep.nameId
     },
-    [en],
+    [en, epicsList],
   )
+
+  const handleQuickColumnAdd = (colId: JiraStatusId) => {
+    const clean = colQuickDrafts[colId].trim()
+    if (!clean) return
+    setState(prev => {
+      const key = `${activeProjectKey}-${prev.nextSequence}`
+      const created: JiraIssue = {
+        id: uid('q'),
+        key,
+        title: clean,
+        description: `Inline board issue created in ${colId}.`,
+        type: 'task',
+        status: colId,
+        priority: 'Medium',
+        points: 3,
+        assignee: 'Rizky',
+        epicKey: epicsList[0]?.key ?? 'DX-EPIC-1',
+        sprintId: 'sprint-24',
+        labels: [activeProjectKey.toLowerCase()],
+        dueDate: '2026-11-29',
+        estHours: 6,
+        loggedHours: 0,
+        component: 'Ledger Core',
+        fixVersion: 'v7.1.0',
+        subtasks: [],
+        comments: [],
+        updatedAt: new Date().toISOString(),
+      }
+      return {
+        ...prev,
+        nextSequence: prev.nextSequence + 1,
+        issues: [...prev.issues, created],
+      }
+    })
+    setColQuickDrafts(prev => ({ ...prev, [colId]: '' }))
+    flashNotice(en ? `Added issue into ${colId.toUpperCase()} column.` : `Tiket ditambahkan ke kolom ${colId.toUpperCase()}.`)
+  }
+
+  const promoteDiscoveryIdea = (idea: ProductDiscoveryIdea) => {
+    const score = computeRiceScore(idea)
+    setState(prev => {
+      const key = `${activeProjectKey}-${prev.nextSequence}`
+      const story: JiraIssue = {
+        id: uid('idea'),
+        key,
+        title: en ? idea.titleEn : idea.titleId,
+        description: `Promoted from Jira Product Discovery (${idea.code} · RICE Score ${score}).`,
+        type: 'story',
+        status: 'todo',
+        priority: score >= 150 ? 'Highest' : 'High',
+        points: Math.min(13, Math.max(3, idea.effort * 2)),
+        assignee: 'Dimas',
+        epicKey: idea.epicKey,
+        sprintId: 'sprint-24',
+        labels: ['product-discovery', `rice-${score}`],
+        dueDate: '2026-11-30',
+        estHours: idea.effort * 8,
+        loggedHours: 0,
+        component: 'AI Orchestrator',
+        fixVersion: 'v7.1.0',
+        subtasks: [],
+        comments: [],
+        updatedAt: new Date().toISOString(),
+      }
+      setIdeas(old => old.map(item => (item.id === idea.id ? { ...item, promotedKey: key } : item)))
+      return {
+        ...prev,
+        nextSequence: prev.nextSequence + 1,
+        issues: [story, ...prev.issues],
+      }
+    })
+    flashNotice(
+      en
+        ? `Promoted ${idea.code} (RICE ${score}) into Active Sprint Board!`
+        : `Ide ${idea.code} (RICE ${score}) berhasil dipromosikan ke Sprint Aktif!`,
+    )
+  }
+
+  const escalateJsmIncident = (ticket: JsmServiceTicket) => {
+    setState(prev => {
+      const key = `${activeProjectKey}-${prev.nextSequence}`
+      const bug: JiraIssue = {
+        id: uid('inc'),
+        key,
+        title: `[${ticket.key}] ${en ? ticket.summaryEn : ticket.summaryId}`,
+        description: `Escalated from JSM Service Desk (${ticket.key} · ${ticket.severity} · Service: ${ticket.service}).`,
+        type: 'bug',
+        status: 'in_progress',
+        priority: ticket.severity === 'SEV-1' ? 'Highest' : 'High',
+        points: 5,
+        assignee: 'Alya',
+        epicKey: 'DX-EPIC-1',
+        sprintId: 'sprint-24',
+        labels: ['jsm-escalation', ticket.severity.toLowerCase()],
+        dueDate: '2026-11-19',
+        estHours: 8,
+        loggedHours: 2,
+        component: ticket.service,
+        fixVersion: 'v7.1.0',
+        subtasks: [
+          { id: uid('st'), title: `Mitigate ${ticket.key} & attach root-cause postmortem`, done: false },
+        ],
+        comments: [],
+        updatedAt: new Date().toISOString(),
+      }
+      setJsmTickets(old => old.map(t => (t.id === ticket.id ? { ...t, linkedBoardKey: key, cabStatus: 'mitigated' } : t)))
+      return {
+        ...prev,
+        nextSequence: prev.nextSequence + 1,
+        issues: [bug, ...prev.issues],
+      }
+    })
+    flashNotice(
+      en
+        ? `Escalated ${ticket.key} onto Active Sprint Board for immediate engineering resolution!`
+        : `Insiden ${ticket.key} berhasil dieskalasi ke Sprint Board untuk penanganan cepat!`,
+    )
+  }
+
+  const extractWikiActionToTicket = (doc: ConfluenceSpecDoc) => {
+    setState(prev => {
+      const key = `${activeProjectKey}-${prev.nextSequence}`
+      const task: JiraIssue = {
+        id: uid('doc'),
+        key,
+        title: `[${doc.code}] ${en ? doc.titleEn : doc.titleId}`,
+        description: en ? doc.bodyEn : doc.bodyId,
+        type: 'task',
+        status: 'todo',
+        priority: 'High',
+        points: 5,
+        assignee: 'Rizky',
+        epicKey: 'DX-EPIC-2',
+        sprintId: 'sprint-24',
+        labels: ['confluence-spec', doc.category.toLowerCase()],
+        dueDate: '2026-11-28',
+        estHours: 10,
+        loggedHours: 0,
+        component: 'Ledger Core',
+        fixVersion: 'v7.1.0',
+        subtasks: [],
+        comments: [],
+        updatedAt: new Date().toISOString(),
+      }
+      setWikiDocs(old =>
+        old.map(d => (d.id === doc.id ? { ...d, linkedKeys: [...new Set([...d.linkedKeys, key])] } : d)),
+      )
+      return {
+        ...prev,
+        nextSequence: prev.nextSequence + 1,
+        issues: [task, ...prev.issues],
+      }
+    })
+    flashNotice(
+      en
+        ? `Extracted action item from ${doc.code} into Sprint Ticket!`
+        : `Action item dokumen ${doc.code} berhasil diekstrak menjadi Tiket Sprint!`,
+    )
+  }
 
   const visibleColumns = useMemo(
     () => (mobileCol === 'all' ? COLUMNS : COLUMNS.filter(c => c.id === mobileCol)),
@@ -1268,7 +1517,7 @@ export default function JiraEnterpriseBoardPage() {
           <div className="jira-hero-copy">
             <div className="jira-kicker-row">
               <span className="jira-kicker">
-                <Kanban size={13} /> DREAMEX JIRA AGILE & SPRINT OS · v7.0
+                <Kanban size={13} /> DREAMEX JIRA CLOUD ENTERPRISE · v8.0
               </span>
               <span className="jira-sprint-pill" data-testid="jira-active-sprint-name">
                 {state.activeSprintName}
@@ -1329,8 +1578,115 @@ export default function JiraEnterpriseBoardPage() {
             >
               <RotateCcw size={15} /> {en ? 'Reset Demo' : 'Reset Data'}
             </button>
+            <button
+              type="button"
+              className="button button-ghost"
+              data-testid="jira-shortcuts-btn"
+              onClick={() => setShortcutsOpen(true)}
+            >
+              <HelpCircle size={15} /> {en ? 'Shortcuts (?)' : 'Pintasan (?)'}
+            </button>
           </div>
         </div>
+
+        {/* Multi-Project Switcher Bar (Atlassian Cloud Projects) */}
+        <div className="jira-project-bar" data-testid="jira-project-switcher">
+          <div className="jira-project-pills" role="group" aria-label={en ? 'Switch Jira Project' : 'Pilih Proyek Jira'}>
+            <span className="jira-kpi-label" style={{ marginRight: 4 }}>
+              <FolderKanban size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+              {en ? 'PROJECTS:' : 'PROYEK:'}
+            </span>
+            {projects.map(proj => (
+              <button
+                key={proj.key}
+                type="button"
+                data-testid={`jira-project-pill-${proj.key}`}
+                className={activeProjectKey === proj.key ? 'jira-project-pill is-active' : 'jira-project-pill'}
+                onClick={() => {
+                  setActiveProjectKey(proj.key)
+                  flashNotice(
+                    en
+                      ? `Switched active project context to ${proj.key} · ${proj.nameEn} (${proj.methodology})`
+                      : `Konteks proyek aktif diubah ke ${proj.key} · ${proj.nameId} (${proj.methodology})`,
+                  )
+                }}
+              >
+                <span className="jira-project-key-tag">{proj.key}</span>
+                <span>{en ? proj.nameEn : proj.nameId}</span>
+              </button>
+            ))}
+            <button
+              type="button"
+              className="jira-chip-btn"
+              onClick={() => setShowNewProjectForm(v => !v)}
+            >
+              + {en ? 'New Project' : 'Proyek Baru'}
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button
+              type="button"
+              className="jira-chip-btn"
+              onClick={() => setCardDensity(d => (d === 'comfortable' ? 'compact' : 'comfortable'))}
+            >
+              {cardDensity === 'comfortable'
+                ? en
+                  ? 'Density: Comfortable'
+                  : 'Tampilan: Nyaman'
+                : en
+                  ? 'Density: Compact'
+                  : 'Tampilan: Ringkas'}
+            </button>
+          </div>
+        </div>
+
+        {showNewProjectForm && (
+          <form
+            className="jira-goal-compiler"
+            onSubmit={e => {
+              e.preventDefault()
+              const k = newProjectKeyInput.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)
+              const n = newProjectNameInput.trim()
+              if (!k || !n) return
+              if (!projects.some(p => p.key === k)) {
+                setProjects(prev => [
+                  ...prev,
+                  {
+                    key: k,
+                    nameEn: n,
+                    nameId: n,
+                    methodology: 'Scrum',
+                    lead: 'Bima',
+                    categoryEn: 'Custom Space',
+                    categoryId: 'Ruang Kustom',
+                  },
+                ])
+              }
+              setActiveProjectKey(k)
+              setNewProjectKeyInput('')
+              setNewProjectNameInput('')
+              setShowNewProjectForm(false)
+            }}
+          >
+            <input
+              value={newProjectKeyInput}
+              onChange={e => setNewProjectKeyInput(e.target.value)}
+              placeholder="KEY (e.g. PAY)"
+              style={{ maxWidth: 140 }}
+              required
+            />
+            <input
+              value={newProjectNameInput}
+              onChange={e => setNewProjectNameInput(e.target.value)}
+              placeholder={en ? 'Project name (e.g. Core Mobile SuperApp)…' : 'Nama proyek baru…'}
+              required
+            />
+            <button type="submit" className="button button-primary">
+              <Plus size={14} /> {en ? 'Create Space' : 'Buat Ruang'}
+            </button>
+          </form>
+        )}
 
         {syncedBlueprint && (
           <div className="jira-blueprint-banner" data-testid="jira-blueprint-sync-banner">
@@ -1504,18 +1860,21 @@ export default function JiraEnterpriseBoardPage() {
         </div>
       </section>
 
-      {/* 8-View Enterprise Workspace Switcher */}
+      {/* 11-View Full Atlassian Cloud Workspace Switcher */}
       <div className="jira-tabs-bar" role="tablist" aria-label={en ? 'Jira workspace views' : 'Tampilan workspace Jira'}>
         {(
           [
-            { id: 'board', icon: Kanban, en: 'Active Sprint Board', idLabel: 'Board Sprint Aktif', count: activeSprintIssues.length },
-            { id: 'autopilot', icon: BrainCircuit, en: 'AI Autopilot & Future', idLabel: 'AI Autopilot & Prediksi', count: horizonReport.recommendations.length },
-            { id: 'backlog', icon: Layers3, en: 'Backlog & Sprints', idLabel: 'Backlog & Sprint', count: state.issues.length },
-            { id: 'roadmap', icon: CalendarRange, en: 'Epic Gantt Roadmap', idLabel: 'Roadmap Gantt Epic', count: EPICS.length },
-            { id: 'releases', icon: PackageCheck, en: 'Releases & Versions', idLabel: 'Rilis & Versi', count: releases.length },
-            { id: 'navigator', icon: ListChecks, en: 'Issue Navigator & Bulk', idLabel: 'Navigator & Edit Massal', count: filteredIssues.length },
-            { id: 'reports', icon: BarChart3, en: 'Burndown & Retro', idLabel: 'Burndown & Retro', count: 5 },
-            { id: 'automation', icon: Bot, en: 'Automation & Jira Sync', idLabel: 'Otomasi & Sinkron Jira', count: state.rules.length },
+            { id: 'board', icon: Kanban, en: 'Sprint Board', idLabel: 'Board Sprint', count: activeSprintIssues.length },
+            { id: 'autopilot', icon: BrainCircuit, en: 'AI Autopilot', idLabel: 'AI Autopilot', count: horizonReport.recommendations.length },
+            { id: 'backlog', icon: Layers3, en: 'Backlog & Poker', idLabel: 'Backlog & Poker', count: state.issues.length },
+            { id: 'roadmap', icon: CalendarRange, en: 'Epic Gantt', idLabel: 'Roadmap Gantt', count: epicsList.length },
+            { id: 'discovery', icon: Lightbulb, en: 'Discovery RICE', idLabel: 'Ide & RICE', count: ideas.length },
+            { id: 'jsm', icon: ShieldAlert, en: 'Service Desk & CAB', idLabel: 'Insiden & CAB', count: jsmTickets.length },
+            { id: 'wiki', icon: BookOpen, en: 'Confluence Specs', idLabel: 'Dokumen PRD/ADR', count: wikiDocs.length },
+            { id: 'releases', icon: PackageCheck, en: 'Releases', idLabel: 'Versi Rilis', count: releases.length },
+            { id: 'navigator', icon: ListChecks, en: 'JQL & Bulk', idLabel: 'JQL & Massal', count: filteredIssues.length },
+            { id: 'reports', icon: BarChart3, en: 'CFD & Reports', idLabel: 'CFD & Laporan', count: 6 },
+            { id: 'automation', icon: Bot, en: 'Automation & API', idLabel: 'Otomasi & API', count: state.rules.length },
           ] as const
         ).map(tab => {
           const Icon = tab.icon
@@ -1545,6 +1904,7 @@ export default function JiraEnterpriseBoardPage() {
             <label className="jira-jql-box">
               <span className="jira-jql-prefix">JQL</span>
               <input
+                ref={jqlInputRef}
                 type="text"
                 data-testid="jira-jql-input"
                 value={jqlQuery}
@@ -1581,9 +1941,60 @@ export default function JiraEnterpriseBoardPage() {
                   <option value="epic">{en ? 'Group by Epic' : 'Per Epic'}</option>
                   <option value="assignee">{en ? 'Group by Assignee' : 'Per PIC / Assignee'}</option>
                   <option value="priority">{en ? 'Group by Priority' : 'Per Prioritas'}</option>
+                  <option value="component">{en ? 'Group by Component' : 'Per Komponen'}</option>
                 </select>
               </label>
             )}
+          </div>
+
+          {/* Saved Starred JQL Filters Bar */}
+          <div className="jira-toolbar-row">
+            <div className="jira-quick-chips" role="group" aria-label={en ? 'Saved JQL filters' : 'Filter JQL tersimpan'}>
+              <span className="jira-kpi-label">
+                <Star size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                {en ? 'STARRED JQL:' : 'FILTER BINTANG:'}
+              </span>
+              {savedFilters.map(sf => (
+                <button
+                  key={sf.id}
+                  type="button"
+                  className={jqlQuery === sf.jql ? 'jira-chip-btn is-active' : 'jira-chip-btn'}
+                  onClick={() => setJqlQuery(prev => (prev === sf.jql ? '' : sf.jql))}
+                >
+                  ★ {sf.name}
+                </button>
+              ))}
+              {jqlQuery.trim() && (
+                <span style={{ display: 'inline-flex', gap: 5, alignItems: 'center' }}>
+                  <input
+                    value={saveFilterName}
+                    onChange={e => setSaveFilterName(e.target.value)}
+                    placeholder={en ? 'Filter name…' : 'Nama filter…'}
+                    style={{
+                      height: 28,
+                      padding: '2px 8px',
+                      borderRadius: 7,
+                      border: '1px solid rgba(148,163,184,0.3)',
+                      background: 'transparent',
+                      color: 'inherit',
+                      fontSize: 11,
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="jira-chip-btn"
+                    onClick={() => {
+                      const clean = saveFilterName.trim() || `Filter #${savedFilters.length + 1}`
+                      setSavedFilters(prev => [...prev, { id: uid('sf'), name: clean, jql: jqlQuery.trim() }])
+                      setSaveFilterName('')
+                      flashNotice(en ? `Saved starred JQL filter "${clean}"!` : `Filter JQL "${clean}" disimpan!`)
+                    }}
+                  >
+                    + {en ? 'Save JQL' : 'Simpan'}
+                  </button>
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="jira-toolbar-row">
@@ -1780,7 +2191,7 @@ export default function JiraEnterpriseBoardPage() {
                                   key={issue.id}
                                   draggable
                                   data-testid={`jira-card-${issue.key}`}
-                                  className="jira-card"
+                                  className={cardDensity === 'compact' ? 'jira-card is-compact' : 'jira-card'}
                                   onDragStart={e => {
                                     setDraggingId(issue.id)
                                     e.dataTransfer.setData('text/plain', issue.id)
@@ -1867,6 +2278,25 @@ export default function JiraEnterpriseBoardPage() {
                               )
                             })}
                           </div>
+
+                          {/* Inline Jira Column Quick-Create */}
+                          <form
+                            className="jira-col-quick-add"
+                            onSubmit={e => {
+                              e.preventDefault()
+                              handleQuickColumnAdd(col.id)
+                            }}
+                          >
+                            <input
+                              value={colQuickDrafts[col.id]}
+                              onChange={e => setColQuickDrafts(prev => ({ ...prev, [col.id]: e.target.value }))}
+                              placeholder={en ? `+ Create in ${col.en}…` : `+ Buat di ${col.idLabel}…`}
+                              aria-label={`Quick create in ${col.en}`}
+                            />
+                            <button type="submit" aria-label={`Submit quick issue in ${col.en}`}>
+                              +
+                            </button>
+                          </form>
                         </div>
                       )
                     })}
@@ -2015,14 +2445,95 @@ export default function JiraEnterpriseBoardPage() {
               </pre>
             </div>
           </article>
+
+          {/* Autonomous Daily Standup Digest (Slack / Teams Ready) */}
+          <article className="jira-panel-card">
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
+              <div>
+                <span className="jira-kpi-label">
+                  {en ? 'AUTONOMOUS DAILY STANDUP DIGEST (SLACK / TEAMS)' : 'RINGKASAN DAILY STANDUP OTONOM (SLACK / TEAMS)'}
+                </span>
+                <h2 style={{ margin: '4px 0 0', fontSize: 18 }}>
+                  {en ? 'Zero-Meeting Async Standup Report' : 'Laporan Standup Harian Otomatis Siap Kirim'}
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="button button-primary"
+                onClick={() => {
+                  const text = buildAutonomousStandupDigest(
+                    state.activeSprintName,
+                    state.issues,
+                    horizonReport.confidenceScore,
+                    en,
+                  )
+                  void navigator.clipboard?.writeText(text)
+                  flashNotice(en ? 'Copied Autonomous Daily Standup digest!' : 'Ringkasan Daily Standup disalin!')
+                }}
+              >
+                <Copy size={14} /> {en ? 'Copy Standup Digest' : 'Salin Standup'}
+              </button>
+            </div>
+            <pre className="jira-code-pre">
+              {buildAutonomousStandupDigest(state.activeSprintName, state.issues, horizonReport.confidenceScore, en)}
+            </pre>
+          </article>
         </section>
       )}
 
       {/* ====================================================================
-          VIEW 2: BACKLOG & SPRINT CAPACITY PLANNING
+          VIEW 2: BACKLOG & SPRINT CAPACITY PLANNING + PLANNING POKER
          ==================================================================== */}
       {activeTab === 'backlog' && (
         <section className="jira-backlog-stack" aria-label={en ? 'Backlog and Sprint Planning' : 'Backlog dan Perencanaan Sprint'}>
+          {/* Interactive Planning Poker Estimator */}
+          <article className="jira-panel-card">
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+              <div>
+                <span className="jira-kpi-label">
+                  {en ? 'SCRUM PLANNING POKER · AI STORY POINT CALIBRATOR' : 'PLANNING POKER SCRUM · KALIBRATOR STORY POINTS'}
+                </span>
+                <h2 style={{ margin: '4px 0 0', fontSize: 17 }}>
+                  {en
+                    ? 'Calibrate Fibonacci Story Points Before Sprint Commitment'
+                    : 'Hitung Objektif Estimasi Fibonacci Sebelum Komitmen Sprint'}
+                </h2>
+              </div>
+              <span className="jira-kpi-badge" style={{ fontSize: 13, padding: '6px 12px' }}>
+                {en ? 'Recommended:' : 'Rekomendasi:'}{' '}
+                {estimatePokerStoryPoints(pokerComplexity, pokerUncertainty, pokerQa)} SP
+              </span>
+            </div>
+            <div className="jira-field-grid">
+              <div className="jira-field">
+                <label>{en ? 'Technical Complexity' : 'Kompleksitas Teknis'}</label>
+                <select
+                  value={pokerComplexity}
+                  onChange={e => setPokerComplexity(Number(e.target.value) as 1 | 2 | 3 | 5)}
+                >
+                  <option value={1}>1 · Trivial / Config</option>
+                  <option value={2}>2 · Standard CRUD / UI</option>
+                  <option value={3}>3 · Multi-Service / DB Migration</option>
+                  <option value={5}>5 · Distributed Consensus / Crypto</option>
+                </select>
+              </div>
+              <div className="jira-field">
+                <label>{en ? 'Domain Uncertainty & QA Scope' : 'Ketidakpastian & Cakupan QA'}</label>
+                <select
+                  value={pokerUncertainty}
+                  onChange={e => {
+                    const v = Number(e.target.value) as 1 | 2 | 3
+                    setPokerUncertainty(v)
+                    setPokerQa(v)
+                  }}
+                >
+                  <option value={1}>1 · Well-known contract</option>
+                  <option value={2}>2 · Moderate edge-cases + E2E</option>
+                  <option value={3}>3 · High external risk + Chaos test</option>
+                </select>
+              </div>
+            </div>
+          </article>
           {(
             [
               {
@@ -2205,7 +2716,7 @@ export default function JiraEnterpriseBoardPage() {
                 <span>Jan W3</span>
               </div>
 
-              {EPICS.map(epic => {
+              {epicsList.map(epic => {
                 const children = state.issues.filter(i => i.epicKey === epic.key)
                 const totalSp = children.reduce((s, i) => s + i.points, 0)
                 const doneSp = children.filter(i => i.status === 'done').reduce((s, i) => s + i.points, 0)
@@ -2273,6 +2784,320 @@ export default function JiraEnterpriseBoardPage() {
                   )
                 })}
             </div>
+          </div>
+
+          <form
+            className="jira-goal-compiler"
+            onSubmit={e => {
+              e.preventDefault()
+              const clean = newEpicTitle.trim()
+              if (!clean) return
+              const nextKey = `${activeProjectKey}-EPIC-${epicsList.length + 1}`
+              setEpicsList(prev => [
+                ...prev,
+                {
+                  id: uid('epic'),
+                  key: nextKey,
+                  nameEn: clean,
+                  nameId: clean,
+                  color: 'linear-gradient(90deg, #34d399, #38bdf8)',
+                  startSlot: 2,
+                  spanSlots: 4,
+                  owner: 'Bima',
+                },
+              ])
+              setNewEpicTitle('')
+              flashNotice(en ? `Created new Roadmap Epic ${nextKey}!` : `Epic baru ${nextKey} ditambahkan ke Roadmap!`)
+            }}
+          >
+            <input
+              value={newEpicTitle}
+              onChange={e => setNewEpicTitle(e.target.value)}
+              placeholder={en ? '+ Create new strategic Epic on Gantt timeline…' : '+ Buat Epic strategis baru di timeline Gantt…'}
+              aria-label={en ? 'New Epic title' : 'Judul Epic baru'}
+            />
+            <button type="submit" className="button button-primary">
+              <Plus size={14} /> {en ? 'Add Epic' : 'Tambah Epic'}
+            </button>
+          </form>
+        </section>
+      )}
+
+      {/* ====================================================================
+          VIEW 3C: JIRA PRODUCT DISCOVERY & RICE PRIORITIZATION MATRIX
+         ==================================================================== */}
+      {activeTab === 'discovery' && (
+        <section
+          className="jira-backlog-stack"
+          data-testid="jira-discovery-panel"
+          aria-label={en ? 'Jira Product Discovery RICE Matrix' : 'Matriks Prioritas Ide RICE'}
+        >
+          <article className="jira-panel-card">
+            <div>
+              <span className="jira-kpi-label">
+                {en ? 'JIRA PRODUCT DISCOVERY · RICE SCORING MATRIX' : 'JIRA PRODUCT DISCOVERY · MATRIKS SKOR RICE'}
+              </span>
+              <h2 style={{ margin: '4px 0 0', fontSize: 18 }}>
+                {en
+                  ? 'Prioritize Product Ideas by Reach × Impact × Confidence ÷ Effort'
+                  : 'Prioritaskan Ide Fitur Berdasarkan Reach × Impact × Confidence ÷ Effort'}
+              </h2>
+            </div>
+
+            <form
+              className="jira-goal-compiler"
+              onSubmit={e => {
+                e.preventDefault()
+                const clean = newIdeaTitle.trim()
+                if (!clean) return
+                const code = `IDEA-0${ideas.length + 1}`
+                setIdeas(prev => [
+                  {
+                    id: uid('idea'),
+                    code,
+                    titleEn: clean,
+                    titleId: clean,
+                    reach: newIdeaReach,
+                    impact: newIdeaImpact,
+                    confidence: 85,
+                    effort: newIdeaEffort,
+                    epicKey: epicsList[0]?.key ?? 'DX-EPIC-1',
+                  },
+                  ...prev,
+                ])
+                setNewIdeaTitle('')
+                flashNotice(en ? `Added ${code} to Product Discovery!` : `Ide ${code} berhasil ditambahkan!`)
+              }}
+            >
+              <input
+                value={newIdeaTitle}
+                onChange={e => setNewIdeaTitle(e.target.value)}
+                placeholder={en ? 'Capture new product idea or customer request…' : 'Tulis ide fitur atau kebutuhan pelanggan baru…'}
+                aria-label={en ? 'Product discovery idea title' : 'Judul ide produk baru'}
+              />
+              <select
+                className="jira-select"
+                value={newIdeaReach}
+                onChange={e => setNewIdeaReach(Number(e.target.value))}
+                aria-label="Reach"
+              >
+                <option value={250}>Reach: 250/mo</option>
+                <option value={500}>Reach: 500/mo</option>
+                <option value={900}>Reach: 900/mo</option>
+              </select>
+              <select
+                className="jira-select"
+                value={newIdeaImpact}
+                onChange={e => setNewIdeaImpact(Number(e.target.value) as 1 | 2 | 3)}
+                aria-label="Impact"
+              >
+                <option value={1}>Impact: 1x</option>
+                <option value={2}>Impact: 2x (High)</option>
+                <option value={3}>Impact: 3x (Massive)</option>
+              </select>
+              <select
+                className="jira-select"
+                value={newIdeaEffort}
+                onChange={e => setNewIdeaEffort(Number(e.target.value))}
+                aria-label="Effort"
+              >
+                <option value={2}>Effort: 2w</option>
+                <option value={3}>Effort: 3w</option>
+                <option value={5}>Effort: 5w</option>
+              </select>
+              <button type="submit" className="button button-primary">
+                <Plus size={14} /> {en ? 'Add Idea' : 'Tambah Ide'}
+              </button>
+            </form>
+
+            <div className="jira-rule-list">
+              {[...ideas]
+                .sort((a, b) => computeRiceScore(b) - computeRiceScore(a))
+                .map(idea => {
+                  const score = computeRiceScore(idea)
+                  return (
+                    <div className="jira-rule-item" key={idea.id}>
+                      <div style={{ maxWidth: 680 }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+                          <span className="jira-type-badge jira-type-epic">{idea.code}</span>
+                          <span className="jira-kpi-badge">RICE: {score}</span>
+                          <strong>{en ? idea.titleEn : idea.titleId}</strong>
+                        </div>
+                        <div className="jira-kpi-sub" style={{ marginTop: 4 }}>
+                          Reach {idea.reach} · Impact {idea.impact}x · Confidence {idea.confidence}% · Effort {idea.effort}w ·{' '}
+                          {idea.epicKey}
+                        </div>
+                      </div>
+                      {idea.promotedKey ? (
+                        <span className="jira-kpi-badge">
+                          {en ? `Promoted -> ${idea.promotedKey}` : `Masuk Sprint -> ${idea.promotedKey}`}
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="button button-primary"
+                          data-testid={`jira-promote-${idea.code}`}
+                          onClick={() => promoteDiscoveryIdea(idea)}
+                        >
+                          <Zap size={14} /> {en ? 'Promote to Sprint' : 'Jadikan Tiket Sprint'}
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+            </div>
+          </article>
+        </section>
+      )}
+
+      {/* ====================================================================
+          VIEW 3D: JIRA SERVICE MANAGEMENT (JSM) INCIDENTS & CAB DESK
+         ==================================================================== */}
+      {activeTab === 'jsm' && (
+        <section
+          className="jira-backlog-stack"
+          data-testid="jira-jsm-panel"
+          aria-label={en ? 'Jira Service Management Desk' : 'Meja Layanan Insiden dan CAB JSM'}
+        >
+          <article className="jira-panel-card">
+            <div>
+              <span className="jira-kpi-label">
+                {en ? 'JIRA SERVICE MANAGEMENT (ITSM) · INCIDENTS & CAB' : 'JIRA SERVICE MANAGEMENT (ITSM) · INSIDEN & CAB'}
+              </span>
+              <h2 style={{ margin: '4px 0 0', fontSize: 18 }}>
+                {en
+                  ? 'Live Production Incidents, On-Call SLA & Change Advisory Board'
+                  : 'Insiden Produksi Aktif, SLA On-Call & Persetujuan Perubahan CAB'}
+              </h2>
+            </div>
+
+            <div className="jira-rule-list">
+              {jsmTickets.map(ticket => (
+                <div className="jira-rule-item" key={ticket.id}>
+                  <div style={{ maxWidth: 680 }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
+                      <span className={`jira-type-badge ${ticket.kind === 'incident' ? 'jira-type-bug' : 'jira-type-task'}`}>
+                        {ticket.key}
+                      </span>
+                      <span className={ticket.severity === 'SEV-1' ? 'jira-kpi-badge is-warn' : 'jira-kpi-badge'}>
+                        {ticket.severity}
+                      </span>
+                      <strong>{en ? ticket.summaryEn : ticket.summaryId}</strong>
+                    </div>
+                    <div className="jira-kpi-sub" style={{ marginTop: 4 }}>
+                      Service: <b>{ticket.service}</b> · Reporter: {ticket.requester} ·{' '}
+                      {en ? ticket.slaRemainingEn : ticket.slaRemainingId}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                    {ticket.kind === 'change' && ticket.cabStatus !== 'approved' && (
+                      <button
+                        type="button"
+                        className="button button-ghost"
+                        onClick={() =>
+                          setJsmTickets(old =>
+                            old.map(t => (t.id === ticket.id ? { ...t, cabStatus: 'approved' } : t)),
+                          )
+                        }
+                      >
+                        {en ? 'Approve CAB' : 'Setujui CAB'}
+                      </button>
+                    )}
+                    {ticket.linkedBoardKey ? (
+                      <span className="jira-kpi-badge">Linked: {ticket.linkedBoardKey}</span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="button button-primary"
+                        data-testid={`jira-escalate-${ticket.key}`}
+                        onClick={() => escalateJsmIncident(ticket)}
+                      >
+                        <ShieldAlert size={14} /> {en ? 'Escalate to Sprint Board' : 'Eskalasi ke Sprint Board'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+        </section>
+      )}
+
+      {/* ====================================================================
+          VIEW 3E: CONFLUENCE LINKED SPECS, PRD & ADR WIKI
+         ==================================================================== */}
+      {activeTab === 'wiki' && (
+        <section
+          className="jira-panel-card"
+          data-testid="jira-wiki-panel"
+          aria-label={en ? 'Confluence Engineering Wiki' : 'Wiki Spesifikasi Confluence'}
+        >
+          <div>
+            <span className="jira-kpi-label">
+              {en ? 'ATLASSIAN CONFLUENCE BRIDGE · LINKED PRDs, ADRs & RUNBOOKS' : 'INTEGRASI CONFLUENCE · DOKUMEN PRD, ADR & RUNBOOK'}
+            </span>
+            <h2 style={{ margin: '4px 0 0', fontSize: 18 }}>
+              {en
+                ? 'Bi-Directional Knowledge Base Connected Directly to Sprint Tickets'
+                : 'Basis Dokumen Arsitektur yang Terhubung Dua Arah ke Tiket Sprint'}
+            </h2>
+          </div>
+
+          <div className="jira-wiki-layout">
+            <div className="jira-wiki-nav">
+              {wikiDocs.map(doc => (
+                <button
+                  key={doc.id}
+                  type="button"
+                  className={activeWikiId === doc.id ? 'jira-wiki-nav-btn is-active' : 'jira-wiki-nav-btn'}
+                  onClick={() => setActiveWikiId(doc.id)}
+                >
+                  <span className="jira-kpi-label">
+                    {doc.code} · {doc.category}
+                  </span>
+                  <strong style={{ fontSize: 12.5 }}>{en ? doc.titleEn : doc.titleId}</strong>
+                </button>
+              ))}
+            </div>
+
+            {(() => {
+              const doc = wikiDocs.find(d => d.id === activeWikiId) ?? wikiDocs[0]
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
+                    <div>
+                      <strong style={{ fontSize: 16 }}>{en ? doc.titleEn : doc.titleId}</strong>
+                      <div className="jira-kpi-sub">
+                        {doc.author} · Updated {doc.updatedAt} · Linked: {doc.linkedKeys.join(', ')}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="button button-primary"
+                      data-testid="jira-wiki-extract-btn"
+                      onClick={() => extractWikiActionToTicket(doc)}
+                    >
+                      <Plus size={14} /> {en ? 'Extract Action to Jira Ticket' : 'Jadikan Tiket Jira'}
+                    </button>
+                  </div>
+
+                  <div className="jira-field">
+                    <textarea
+                      aria-label="Confluence specification markdown editor"
+                      style={{ minHeight: 190 }}
+                      value={en ? doc.bodyEn : doc.bodyId}
+                      onChange={e => {
+                        const val = e.target.value
+                        setWikiDocs(old =>
+                          old.map(d => (d.id === doc.id ? (en ? { ...d, bodyEn: val } : { ...d, bodyId: val }) : d)),
+                        )
+                      }}
+                    />
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         </section>
       )}
@@ -2591,6 +3416,26 @@ export default function JiraEnterpriseBoardPage() {
             </span>
           </article>
 
+          {/* Cumulative Flow Diagram (CFD) */}
+          <article className="jira-panel-card" style={{ gridColumn: '1 / -1' }}>
+            <div>
+              <span className="jira-kpi-label">
+                {en ? 'CUMULATIVE FLOW DIAGRAM (CFD) · CYCLE STABILITY' : 'CUMULATIVE FLOW DIAGRAM (CFD) · STABILITAS ALUR'}
+              </span>
+              <h2 style={{ margin: '4px 0 0', fontSize: 18 }}>
+                {en ? 'Stage Throughput Across Done, QA Review, In Progress & To Do' : 'Akumulasi Alur Tiket Lintas Tahap Kerja'}
+              </h2>
+            </div>
+            <svg className="jira-chart-svg" viewBox="0 0 640 160" role="img" aria-label="Cumulative flow diagram">
+              <polygon points="30,140 180,128 330,115 480,96 610,76 610,140" fill="rgba(74, 222, 128, 0.35)" />
+              <polygon points="30,118 180,104 330,88 480,70 610,54 610,76 480,96 330,115 180,128 30,140" fill="rgba(167, 139, 250, 0.35)" />
+              <polygon points="30,90 180,76 330,62 480,46 610,32 610,54 480,70 330,88 180,104 30,118" fill="rgba(56, 189, 248, 0.35)" />
+              <line x1="30" y1="76" x2="610" y2="32" stroke="#38bdf8" strokeWidth="2" />
+              <line x1="30" y1="140" x2="610" y2="76" stroke="#4ade80" strokeWidth="2" />
+              <text x="36" y="24" fill="#94a3b8" fontSize="10">Green = Done · Purple = QA Review · Cyan = In Progress</text>
+            </svg>
+          </article>
+
           {/* Workload Distribution by Assignee */}
           <article className="jira-panel-card" style={{ gridColumn: '1 / -1' }}>
             <span className="jira-kpi-label">{en ? 'WORKLOAD BY ENGINEER' : 'DISTRIBUSI BEBAN KERJA TIM'}</span>
@@ -2905,6 +3750,37 @@ export default function JiraEnterpriseBoardPage() {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 <button
                   type="button"
+                  className={selectedIssue.watching ? 'button button-primary' : 'button button-ghost'}
+                  onClick={() => updateIssue(selectedIssue.id, { watching: !selectedIssue.watching })}
+                >
+                  <Eye size={14} /> {selectedIssue.watching ? (en ? 'Watching' : 'Dipantau') : en ? 'Watch' : 'Pantau'}
+                </button>
+                <button
+                  type="button"
+                  className="button button-ghost"
+                  onClick={() => {
+                    setState(prev => {
+                      const cloneKey = `${activeProjectKey}-${prev.nextSequence}`
+                      const cloned: JiraIssue = {
+                        ...selectedIssue,
+                        id: uid('clone'),
+                        key: cloneKey,
+                        title: `[Clone] ${selectedIssue.title}`,
+                        updatedAt: new Date().toISOString(),
+                      }
+                      return {
+                        ...prev,
+                        nextSequence: prev.nextSequence + 1,
+                        issues: [cloned, ...prev.issues],
+                      }
+                    })
+                    flashNotice(en ? `Cloned ${selectedIssue.key}!` : `Tiket ${selectedIssue.key} berhasil diduplikasi!`)
+                  }}
+                >
+                  <Copy size={14} /> Clone
+                </button>
+                <button
+                  type="button"
                   className="button button-ghost"
                   onClick={() => {
                     const adf = JSON.stringify(buildBulkJiraAdfPayload([selectedIssue]), null, 2)
@@ -3016,7 +3892,7 @@ export default function JiraEnterpriseBoardPage() {
                   value={selectedIssue.epicKey}
                   onChange={e => updateIssue(selectedIssue.id, { epicKey: e.target.value })}
                 >
-                  {EPICS.map(ep => (
+                  {epicsList.map(ep => (
                     <option key={ep.key} value={ep.key}>
                       {ep.key} · {en ? ep.nameEn : ep.nameId}
                     </option>
@@ -3036,6 +3912,79 @@ export default function JiraEnterpriseBoardPage() {
                   <option value="backlog">Product Backlog</option>
                 </select>
               </div>
+
+              <div className="jira-field">
+                <label htmlFor="drawer-issue-component">{en ? 'Component' : 'Komponen'}</label>
+                <select
+                  id="drawer-issue-component"
+                  value={selectedIssue.component ?? 'Ledger Core'}
+                  onChange={e => updateIssue(selectedIssue.id, { component: e.target.value })}
+                >
+                  {JIRA_COMPONENTS.map(comp => (
+                    <option key={comp} value={comp}>
+                      {comp}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="jira-field">
+                <label htmlFor="drawer-issue-version">Fix Version</label>
+                <select
+                  id="drawer-issue-version"
+                  value={selectedIssue.fixVersion ?? 'v7.1.0'}
+                  onChange={e => updateIssue(selectedIssue.id, { fixVersion: e.target.value })}
+                >
+                  {releases.map(r => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Jira Time Tracking & Worklog Bar */}
+            {(() => {
+              const est = selectedIssue.estHours ?? selectedIssue.points * 3
+              const logged = selectedIssue.loggedHours ?? (selectedIssue.status === 'done' ? est : Math.round(est * 0.4))
+              const pct = Math.min(100, Math.round((logged / Math.max(1, est)) * 100))
+              return (
+                <div className="jira-rule-item">
+                  <div style={{ flex: 1, minWidth: 200 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 5 }}>
+                      <span>
+                        <Clock size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} />
+                        <b>{en ? 'Time Tracking (Worklog):' : 'Pelacakan Waktu Kerja:'}</b> {logged}h logged / {est}h est
+                      </span>
+                      <span>{pct}%</span>
+                    </div>
+                    <div className="jira-worklog-bar">
+                      <span className="jira-worklog-logged" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="button button-ghost"
+                    onClick={() => updateIssue(selectedIssue.id, { estHours: est, loggedHours: logged + 2 })}
+                  >
+                    + Log 2h
+                  </button>
+                </div>
+              )
+            })()}
+
+            {/* Cross-Suite OS Integration Links */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <Link className="jira-chip-btn" to="/qa-studio">
+                {en ? 'Open in QA Playwright Studio →' : 'Buka di Studio QA Playwright →'}
+              </Link>
+              <Link className="jira-chip-btn" to="/ba-hub">
+                {en ? 'Open in BA Gherkin & RTM →' : 'Buka di Studio BA Gherkin →'}
+              </Link>
+              <Link className="jira-chip-btn" to="/api-playground">
+                {en ? 'Inspect API Contract →' : 'Inspeksi Kontrak API →'}
+              </Link>
             </div>
 
             {/* DevOps Git Branch Helper */}
@@ -3424,6 +4373,67 @@ export default function JiraEnterpriseBoardPage() {
               >
                 <CheckCircle2 size={15} /> {en ? 'Complete & Roll Forward' : 'Selesaikan Sprint'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ====================================================================
+          JIRA KEYBOARD SHORTCUTS MODAL (?)
+         ==================================================================== */}
+      {shortcutsOpen && (
+        <div
+          className="jira-modal-backdrop is-centered"
+          role="dialog"
+          aria-modal="true"
+          aria-label={en ? 'Jira Keyboard Shortcuts' : 'Pintasan Keyboard Jira'}
+          data-testid="jira-shortcuts-modal"
+          onClick={e => {
+            if (e.target === e.currentTarget) setShortcutsOpen(false)
+          }}
+        >
+          <div className="jira-create-dialog">
+            <div className="jira-drawer-head">
+              <strong>{en ? 'Jira Cloud Keyboard Shortcuts' : 'Pintasan Keyboard Jira Cloud'}</strong>
+              <button type="button" className="button button-ghost" onClick={() => setShortcutsOpen(false)}>
+                <X size={16} />
+              </button>
+            </div>
+            <div className="jira-shortcut-grid">
+              <div className="jira-shortcut-item">
+                <span>{en ? 'Create new issue' : 'Buat tiket baru'}</span>
+                <kbd className="jira-shortcut-kbd">C</kbd>
+              </div>
+              <div className="jira-shortcut-item">
+                <span>{en ? 'Toggle My Issues filter' : 'Filter tiket saya'}</span>
+                <kbd className="jira-shortcut-kbd">A</kbd>
+              </div>
+              <div className="jira-shortcut-item">
+                <span>{en ? 'Open Keyboard Shortcuts' : 'Buka daftar pintasan'}</span>
+                <kbd className="jira-shortcut-kbd">?</kbd>
+              </div>
+              <div className="jira-shortcut-item">
+                <span>{en ? 'Close Drawer / Modal' : 'Tutup panel / modal'}</span>
+                <kbd className="jira-shortcut-kbd">Esc</kbd>
+              </div>
+              <div className="jira-shortcut-item">
+                <span>{en ? 'Global OS Command Palette' : 'Command Palette OS Global'}</span>
+                <kbd className="jira-shortcut-kbd">Ctrl+K</kbd>
+              </div>
+              <div className="jira-shortcut-item">
+                <span>{en ? 'Focus JQL Search' : 'Fokus ke kueri JQL'}</span>
+                <button
+                  type="button"
+                  className="jira-chip-btn"
+                  onClick={() => {
+                    setShortcutsOpen(false)
+                    setActiveTab('board')
+                    setTimeout(() => jqlInputRef.current?.focus(), 40)
+                  }}
+                >
+                  Focus JQL
+                </button>
+              </div>
             </div>
           </div>
         </div>
