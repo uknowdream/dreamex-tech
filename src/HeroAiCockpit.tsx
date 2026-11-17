@@ -208,7 +208,7 @@ export function HeroAiCockpit() {
           <span />
         </div>
         <small className="hero-cockpit-title">
-          <Cpu size={13} /> DreamEx Neural Core · v5.0
+          <Cpu size={13} /> DreamEx Neural Core · v6.0
         </small>
         <span className="terminal-live hero-cockpit-live">
           <i /> {t('terminalLive')}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowDownRight, ArrowRight, BookOpen, Braces, Check, Copy, ShieldCheck } from 'lucide-react'
 import { useLanguage } from './i18n'
+import './EngineeringLab.css'
 
 export function EngineeringLabView() {
   const { language } = useLanguage()

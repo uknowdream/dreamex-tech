@@ -6,9 +6,11 @@ import {
   Copy,
   Cpu,
   Download,
+  FolderArchive,
   Laptop,
   Play,
   RotateCcw,
+  Share2,
   ShieldAlert,
   ShieldCheck,
   Smartphone,
@@ -18,9 +20,11 @@ import {
   Workflow,
   Zap,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useLanguage } from './i18n'
+import { useProjectContextBus } from './projectContextBus'
 import { useTheme } from './themeUtils'
+import { buildProductionStarterZip } from './zipBuilder'
 import './AiPrototypeStudio.css'
 
 const NeuralAiByokDrawer = lazy(() => import('./NeuralAiByokDrawer'))
@@ -345,19 +349,28 @@ interface TraceEntry {
 export default function AiPrototypeStudioPage() {
   const { language } = useLanguage()
   const { theme } = useTheme()
+  const { context: syncedContext, publishContext } = useProjectContextBus()
+  const [searchParams, setSearchParams] = useSearchParams()
   const en = language === 'en'
 
-  const [blueprintId, setBlueprintId] = useState<BlueprintId>('fintech')
+  const initialBp = searchParams.get('bp')
+  const [blueprintId, setBlueprintId] = useState<BlueprintId>(() =>
+    initialBp && initialBp in BLUEPRINTS ? (initialBp as BlueprintId) : 'fintech',
+  )
   const blueprint = BLUEPRINTS[blueprintId]
 
-  const [customPrompt, setCustomPrompt] = useState('')
+  const [customPrompt, setCustomPrompt] = useState(() => searchParams.get('q') || '')
   const [selectedAgentIdx, setSelectedAgentIdx] = useState(0)
   const [verifiedAgents, setVerifiedAgents] = useState<number[]>([0, 1, 2, 3, 4])
   const [runningAgentIdx, setRunningAgentIdx] = useState<number | null>(null)
+  const [shareStatus, setShareStatus] = useState('')
 
   const [viewport, setViewport] = useState<DeviceViewport>('desktop')
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>('live')
-  const [rbacRole, setRbacRole] = useState<RbacRole>('admin')
+  const [rbacRole, setRbacRole] = useState<RbacRole>(() => {
+    const r = searchParams.get('role')
+    return r === 'operator' || r === 'auditor' ? r : 'admin'
+  })
   const [cacheShieldOn, setCacheShieldOn] = useState(true)
   const [faultInjected, setFaultInjected] = useState(false)
   const [txCount, setTxCount] = useState(128)
@@ -567,6 +580,65 @@ export default function AiPrototypeStudioPage() {
     URL.revokeObjectURL(url)
   }
 
+  const downloadStarterRepoZip = () => {
+    const archive = buildProductionStarterZip({
+      blueprintId: blueprint.id,
+      title: en ? blueprint.titleEn : blueprint.titleId,
+      intent: effectivePrompt,
+      uslCeilingNodes: blueprint.uslCeilingNodes,
+      p95Ms: liveP95,
+      codeArtifact,
+      playwrightArtifact,
+    })
+    const blob = new Blob([archive], { type: 'application/zip' })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `dreamex-${blueprint.id}-starter.zip`
+    document.body.append(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(url)
+    setShareStatus(
+      en
+        ? '7-file production starter .zip generated locally!'
+        : 'Paket proyek 7-berkas .zip berhasil dibuat di browser!',
+    )
+  }
+
+  const shareLivePermalink = async () => {
+    const params = new URLSearchParams()
+    params.set('bp', blueprint.id)
+    params.set('role', rbacRole)
+    if (customPrompt.trim()) params.set('q', customPrompt.trim().slice(0, 160))
+    setSearchParams(params, { replace: true })
+    const shareUrl = `${window.location.origin}/prototype?${params.toString()}`
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      setShareStatus(en ? 'Shareable prototype link copied!' : 'Tautan berbagi prototipe tersalin!')
+    } catch {
+      setShareStatus(shareUrl)
+    }
+  }
+
+  const syncAcrossSuites = () => {
+    publishContext({
+      blueprintId: blueprint.id,
+      projectName: en ? blueprint.titleEn : blueprint.titleId,
+      intentPrompt: effectivePrompt,
+      uslCeilingNodes: blueprint.uslCeilingNodes,
+      p95TargetMs: liveP95,
+      rbacRole,
+      gherkinScenario: blueprint.agents[0]?.deliverableEn || '',
+      updatedAt: new Date().toISOString(),
+    })
+    setShareStatus(
+      en
+        ? 'Active blueprint synced to Unified OS Context Bus across all suites!'
+        : 'Blueprint aktif berhasil disinkronkan ke seluruh suite OS!',
+    )
+  }
+
   const strokePrimary = theme === 'light' ? '#047857' : '#5eead4'
   const strokeSecondary = theme === 'light' ? '#0369a1' : '#38bdf8'
   const nodeFill = theme === 'light' ? '#ffffff' : '#0d182c'
@@ -578,7 +650,7 @@ export default function AiPrototypeStudioPage() {
         <div>
           <span className="proto-hero-kicker">
             <i className="proto-hero-dot" aria-hidden="true" />
-            {en ? 'AUTONOMOUS AI PROTOTYPE STUDIO · v5.0' : 'STUDIO PROTOTIPE AI OTONOM · v5.0'}
+            {en ? 'AUTONOMOUS AI PROTOTYPE STUDIO · v6.0' : 'STUDIO PROTOTIPE AI OTONOM · v6.0'}
           </span>
           <h1 id="proto-studio-heading" data-testid="proto-studio-title">
             {en ? (
@@ -607,15 +679,35 @@ export default function AiPrototypeStudioPage() {
                   ? 'Run 5-Agent Pipeline'
                   : 'Jalankan Pipeline 5-Agen'}
             </button>
+            <button type="button" className="button button-ghost" data-testid="proto-download-zip" onClick={downloadStarterRepoZip}>
+              <FolderArchive size={16} />
+              {en ? 'Starter Repo (.zip)' : 'Unduh Proyek (.zip)'}
+            </button>
+            <button type="button" className="button button-ghost" data-testid="proto-share-link" onClick={() => void shareLivePermalink()}>
+              <Share2 size={16} />
+              {en ? 'Share Live Link' : 'Bagikan Tautan'}
+            </button>
+            <button type="button" className="button button-ghost" data-testid="proto-sync-bus" onClick={syncAcrossSuites}>
+              <Cpu size={16} />
+              {syncedContext?.blueprintId === blueprint.id
+                ? en
+                  ? 'Synced to OS ✓'
+                  : 'Tersinkron OS ✓'
+                : en
+                  ? 'Sync Across OS'
+                  : 'Sinkron ke OS'}
+            </button>
             <button type="button" className="button button-ghost" onClick={downloadBundleJson}>
               <Download size={16} />
-              {en ? 'Export Prototype Pack (.json)' : 'Ekspor Paket Prototipe (.json)'}
+              .JSON
             </button>
-            <Link className="button button-ghost" to="/tools">
-              <Cpu size={16} />
-              {en ? '6-Pillar Workbench' : 'Workbench 6-Pilar'}
-            </Link>
           </div>
+          {shareStatus && (
+            <p role="status" style={{ margin: '10px 0 0', fontSize: 12.5, color: theme === 'light' ? '#047857' : '#6ee7b7', fontWeight: 600 }}>
+              <Check size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} />
+              {shareStatus}
+            </p>
+          )}
         </div>
 
         <div className="proto-hero-visual">
@@ -1014,6 +1106,9 @@ export default function AiPrototypeStudioPage() {
             <button type="button" className="button button-ghost" onClick={downloadBundleJson}>
               <Download size={14} /> {en ? 'Download JSON Spec' : 'Unduh Spesifikasi JSON'}
             </button>
+            <Link className="button button-ghost" to="/grader">
+              <ShieldCheck size={14} /> {en ? 'Audit Domain Readiness' : 'Audit Kesiapan Domain'}
+            </Link>
           </div>
         </div>
       </section>

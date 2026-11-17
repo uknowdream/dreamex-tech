@@ -2259,3 +2259,13 @@ html[data-theme="light"] #root .home-page :is(.tag-chip, .tag-filter-pill) { bac
 html[data-theme="light"] #root .home-page :is(.tag-chip, .tag-filter-pill):hover { background: #e0f2fe; border-color: rgba(3, 105, 161, .35); color: #0369a1; }
 html[data-theme="light"] #root .home-page :is(.tag-chip, .tag-filter-pill).active { background: #047857; border-color: #047857; color: #ffffff; }
 html[data-theme="light"] #root .home-page .hero-proto-btn { background: linear-gradient(135deg, #f0f9ff, #ecfdf5); border-color: rgba(3, 105, 161, .34); color: #0369a1; }
+html[data-theme="light"] #root .home-page .role-funnel-strip { background: #f8fafc; border-bottom-color: rgba(15, 23, 42, .1); }
+html[data-theme="light"] #root .home-page .role-funnel-label { color: #0369a1; }
+html[data-theme="light"] #root .home-page .role-funnel-pill { background: #ffffff; border-color: rgba(15, 23, 42, .16); color: #0f172a; }
+html[data-theme="light"] #root .home-page .role-funnel-pill b { color: #047857; }
+.os-context-bus-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 8px; padding: 7px 12px; border-radius: 10px; border: 1px solid rgba(110, 243, 197, .34); background: rgba(16, 185, 129, .1); color: #d1fae5; font: 600 11.5px/1.35 var(--mono); }
+.os-context-bus-actions { display: inline-flex; align-items: center; gap: 8px; }
+.os-context-bus-actions a { color: #7dd3fc; text-decoration: underline; }
+.os-context-bus-actions button { width: 22px; height: 22px; border-radius: 6px; border: 1px solid rgba(148, 163, 184, .3); background: transparent; color: inherit; cursor: pointer; }
+html[data-theme="light"] .os-context-bus-bar { background: #ecfdf5; border-color: rgba(4, 120, 87, .3); color: #065f46; }
+html[data-theme="light"] .os-context-bus-actions a { color: #0369a1; }

@@ -5,6 +5,7 @@ import { expect, test } from '@playwright/test'
 const auditedRoutes = [
   '/',
   '/prototype',
+  '/grader',
   '/workspace',
   '/control-plane',
   '/engineering-intelligence',

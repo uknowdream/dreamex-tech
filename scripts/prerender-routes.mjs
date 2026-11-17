@@ -36,8 +36,15 @@ function replaceMeta(html, attribute, key, value) {
   return html.replace('</head>', '  <meta ' + attribute + '="' + escapeHtml(key) + '" content="' + safeValue + '" />\n  </head>')
 }
 
+function ogImageFor(canonical) {
+  if (canonical.endsWith('/prototype')) return 'https://dreamex.tech/images/og-prototype.jpg'
+  if (canonical.endsWith('/grader')) return 'https://dreamex.tech/images/og-grader.jpg'
+  return 'https://dreamex.tech/images/og-default.jpg'
+}
+
 function renderMetadata(page, canonical, type = 'website', publishedAt = '', indexable = true) {
   let html = template
+  const socialImage = ogImageFor(canonical)
   html = html.replace(/<html\b([^>]*)\blang=["'][^"']*["']([^>]*)>/i, '<html$1lang="en"$2>')
   html = html.replace(/<title>[\s\S]*?<\/title>/i, '<title>' + escapeHtml(page.title) + '</title>')
   html = replaceMeta(html, 'name', 'description', page.description)
@@ -46,9 +53,13 @@ function renderMetadata(page, canonical, type = 'website', publishedAt = '', ind
   html = replaceMeta(html, 'property', 'og:description', page.description)
   html = replaceMeta(html, 'property', 'og:url', canonical)
   html = replaceMeta(html, 'property', 'og:type', type)
+  html = replaceMeta(html, 'property', 'og:image', socialImage)
+  html = replaceMeta(html, 'property', 'og:image:width', '1200')
+  html = replaceMeta(html, 'property', 'og:image:height', '630')
   html = replaceMeta(html, 'name', 'twitter:title', page.title)
   html = replaceMeta(html, 'name', 'twitter:description', page.description)
-  html = replaceMeta(html, 'name', 'twitter:card', 'summary')
+  html = replaceMeta(html, 'name', 'twitter:card', 'summary_large_image')
+  html = replaceMeta(html, 'name', 'twitter:image', socialImage)
   const canonicalPattern = /<link\b(?=[^>]*\brel\s*=\s*["']canonical["'])[^>]*>/i
   if (!canonicalPattern.test(html)) {
     errors.push(canonical + ': template is missing its canonical link')

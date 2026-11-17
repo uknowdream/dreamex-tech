@@ -24,6 +24,7 @@ import { EngineeringLaunchpad } from './EngineeringLaunchpad'
 import { HeroAiCockpit } from './HeroAiCockpit'
 import { HeroNeuralCanvas } from './HeroNeuralCanvas'
 import { HoloMotionFx } from './HoloMotionFx'
+import { useProjectContextBus } from './projectContextBus'
 const LazyEngineeringLab = lazy(() => import('./EngineeringLab').then(module => ({ default: module.EngineeringLabView })))
 const LazyWebQualityObservatory = lazy(() => import('./DevUtilitiesSuite').then(module => ({ default: module.WebQualityObservatoryView })))
 const LazyDeveloperUtilities = lazy(() => import('./DevUtilitiesSuite').then(module => ({ default: module.DeveloperUtilitiesView })))
@@ -47,6 +48,8 @@ const SiteAuditPage = lazy(() => import('./SiteAudit').then(module => ({ default
 const SovereignWorkbenchPage = lazy(() => import('./SovereignWorkbench').then(module => ({ default: module.SovereignWorkbenchPage })))
 const AiPrototypeStudioPage = lazy(() => import('./AiPrototypeStudio'))
 const HomePrototypeStage = lazy(() => import('./HomePrototypeStage'))
+const AiReadinessGraderPage = lazy(() => import('./AiReadinessGrader'))
+const GuidedProductTour = lazy(() => import('./GuidedProductTour'))
 
 const categories = ['Semua', 'Software Engineering', 'QA Automation', 'AI & Technology']
 
@@ -124,6 +127,7 @@ const NAV_DESTINATIONS: Record<string, { id: string; en: string; descriptionId: 
   '/learn': { id: 'Pusat Belajar', en: 'Learning Hub', descriptionId: 'Jalur belajar terstruktur', descriptionEn: 'Structured learning paths' },
   '/tools': { id: 'Sovereign IT Workbench (6-Pilar)', en: 'Sovereign IT Workbench (6-Pillar)', descriptionId: 'Workbench IT, QA, BA, PM & Otomasi Jira', descriptionEn: 'Unified IT, QA, BA, PM & Jira Automation suite' },
   '/prototype': { id: 'Studio Prototipe AI (5-Agen)', en: 'AI Prototype Studio (5-Agent)', descriptionId: 'Orkestrasi DAG 5-agen, sandbox UI responsif & ekonomi token', descriptionEn: '5-agent DAG orchestrator, live responsive UI sandbox & token ROI' },
+  '/grader': { id: 'Grader Kesiapan AI & Keamanan', en: 'AI Readiness & Security Grader', descriptionId: 'Audit domain untuk CSP, HSTS, /llms.txt & lencana SVG', descriptionEn: 'Audit domains for CSP, HSTS, /llms.txt & live SVG badges' },
   '/ba-hub': { id: 'BA Gherkin & RTM Studio', en: 'BA Gherkin & RTM Studio', descriptionId: 'Kompilator BRD ke Gherkin & matriks RTM', descriptionEn: 'BRD-to-Gherkin compiler & bi-directional RTM' },
   '/pm-jira-hub': { id: 'PM Monte Carlo & Jira Hub', en: 'PM Monte Carlo & Jira Hub', descriptionId: 'Payload Jira REST API v3, JQL & Monte Carlo', descriptionEn: 'Jira REST API v3 ADF, JQL & Monte Carlo forecasting' },
 }
@@ -392,17 +396,17 @@ function Header() {
               if (!event.currentTarget.open) setActiveMegaPillar('all')
             }}
           >
-            <summary><span className="nav-link-icon"><Layers3 size={16}/></span><span><b>{language === 'en' ? 'Engineering platform' : 'Platform engineering'}</b><small>{language === 'en' ? '24 AI workspaces for Dev, QA, BA & PM' : '24 workspace AI untuk Dev, QA, BA & PM'}</small></span><ChevronDown size={15} className="nav-chevron" /></summary>
+            <summary><span className="nav-link-icon"><Layers3 size={16}/></span><span><b>{language === 'en' ? 'Engineering platform' : 'Platform engineering'}</b><small>{language === 'en' ? '25 AI workspaces for Dev, QA, BA & PM' : '25 workspace AI untuk Dev, QA, BA & PM'}</small></span><ChevronDown size={15} className="nav-chevron" /></summary>
             <div className="nav-mega-panel">
               <div className="nav-mega-intro">
                 <picture>
                   <source srcSet="/images/spotlight-ai-os.webp" type="image/webp" />
                   <img className="nav-mega-spotlight-art" src="/images/spotlight-ai-os.jpg" alt="" aria-hidden="true" width={360} height={200} />
                 </picture>
-                <span className="nav-mega-kicker">{language === 'en' ? 'AUTONOMOUS AI WORKSPACE · v5.0' : 'RUANG KERJA AI OTONOM · v5.0'}</span>
+                <span className="nav-mega-kicker">{language === 'en' ? 'AUTONOMOUS AI WORKSPACE · v6.0' : 'RUANG KERJA AI OTONOM · v6.0'}</span>
                 <strong>{language === 'en' ? 'From live prototype to autonomous release.' : 'Dari prototipe hidup hingga rilis otonom.'}</strong>
-                <p>{language === 'en' ? 'Unify 5-agent UI prototyping, distributed systems design, self-healing QA, executable BA specs, and Jira telemetry in one OS.' : 'Satukan prototipe UI 5-agen, desain sistem, otomasi QA self-healing, spesifikasi BA, dan telemetri Jira dalam satu OS.'}</p>
-                <div className="nav-mega-badges" aria-hidden="true"><span>24 Suites</span><span>Local + BYOK</span><span>Zero-Trust</span></div>
+                <p>{language === 'en' ? 'Unify 5-agent UI prototyping, AI/Security URL grading, USL architecture, self-healing QA, BA specs, and Jira telemetry in one OS.' : 'Satukan prototipe UI 5-agen, audit URL AI/Keamanan, arsitektur USL, QA self-healing, spesifikasi BA, dan telemetri Jira.'}</p>
+                <div className="nav-mega-badges" aria-hidden="true"><span>25 Suites</span><span>MCP + BYOK</span><span>Zero-Trust</span></div>
                 <div className="nav-mega-intro-stats" aria-hidden="true">
                   <div><b>01–05</b><span>{language === 'en' ? 'Agent stages' : 'Tahap agen'}</span></div>
                   <div><b>100%</b><span>{language === 'en' ? 'Browser-first' : 'Berbasis browser'}</span></div>
@@ -412,10 +416,10 @@ function Header() {
               </div>
               <div className="nav-mega-pillars" role="group" aria-label={language === 'en' ? 'Filter platform pillar' : 'Filter pilar platform'}>
                 {([
-                  { id: 'all', en: 'All Suites (22)', idLabel: 'Semua Suite (22)' },
+                  { id: 'all', en: 'All Suites (23)', idLabel: 'Semua Suite (23)' },
                   { id: 'plan', en: 'Control & Ops (9)', idLabel: 'Kendali & Ops (9)' },
                   { id: 'build', en: 'Build & QA (9)', idLabel: 'Bangun & QA (9)' },
-                  { id: 'secure', en: 'Security & Learn (4)', idLabel: 'Keamanan & Edukasi (4)' },
+                  { id: 'secure', en: 'Security & Learn (5)', idLabel: 'Keamanan & Edukasi (5)' },
                 ] as const).map(pillar => (
                   <button
                     key={pillar.id}
@@ -454,6 +458,7 @@ function Header() {
               </div>
               <div className={activeMegaPillar !== 'all' && activeMegaPillar !== 'secure' && !navQuery.trim() ? 'nav-mega-group is-pillar-filtered' : 'nav-mega-group'} data-pillar="secure">
                 <span className="nav-group-label">{language === 'en' ? 'SECURE & LEARN' : 'AMANKAN & PELAJARI'}</span>
+                <NavLink to="/grader" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Sparkles size={15}/></span><span><b>{language === 'en' ? 'AI & Security URL Grader' : 'Grader URL AI & Keamanan'}</b><small>{language === 'en' ? 'Audit CSP, /llms.txt & share SVG badges' : 'Audit CSP, /llms.txt & lencana SVG'}</small></span><i className="nav-item-tag" aria-hidden="true">v6</i></NavLink>
                 <NavLink to="/security-center" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><ShieldCheck size={15}/></span><span><b>{language === 'en' ? 'Security Center' : 'Pusat Keamanan'}</b><small>{language === 'en' ? 'Zero-trust headers & CSP auditing' : 'Audit header zero-trust & CSP'}</small></span><i className="nav-item-tag" aria-hidden="true">SEC</i></NavLink>
                 <NavLink to="/supply-chain-intelligence" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Network size={15}/></span><span><b>Supply Chain</b><small>{language === 'en' ? 'CycloneDX/SPDX SBOM intelligence' : 'Intelijen SBOM CycloneDX & SPDX'}</small></span></NavLink>
                 <NavLink to="/observatory" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Activity size={15}/></span><span><b>Web Quality Observatory</b><small>{language === 'en' ? 'Accessibility, SEO & DOM signals' : 'Audit aksesibilitas, SEO & DOM'}</small></span></NavLink>
@@ -502,7 +507,8 @@ function Footer() {
         </div>
         <div className="footer-column">
           <span className="footer-heading">{en ? 'BUILD & VERIFY' : 'BANGUN & UJI'}</span>
-          <Link to="/prototype">{en ? 'AI Prototype Studio (v5)' : 'Studio Prototipe AI (v5)'} {arrow}</Link>
+          <Link to="/prototype">{en ? 'AI Prototype Studio (v6)' : 'Studio Prototipe AI (v6)'} {arrow}</Link>
+          <Link to="/grader">{en ? 'AI & Security URL Grader' : 'Grader URL AI & Keamanan'} {arrow}</Link>
           <Link to="/lab">Engineering Lab {arrow}</Link>
           <Link to="/tools">{en ? 'Sovereign IT Suite (6-Pillar)' : 'Suite IT Sovereign (6-Pilar)'} {arrow}</Link>
           <Link to="/ba-hub">{en ? 'BA Gherkin & RTM Studio' : 'Studio BA Gherkin & RTM'} {arrow}</Link>
@@ -657,8 +663,8 @@ function Home() {
       <div className="hero-copy"><div className="eyebrow"><span className="eyebrow-dot" /> {t('heroEyebrow')}</div>
         <h1>{t('heroLine1')}<br /><span>{t('heroLine2')}</span><br />{t('heroLine3')}</h1>
         <p className="hero-description">{t('heroDescription')}</p>
-        <div className="hero-actions"><Link className="button button-primary" to="/tools"><Sparkles size={17} /> {language === 'en' ? 'Launch AI Workbench' : 'Buka Workbench AI'}</Link><Link className="button button-ghost hero-proto-btn" to="/prototype"><Layers3 size={17} /> {language === 'en' ? 'Interactive AI Prototype' : 'Prototipe AI Interaktif'}</Link><a className="button button-ghost" href="#latest">{t('exploreKnowledge')} <ArrowRight size={17} /></a><a className="button button-ghost hero-github-btn" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer"><Github size={17} /> {t('sourceCode')}</a></div>
-        <div className="hero-stats"><div><strong>24<i>+</i></strong><span>{t('engineeringNotes')}</span></div><div><strong>04</strong><span>{t('coreDisciplines')}</span></div><div><strong>0.04<i>ms</i></strong><span>{t('ideasExplore')}</span></div></div>
+        <div className="hero-actions"><Link className="button button-primary" to="/tools"><Sparkles size={17} /> {language === 'en' ? 'Launch AI Workbench' : 'Buka Workbench AI'}</Link><Link className="button button-ghost hero-proto-btn" to="/prototype"><Layers3 size={17} /> {language === 'en' ? 'Interactive AI Prototype' : 'Prototipe AI Interaktif'}</Link><button type="button" className="button button-ghost" data-testid="open-guided-tour" onClick={() => window.dispatchEvent(new CustomEvent('dreamex-open-guided-tour'))}><Clock3 size={17} /> {language === 'en' ? '60s Product Tour' : 'Tur Produk 60d'}</button><a className="button button-ghost hero-github-btn" href="https://github.com/uknowdream/dreamex-tech" target="_blank" rel="noreferrer"><Github size={17} /> {t('sourceCode')}</a></div>
+        <div className="hero-stats"><div><strong>25<i>+</i></strong><span>{t('engineeringNotes')}</span></div><div><strong>04</strong><span>{t('coreDisciplines')}</span></div><div><strong>0.04<i>ms</i></strong><span>{t('ideasExplore')}</span></div></div>
       </div>
       <div className="hero-visual"><div className="visual-orbit orbit-one" /><div className="visual-orbit orbit-two" /><HeroAiCockpit /><div className="hero-bento-meta"><div className="hero-chips-rack"><div className="floating-chip chip-top"><ShieldCheck size={16} /> {t('visualChipQuality')}</div><div className="floating-chip chip-bottom"><Sparkles size={16} /> {t('visualChipCuriosity')}</div></div><div className="hero-signal-card" aria-hidden="true">
         <div className="hero-signal-head"><span>{language === 'en' ? 'ENGINEERING LOOP' : 'SIKLUS ENGINEERING'}</span><span>03</span></div>
@@ -672,6 +678,18 @@ function Home() {
       </div></div><div className="visual-caption"><span>{t('visualCaption')}</span><span>{t('visualIterate')} <ArrowDownRight size={13} /></span></div></div>
     </div></section>
     <section className="trust-strip"><div className="container trust-inner"><span><Zap size={15} /> {t('trustKnowledge')}</span><span><ShieldCheck size={15} /> {t('trustQuality')}</span><span><Braces size={15} /> {t('trustEngineering')}</span><span><Sparkles size={15} /> {t('trustAI')}</span></div></section>
+    <section className="role-funnel-strip" data-testid="role-guided-funnel" aria-label={language === 'en' ? 'Start by engineering role' : 'Mulai sesuai peran engineering'}>
+      <div className="container role-funnel-inner">
+        <span className="role-funnel-label">{language === 'en' ? 'START BY ROLE:' : 'MULAI SESUAI PERAN:'}</span>
+        <div className="role-funnel-pills">
+          <Link className="role-funnel-pill" to="/prototype"><b>01</b> {language === 'en' ? 'CTO & Architect · 5-Agent Prototype' : 'CTO & Arsitek · Prototipe 5-Agen'}</Link>
+          <Link className="role-funnel-pill" to="/grader"><b>02</b> {language === 'en' ? 'SecOps · AI & CSP URL Grader' : 'SecOps · Audit URL AI & CSP'}</Link>
+          <Link className="role-funnel-pill" to="/qa-studio"><b>03</b> {language === 'en' ? 'QA / SDET · Self-Healing Playwright' : 'QA / SDET · Playwright Auto-Heal'}</Link>
+          <Link className="role-funnel-pill" to="/ba-hub"><b>04</b> {language === 'en' ? 'Business Analyst · Gherkin & RTM' : 'Business Analyst · Gherkin & RTM'}</Link>
+          <Link className="role-funnel-pill" to="/pm-jira-hub"><b>05</b> {language === 'en' ? 'PM Lead · Monte Carlo & Jira v3' : 'PM Lead · Monte Carlo & Jira v3'}</Link>
+        </div>
+      </div>
+    </section>
     <Suspense fallback={null}><HomePrototypeStage /></Suspense>
     <Suspense fallback={null}><NeuralAiStudio /></Suspense>
     <EngineeringLaunchpad />
@@ -1078,17 +1096,19 @@ function CommandPalette() {
     { id: 'performance', label: 'Performance Observatory', detail: isEnglish ? 'Browser timing and available Web Vitals' : 'Timing browser dan Web Vitals', icon: Activity, run: () => navigate('/performance') },
     { id: 'knowledge-graph', label: 'Engineering Knowledge Graph', detail: isEnglish ? 'Explore relationships between concepts and tools' : 'Jelajahi relasi konsep dan tools', icon: Share2, run: () => navigate('/knowledge-graph') },
     { id: 'learn', label: isEnglish ? 'Open Learning Hub' : 'Buka Pusat Belajar', detail: isEnglish ? 'Curated paths and engineering glossary' : 'Jalur belajar dan glosarium engineering', icon: BookOpen, run: () => navigate('/learn') },
-    { id: 'prototype', label: isEnglish ? 'Autonomous AI Prototype & Multi-Agent Studio' : 'Studio Prototipe AI Otonom & Multi-Agen', detail: isEnglish ? '5-agent DAG orchestrator, live responsive UI sandbox & token ROI' : 'Orkestrator DAG 5-agen, sandbox UI hidup & kalkulator token', icon: Sparkles, run: () => navigate('/prototype') },
+    { id: 'guided-tour', label: isEnglish ? 'Interactive 60-Second Executive Product Tour' : 'Tur Produk Interaktif 60 Detik', detail: isEnglish ? 'Guided walkthrough across 5-agent prototyping, URL grader, USL & MCP' : 'Panduan interaktif prototipe 5-agen, audit URL, USL & MCP', icon: Clock3, run: () => window.dispatchEvent(new CustomEvent('dreamex-open-guided-tour')) },
+    { id: 'prototype', label: isEnglish ? 'Autonomous AI Prototype & Multi-Agent Studio' : 'Studio Prototipe AI Otonom & Multi-Agen', detail: isEnglish ? '5-agent DAG orchestrator, live responsive UI sandbox & .zip repo export' : 'Orkestrator DAG 5-agen, sandbox UI hidup & ekspor proyek .zip', icon: Sparkles, run: () => navigate('/prototype') },
+    { id: 'grader', label: isEnglish ? 'AI Readiness, Security & Architecture URL Grader' : 'Grader Kesiapan AI, Keamanan & Arsitektur URL', detail: isEnglish ? 'Scan domains for CSP, HSTS, /llms.txt & generate live SVG badges' : 'Audit domain untuk CSP, HSTS, /llms.txt & lencana skor SVG', icon: ShieldCheck, run: () => navigate('/grader') },
     { id: 'tools', label: isEnglish ? 'Sovereign IT Workbench (6-Pillar Suite)' : 'Workbench IT Sovereign (6-Pilar)', detail: isEnglish ? 'SE, QA/UAT, BA Gherkin/RTM, PM Monte Carlo & Jira API v3' : 'SE, QA/UAT, BA Gherkin/RTM, PM Monte Carlo & Jira API v3', icon: Zap, run: () => navigate('/tools') },
     { id: 'ba-hub', label: isEnglish ? 'BA Requirement, Gherkin & RTM Studio' : 'Studio BA Requirement, Gherkin & RTM', detail: isEnglish ? 'BRD-to-Gherkin compiler & bi-directional RTM gap detector' : 'Kompilator BRD ke Gherkin & detektor celah RTM', icon: ClipboardList, run: () => navigate('/ba-hub') },
     { id: 'pm-jira-hub', label: isEnglish ? 'PM Monte Carlo & Jira Neural Hub' : 'Hub PM Monte Carlo & Otomasi Jira', detail: isEnglish ? 'Jira REST API v3 ADF synthesizer, JQL Studio & 10,000-trial Monte Carlo' : 'Generator JSON Jira REST API v3 ADF, Studio JQL & Monte Carlo', icon: Gauge, run: () => navigate('/pm-jira-hub') },
     { id: 'toggle-theme', label: isEnglish ? `Switch to ${theme === 'dark' ? 'Daylight Light' : 'Obsidian Dark'} Theme` : `Ubah ke Tema ${theme === 'dark' ? 'Terang Daylight' : 'Gelap Obsidian'}`, detail: isEnglish ? 'Adaptive theme polarity · Shortcut Alt+T' : 'Polaritas tema adaptif · Pintasan Alt+T', icon: Sparkles, run: () => toggleTheme() },
   ]
   const actionCategory: Record<string, string> = {
-    home: 'learn', about: 'learn', topics: 'learn', articles: 'learn', 'reading-list': 'learn', workspace: 'learn', 'knowledge-graph': 'learn', learn: 'learn', 'toggle-theme': 'learn',
+    home: 'learn', about: 'learn', topics: 'learn', articles: 'learn', 'reading-list': 'learn', workspace: 'learn', 'knowledge-graph': 'learn', learn: 'learn', 'toggle-theme': 'learn', 'guided-tour': 'learn',
     lab: 'qa', 'qa-studio': 'qa', 'quality-intelligence': 'qa', prototype: 'qa', tools: 'qa', 'ba-hub': 'qa',
     'api-playground': 'api', 'engineering-intelligence': 'api',
-    devtools: 'security', 'security-center': 'security', 'supply-chain-intelligence': 'security',
+    devtools: 'security', 'security-center': 'security', 'supply-chain-intelligence': 'security', grader: 'security',
     observatory: 'reliability', 'control-plane': 'reliability', 'command-center': 'reliability', performance: 'reliability', 'pm-jira-hub': 'reliability',
   }
   const categories = [
@@ -1405,6 +1425,7 @@ const ROUTE_SEO: Record<string, LocalizedRouteSeo> = {
   '/rss': { en: { title: 'Latest Articles & RSS — DreamEx Tech', description: 'Browse the latest DreamEx Tech articles and subscribe to the RSS 2.0 feed for engineering, QA, AI, and technology.' }, id: { title: 'Artikel Terbaru & RSS — DreamEx Tech', description: 'Jelajahi artikel terbaru DreamEx Tech dan berlangganan RSS 2.0 untuk engineering, QA, AI, dan teknologi.' } },
   '/tools': { en: { title: 'Sovereign IT, QA, BA, PM & Jira Workbench — DreamEx Tech', description: 'Unified 6-pillar client-sovereign workbench for Software Engineers, QA/UAT, Business Analysts, Project Managers, and Jira Automation.' }, id: { title: 'Workbench Terpadu IT, QA, BA, PM & Jira — DreamEx Tech', description: 'Ruang kerja 6-pilar di browser untuk Software Engineer, QA/UAT, Business Analyst, Project Manager, dan Otomasi Jira.' } },
   '/prototype': { en: { title: 'Autonomous AI Prototype & Multi-Agent Studio — DreamEx Tech', description: 'Orchestrate 5 specialized engineering AI agents, test responsive live UI prototypes with RBAC and failover, and model LLM token economics.' }, id: { title: 'Studio Prototipe AI Otonom & Multi-Agen — DreamEx Tech', description: 'Orkestrasi 5 agen AI rekayasa, uji prototipe UI responsif dengan RBAC dan failover, serta hitung ekonomi token LLM di browser.' } },
+  '/grader': { en: { title: 'AI Readiness, Security & Architecture Grader — DreamEx Tech', description: 'Audit any public HTTPS website for Zero-Trust CSP headers, llms.txt AI discovery, JSON-LD, semantic accessibility, and embed live SVG badges.' }, id: { title: 'Grader Kesiapan AI, Keamanan & Arsitektur — DreamEx Tech', description: 'Audit website HTTPS publik untuk header keamanan CSP, manifes llms.txt bagi agen AI, JSON-LD, aksesibilitas, dan lencana skor SVG langsung.' } },
   '/ba-hub': { en: { title: 'BA Requirement, Gherkin & RTM Studio — DreamEx Tech', description: 'Compile business requirements into Agile user stories, Gherkin BDD scenarios, and bi-directional Requirement Traceability Matrices.' }, id: { title: 'Studio BA Requirement, Gherkin & RTM — DreamEx Tech', description: 'Kompilasi kebutuhan bisnis menjadi User Story, skenario BDD Gherkin, dan matriks ketertelusuran RTM dua arah.' } },
   '/pm-jira-hub': { en: { title: 'PM Monte Carlo & Jira Neural Automation Hub — DreamEx Tech', description: 'Synthesize Jira REST API v3 ADF payloads, build visual JQL queries, and run 10,000-trial Monte Carlo sprint forecasts.' }, id: { title: 'Hub PM Monte Carlo & Otomasi Jira — DreamEx Tech', description: 'Hasilkan payload JSON Jira REST API v3 ADF, bangun kueri JQL visual, dan jalankan simulasi rilis Monte Carlo 10.000 iterasi.' } },
 }
@@ -1436,15 +1457,22 @@ function RouteMetadata() {
           description: language === 'en' ? 'This DreamEx Tech route could not be found. Return to the homepage to explore engineering tools and articles.' : 'Halaman DreamEx Tech ini tidak ditemukan. Kembali ke beranda untuk menjelajahi tools engineering dan artikel.',
         }
     const canonicalUrl = `https://dreamex.tech${route === '/' ? '/' : route}`
+    const socialImage = route === '/prototype'
+      ? 'https://dreamex.tech/images/og-prototype.jpg'
+      : route === '/grader'
+        ? 'https://dreamex.tech/images/og-grader.jpg'
+        : 'https://dreamex.tech/images/og-default.jpg'
     document.title = page.title
     upsertMeta('description', page.description)
     upsertMeta('og:title', page.title, true)
     upsertMeta('og:description', page.description, true)
     upsertMeta('og:url', canonicalUrl, true)
     upsertMeta('og:type', article ? 'article' : 'website', true)
+    upsertMeta('og:image', socialImage, true)
     upsertMeta('twitter:title', page.title)
     upsertMeta('twitter:description', page.description)
-    upsertMeta('twitter:card', 'summary')
+    upsertMeta('twitter:card', 'summary_large_image')
+    upsertMeta('twitter:image', socialImage)
     const privateUtilityRoute = route === '/reading-list'
     upsertMeta('robots', unknownArticle || privateUtilityRoute ? 'noindex, follow' : 'index, follow')
     let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')
@@ -1476,6 +1504,7 @@ const TOOL_BREADCRUMB_LABELS: Record<string, { id: string; en: string }> = {
   '/github-ci': { id: 'Aktivitas CI GitHub', en: 'GitHub CI Activity' },
   '/team-workspace': { id: 'Workspace Tim Bersama', en: 'Shared Team Workspace' },
   '/prototype': { id: 'Studio Prototipe AI (5-Agen)', en: 'AI Prototype Studio (5-Agent)' },
+  '/grader': { id: 'Grader Kesiapan AI & Keamanan', en: 'AI Readiness & Security Grader' },
   '/tools': { id: 'Workbench IT Sovereign (6-Pilar)', en: 'Sovereign IT Workbench (6-Pillar)' },
   '/ba-hub': { id: 'Studio BA Gherkin & RTM', en: 'BA Gherkin & RTM Studio' },
   '/pm-jira-hub': { id: 'Hub PM Monte Carlo & Jira', en: 'PM Monte Carlo & Jira Hub' },
@@ -1498,7 +1527,7 @@ const TOOL_SUBNAV_CLUSTERS = [
     id: 'secure',
     en: '03 SecOps & Intel',
     idLabel: '03 Keamanan & Audit',
-    routes: ['/security-center', '/supply-chain-intelligence', '/observatory', '/site-audit', '/learn'],
+    routes: ['/grader', '/security-center', '/supply-chain-intelligence', '/observatory', '/site-audit', '/learn'],
   },
   {
     id: 'workbench',
@@ -1513,6 +1542,7 @@ type SubnavClusterId = (typeof TOOL_SUBNAV_CLUSTERS)[number]['id']
 function ToolRouteBreadcrumbs() {
   const { pathname } = useLocation()
   const { language } = useLanguage()
+  const { context: syncedProject, resetContext } = useProjectContextBus()
   const cleanPath = pathname.replace(/\/+$/, '') || '/'
   const label = TOOL_BREADCRUMB_LABELS[cleanPath]
   const detectedCluster: SubnavClusterId =
@@ -1575,16 +1605,35 @@ function ToolRouteBreadcrumbs() {
         )
       })}
     </nav>
+    {syncedProject && (
+      <div className="os-context-bus-bar" data-testid="os-context-pill">
+        <span>
+          <Sparkles size={12} style={{ verticalAlign: 'middle', marginRight: 5 }} />
+          <b>{en ? 'ACTIVE OS BLUEPRINT:' : 'BLUEPRINT OS AKTIF:'}</b> {syncedProject.projectName} · USL {syncedProject.uslCeilingNodes} Nodes · P95 {syncedProject.p95TargetMs}ms
+        </span>
+        <div className="os-context-bus-actions">
+          {cleanPath !== '/prototype' && <Link to={`/prototype?bp=${encodeURIComponent(syncedProject.blueprintId)}`}>{en ? 'Inspect Prototype' : 'Buka Prototipe'}</Link>}
+          <button type="button" onClick={resetContext} aria-label={en ? 'Clear synced blueprint' : 'Hapus sinkronisasi blueprint'}>×</button>
+        </div>
+      </div>
+    )}
   </div>
 }
 
 export default function App() {
   const { t, language } = useLanguage()
   const en = language === 'en'
+  const [tourOpen, setTourOpen] = useState(false)
   const loadingBox = (labelEn: string, labelId: string) => (
     <div className="container route-loading" role="status">{en ? labelEn : labelId}</div>
   )
   const location = useLocation()
+
+  useEffect(() => {
+    const openTour = () => setTourOpen(true)
+    window.addEventListener('dreamex-open-guided-tour', openTour)
+    return () => window.removeEventListener('dreamex-open-guided-tour', openTour)
+  }, [])
 
   useLayoutEffect(() => {
     // The preload is fetched in index.html; attach it before paint on later SPA navigation.
@@ -1597,5 +1646,5 @@ export default function App() {
     stylesheet.dataset.dreamexPremiumExperience = 'true'
     document.head.append(stylesheet)
   }, [location.pathname])
-  return <><a className="skip-link" href="#main-content" tabIndex={0}>{t('skip')}</a><OfflineNotice /><ScrollProgress /><CommandPalette /><ScrollToTop /><MotionOnScroll /><Header /><ToolRouteBreadcrumbs /><Routes><Route path="/" element={<Home />} /><Route path="/prototype" element={<Suspense fallback={loadingBox('Loading AI Prototype Studio…', 'Memuat Studio Prototipe AI…')}><AiPrototypeStudioPage /></Suspense>} /><Route path="/tools" element={<Suspense fallback={loadingBox('Loading Sovereign IT Workbench…', 'Memuat Workbench IT Sovereign…')}><SovereignWorkbenchPage initialPillar="eng" /></Suspense>} /><Route path="/ba-hub" element={<Suspense fallback={loadingBox('Loading BA Gherkin & RTM Studio…', 'Memuat Studio BA Gherkin & RTM…')}><SovereignWorkbenchPage initialPillar="ba" /></Suspense>} /><Route path="/pm-jira-hub" element={<Suspense fallback={loadingBox('Loading PM & Jira Automation Hub…', 'Memuat Hub PM & Otomasi Jira…')}><SovereignWorkbenchPage initialPillar="jira" /></Suspense>} /><Route path="/github-ci" element={<Suspense fallback={loadingBox('Loading GitHub CI Activity…', 'Memuat Aktivitas CI GitHub…')}><GitHubIntegrationPage /></Suspense>} /><Route path="/team-workspace" element={<Suspense fallback={loadingBox('Loading Shared Team Workspace…', 'Memuat Workspace Tim Bersama…')}><TeamWorkspacePage /></Suspense>} /><Route path="/observatory" element={<WebQualityObservatoryPage />} /><Route path="/site-audit" element={<Suspense fallback={loadingBox('Loading Page Health Audit…', 'Memuat Audit Kesehatan Halaman…')}><SiteAuditPage /></Suspense>} /> <Route path="/devtools" element={<DeveloperUtilitiesPage />} /> <Route path="/workspace" element={<Suspense fallback={loadingBox('Loading Engineering Workspace…', 'Memuat Engineering Workspace…')}><EngineeringWorkspacePage /></Suspense>} /><Route path="/control-plane" element={<Suspense fallback={loadingBox('Loading Engineering Control Plane…', 'Memuat Engineering Control Plane…')}><EngineeringControlPlanePage /></Suspense>} /><Route path="/engineering-intelligence" element={<Suspense fallback={loadingBox('Loading Engineering Intelligence…', 'Memuat Engineering Intelligence…')}><EngineeringIntelligencePage /></Suspense>} /><Route path="/command-center" element={<Suspense fallback={loadingBox('Loading Command Center…', 'Memuat Command Center…')}><EngineeringCommandCenterPage /></Suspense>} /><Route path="/qa-studio" element={<Suspense fallback={loadingBox('Loading QA Automation Studio…', 'Memuat Studio Otomasi QA…')}><QAAutomationStudioPage /></Suspense>} /><Route path="/quality-intelligence" element={<Suspense fallback={loadingBox('Loading Quality Intelligence…', 'Memuat Quality Intelligence…')}><QualityIntelligencePage /></Suspense>} /><Route path="/reliability-center" element={<Suspense fallback={loadingBox('Loading Reliability Center…', 'Memuat Pusat Reliability…')}><ReliabilityCenterPage /></Suspense>} /><Route path="/supply-chain-intelligence" element={<Suspense fallback={loadingBox('Loading Supply Chain Intelligence…', 'Memuat Supply Chain Intelligence…')}><SupplyChainIntelligencePage /></Suspense>} /><Route path="/security-center" element={<Suspense fallback={loadingBox('Loading Security Center…', 'Memuat Pusat Keamanan…')}><SecurityCenterPage /></Suspense>} /><Route path="/api-playground" element={<Suspense fallback={loadingBox('Loading API Playground…', 'Memuat API Playground…')}><ApiPlaygroundPage /></Suspense>} /><Route path="/performance" element={<Suspense fallback={loadingBox('Loading Performance Observatory…', 'Memuat Observatory Performa…')}><PerformanceObservatoryPage /></Suspense>} /><Route path="/knowledge-graph" element={<Suspense fallback={loadingBox('Loading Engineering Knowledge Graph…', 'Memuat Graf Pengetahuan Engineering…')}><EngineeringKnowledgeGraphPage /></Suspense>} /><Route path="/roadmap" element={<Suspense fallback={loadingBox('Loading Product Roadmap…', 'Memuat Roadmap Produk…')}><EngineeringRoadmapPage /></Suspense>} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><Footer /><RouteMetadata /></>
+  return <><a className="skip-link" href="#main-content" tabIndex={0}>{t('skip')}</a><OfflineNotice /><ScrollProgress /><CommandPalette />{tourOpen && <Suspense fallback={null}><GuidedProductTour onClose={() => setTourOpen(false)} /></Suspense>}<ScrollToTop /><MotionOnScroll /><Header /><ToolRouteBreadcrumbs /><Routes><Route path="/" element={<Home />} /><Route path="/prototype" element={<Suspense fallback={loadingBox('Loading AI Prototype Studio…', 'Memuat Studio Prototipe AI…')}><AiPrototypeStudioPage /></Suspense>} /><Route path="/grader" element={<Suspense fallback={loadingBox('Loading AI & Security URL Grader…', 'Memuat Grader URL AI & Keamanan…')}><AiReadinessGraderPage /></Suspense>} /><Route path="/tools" element={<Suspense fallback={loadingBox('Loading Sovereign IT Workbench…', 'Memuat Workbench IT Sovereign…')}><SovereignWorkbenchPage initialPillar="eng" /></Suspense>} /><Route path="/ba-hub" element={<Suspense fallback={loadingBox('Loading BA Gherkin & RTM Studio…', 'Memuat Studio BA Gherkin & RTM…')}><SovereignWorkbenchPage initialPillar="ba" /></Suspense>} /><Route path="/pm-jira-hub" element={<Suspense fallback={loadingBox('Loading PM & Jira Automation Hub…', 'Memuat Hub PM & Otomasi Jira…')}><SovereignWorkbenchPage initialPillar="jira" /></Suspense>} /><Route path="/github-ci" element={<Suspense fallback={loadingBox('Loading GitHub CI Activity…', 'Memuat Aktivitas CI GitHub…')}><GitHubIntegrationPage /></Suspense>} /><Route path="/team-workspace" element={<Suspense fallback={loadingBox('Loading Shared Team Workspace…', 'Memuat Workspace Tim Bersama…')}><TeamWorkspacePage /></Suspense>} /><Route path="/observatory" element={<WebQualityObservatoryPage />} /><Route path="/site-audit" element={<Suspense fallback={loadingBox('Loading Page Health Audit…', 'Memuat Audit Kesehatan Halaman…')}><SiteAuditPage /></Suspense>} /> <Route path="/devtools" element={<DeveloperUtilitiesPage />} /> <Route path="/workspace" element={<Suspense fallback={loadingBox('Loading Engineering Workspace…', 'Memuat Engineering Workspace…')}><EngineeringWorkspacePage /></Suspense>} /><Route path="/control-plane" element={<Suspense fallback={loadingBox('Loading Engineering Control Plane…', 'Memuat Engineering Control Plane…')}><EngineeringControlPlanePage /></Suspense>} /><Route path="/engineering-intelligence" element={<Suspense fallback={loadingBox('Loading Engineering Intelligence…', 'Memuat Engineering Intelligence…')}><EngineeringIntelligencePage /></Suspense>} /><Route path="/command-center" element={<Suspense fallback={loadingBox('Loading Command Center…', 'Memuat Command Center…')}><EngineeringCommandCenterPage /></Suspense>} /><Route path="/qa-studio" element={<Suspense fallback={loadingBox('Loading QA Automation Studio…', 'Memuat Studio Otomasi QA…')}><QAAutomationStudioPage /></Suspense>} /><Route path="/quality-intelligence" element={<Suspense fallback={loadingBox('Loading Quality Intelligence…', 'Memuat Quality Intelligence…')}><QualityIntelligencePage /></Suspense>} /><Route path="/reliability-center" element={<Suspense fallback={loadingBox('Loading Reliability Center…', 'Memuat Pusat Reliability…')}><ReliabilityCenterPage /></Suspense>} /><Route path="/supply-chain-intelligence" element={<Suspense fallback={loadingBox('Loading Supply Chain Intelligence…', 'Memuat Supply Chain Intelligence…')}><SupplyChainIntelligencePage /></Suspense>} /><Route path="/security-center" element={<Suspense fallback={loadingBox('Loading Security Center…', 'Memuat Pusat Keamanan…')}><SecurityCenterPage /></Suspense>} /><Route path="/api-playground" element={<Suspense fallback={loadingBox('Loading API Playground…', 'Memuat API Playground…')}><ApiPlaygroundPage /></Suspense>} /><Route path="/performance" element={<Suspense fallback={loadingBox('Loading Performance Observatory…', 'Memuat Observatory Performa…')}><PerformanceObservatoryPage /></Suspense>} /><Route path="/knowledge-graph" element={<Suspense fallback={loadingBox('Loading Engineering Knowledge Graph…', 'Memuat Graf Pengetahuan Engineering…')}><EngineeringKnowledgeGraphPage /></Suspense>} /><Route path="/roadmap" element={<Suspense fallback={loadingBox('Loading Product Roadmap…', 'Memuat Roadmap Produk…')}><EngineeringRoadmapPage /></Suspense>} /><Route path="/about" element={<AboutPage />} /><Route path="/reading-list" element={<ReadingListPage />} /><Route path="/lab" element={<EngineeringLabPage />} /><Route path="/learn" element={<LearningHubPage />} /><Route path="/rss" element={<RssPage />} /><Route path="/blog/:slug" element={<ArticlePage />} /><Route path="*" element={<main id="main-content" className="container not-found"><h1>{t('pageNotFound')}</h1><p>{t('pageMissingDescription')}</p><Link className="read-link" to="/">{t('backHome')} <ArrowRight size={16} /></Link></main>} /></Routes><Footer /><RouteMetadata /></>
 }

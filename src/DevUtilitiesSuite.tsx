@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Activity, AlertTriangle, Braces, CheckCircle2, Copy, Download, Search, ShieldCheck, Sparkles } from 'lucide-react'
 import { useLanguage } from './i18n'
+import './DevUtilitiesSuite.css'
 
 type ObservatoryCheck = { id: string; category: string; title: string; description: string; severity: 'high' | 'medium' | 'info'; run: () => Promise<{ status: 'pass' | 'warn' | 'fail'; detail: string }> }
 

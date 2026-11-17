@@ -1,0 +1,74 @@
+# DreamEx Tech — Autonomous AI Engineering Operating System (v6.0)
+
+> DreamEx Tech (https://dreamex.tech) is a client-sovereign AI Engineering Operating System uniting 5-Agent Live UI Prototyping, Universal Scalability Law (USL) distributed systems architecture, Self-Healing Playwright QA automation, Executable Gherkin/RTM Business Analysis, 10,000-trial Monte Carlo Jira delivery forecasting, and Zero-Trust Security/SBOM governance.
+
+## Flagship Interactive Suites
+- [Autonomous AI Prototype & Multi-Agent Studio](https://dreamex.tech/prototype): Orchestrate 5 specialized engineering AI agents, test responsive Desktop/Tablet/Mobile sandboxes with RBAC & chaos failover, model LLM token ROI, and export a 7-file production starter .zip.
+- [AI Readiness, Security & Architecture Grader](https://dreamex.tech/grader): Audit any public HTTPS website or GitHub repository across Zero-Trust CSP/HSTS headers, /llms.txt AI discovery, semantic accessibility, and edge latency, with dynamic SVG badges.
+- [6-Pillar Sovereign IT Workbench](https://dreamex.tech/tools): Unified deterministic workbench for Software Engineers, QA/UAT, Business Analysts, Project Managers, Jira REST v3 ADF, and DevSecOps.
+- [BA Requirement, Gherkin & RTM Studio](https://dreamex.tech/ba-hub): Compile BRD intents into Gherkin BDD scenarios and bi-directional Requirement Traceability Matrices.
+- [PM Monte Carlo & Jira Neural Hub](https://dreamex.tech/pm-jira-hub): Synthesize Jira REST API v3 ADF payloads, visual JQL queries, and 10,000-trial sprint forecasts.
+- [Unified Engineering Workspace](https://dreamex.tech/workspace): Search and launch all 25+ role-indexed engineering suites.
+
+## Machine-Readable APIs & Model Context Protocol (MCP)
+- Streamable HTTP MCP Server (JSON-RPC 2.0): https://dreamex.tech/api/mcp
+- Public AI Readiness & Security Grader API: https://dreamex.tech/api/grader
+- Dynamic SVG Readiness Shield Badge: https://dreamex.tech/api/badge?domain=dreamex.tech&score=99&grade=A%2B
+- Full Documentation & Article Corpus: https://dreamex.tech/llms-full.txt
+- RSS 2.0 Technical Feed: https://dreamex.tech/rss.xml
+- Canonical XML Sitemap: https://dreamex.tech/sitemap.xml
+
+## Technical Research & Architecture Studies
+- [Merancang Playwright Test Suite yang Stabil](https://dreamex.tech/blog/playwright-test-architecture) (2026-10-10): Pola page object yang proporsional, locator yang tangguh, isolasi data, dan strategi mengurangi flaky test.
+- [Tata Kelola Kontrak API, Idempotency & Outbox Pattern](https://dreamex.tech/blog/api-contract-governance-idempotency) (2026-10-09): Mencegah transaksi ganda dan pergeseran skema antar microservice melalui kontrak runtime dan idempotency key.
+- [Checklist Keamanan Dasar untuk Pipeline CI/CD](https://dreamex.tech/blog/secure-ci-cd-basics) (2026-10-07): Praktik least privilege, pengelolaan secret, dependency hygiene, dan perlindungan supply chain perangkat lunak.
+- [Menghubungkan BRD, Gherkin BDD, dan Otomasi Jira REST v3](https://dreamex.tech/blog/requirements-traceability-jira-adf) (2026-10-06): Menjaga keterlacakan kebutuhan bisnis hingga test case Playwright dan tiket Jira terstruktur tanpa pekerjaan manual berulang.
+- [Membangun Evaluasi AI yang Bisa Diulang](https://dreamex.tech/blog/evaluating-ai-features) (2026-10-03): Rancang dataset, rubrik penilaian, regression checks, dan pemantauan agar perubahan AI dapat dinilai secara objektif.
+- [Mengganti Tebakan Deadline dengan Simulasi Monte Carlo P85](https://dreamex.tech/blog/monte-carlo-forecasting-delivery) (2026-10-02): Mengukur kepastian rilis sprint secara kuantitatif menggunakan distribusi throughput historis dan metrik EVM.
+- [Membangun Fondasi QA Automation yang Andal](https://dreamex.tech/blog/qa-automation-foundations) (2026-10-01): Prinsip memilih test case, menjaga stabilitas suite, dan membuat hasil pengujian dapat dipercaya.
+- [TypeScript untuk Proyek yang Mudah Dipelihara](https://dreamex.tech/blog/typescript-for-maintainable-projects) (2026-09-24): Cara memanfaatkan tipe, kontrak, dan batas modul agar perubahan lebih aman.
+- [Menerapkan AI dengan Pendekatan Engineering](https://dreamex.tech/blog/practical-ai-engineering) (2026-09-18): Evaluasi kualitas, batasan, observability, dan pengujian untuk fitur berbasis AI.
+
+## Complete Platform Route Directory
+- https://dreamex.tech/ (priority 1.0, weekly)
+- https://dreamex.tech/about (priority 0.6, monthly)
+- https://dreamex.tech/lab (priority 0.7, monthly)
+- https://dreamex.tech/observatory (priority 0.6, monthly)
+- https://dreamex.tech/devtools (priority 0.7, monthly)
+- https://dreamex.tech/workspace (priority 0.8, monthly)
+- https://dreamex.tech/github-ci (priority 0.7, monthly)
+- https://dreamex.tech/team-workspace (priority 0.7, monthly)
+- https://dreamex.tech/engineering-intelligence (priority 0.8, monthly)
+- https://dreamex.tech/control-plane (priority 0.8, weekly)
+- https://dreamex.tech/command-center (priority 0.8, weekly)
+- https://dreamex.tech/quality-intelligence (priority 0.8, weekly)
+- https://dreamex.tech/reliability-center (priority 0.8, weekly)
+- https://dreamex.tech/supply-chain-intelligence (priority 0.8, weekly)
+- https://dreamex.tech/roadmap (priority 0.8, weekly)
+- https://dreamex.tech/qa-studio (priority 0.8, monthly)
+- https://dreamex.tech/security-center (priority 0.7, monthly)
+- https://dreamex.tech/api-playground (priority 0.7, monthly)
+- https://dreamex.tech/performance (priority 0.7, monthly)
+- https://dreamex.tech/knowledge-graph (priority 0.7, weekly)
+- https://dreamex.tech/learn (priority 0.8, weekly)
+- https://dreamex.tech/prototype (priority 0.9, weekly)
+- https://dreamex.tech/grader (priority 0.9, weekly)
+- https://dreamex.tech/tools (priority 0.9, weekly)
+- https://dreamex.tech/ba-hub (priority 0.8, weekly)
+- https://dreamex.tech/pm-jira-hub (priority 0.8, weekly)
+- https://dreamex.tech/rss (priority 0.7, daily)
+- https://dreamex.tech/blog/playwright-test-architecture (priority 0.8, monthly)
+- https://dreamex.tech/blog/api-contract-governance-idempotency (priority 0.8, monthly)
+- https://dreamex.tech/blog/secure-ci-cd-basics (priority 0.8, monthly)
+- https://dreamex.tech/blog/requirements-traceability-jira-adf (priority 0.8, monthly)
+- https://dreamex.tech/blog/evaluating-ai-features (priority 0.8, monthly)
+- https://dreamex.tech/blog/monte-carlo-forecasting-delivery (priority 0.8, monthly)
+- https://dreamex.tech/blog/qa-automation-foundations (priority 0.8, monthly)
+- https://dreamex.tech/blog/typescript-for-maintainable-projects (priority 0.8, monthly)
+- https://dreamex.tech/blog/practical-ai-engineering (priority 0.8, monthly)
+
+## MCP Tool Signatures (POST https://dreamex.tech/api/mcp)
+- `calculate_usl_scalability`: Computes Gunther Universal Scalability Law node ceiling N_max and Little’s Law DB connection pool.
+- `compile_gherkin_bdd`: Compiles business intent into deterministic Given/When/Then Gherkin scenarios with RTM IDs.
+- `forecast_monte_carlo_sprint`: Runs 2,000+ trial Monte Carlo velocity simulation returning P50, P85, and P95 sprint commitments.
+- `estimate_llm_token_economics`: Models 30-day LLM token cost, semantic cache savings %, and peak edge worker concurrency.

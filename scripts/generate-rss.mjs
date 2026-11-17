@@ -106,6 +106,7 @@ const sitemapUrls = [
   { loc: `${siteUrl}/knowledge-graph`, changefreq: 'weekly', priority: '0.7' },
   { loc: `${siteUrl}/learn`, changefreq: 'weekly', priority: '0.8' },
   { loc: `${siteUrl}/prototype`, changefreq: 'weekly', priority: '0.9' },
+  { loc: `${siteUrl}/grader`, changefreq: 'weekly', priority: '0.9' },
   { loc: `${siteUrl}/tools`, changefreq: 'weekly', priority: '0.9' },
   { loc: `${siteUrl}/ba-hub`, changefreq: 'weekly', priority: '0.8' },
   { loc: `${siteUrl}/pm-jira-hub`, changefreq: 'weekly', priority: '0.8' },
@@ -133,3 +134,47 @@ const sitemapXml = [
 ].join(String.fromCharCode(10))
 writeFileSync(join(root, 'public/sitemap.xml'), sitemapXml)
 console.log(`Sitemap generation passed: ${sitemapUrls.length} canonical routes included.`)
+
+const llmsSummary = [
+  '# DreamEx Tech — Autonomous AI Engineering Operating System (v6.0)',
+  '',
+  '> DreamEx Tech (https://dreamex.tech) is a client-sovereign AI Engineering Operating System uniting 5-Agent Live UI Prototyping, Universal Scalability Law (USL) distributed systems architecture, Self-Healing Playwright QA automation, Executable Gherkin/RTM Business Analysis, 10,000-trial Monte Carlo Jira delivery forecasting, and Zero-Trust Security/SBOM governance.',
+  '',
+  '## Flagship Interactive Suites',
+  `- [Autonomous AI Prototype & Multi-Agent Studio](${siteUrl}/prototype): Orchestrate 5 specialized engineering AI agents, test responsive Desktop/Tablet/Mobile sandboxes with RBAC & chaos failover, model LLM token ROI, and export a 7-file production starter .zip.`,
+  `- [AI Readiness, Security & Architecture Grader](${siteUrl}/grader): Audit any public HTTPS website or GitHub repository across Zero-Trust CSP/HSTS headers, /llms.txt AI discovery, semantic accessibility, and edge latency, with dynamic SVG badges.`,
+  `- [6-Pillar Sovereign IT Workbench](${siteUrl}/tools): Unified deterministic workbench for Software Engineers, QA/UAT, Business Analysts, Project Managers, Jira REST v3 ADF, and DevSecOps.`,
+  `- [BA Requirement, Gherkin & RTM Studio](${siteUrl}/ba-hub): Compile BRD intents into Gherkin BDD scenarios and bi-directional Requirement Traceability Matrices.`,
+  `- [PM Monte Carlo & Jira Neural Hub](${siteUrl}/pm-jira-hub): Synthesize Jira REST API v3 ADF payloads, visual JQL queries, and 10,000-trial sprint forecasts.`,
+  `- [Unified Engineering Workspace](${siteUrl}/workspace): Search and launch all 25+ role-indexed engineering suites.`,
+  '',
+  '## Machine-Readable APIs & Model Context Protocol (MCP)',
+  `- Streamable HTTP MCP Server (JSON-RPC 2.0): ${siteUrl}/api/mcp`,
+  `- Public AI Readiness & Security Grader API: ${siteUrl}/api/grader`,
+  `- Dynamic SVG Readiness Shield Badge: ${siteUrl}/api/badge?domain=dreamex.tech&score=99&grade=A%2B`,
+  `- Full Documentation & Article Corpus: ${siteUrl}/llms-full.txt`,
+  `- RSS 2.0 Technical Feed: ${siteUrl}/rss.xml`,
+  `- Canonical XML Sitemap: ${siteUrl}/sitemap.xml`,
+  '',
+  '## Technical Research & Architecture Studies',
+  ...articles.map(article => `- [${article.title}](${siteUrl}/blog/${article.slug}) (${article.date}): ${article.excerpt}`),
+  '',
+].join('\n')
+
+const llmsFull = [
+  llmsSummary.trimEnd(),
+  '',
+  '## Complete Platform Route Directory',
+  ...sitemapUrls.map(entry => `- ${entry.loc} (priority ${entry.priority}, ${entry.changefreq})`),
+  '',
+  '## MCP Tool Signatures (POST https://dreamex.tech/api/mcp)',
+  '- `calculate_usl_scalability`: Computes Gunther Universal Scalability Law node ceiling N_max and Little’s Law DB connection pool.',
+  '- `compile_gherkin_bdd`: Compiles business intent into deterministic Given/When/Then Gherkin scenarios with RTM IDs.',
+  '- `forecast_monte_carlo_sprint`: Runs 2,000+ trial Monte Carlo velocity simulation returning P50, P85, and P95 sprint commitments.',
+  '- `estimate_llm_token_economics`: Models 30-day LLM token cost, semantic cache savings %, and peak edge worker concurrency.',
+  '',
+].join('\n')
+
+writeFileSync(join(root, 'public/llms.txt'), llmsSummary)
+writeFileSync(join(root, 'public/llms-full.txt'), llmsFull)
+console.log('AI agent manifest generation passed: public/llms.txt and public/llms-full.txt written.')

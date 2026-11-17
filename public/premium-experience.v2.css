@@ -1402,6 +1402,56 @@
   color: #ffffff;
 }
 
+.home-page .role-funnel-strip{
+  border-bottom: 1px solid rgba(132, 168, 214, .16);
+  background: linear-gradient(90deg, rgba(8, 14, 28, .96), rgba(12, 22, 40, .96), rgba(8, 14, 28, .96));
+  padding-block: 14px;
+}
+
+.home-page .role-funnel-inner{
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+.home-page .role-funnel-label{
+  font: 700 10px/1 var(--mono);
+  letter-spacing: .1em;
+  color: #7dd3fc;
+}
+
+.home-page .role-funnel-pills{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.home-page .role-funnel-pill{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 211, 252, .24);
+  background: rgba(13, 24, 45, .82);
+  color: #dbeafe;
+  font: 600 11.5px/1.2 var(--sans);
+  transition: border-color .2s ease, transform .2s ease, background .2s ease;
+}
+
+.home-page .role-funnel-pill b{
+  color: #c5ff70;
+  font: 700 10px/1 var(--mono);
+}
+
+.home-page .role-funnel-pill:hover{
+  border-color: rgba(110, 243, 197, .6);
+  background: rgba(20, 36, 66, .95);
+  transform: translateY(-1px);
+  color: #ffffff;
+}
+
 @media (max-width: 720px){
   .home-page .discovery-toolbar{
     padding: 14px;

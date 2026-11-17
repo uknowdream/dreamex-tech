@@ -11,6 +11,7 @@ if (baseUrl.username || baseUrl.password || baseUrl.search || baseUrl.hash || ba
 const checks = [
   { path: '/', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/prototype', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/grader', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/tools', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/ba-hub', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/pm-jira-hub', type: 'html', markers: ['id="root"', '<div'] },
@@ -21,6 +22,8 @@ const checks = [
   { path: '/api/team-workspace?resource=members', type: 'protected-api', markers: ['"error"'], expectedStatuses: [401, 503] },
   { path: '/api/team-workspace?resource=audit', type: 'protected-api', markers: ['"error"'], expectedStatuses: [401, 503] },
   { path: '/api/radar', type: 'json', markers: ['"service"', 'dreamex-radar'] },
+  { path: '/api/mcp', type: 'json', markers: ['"dreamex-os-mcp"', '"tools"'] },
+  { path: '/llms.txt', type: 'text', markers: ['DreamEx Tech', 'https://dreamex.tech/prototype'] },
   { path: '/qa-studio', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/quality-intelligence', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/supply-chain-intelligence', type: 'html', markers: ['id="root"', '<div'] },
