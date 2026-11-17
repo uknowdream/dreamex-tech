@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useLanguage } from './i18n'
 
 const destinations = [
-  { href: '/workspace', icon: Workflow, key: 'workspace', en: 'Unified AI workspace', id: 'Workspace AI terpadu', detailEn: '24 integrated toolchains across software design, live prototyping, verification, specs, and operations.', detailId: '24 toolchain terpadu untuk arsitektur software, prototipe AI, verifikasi, spesifikasi, dan operasi.', labelEn: 'OS HUB', labelId: 'OS HUB', chips: ['24 SUITES', 'SVG + AI'] },
+  { href: '/workspace', icon: Workflow, key: 'workspace', en: 'Unified AI workspace', id: 'Workspace AI terpadu', detailEn: '25 integrated toolchains across software design, live prototyping, Jira sprint boards, verification, and operations.', detailId: '25 toolchain terpadu untuk arsitektur software, prototipe AI, board sprint Jira, verifikasi, dan operasi.', labelEn: 'OS HUB', labelId: 'OS HUB', chips: ['25 SUITES', 'SVG + AI'] },
   { href: '/quality-intelligence', icon: Gauge, key: 'quality', en: 'Quality intelligence', id: 'Quality intelligence', detailEn: 'Parse Playwright & JUnit telemetry, isolate flakiness, and export audit proof.', detailId: 'Analisis telemetri Playwright & JUnit, isolasi tes flaky, dan ekspor bukti audit.', labelEn: 'QA ENGINE', labelId: 'QA ENGINE', chips: ['JUNIT / PW', 'FLAKE AI'] },
   { href: '/api-playground', icon: Code2, key: 'api', en: 'API contract runner', id: 'API contract runner', detailEn: 'Inspect HTTP payloads, validate strict schemas, and verify contract compatibility.', detailId: 'Periksa payload HTTP, validasi skema ketat, dan verifikasi kompatibilitas kontrak.', labelEn: 'API SPEC', labelId: 'API SPEC', chips: ['OPENAPI 3.X', 'SCHEMA DIFF'] },
   { href: '/security-center', icon: ShieldCheck, key: 'security', en: 'Zero-trust security center', id: 'Pusat keamanan zero-trust', detailEn: 'Evaluate CSP, header hardening, client privacy posture, and OWASP baselines.', detailId: 'Evaluasi CSP, hardening header, privasi klien, dan standar dasar OWASP.', labelEn: 'SECURITY', labelId: 'KEAMANAN', chips: ['CSP & OWASP', 'LOCAL VAULT'] },
@@ -41,6 +41,7 @@ export function EngineeringLaunchpad() {
       <div className="launchpad-foot">
         <span><span className="launchpad-foot-dot" /> {en ? 'Autonomous v6.0 Multi-Agent OS: Live Prototype · AI Grader · SE · QA · BA · Jira' : 'OS Multi-Agen v6.0 Otonom: Prototipe AI · AI Grader · SE · QA · BA · Jira'}</span>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+          <Link to="/jira">{en ? 'Jira Agile & Sprint OS (v7)' : 'Board Jira Agile & Sprint (v7)'} <ArrowUpRight size={14} /></Link>
           <Link to="/prototype">{en ? 'AI Prototype Studio (v6)' : 'Studio Prototipe AI (v6)'} <ArrowUpRight size={14} /></Link>
           <Link to="/grader">{en ? 'AI & Security URL Grader' : 'Audit URL AI & Keamanan'} <ArrowUpRight size={14} /></Link>
           <Link to="/tools">{en ? 'Open 6-Pillar IT Workbench' : 'Buka 6-Pilar IT Workbench'} <ArrowUpRight size={14} /></Link>

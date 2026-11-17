@@ -15,6 +15,7 @@ const checks = [
   { path: '/tools', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/ba-hub', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/pm-jira-hub', type: 'html', markers: ['id="root"', '<div'] },
+  { path: '/jira', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/api-playground', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/github-ci', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/team-workspace', type: 'html', markers: ['id="root"', '<div'] },

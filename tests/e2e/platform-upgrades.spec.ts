@@ -31,10 +31,10 @@ test.describe('DreamEx Tech v3.1 Platform Upgrades', () => {
     await page.getByRole('button', { name: /Business Analyst/i }).click()
     const filteredCards = await page.locator('.workspace-grid .workspace-card').count()
     expect(filteredCards).toBeGreaterThanOrEqual(4)
-    expect(filteredCards).toBeLessThan(24)
+    expect(filteredCards).toBeLessThan(25)
 
     await page.getByRole('button', { name: /All Roles|Semua Peran/i }).click()
-    await expect(page.locator('.workspace-grid .workspace-card')).toHaveCount(24)
+    await expect(page.locator('.workspace-grid .workspace-card')).toHaveCount(25)
 
     await page.locator('button.menu-toggle').click()
     await page.locator('.nav-drawer-footer .language-option', { hasText: 'ID' }).click()

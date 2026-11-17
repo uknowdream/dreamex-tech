@@ -7,6 +7,7 @@
 - [AI Readiness, Security & Architecture Grader](https://dreamex.tech/grader): Audit any public HTTPS website or GitHub repository across Zero-Trust CSP/HSTS headers, /llms.txt AI discovery, semantic accessibility, and edge latency, with dynamic SVG badges.
 - [6-Pillar Sovereign IT Workbench](https://dreamex.tech/tools): Unified deterministic workbench for Software Engineers, QA/UAT, Business Analysts, Project Managers, Jira REST v3 ADF, and DevSecOps.
 - [BA Requirement, Gherkin & RTM Studio](https://dreamex.tech/ba-hub): Compile BRD intents into Gherkin BDD scenarios and bi-directional Requirement Traceability Matrices.
+- [Jira Agile Board, Backlog & Sprint OS](https://dreamex.tech/jira): Full Jira Scrum/Kanban workspace with WIP guardrails, swimlanes, backlog sprint planning, Epic Gantt timeline, executable JQL, burndown/velocity charts, automation rules, and Atlassian REST v3 ADF / CSV export.
 - [PM Monte Carlo & Jira Neural Hub](https://dreamex.tech/pm-jira-hub): Synthesize Jira REST API v3 ADF payloads, visual JQL queries, and 10,000-trial sprint forecasts.
 - [Unified Engineering Workspace](https://dreamex.tech/workspace): Search and launch all 25+ role-indexed engineering suites.
 
