@@ -1406,7 +1406,7 @@ test('homepage supports tag filtering and article sorting controls', async ({ pa
 
   const sortSelect = page.getByRole('combobox', { name: /Sort articles|Urutkan artikel/i })
   await sortSelect.selectOption('newest')
-  await expect(page.locator('.article-card h3 a').first()).toHaveAttribute('href', '/blog/playwright-test-architecture')
+  await expect(page.locator('.article-card h3 a').first()).toHaveAttribute('href', '/blog/realtime-collaboration-local-first')
   await sortSelect.selectOption('oldest')
   await expect(page.locator('.article-card h3 a').first()).toHaveAttribute('href', '/blog/practical-ai-engineering')
   await sortSelect.selectOption('default')
