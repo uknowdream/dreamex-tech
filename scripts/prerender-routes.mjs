@@ -44,6 +44,9 @@ function ogImageFor(canonical) {
 
 function renderMetadata(page, canonical, type = 'website', publishedAt = '', indexable = true) {
   let html = template
+  if (canonical !== 'https://dreamex.tech/') {
+    html = html.replace(/\s*<link\b[^>]*href=["']\/premium-experience\.v2\.css["'][^>]*>\s*/i, '\n    ')
+  }
   const socialImage = ogImageFor(canonical)
   html = html.replace(/<html\b([^>]*)\blang=["'][^"']*["']([^>]*)>/i, '<html$1lang="en"$2>')
   html = html.replace(/<title>[\s\S]*?<\/title>/i, '<title>' + escapeHtml(page.title) + '</title>')

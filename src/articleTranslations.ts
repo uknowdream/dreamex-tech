@@ -91,4 +91,34 @@ export const articleTranslations: Record<string, ArticleTranslation> = {
       'Combine probabilistic sprint forecasts with Earned Value indices (SPI and CPI) to detect cost or schedule slippage early enough for scope adjustments rather than weekend firefighting.',
     ],
   },
+  'realtime-collaboration-local-first': {
+    title: 'Local-First Real-Time Collaboration with BroadcastChannel and Optimistic Revisions',
+    excerpt: 'Sync state across tabs, devices, and teams without losing work using local-first patterns and revision conflict detection.',
+    body: [
+      'Modern collaborative apps must stay responsive even when the network is slow or offline. A local-first approach keeps the primary state on the user device and treats the server as a replication layer rather than a prerequisite for using the app.',
+      'For cross-tab sync inside one browser, BroadcastChannel delivers very low latency with no server at all. Guard against echo loops with a source marker, and only broadcast validated snapshots so receiving tabs never hydrate corrupted data.',
+      'When syncing to the cloud, use optimistic revision numbers. The client sends the revision it expects, and the server rejects with HTTP 409 when the revision has moved on. This prevents silent overwrites of a teammate work.',
+      'Cap payload size, hash collaboration room identifiers, and rate-limit write endpoints. Provide a fallback such as a compressed shareable link so collaboration keeps working before server storage is configured.',
+    ],
+  },
+  'zero-vulnerability-dependency-upgrades': {
+    title: 'Drama-Free Major Dependency Upgrades Toward Zero Vulnerabilities',
+    excerpt: 'A staged strategy for major framework upgrades, measuring bundle impact, and keeping regressions at zero with automated verification gates.',
+    body: [
+      'Dependency vulnerabilities rarely disappear by postponing upgrades. The longer a major version is left behind, the larger the migration gap and the harder it becomes to separate regressions from intentional behavior changes.',
+      'Start with a production-only audit and group findings by root package. A single router or bundler upgrade often closes several advisories at once. Read the official migration notes and enable compatibility flags first.',
+      'Run the full verification gate after every step: typecheck, lint, API unit tests, build, SEO verification, performance budgets, and end-to-end tests on desktop and mobile. Consistent gates turn upgrades into routine work instead of risky projects.',
+      'Measure the initial bundle before and after the upgrade. Code-split secondary views so new features never slow the main page, then automate budget checks in CI.',
+    ],
+  },
+  'conversion-architecture-engineering-sites': {
+    title: 'Conversion Architecture for Engineering Sites: From Demo to Measurable Case Studies',
+    excerpt: 'Earn prospect trust with a clear demo flow, case studies backed by real metrics, and a transparent public changelog.',
+    body: [
+      'A feature-rich engineering site does not automatically create business conversations. Visitors need a clear next step, measurable proof of outcomes, and signals that the product is actively maintained.',
+      'Provide one focused conversion page: a short form with server-side validation, a traceable reference ID, and fallback paths such as email or a public issue. Avoid collecting data you do not need and explain how data is stored.',
+      'Case studies work best when they show the starting point, the technical intervention, and the resulting metrics, such as flaky test rate, pipeline duration, or settlement window. Anonymize clients when needed, but stay honest about the numbers.',
+      'A public changelog proves release cadence and builds long-term trust. Tie every version to user-visible impact rather than a list of internal technical changes.',
+    ],
+  },
 }

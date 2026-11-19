@@ -82,6 +82,30 @@ export const ARTICLE_COVERS: Record<string, ArticleCoverMeta> = {
     altEn: 'Multi-layered holographic spatial command matrix showing probabilistic sprint delivery forecasts.',
     altId: 'Matriks komando spasial holografik yang menampilkan simulasi probabilitas rilis sprint.',
   },
+  'realtime-collaboration-local-first': {
+    src: '/images/showcase-neural-mesh.jpg',
+    accent: '#38bdf8',
+    badgeEn: 'REAL-TIME SYNC',
+    badgeId: 'SINKRON REAL-TIME',
+    altEn: 'Luminous neural mesh of connected nodes representing real-time local-first collaboration across devices.',
+    altId: 'Jaringan neural bercahaya dengan node terhubung yang melambangkan kolaborasi real-time lintas perangkat.',
+  },
+  'zero-vulnerability-dependency-upgrades': {
+    src: '/images/cover-security-vault.jpg',
+    accent: '#10b981',
+    badgeEn: 'SUPPLY CHAIN',
+    badgeId: 'RANTAI PASOK',
+    altEn: 'Zero-trust security vault visual representing safe dependency upgrades with zero vulnerabilities.',
+    altId: 'Visual brankas keamanan zero-trust yang melambangkan upgrade dependensi aman tanpa kerentanan.',
+  },
+  'conversion-architecture-engineering-sites': {
+    src: '/images/cover-agentic-prototype.jpg',
+    accent: '#f59e0b',
+    badgeEn: 'GROWTH ENGINEERING',
+    badgeId: 'GROWTH ENGINEERING',
+    altEn: 'Agentic prototype workspace visual representing conversion architecture and measurable case studies.',
+    altId: 'Visual workspace prototipe agentik yang melambangkan arsitektur konversi dan studi kasus terukur.',
+  },
 }
 
 const FALLBACK_COVER: ArticleCoverMeta = {

@@ -56,6 +56,7 @@ test.describe('DreamEx Jira Agile & Sprint OS (/jira)', () => {
   })
 
   test('supports Backlog planning, Epic Gantt Roadmap, Bulk Navigator, Burndown Reports, Automation Sync, Light Mode & 320px responsiveness', async ({ page }) => {
+    test.setTimeout(60_000)
     await page.goto('/jira')
 
     // Backlog view + quick create

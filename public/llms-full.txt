@@ -7,6 +7,7 @@
 - [AI Readiness, Security & Architecture Grader](https://dreamex.tech/grader): Audit any public HTTPS website or GitHub repository across Zero-Trust CSP/HSTS headers, /llms.txt AI discovery, semantic accessibility, and edge latency, with dynamic SVG badges.
 - [6-Pillar Sovereign IT Workbench](https://dreamex.tech/tools): Unified deterministic workbench for Software Engineers, QA/UAT, Business Analysts, Project Managers, Jira REST v3 ADF, and DevSecOps.
 - [BA Requirement, Gherkin & RTM Studio](https://dreamex.tech/ba-hub): Compile BRD intents into Gherkin BDD scenarios and bi-directional Requirement Traceability Matrices.
+- [Enterprise Demo, Case Studies & Changelog](https://dreamex.tech/contact): Book a guided demo or architecture review, read measurable engineering case studies, and follow the public release changelog.
 - [Jira Agile Board, Backlog & Sprint OS](https://dreamex.tech/jira): Full Jira Scrum/Kanban workspace with WIP guardrails, swimlanes, backlog sprint planning, Epic Gantt timeline, executable JQL, burndown/velocity charts, automation rules, and Atlassian REST v3 ADF / CSV export.
 - [PM Monte Carlo & Jira Neural Hub](https://dreamex.tech/pm-jira-hub): Synthesize Jira REST API v3 ADF payloads, visual JQL queries, and 10,000-trial sprint forecasts.
 - [Unified Engineering Workspace](https://dreamex.tech/workspace): Search and launch all 25+ role-indexed engineering suites.
@@ -20,6 +21,9 @@
 - Canonical XML Sitemap: https://dreamex.tech/sitemap.xml
 
 ## Technical Research & Architecture Studies
+- [Kolaborasi Real-Time Local-First dengan BroadcastChannel dan Revisi Optimistik](https://dreamex.tech/blog/realtime-collaboration-local-first) (2026-11-18): Menyinkronkan state antar tab, perangkat, dan tim tanpa kehilangan data menggunakan pola local-first serta deteksi konflik revisi.
+- [Upgrade Dependensi Mayor Tanpa Drama Menuju Nol Kerentanan](https://dreamex.tech/blog/zero-vulnerability-dependency-upgrades) (2026-11-12): Strategi bertahap untuk upgrade framework mayor, mengukur dampak bundle, dan menjaga regresi tetap nol dengan gerbang verifikasi otomatis.
+- [Arsitektur Konversi untuk Situs Engineering: Dari Demo ke Studi Kasus Terukur](https://dreamex.tech/blog/conversion-architecture-engineering-sites) (2026-11-05): Membangun kepercayaan calon klien melalui alur demo yang jelas, studi kasus dengan metrik nyata, dan changelog publik yang transparan.
 - [Merancang Playwright Test Suite yang Stabil](https://dreamex.tech/blog/playwright-test-architecture) (2026-10-10): Pola page object yang proporsional, locator yang tangguh, isolasi data, dan strategi mengurangi flaky test.
 - [Tata Kelola Kontrak API, Idempotency & Outbox Pattern](https://dreamex.tech/blog/api-contract-governance-idempotency) (2026-10-09): Mencegah transaksi ganda dan pergeseran skema antar microservice melalui kontrak runtime dan idempotency key.
 - [Checklist Keamanan Dasar untuk Pipeline CI/CD](https://dreamex.tech/blog/secure-ci-cd-basics) (2026-10-07): Praktik least privilege, pengelolaan secret, dependency hygiene, dan perlindungan supply chain perangkat lunak.
@@ -58,7 +62,11 @@
 - https://dreamex.tech/ba-hub (priority 0.8, weekly)
 - https://dreamex.tech/pm-jira-hub (priority 0.8, weekly)
 - https://dreamex.tech/jira (priority 0.9, weekly)
+- https://dreamex.tech/contact (priority 0.8, monthly)
 - https://dreamex.tech/rss (priority 0.7, daily)
+- https://dreamex.tech/blog/realtime-collaboration-local-first (priority 0.8, monthly)
+- https://dreamex.tech/blog/zero-vulnerability-dependency-upgrades (priority 0.8, monthly)
+- https://dreamex.tech/blog/conversion-architecture-engineering-sites (priority 0.8, monthly)
 - https://dreamex.tech/blog/playwright-test-architecture (priority 0.8, monthly)
 - https://dreamex.tech/blog/api-contract-governance-idempotency (priority 0.8, monthly)
 - https://dreamex.tech/blog/secure-ci-cd-basics (priority 0.8, monthly)

@@ -6,8 +6,29 @@
     <link>https://dreamex.tech/</link>
     <description>Practical notes on software engineering, quality engineering, AI, and modern technology.</description>
     <language>id-ID</language>
-    <lastBuildDate>Thu, 19 Nov 2026 21:21:45 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 19 Nov 2026 22:05:03 GMT</lastBuildDate>
     <atom:link href="https://dreamex.tech/rss.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Kolaborasi Real-Time Local-First dengan BroadcastChannel dan Revisi Optimistik</title>
+      <link>https://dreamex.tech/blog/realtime-collaboration-local-first</link>
+      <guid isPermaLink="true">https://dreamex.tech/blog/realtime-collaboration-local-first</guid>
+      <description>Menyinkronkan state antar tab, perangkat, dan tim tanpa kehilangan data menggunakan pola local-first serta deteksi konflik revisi.</description>
+      <pubDate>Wed, 18 Nov 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Upgrade Dependensi Mayor Tanpa Drama Menuju Nol Kerentanan</title>
+      <link>https://dreamex.tech/blog/zero-vulnerability-dependency-upgrades</link>
+      <guid isPermaLink="true">https://dreamex.tech/blog/zero-vulnerability-dependency-upgrades</guid>
+      <description>Strategi bertahap untuk upgrade framework mayor, mengukur dampak bundle, dan menjaga regresi tetap nol dengan gerbang verifikasi otomatis.</description>
+      <pubDate>Thu, 12 Nov 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Arsitektur Konversi untuk Situs Engineering: Dari Demo ke Studi Kasus Terukur</title>
+      <link>https://dreamex.tech/blog/conversion-architecture-engineering-sites</link>
+      <guid isPermaLink="true">https://dreamex.tech/blog/conversion-architecture-engineering-sites</guid>
+      <description>Membangun kepercayaan calon klien melalui alur demo yang jelas, studi kasus dengan metrik nyata, dan changelog publik yang transparan.</description>
+      <pubDate>Thu, 05 Nov 2026 00:00:00 GMT</pubDate>
+    </item>
     <item>
       <title>Merancang Playwright Test Suite yang Stabil</title>
       <link>https://dreamex.tech/blog/playwright-test-architecture</link>

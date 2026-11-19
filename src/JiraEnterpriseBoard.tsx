@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import {
   AlertTriangle,
@@ -69,8 +69,20 @@ import {
   type ProductDiscoveryIdea,
   type SavedJqlFilter,
 } from './jiraEnterpriseModules'
-import { JiraCalendarView, JiraFormsPortalView, JiraWorkflowSettingsView } from './jira/JiraProViews'
 import './JiraEnterpriseBoard.css'
+
+const JiraCalendarView = lazy(() =>
+  import('./jira/JiraProViews').then(m => ({ default: m.JiraCalendarView })),
+)
+const JiraFormsPortalView = lazy(() =>
+  import('./jira/JiraProViews').then(m => ({ default: m.JiraFormsPortalView })),
+)
+const JiraWorkflowSettingsView = lazy(() =>
+  import('./jira/JiraProViews').then(m => ({ default: m.JiraWorkflowSettingsView })),
+)
+const JiraCloudSyncPanel = lazy(() =>
+  import('./jira/JiraCloudSyncPanel').then(m => ({ default: m.JiraCloudSyncPanel })),
+)
 
 export type JiraStatusId = 'todo' | 'in_progress' | 'review' | 'blocked' | 'done'
 export type JiraIssueKind = 'story' | 'bug' | 'task' | 'security'
@@ -642,9 +654,69 @@ function createDefaultState(): JiraWorkspaceState {
   }
 }
 
+function decodeShareableSyncParam(rawParam: string): Partial<JiraWorkspaceState> | null {
+  try {
+    const normalized = rawParam.replaceAll('-', '+').replaceAll('_', '/')
+    const pad = normalized.length % 4 === 0 ? '' : '='.repeat(4 - (normalized.length % 4))
+    const bin = atob(normalized + pad)
+    const bytes = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+    const decoded = JSON.parse(new TextDecoder().decode(bytes)) as {
+      activeSprintName?: string
+      issues?: Array<Partial<JiraIssue>>
+    }
+    if (!decoded || !Array.isArray(decoded.issues) || !decoded.issues.length) return null
+    const nowIso = new Date().toISOString()
+    const hydratedIssues: JiraIssue[] = decoded.issues.slice(0, 24).map((i, idx) => ({
+      id: typeof i.id === 'string' && i.id ? i.id : `sync-${idx + 1}`,
+      key: typeof i.key === 'string' && i.key ? i.key : `DX-${900 + idx}`,
+      title: typeof i.title === 'string' && i.title ? i.title : 'Synced Issue',
+      description: typeof i.description === 'string' ? i.description : 'Hydrated from DreamEx Shareable Multi-Device Sync URL.',
+      type: i.type === 'bug' || i.type === 'task' || i.type === 'security' ? i.type : 'story',
+      status:
+        i.status === 'in_progress' || i.status === 'review' || i.status === 'blocked' || i.status === 'done'
+          ? i.status
+          : 'todo',
+      priority:
+        i.priority === 'Highest' || i.priority === 'High' || i.priority === 'Low' ? i.priority : 'Medium',
+      points: typeof i.points === 'number' && i.points > 0 ? i.points : 3,
+      assignee: typeof i.assignee === 'string' && i.assignee ? i.assignee : 'Rizky',
+      epicKey: typeof i.epicKey === 'string' && i.epicKey ? i.epicKey : 'DX-EPIC-1',
+      sprintId: i.sprintId === 'sprint-25' || i.sprintId === 'backlog' ? i.sprintId : 'sprint-24',
+      labels: Array.isArray(i.labels) ? i.labels.map(String) : ['url-synced'],
+      dueDate: typeof i.dueDate === 'string' && i.dueDate ? i.dueDate : '2026-11-28',
+      subtasks: Array.isArray(i.subtasks) ? i.subtasks : [],
+      comments: Array.isArray(i.comments) ? i.comments : [],
+      updatedAt: nowIso,
+    }))
+    return {
+      activeSprintName: typeof decoded.activeSprintName === 'string' ? decoded.activeSprintName : undefined,
+      issues: hydratedIssues,
+    }
+  } catch {
+    return null
+  }
+}
+
 function loadState(): JiraWorkspaceState {
   if (typeof window === 'undefined') return createDefaultState()
   try {
+    const syncParam = new URLSearchParams(window.location.search).get('sync')
+    if (syncParam) {
+      const fromUrl = decodeShareableSyncParam(syncParam)
+      if (fromUrl?.issues?.length) {
+        const fallback = createDefaultState()
+        return {
+          ...fallback,
+          activeSprintName: fromUrl.activeSprintName ?? fallback.activeSprintName,
+          issues: fromUrl.issues,
+          automationLogs: [
+            `[SYNC-URL] Hydrated ${fromUrl.issues.length} issue(s) from cross-device shareable board link.`,
+            ...fallback.automationLogs,
+          ],
+        }
+      }
+    }
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (!raw) return createDefaultState()
     const parsed = JSON.parse(raw) as Partial<JiraWorkspaceState>
@@ -886,11 +958,48 @@ export default function JiraEnterpriseBoardPage() {
 
   // v9.0 App Shell Sidebar, Undo/Redo History, Workflow Validator & Issue Linking
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [isDesktopWide, setIsDesktopWide] = useState(() =>
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(min-width: 1121px)').matches
+      : true,
+  )
+  const [broadcastPeers, setBroadcastPeers] = useState(0)
+  const skipBroadcastRef = useRef(false)
+  const channelRef = useRef<BroadcastChannel | null>(null)
   const [requireSubtaskForDone, setRequireSubtaskForDone] = useState(false)
   const [undoStack, setUndoStack] = useState<JiraWorkspaceState[]>([])
   const [redoStack, setRedoStack] = useState<JiraWorkspaceState[]>([])
   const [linkKind, setLinkKind] = useState<'blocks' | 'blocked_by' | 'relates_to' | 'duplicates'>('relates_to')
   const [linkTargetKey, setLinkTargetKey] = useState<string>('DX-102')
+
+  // v10.0 Track desktop breakpoint so ONLY Left Sidebar OR Horizontal Tabs Bar renders at any viewport
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+    const mq = window.matchMedia('(min-width: 1121px)')
+    const syncMatch = () => setIsDesktopWide(mq.matches)
+    syncMatch()
+    mq.addEventListener('change', syncMatch)
+    return () => mq.removeEventListener('change', syncMatch)
+  }, [])
+
+  // v10.0 Real-Time Multi-Tab BroadcastChannel sync (<5ms across browser tabs)
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.BroadcastChannel !== 'function') return
+    const ch = new window.BroadcastChannel('dreamex-jira-live-bus')
+    channelRef.current = ch
+    ch.onmessage = ev => {
+      const payload = ev.data as { type?: string; state?: JiraWorkspaceState } | null
+      if (payload?.type === 'jira-state-sync' && payload.state && Array.isArray(payload.state.issues)) {
+        skipBroadcastRef.current = true
+        setState(payload.state)
+        setBroadcastPeers(n => n + 1)
+      }
+    }
+    return () => {
+      ch.close()
+      channelRef.current = null
+    }
+  }, [])
 
   const mutateWithUndo = useCallback((updater: (prev: JiraWorkspaceState) => JiraWorkspaceState) => {
     setState(prev => {
@@ -926,12 +1035,21 @@ export default function JiraEnterpriseBoardPage() {
     })
   }, [])
 
-  // Persist to localStorage
+  // Persist to localStorage + broadcast live updates to other open tabs
   useEffect(() => {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
     } catch {
       /* Safe fallback if private browsing quota is restricted */
+    }
+    if (skipBroadcastRef.current) {
+      skipBroadcastRef.current = false
+      return
+    }
+    try {
+      channelRef.current?.postMessage({ type: 'jira-state-sync', state })
+    } catch {
+      /* Ignore closed channel */
     }
   }, [state])
 
@@ -1750,6 +1868,73 @@ export default function JiraEnterpriseBoardPage() {
     flashNotice(en ? `Scheduled new issue on ${dueDate}!` : `Tiket baru dijadwalkan pada ${dueDate}!`)
   }
 
+  const handleApplyRemoteSnapshot = (rawSnap: unknown) => {
+    const parsed = rawSnap as Partial<JiraWorkspaceState> | null
+    if (!parsed || !Array.isArray(parsed.issues) || !parsed.issues.length) {
+      flashNotice(en ? 'Remote snapshot did not contain valid issues.' : 'Snapshot cloud tidak memiliki tiket valid.')
+      return
+    }
+    mutateWithUndo(prev => ({
+      ...prev,
+      activeSprintName: typeof parsed.activeSprintName === 'string' ? parsed.activeSprintName : prev.activeSprintName,
+      activeSprintGoal: typeof parsed.activeSprintGoal === 'string' ? parsed.activeSprintGoal : prev.activeSprintGoal,
+      issues: parsed.issues as JiraIssue[],
+      automationLogs: [`[CLOUD-SYNC] Pulled ${parsed.issues?.length ?? 0} issue(s) from team Cloud Room.`, ...prev.automationLogs],
+    }))
+    flashNotice(en ? 'Synced latest board snapshot from Cloud Room!' : 'Berhasil menyinkronkan snapshot terbaru dari Ruang Cloud!')
+  }
+
+  const handleImportGithubIssues = (
+    imported: Array<{ title: string; body: string; labels: string[]; htmlUrl: string; number: number }>,
+  ) => {
+    const prefix = activeProjectKey === 'ALL' ? 'DX' : activeProjectKey
+    mutateWithUndo(prev => {
+      let seq = prev.nextSequence
+      const nowIso = new Date().toISOString()
+      const created: JiraIssue[] = imported.map(item => {
+        const key = `${prefix}-${seq}`
+        seq += 1
+        const isBug = item.labels.some(l => /bug|error|fix|incident/i.test(l))
+        const isSec = item.labels.some(l => /sec|cve|vuln/i.test(l))
+        return {
+          id: uid('gh'),
+          key,
+          title: item.title,
+          description: `${item.body}\n\nSource: ${item.htmlUrl}`,
+          type: isSec ? 'security' : isBug ? 'bug' : 'story',
+          status: 'todo',
+          priority: isSec ? 'Highest' : isBug ? 'High' : 'Medium',
+          points: 3,
+          assignee: isSec ? 'Alya' : 'Rizky',
+          epicKey: epicsList[0]?.key ?? 'DX-EPIC-1',
+          sprintId: 'sprint-24',
+          labels: [...new Set(['github-import', ...item.labels.slice(0, 3)])],
+          prRef: `GH#${item.number}`,
+          dueDate: '2026-11-30',
+          component: 'CI/CD Pipeline',
+          fixVersion: 'v7.1.0',
+          subtasks: [],
+          comments: [],
+          updatedAt: nowIso,
+        }
+      })
+      return {
+        ...prev,
+        nextSequence: seq,
+        issues: [...created, ...prev.issues],
+        automationLogs: [
+          `[GITHUB-BRIDGE] Imported ${created.length} live GitHub issue(s) into ${prefix} Sprint 24.`,
+          ...prev.automationLogs,
+        ],
+      }
+    })
+    flashNotice(
+      en
+        ? `Imported ${imported.length} live GitHub issue(s) onto ${prefix} board!`
+        : `Berhasil mengimpor ${imported.length} issue GitHub langsung ke board ${prefix}!`,
+    )
+  }
+
   const handleFormsPortalSubmit = (payload: {
     template: string
     type: JiraIssueKind
@@ -2232,153 +2417,165 @@ export default function JiraEnterpriseBoardPage() {
         </div>
       </section>
 
-      {/* Atlassian Jira Cloud Enterprise App Shell (Collapsible Left Sidebar + Main Workspace) */}
-      <div className={sidebarOpen ? 'jira-cloud-shell' : 'jira-cloud-shell is-sidebar-collapsed'}>
-        {sidebarOpen && (
-          <aside className="jira-cloud-sidebar" data-testid="jira-cloud-sidebar" aria-label={en ? 'Jira Project Sidebar' : 'Sidebar Proyek Jira'}>
-            <div className="jira-sidebar-project-head">
-              <span className="jira-sidebar-avatar">{activeProjectMeta.key}</span>
-              <div style={{ minWidth: 0 }}>
-                <strong style={{ display: 'block', fontSize: 12.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {en ? activeProjectMeta.nameEn : activeProjectMeta.nameId}
-                </strong>
-                <span className="jira-kpi-sub" style={{ fontSize: 10.5 }}>
-                  {activeProjectMeta.methodology} · {en ? activeProjectMeta.categoryEn : activeProjectMeta.categoryId}
-                </span>
-              </div>
-            </div>
+      {/* Atlassian Jira Cloud Enterprise App Shell — Single Active Nav (Sidebar on >=1121px Desktop when open, Compact Tabs Bar on Mobile/Collapsed) */}
+      {(() => {
+        const showLeftSidebar = isDesktopWide && sidebarOpen
+        return (
+          <div className={showLeftSidebar ? 'jira-cloud-shell' : 'jira-cloud-shell is-sidebar-collapsed'}>
+            {showLeftSidebar && (
+              <aside className="jira-cloud-sidebar" data-testid="jira-cloud-sidebar" aria-label={en ? 'Jira Project Sidebar' : 'Sidebar Proyek Jira'}>
+                <div className="jira-sidebar-project-head">
+                  <span className="jira-sidebar-avatar">{activeProjectMeta.key}</span>
+                  <div style={{ minWidth: 0 }}>
+                    <strong style={{ display: 'block', fontSize: 12.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {en ? activeProjectMeta.nameEn : activeProjectMeta.nameId}
+                    </strong>
+                    <span className="jira-kpi-sub" style={{ fontSize: 10.5 }}>
+                      {activeProjectMeta.methodology} · {en ? activeProjectMeta.categoryEn : activeProjectMeta.categoryId}
+                    </span>
+                  </div>
+                </div>
 
-            <div className="jira-sidebar-group">
-              <span className="jira-sidebar-group-title">{en ? 'PLANNING' : 'PERENCANAAN'}</span>
+                <div role="tablist" aria-orientation="vertical" aria-label={en ? 'Jira workspace views' : 'Tampilan workspace Jira'} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div className="jira-sidebar-group">
+                    <span className="jira-sidebar-group-title">{en ? 'PLANNING' : 'PERENCANAAN'}</span>
+                    {(
+                      [
+                        { id: 'board', icon: Kanban, en: 'Sprint Board', idLabel: 'Board Sprint', count: activeSprintIssues.length },
+                        { id: 'backlog', icon: Layers3, en: 'Backlog & Poker', idLabel: 'Backlog & Poker', count: projectScopedIssues.length },
+                        { id: 'roadmap', icon: CalendarRange, en: 'Epic Gantt', idLabel: 'Roadmap Gantt', count: epicsList.length },
+                        { id: 'calendar', icon: CalendarDays, en: 'Calendar', idLabel: 'Kalender', count: projectScopedIssues.length },
+                        { id: 'discovery', icon: Lightbulb, en: 'Discovery RICE', idLabel: 'Ide & RICE', count: ideas.length },
+                      ] as const
+                    ).map(item => {
+                      const Icon = item.icon
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          role="tab"
+                          aria-selected={activeTab === item.id}
+                          data-testid={`jira-tab-${item.id}`}
+                          className={activeTab === item.id ? 'jira-sidebar-btn is-active' : 'jira-sidebar-btn'}
+                          onClick={() => setActiveTab(item.id)}
+                        >
+                          <span className="jira-sidebar-btn-left">
+                            <Icon size={14} />
+                            <span>{en ? item.en : item.idLabel}</span>
+                          </span>
+                          <span className="jira-tab-count">{item.count}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  <div className="jira-sidebar-group">
+                    <span className="jira-sidebar-group-title">{en ? 'DELIVERY & OPS' : 'DELIVERY & OPERASI'}</span>
+                    {(
+                      [
+                        { id: 'releases', icon: PackageCheck, en: 'Releases', idLabel: 'Versi Rilis', count: releases.length },
+                        { id: 'jsm', icon: ShieldAlert, en: 'Service Desk', idLabel: 'Insiden & CAB', count: jsmTickets.length },
+                        { id: 'forms', icon: ClipboardList, en: 'Forms Portal', idLabel: 'Portal Form', count: 4 },
+                        { id: 'wiki', icon: BookOpen, en: 'Confluence Wiki', idLabel: 'Dokumen PRD/ADR', count: wikiDocs.length },
+                        { id: 'navigator', icon: ListChecks, en: 'JQL & Bulk', idLabel: 'JQL & Massal', count: filteredIssues.length },
+                      ] as const
+                    ).map(item => {
+                      const Icon = item.icon
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          role="tab"
+                          aria-selected={activeTab === item.id}
+                          data-testid={`jira-tab-${item.id}`}
+                          className={activeTab === item.id ? 'jira-sidebar-btn is-active' : 'jira-sidebar-btn'}
+                          onClick={() => setActiveTab(item.id)}
+                        >
+                          <span className="jira-sidebar-btn-left">
+                            <Icon size={14} />
+                            <span>{en ? item.en : item.idLabel}</span>
+                          </span>
+                          <span className="jira-tab-count">{item.count}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  <div className="jira-sidebar-group">
+                    <span className="jira-sidebar-group-title">{en ? 'INTELLIGENCE' : 'KECERDASAN & ATURAN'}</span>
+                    {(
+                      [
+                        { id: 'autopilot', icon: BrainCircuit, en: 'AI Autopilot', idLabel: 'AI Autopilot', count: horizonReport.recommendations.length },
+                        { id: 'reports', icon: BarChart3, en: 'CFD & Reports', idLabel: 'CFD & Laporan', count: 6 },
+                        { id: 'automation', icon: Bot, en: 'Automation & Cloud', idLabel: 'Otomasi & Cloud', count: state.rules.length },
+                        { id: 'workflow', icon: GitMerge, en: 'Workflow & RBAC', idLabel: 'Workflow & Izin', count: 5 },
+                      ] as const
+                    ).map(item => {
+                      const Icon = item.icon
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          role="tab"
+                          aria-selected={activeTab === item.id}
+                          data-testid={`jira-tab-${item.id}`}
+                          className={activeTab === item.id ? 'jira-sidebar-btn is-active' : 'jira-sidebar-btn'}
+                          onClick={() => setActiveTab(item.id)}
+                        >
+                          <span className="jira-sidebar-btn-left">
+                            <Icon size={14} />
+                            <span>{en ? item.en : item.idLabel}</span>
+                          </span>
+                          <span className="jira-tab-count">{item.count}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </aside>
+            )}
+
+            <div className="jira-cloud-main">
+          {!showLeftSidebar && (
+            <div className="jira-tabs-bar" role="tablist" aria-label={en ? 'Jira workspace views' : 'Tampilan workspace Jira'}>
               {(
                 [
                   { id: 'board', icon: Kanban, en: 'Sprint Board', idLabel: 'Board Sprint', count: activeSprintIssues.length },
+                  { id: 'autopilot', icon: BrainCircuit, en: 'AI Autopilot', idLabel: 'AI Autopilot', count: horizonReport.recommendations.length },
                   { id: 'backlog', icon: Layers3, en: 'Backlog & Poker', idLabel: 'Backlog & Poker', count: projectScopedIssues.length },
                   { id: 'roadmap', icon: CalendarRange, en: 'Epic Gantt', idLabel: 'Roadmap Gantt', count: epicsList.length },
                   { id: 'calendar', icon: CalendarDays, en: 'Calendar', idLabel: 'Kalender', count: projectScopedIssues.length },
                   { id: 'discovery', icon: Lightbulb, en: 'Discovery RICE', idLabel: 'Ide & RICE', count: ideas.length },
-                ] as const
-              ).map(item => {
-                const Icon = item.icon
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    data-testid={`jira-side-${item.id}`}
-                    className={activeTab === item.id ? 'jira-sidebar-btn is-active' : 'jira-sidebar-btn'}
-                    onClick={() => setActiveTab(item.id)}
-                  >
-                    <span className="jira-sidebar-btn-left">
-                      <Icon size={14} />
-                      <span>{en ? item.en : item.idLabel}</span>
-                    </span>
-                    <span className="jira-tab-count">{item.count}</span>
-                  </button>
-                )
-              })}
-            </div>
-
-            <div className="jira-sidebar-group">
-              <span className="jira-sidebar-group-title">{en ? 'DELIVERY & OPS' : 'DELIVERY & OPERASI'}</span>
-              {(
-                [
-                  { id: 'releases', icon: PackageCheck, en: 'Releases', idLabel: 'Versi Rilis', count: releases.length },
-                  { id: 'jsm', icon: ShieldAlert, en: 'Service Desk', idLabel: 'Insiden & CAB', count: jsmTickets.length },
+                  { id: 'jsm', icon: ShieldAlert, en: 'Service Desk & CAB', idLabel: 'Insiden & CAB', count: jsmTickets.length },
                   { id: 'forms', icon: ClipboardList, en: 'Forms Portal', idLabel: 'Portal Form', count: 4 },
-                  { id: 'wiki', icon: BookOpen, en: 'Confluence Wiki', idLabel: 'Dokumen PRD/ADR', count: wikiDocs.length },
+                  { id: 'wiki', icon: BookOpen, en: 'Confluence Specs', idLabel: 'Dokumen PRD/ADR', count: wikiDocs.length },
+                  { id: 'releases', icon: PackageCheck, en: 'Releases', idLabel: 'Versi Rilis', count: releases.length },
                   { id: 'navigator', icon: ListChecks, en: 'JQL & Bulk', idLabel: 'JQL & Massal', count: filteredIssues.length },
-                ] as const
-              ).map(item => {
-                const Icon = item.icon
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    data-testid={`jira-side-${item.id}`}
-                    className={activeTab === item.id ? 'jira-sidebar-btn is-active' : 'jira-sidebar-btn'}
-                    onClick={() => setActiveTab(item.id)}
-                  >
-                    <span className="jira-sidebar-btn-left">
-                      <Icon size={14} />
-                      <span>{en ? item.en : item.idLabel}</span>
-                    </span>
-                    <span className="jira-tab-count">{item.count}</span>
-                  </button>
-                )
-              })}
-            </div>
-
-            <div className="jira-sidebar-group">
-              <span className="jira-sidebar-group-title">{en ? 'INTELLIGENCE' : 'KECERDASAN & ATURAN'}</span>
-              {(
-                [
-                  { id: 'autopilot', icon: BrainCircuit, en: 'AI Autopilot', idLabel: 'AI Autopilot', count: horizonReport.recommendations.length },
                   { id: 'reports', icon: BarChart3, en: 'CFD & Reports', idLabel: 'CFD & Laporan', count: 6 },
-                  { id: 'automation', icon: Bot, en: 'Automation & API', idLabel: 'Otomasi & API', count: state.rules.length },
+                  { id: 'automation', icon: Bot, en: 'Automation & Cloud', idLabel: 'Otomasi & Cloud', count: state.rules.length },
                   { id: 'workflow', icon: GitMerge, en: 'Workflow & RBAC', idLabel: 'Workflow & Izin', count: 5 },
                 ] as const
-              ).map(item => {
-                const Icon = item.icon
+              ).map(tab => {
+                const Icon = tab.icon
+                const active = activeTab === tab.id
                 return (
                   <button
-                    key={item.id}
+                    key={tab.id}
                     type="button"
-                    data-testid={`jira-side-${item.id}`}
-                    className={activeTab === item.id ? 'jira-sidebar-btn is-active' : 'jira-sidebar-btn'}
-                    onClick={() => setActiveTab(item.id)}
+                    role="tab"
+                    aria-selected={active}
+                    data-testid={`jira-tab-${tab.id}`}
+                    className={active ? 'jira-tab-btn is-active' : 'jira-tab-btn'}
+                    onClick={() => setActiveTab(tab.id)}
                   >
-                    <span className="jira-sidebar-btn-left">
-                      <Icon size={14} />
-                      <span>{en ? item.en : item.idLabel}</span>
-                    </span>
-                    <span className="jira-tab-count">{item.count}</span>
+                    <Icon size={15} />
+                    <span>{en ? tab.en : tab.idLabel}</span>
+                    <span className="jira-tab-count">{tab.count}</span>
                   </button>
                 )
               })}
             </div>
-          </aside>
-        )}
-
-        <div className="jira-cloud-main">
-      {/* 14-View Full Atlassian Cloud Workspace Switcher */}
-      <div className="jira-tabs-bar" role="tablist" aria-label={en ? 'Jira workspace views' : 'Tampilan workspace Jira'}>
-        {(
-          [
-            { id: 'board', icon: Kanban, en: 'Sprint Board', idLabel: 'Board Sprint', count: activeSprintIssues.length },
-            { id: 'autopilot', icon: BrainCircuit, en: 'AI Autopilot', idLabel: 'AI Autopilot', count: horizonReport.recommendations.length },
-            { id: 'backlog', icon: Layers3, en: 'Backlog & Poker', idLabel: 'Backlog & Poker', count: projectScopedIssues.length },
-            { id: 'roadmap', icon: CalendarRange, en: 'Epic Gantt', idLabel: 'Roadmap Gantt', count: epicsList.length },
-            { id: 'calendar', icon: CalendarDays, en: 'Calendar', idLabel: 'Kalender', count: projectScopedIssues.length },
-            { id: 'discovery', icon: Lightbulb, en: 'Discovery RICE', idLabel: 'Ide & RICE', count: ideas.length },
-            { id: 'jsm', icon: ShieldAlert, en: 'Service Desk & CAB', idLabel: 'Insiden & CAB', count: jsmTickets.length },
-            { id: 'forms', icon: ClipboardList, en: 'Forms Portal', idLabel: 'Portal Form', count: 4 },
-            { id: 'wiki', icon: BookOpen, en: 'Confluence Specs', idLabel: 'Dokumen PRD/ADR', count: wikiDocs.length },
-            { id: 'releases', icon: PackageCheck, en: 'Releases', idLabel: 'Versi Rilis', count: releases.length },
-            { id: 'navigator', icon: ListChecks, en: 'JQL & Bulk', idLabel: 'JQL & Massal', count: filteredIssues.length },
-            { id: 'reports', icon: BarChart3, en: 'CFD & Reports', idLabel: 'CFD & Laporan', count: 6 },
-            { id: 'automation', icon: Bot, en: 'Automation & API', idLabel: 'Otomasi & API', count: state.rules.length },
-            { id: 'workflow', icon: GitMerge, en: 'Workflow & RBAC', idLabel: 'Workflow & Izin', count: 5 },
-          ] as const
-        ).map(tab => {
-          const Icon = tab.icon
-          const active = activeTab === tab.id
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              data-testid={`jira-tab-${tab.id}`}
-              className={active ? 'jira-tab-btn is-active' : 'jira-tab-btn'}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              <Icon size={15} />
-              <span>{en ? tab.en : tab.idLabel}</span>
-              <span className="jira-tab-count">{tab.count}</span>
-            </button>
-          )
-        })}
-      </div>
+          )}
 
       {/* Shared JQL, Assignee Avatar & Quick Filter Bar (Board & Navigator) */}
       {(activeTab === 'board' || activeTab === 'navigator' || activeTab === 'backlog') && (
@@ -4146,6 +4343,19 @@ export default function JiraEnterpriseBoardPage() {
             </div>
           </article>
 
+          <Suspense fallback={<div className="jira-panel-card">{en ? 'Loading Cloud Sync & GitHub Bridge…' : 'Memuat Sinkronisasi Cloud & GitHub…'}</div>}>
+            <JiraCloudSyncPanel
+              en={en}
+              activeProjectKey={activeProjectKey === 'ALL' ? 'DX' : activeProjectKey}
+              issuesCount={state.issues.length}
+              broadcastPeers={broadcastPeers}
+              onGetSnapshot={() => state}
+              onApplyRemoteSnapshot={handleApplyRemoteSnapshot}
+              onImportGithubIssues={handleImportGithubIssues}
+              onFlashNotice={flashNotice}
+            />
+          </Suspense>
+
           <article className="jira-panel-card">
             <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
               <div>
@@ -4214,50 +4424,58 @@ export default function JiraEnterpriseBoardPage() {
       )}
 
       {/* ====================================================================
-          VIEW 7: JIRA WORK MANAGEMENT DELIVERY CALENDAR
+          VIEW 7: JIRA WORK MANAGEMENT DELIVERY CALENDAR (LAZY-LOADED)
          ==================================================================== */}
       {activeTab === 'calendar' && (
-        <JiraCalendarView
-          en={en}
-          issues={projectScopedIssues}
-          onOpenIssue={issueId => setSelectedIssueId(issueId)}
-          onQuickCreateOnDate={handleCalendarQuickCreate}
-        />
+        <Suspense fallback={<div className="jira-panel-card">{en ? 'Loading Delivery Calendar…' : 'Memuat Kalender Delivery…'}</div>}>
+          <JiraCalendarView
+            en={en}
+            issues={projectScopedIssues}
+            onOpenIssue={issueId => setSelectedIssueId(issueId)}
+            onQuickCreateOnDate={handleCalendarQuickCreate}
+          />
+        </Suspense>
       )}
 
       {/* ====================================================================
-          VIEW 8: JIRA FORMS BUILDER & PUBLIC INTAKE PORTAL
+          VIEW 8: JIRA FORMS BUILDER & PUBLIC INTAKE PORTAL (LAZY-LOADED)
          ==================================================================== */}
       {activeTab === 'forms' && (
-        <JiraFormsPortalView
-          en={en}
-          activeProjectKey={activeProjectKey === 'ALL' ? 'DX' : activeProjectKey}
-          onSubmitIntake={handleFormsPortalSubmit}
-        />
+        <Suspense fallback={<div className="jira-panel-card">{en ? 'Loading Forms Intake Portal…' : 'Memuat Portal Form…'}</div>}>
+          <JiraFormsPortalView
+            en={en}
+            activeProjectKey={activeProjectKey === 'ALL' ? 'DX' : activeProjectKey}
+            onSubmitIntake={handleFormsPortalSubmit}
+          />
+        </Suspense>
       )}
 
       {/* ====================================================================
-          VIEW 9: VISUAL WORKFLOW DESIGNER & RBAC PROJECT SETTINGS
+          VIEW 9: VISUAL WORKFLOW DESIGNER & RBAC PROJECT SETTINGS (LAZY-LOADED)
          ==================================================================== */}
       {activeTab === 'workflow' && (
-        <JiraWorkflowSettingsView
-          en={en}
-          issues={projectScopedIssues}
-          wipLimits={state.wipLimits}
-          requireSubtaskForDone={requireSubtaskForDone}
-          onToggleRequireSubtask={() => setRequireSubtaskForDone(v => !v)}
-          onUpdateWipLimit={(col, next) =>
-            setState(prev => ({ ...prev, wipLimits: { ...prev.wipLimits, [col]: next } }))
-          }
-          onFilterByStatus={col => {
-            setJqlQuery(`status = ${col}`)
-            setActiveTab('board')
-          }}
-        />
+        <Suspense fallback={<div className="jira-panel-card">{en ? 'Loading Workflow & RBAC Studio…' : 'Memuat Studio Workflow & Izin…'}</div>}>
+          <JiraWorkflowSettingsView
+            en={en}
+            issues={projectScopedIssues}
+            wipLimits={state.wipLimits}
+            requireSubtaskForDone={requireSubtaskForDone}
+            onToggleRequireSubtask={() => setRequireSubtaskForDone(v => !v)}
+            onUpdateWipLimit={(col, next) =>
+              setState(prev => ({ ...prev, wipLimits: { ...prev.wipLimits, [col]: next } }))
+            }
+            onFilterByStatus={col => {
+              setJqlQuery(`status = ${col}`)
+              setActiveTab('board')
+            }}
+          />
+        </Suspense>
       )}
 
-        </div>
-      </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ====================================================================
           JIRA ISSUE INSPECTOR DRAWER (CLICK ANY ISSUE)

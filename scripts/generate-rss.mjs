@@ -111,6 +111,7 @@ const sitemapUrls = [
   { loc: `${siteUrl}/ba-hub`, changefreq: 'weekly', priority: '0.8' },
   { loc: `${siteUrl}/pm-jira-hub`, changefreq: 'weekly', priority: '0.8' },
   { loc: `${siteUrl}/jira`, changefreq: 'weekly', priority: '0.9' },
+  { loc: `${siteUrl}/contact`, changefreq: 'monthly', priority: '0.8' },
   { loc: `${siteUrl}/rss`, changefreq: 'daily', priority: '0.7' },
   ...articles.map(article => ({
     loc: `${siteUrl}/blog/${article.slug}`,
@@ -146,6 +147,7 @@ const llmsSummary = [
   `- [AI Readiness, Security & Architecture Grader](${siteUrl}/grader): Audit any public HTTPS website or GitHub repository across Zero-Trust CSP/HSTS headers, /llms.txt AI discovery, semantic accessibility, and edge latency, with dynamic SVG badges.`,
   `- [6-Pillar Sovereign IT Workbench](${siteUrl}/tools): Unified deterministic workbench for Software Engineers, QA/UAT, Business Analysts, Project Managers, Jira REST v3 ADF, and DevSecOps.`,
   `- [BA Requirement, Gherkin & RTM Studio](${siteUrl}/ba-hub): Compile BRD intents into Gherkin BDD scenarios and bi-directional Requirement Traceability Matrices.`,
+  `- [Enterprise Demo, Case Studies & Changelog](${siteUrl}/contact): Book a guided demo or architecture review, read measurable engineering case studies, and follow the public release changelog.`,
   `- [Jira Agile Board, Backlog & Sprint OS](${siteUrl}/jira): Full Jira Scrum/Kanban workspace with WIP guardrails, swimlanes, backlog sprint planning, Epic Gantt timeline, executable JQL, burndown/velocity charts, automation rules, and Atlassian REST v3 ADF / CSV export.`,
   `- [PM Monte Carlo & Jira Neural Hub](${siteUrl}/pm-jira-hub): Synthesize Jira REST API v3 ADF payloads, visual JQL queries, and 10,000-trial sprint forecasts.`,
   `- [Unified Engineering Workspace](${siteUrl}/workspace): Search and launch all 25+ role-indexed engineering suites.`,
