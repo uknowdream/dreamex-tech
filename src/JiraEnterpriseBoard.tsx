@@ -6,28 +6,37 @@ import {
   BookOpen,
   Bot,
   BrainCircuit,
+  CalendarDays,
   CalendarRange,
   CheckCircle2,
   ClipboardCheck,
+  ClipboardList,
   Clock,
   Copy,
   Download,
   Eye,
   Filter,
+  Flag,
   FolderKanban,
   GitBranch,
+  GitMerge,
   HelpCircle,
   Kanban,
   Layers3,
   Lightbulb,
+  Link2,
   ListChecks,
   PackageCheck,
+  PanelLeft,
   Plus,
+  Redo2,
   RotateCcw,
   ShieldAlert,
   Sparkles,
   Star,
+  ThumbsUp,
   Trash2,
+  Undo2,
   Upload,
   X,
   Zap,
@@ -60,6 +69,7 @@ import {
   type ProductDiscoveryIdea,
   type SavedJqlFilter,
 } from './jiraEnterpriseModules'
+import { JiraCalendarView, JiraFormsPortalView, JiraWorkflowSettingsView } from './jira/JiraProViews'
 import './JiraEnterpriseBoard.css'
 
 export type JiraStatusId = 'todo' | 'in_progress' | 'review' | 'blocked' | 'done'
@@ -71,13 +81,16 @@ export type JiraViewTab =
   | 'autopilot'
   | 'backlog'
   | 'roadmap'
+  | 'calendar'
   | 'discovery'
   | 'jsm'
+  | 'forms'
   | 'wiki'
   | 'releases'
   | 'navigator'
   | 'reports'
   | 'automation'
+  | 'workflow'
 export type JiraSwimlaneMode = 'none' | 'epic' | 'assignee' | 'priority' | 'component'
 
 export interface JiraSubtask {
@@ -127,6 +140,9 @@ export interface JiraIssue {
   component?: string
   fixVersion?: string
   watching?: boolean
+  flagged?: boolean
+  votes?: number
+  linkedIssues?: Array<{ kind: 'blocks' | 'blocked_by' | 'relates_to' | 'duplicates'; key: string }>
   subtasks: JiraSubtask[]
   comments: JiraComment[]
   updatedAt: string
@@ -502,6 +518,126 @@ function createDefaultState(): JiraWorkspaceState {
         comments: [],
         updatedAt: nowIso,
       },
+      {
+        id: 'iss-fin-201',
+        key: 'FIN-201',
+        title: 'Cross-border QRIS ISO-20022 settlement webhook idempotency ledger',
+        description: 'Guarantee zero double-settlement across multi-currency QRIS rails with SHA-256 locks.',
+        type: 'story',
+        status: 'in_progress',
+        priority: 'Highest',
+        points: 8,
+        assignee: 'Rizky',
+        epicKey: 'DX-EPIC-2',
+        sprintId: 'sprint-24',
+        labels: ['qris', 'fintech', 'iso-20022'],
+        component: 'Ledger Core',
+        fixVersion: 'v7.1.0',
+        dueDate: '2026-11-24',
+        subtasks: [{ id: 'st-fin-1', title: 'Validate ISO-20022 pacs.008 schema', done: true }],
+        comments: [],
+        updatedAt: nowIso,
+      },
+      {
+        id: 'iss-fin-202',
+        key: 'FIN-202',
+        title: 'Real-time anomaly velocity check on high-value merchant payouts',
+        description: 'Score merchant settlement bursts in < 8ms and hold flagged payouts for step-up review.',
+        type: 'security',
+        status: 'review',
+        priority: 'High',
+        points: 5,
+        assignee: 'Alya',
+        epicKey: 'DX-EPIC-1',
+        sprintId: 'sprint-24',
+        labels: ['fraud-shield', 'security', 'fintech'],
+        component: 'Zero-Trust Auth',
+        fixVersion: 'v7.1.0',
+        dueDate: '2026-11-27',
+        subtasks: [],
+        comments: [],
+        updatedAt: nowIso,
+      },
+      {
+        id: 'iss-ops-301',
+        key: 'OPS-301',
+        title: 'Automate regional Vercel edge canary rollback on 5xx SLO burn > 2%',
+        description: 'Bind synthetic probe alerts directly to instant alias rollback runbook.',
+        type: 'task',
+        status: 'in_progress',
+        priority: 'Highest',
+        points: 5,
+        assignee: 'Alya',
+        epicKey: 'DX-EPIC-1',
+        sprintId: 'sprint-24',
+        labels: ['sre', 'canary', 'slo'],
+        component: 'Edge API Gateway',
+        fixVersion: 'v7.1.0',
+        dueDate: '2026-11-25',
+        subtasks: [],
+        comments: [],
+        updatedAt: nowIso,
+      },
+      {
+        id: 'iss-ops-302',
+        key: 'OPS-302',
+        title: 'PostgreSQL 17 zero-downtime read-replica failover drill',
+        description: 'Execute scheduled CAB chaos drill verifying < 4s connection pool recovery.',
+        type: 'task',
+        status: 'todo',
+        priority: 'High',
+        points: 3,
+        assignee: 'Bima',
+        epicKey: 'DX-EPIC-2',
+        sprintId: 'sprint-24',
+        labels: ['postgres', 'cab', 'resilience'],
+        component: 'Ledger Core',
+        fixVersion: 'v7.1.0',
+        dueDate: '2026-11-29',
+        subtasks: [],
+        comments: [],
+        updatedAt: nowIso,
+      },
+      {
+        id: 'iss-ai-401',
+        key: 'AI-401',
+        title: 'Multi-agent DAG token budget ceiling & backup provider circuit breaker',
+        description: 'Auto-switch from primary to fallback LLM provider on HTTP 429/503 with zero dropped turns.',
+        type: 'story',
+        status: 'in_progress',
+        priority: 'High',
+        points: 8,
+        assignee: 'Nadia',
+        epicKey: 'DX-EPIC-4',
+        sprintId: 'sprint-24',
+        labels: ['ai-agents', 'finops', 'mcp'],
+        component: 'AI Orchestrator',
+        fixVersion: 'v7.2.0',
+        dueDate: '2026-12-04',
+        subtasks: [],
+        comments: [],
+        updatedAt: nowIso,
+      },
+      {
+        id: 'iss-ai-402',
+        key: 'AI-402',
+        title: 'Deterministic Gherkin-to-Playwright self-healing locator benchmark',
+        description: 'Achieve >= 98% selector stability across Chromium and WebKit DOM refactors.',
+        type: 'task',
+        status: 'done',
+        priority: 'Medium',
+        points: 5,
+        assignee: 'Nadia',
+        epicKey: 'DX-EPIC-3',
+        sprintId: 'sprint-24',
+        labels: ['playwright', 'auto-heal', 'qa-mesh'],
+        component: 'QA Playwright Mesh',
+        fixVersion: 'v7.1.0',
+        dueDate: '2026-11-20',
+        subtasks: [],
+        comments: [],
+        updatedAt: nowIso,
+      },
     ],
   }
 }
@@ -748,6 +884,48 @@ export default function JiraEnterpriseBoardPage() {
   const [pokerUncertainty, setPokerUncertainty] = useState<1 | 2 | 3>(2)
   const [pokerQa, setPokerQa] = useState<1 | 2 | 3>(2)
 
+  // v9.0 App Shell Sidebar, Undo/Redo History, Workflow Validator & Issue Linking
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [requireSubtaskForDone, setRequireSubtaskForDone] = useState(false)
+  const [undoStack, setUndoStack] = useState<JiraWorkspaceState[]>([])
+  const [redoStack, setRedoStack] = useState<JiraWorkspaceState[]>([])
+  const [linkKind, setLinkKind] = useState<'blocks' | 'blocked_by' | 'relates_to' | 'duplicates'>('relates_to')
+  const [linkTargetKey, setLinkTargetKey] = useState<string>('DX-102')
+
+  const mutateWithUndo = useCallback((updater: (prev: JiraWorkspaceState) => JiraWorkspaceState) => {
+    setState(prev => {
+      const next = updater(prev)
+      if (next === prev) return prev
+      setUndoStack(stack => [prev, ...stack].slice(0, 18))
+      setRedoStack([])
+      return next
+    })
+  }, [])
+
+  const handleUndo = useCallback(() => {
+    setUndoStack(stack => {
+      if (!stack.length) return stack
+      const [previous, ...rest] = stack
+      setState(current => {
+        setRedoStack(r => [current, ...r].slice(0, 18))
+        return previous
+      })
+      return rest
+    })
+  }, [])
+
+  const handleRedo = useCallback(() => {
+    setRedoStack(stack => {
+      if (!stack.length) return stack
+      const [nextSnap, ...rest] = stack
+      setState(current => {
+        setUndoStack(u => [current, ...u].slice(0, 18))
+        return nextSnap
+      })
+      return rest
+    })
+  }, [])
+
   // Persist to localStorage
   useEffect(() => {
     try {
@@ -757,7 +935,7 @@ export default function JiraEnterpriseBoardPage() {
     }
   }, [state])
 
-  // Keyboard shortcuts: 'c' Create, '/' Focus JQL, '?' Shortcuts modal, 'Escape' closes modals/drawer
+  // Keyboard shortcuts: 'c' Create, '[' Toggle Sidebar, '?' Shortcuts, 'Ctrl+Z/Y' Undo/Redo, 'Escape' close
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -773,10 +951,24 @@ export default function JiraEnterpriseBoardPage() {
         target instanceof HTMLTextAreaElement ||
         target instanceof HTMLSelectElement ||
         (target instanceof HTMLElement && target.isContentEditable)
-      if (isInput || e.ctrlKey || e.metaKey || e.altKey) return
+      if (isInput) return
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        handleUndo()
+        return
+      }
+      if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) {
+        e.preventDefault()
+        handleRedo()
+        return
+      }
+      if (e.ctrlKey || e.metaKey || e.altKey) return
       if (e.key.toLowerCase() === 'c') {
         e.preventDefault()
         setCreateOpen(true)
+      } else if (e.key === '[') {
+        e.preventDefault()
+        setSidebarOpen(prev => !prev)
       } else if (e.key === '?') {
         e.preventDefault()
         setShortcutsOpen(prev => !prev)
@@ -787,18 +979,26 @@ export default function JiraEnterpriseBoardPage() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [createOpen, completeSprintOpen, selectedIssueId, shortcutsOpen])
+  }, [createOpen, completeSprintOpen, selectedIssueId, shortcutsOpen, handleUndo, handleRedo])
 
   const flashNotice = useCallback((msg: string) => {
     setNotice(msg)
   }, [])
 
-  // Transition an issue + execute active Jira Automation Rules!
+  // Transition an issue + execute active Jira Automation Rules + Undo History!
   const transitionIssue = useCallback(
     (issueId: string, nextStatus: JiraStatusId) => {
-      setState(prev => {
+      mutateWithUndo(prev => {
         const target = prev.issues.find(i => i.id === issueId)
         if (!target || target.status === nextStatus) return prev
+        if (nextStatus === 'done' && requireSubtaskForDone && target.subtasks.some(s => !s.done)) {
+          flashNotice(
+            en
+              ? `Workflow Validator: ${target.key} still has open subtasks! Complete subtasks or disable Done Validator in Workflow Settings.`
+              : `Validator Workflow: ${target.key} masih memiliki subtask belum selesai!`,
+          )
+          return prev
+        }
 
         const ruleQa = prev.rules.find(r => r.id === 'rule-qa-subtask')?.enabled
         const ruleDone = prev.rules.find(r => r.id === 'rule-done-close-subtasks')?.enabled
@@ -865,7 +1065,7 @@ export default function JiraEnterpriseBoardPage() {
         }
       })
     },
-    [],
+    [mutateWithUndo, requireSubtaskForDone, flashNotice, en],
   )
 
   const updateIssue = useCallback((issueId: string, patch: Partial<JiraIssue>) => {
@@ -1081,25 +1281,33 @@ export default function JiraEnterpriseBoardPage() {
     )
   }
 
+  // Project-scoped issues (Multi-Project Spaces + ALL Portfolio)
+  const projectScopedIssues = useMemo(() => {
+    if (activeProjectKey === 'ALL') return state.issues
+    const prefix = `${activeProjectKey}-`
+    const matches = state.issues.filter(i => i.key.startsWith(prefix))
+    return matches.length > 0 ? matches : state.issues
+  }, [state.issues, activeProjectKey])
+
   // Filtered issues for Board & Navigator
   const filteredIssues = useMemo(() => {
-    return state.issues.filter(issue => {
+    return projectScopedIssues.filter(issue => {
       if (assigneeFilter !== 'ALL' && issue.assignee !== assigneeFilter) return false
       if (quickFilter === 'bugs' && issue.type !== 'bug' && issue.type !== 'security') return false
-      if (quickFilter === 'blocked' && issue.status !== 'blocked' && !issue.blockedByKey) return false
+      if (quickFilter === 'blocked' && issue.status !== 'blocked' && !issue.blockedByKey && !issue.flagged) return false
       if (quickFilter === 'subtasks' && issue.subtasks.length === 0) return false
       return evaluateJqlMatch(issue, jqlQuery)
     })
-  }, [state.issues, assigneeFilter, quickFilter, jqlQuery])
+  }, [projectScopedIssues, assigneeFilter, quickFilter, jqlQuery])
 
   const activeSprintIssues = useMemo(
     () => filteredIssues.filter(i => i.sprintId === 'sprint-24'),
     [filteredIssues],
   )
 
-  // KPI & Monte Carlo calculations
+  // KPI & Monte Carlo calculations (scoped to active project or ALL portfolio)
   const metrics = useMemo(() => {
-    const sprintAll = state.issues.filter(i => i.sprintId === 'sprint-24')
+    const sprintAll = projectScopedIssues.filter(i => i.sprintId === 'sprint-24')
     const totalSp = sprintAll.reduce((acc, i) => acc + i.points, 0)
     const doneSp = sprintAll.filter(i => i.status === 'done').reduce((acc, i) => acc + i.points, 0)
     const pct = totalSp > 0 ? Math.round((doneSp / totalSp) * 100) : 0
@@ -1116,7 +1324,7 @@ export default function JiraEnterpriseBoardPage() {
         ? Math.round(state.velocityHistory.reduce((acc, v) => acc + v.completed, 0) / state.velocityHistory.length)
         : 36
 
-    const remainingTotalSp = state.issues.filter(i => i.status !== 'done').reduce((acc, i) => acc + i.points, 0)
+    const remainingTotalSp = projectScopedIssues.filter(i => i.status !== 'done').reduce((acc, i) => acc + i.points, 0)
     // Deterministic 10,000-trial style percentile estimation from historical velocity distribution
     const velocities = state.velocityHistory.map(v => v.completed)
     const minV = Math.max(12, Math.min(...velocities, avgVelocity - 5))
@@ -1127,7 +1335,7 @@ export default function JiraEnterpriseBoardPage() {
     const p85Sprints = Math.max(1, Number((remainingTotalSp / Math.max(1, p85Vel)).toFixed(1)))
     const p95Sprints = Math.max(1, Number((remainingTotalSp / Math.max(1, p95Vel)).toFixed(1)))
 
-    const allSubtasks = state.issues.flatMap(i => i.subtasks)
+    const allSubtasks = projectScopedIssues.flatMap(i => i.subtasks)
     const doneSubtasks = allSubtasks.filter(st => st.done).length
 
     return {
@@ -1147,7 +1355,7 @@ export default function JiraEnterpriseBoardPage() {
       doneSubtasks,
       enabledRules: state.rules.filter(r => r.enabled).length,
     }
-  }, [state])
+  }, [state, projectScopedIssues])
 
   // Swimlane groups for Active Sprint Board
   const swimlaneGroups = useMemo(() => {
@@ -1504,6 +1712,128 @@ export default function JiraEnterpriseBoardPage() {
     )
   }
 
+  const handleCalendarQuickCreate = (
+    title: string,
+    dueDate: string,
+    type: JiraIssueKind,
+    priority: JiraPriorityLevel,
+  ) => {
+    const prefix = activeProjectKey === 'ALL' ? 'DX' : activeProjectKey
+    mutateWithUndo(prev => {
+      const key = `${prefix}-${prev.nextSequence}`
+      const created: JiraIssue = {
+        id: uid('cal'),
+        key,
+        title,
+        description: `Scheduled via Jira Work Management Delivery Calendar for ${dueDate}.`,
+        type,
+        status: 'todo',
+        priority,
+        points: 3,
+        assignee: 'Bima',
+        epicKey: epicsList[0]?.key ?? 'DX-EPIC-1',
+        sprintId: dueDate.startsWith('2026-12') ? 'sprint-25' : 'sprint-24',
+        labels: ['calendar-scheduled'],
+        dueDate,
+        component: 'Ledger Core',
+        fixVersion: dueDate.startsWith('2026-12') ? 'v7.2.0' : 'v7.1.0',
+        subtasks: [],
+        comments: [],
+        updatedAt: new Date().toISOString(),
+      }
+      return {
+        ...prev,
+        nextSequence: prev.nextSequence + 1,
+        issues: [created, ...prev.issues],
+      }
+    })
+    flashNotice(en ? `Scheduled new issue on ${dueDate}!` : `Tiket baru dijadwalkan pada ${dueDate}!`)
+  }
+
+  const handleFormsPortalSubmit = (payload: {
+    template: string
+    type: JiraIssueKind
+    title: string
+    description: string
+    priority: JiraPriorityLevel
+    environment: string
+    requester: string
+  }) => {
+    const prefix = activeProjectKey === 'ALL' ? 'DX' : activeProjectKey
+    mutateWithUndo(prev => {
+      const key = `${prefix}-${prev.nextSequence}`
+      const secTrigger = payload.type === 'security'
+      // Real-time Autonomous Watchdog: assign to lowest-load engineer when Autopilot is active
+      let optimalAssignee = secTrigger ? 'Alya' : payload.type === 'bug' ? 'Nadia' : 'Rizky'
+      if (autopilotEnabled && !secTrigger) {
+        const loads = TEAM_MEMBERS.map(m => ({
+          id: m.id,
+          sp: prev.issues
+            .filter(i => i.assignee === m.id && i.status !== 'done' && i.sprintId === 'sprint-24')
+            .reduce((s, i) => s + i.points, 0),
+        }))
+        optimalAssignee = [...loads].sort((a, b) => a.sp - b.sp)[0]?.id ?? optimalAssignee
+      }
+      const created: JiraIssue = {
+        id: uid('form'),
+        key,
+        title: `[Form:${payload.template.toUpperCase()}] ${payload.title}`,
+        description: payload.description,
+        type: payload.type,
+        status: 'todo',
+        priority: secTrigger ? 'Highest' : payload.priority,
+        points: secTrigger ? 5 : 3,
+        assignee: optimalAssignee,
+        epicKey: secTrigger ? 'DX-EPIC-1' : 'DX-EPIC-2',
+        sprintId: 'sprint-24',
+        labels: ['jira-form-intake', payload.template],
+        dueDate: '2026-11-26',
+        component: 'Edge API Gateway',
+        fixVersion: 'v7.1.0',
+        subtasks: autopilotEnabled
+          ? [{ id: uid('st'), title: `[Autopilot] Triage & verify ${payload.environment} intake`, done: false }]
+          : [],
+        comments: [
+          {
+            id: uid('cm'),
+            author: payload.requester,
+            body: `Submitted via Jira Forms Intake Portal (${payload.environment}).`,
+            createdAt: nowStamp(),
+            kind: 'activity',
+          },
+        ],
+        updatedAt: new Date().toISOString(),
+      }
+      const logLine = `[FORMS-INTAKE] ${key} created via ${payload.template} portal -> auto-assigned @${optimalAssignee}.`
+      setAiReasoningTrace(old => [logLine, ...old].slice(0, 18))
+      return {
+        ...prev,
+        nextSequence: prev.nextSequence + 1,
+        issues: [created, ...prev.issues],
+        automationLogs: [logLine, ...prev.automationLogs].slice(0, 24),
+      }
+    })
+    flashNotice(
+      en
+        ? `Intake Form submitted -> triaged ticket added to Active Sprint Board!`
+        : `Formulir diterima -> tiket otomatis ditambahkan & ditriase ke Sprint Board!`,
+    )
+  }
+
+  const activeProjectMeta = useMemo(
+    () =>
+      projects.find(p => p.key === activeProjectKey) ?? {
+        key: 'ALL',
+        nameEn: 'All Enterprise Spaces',
+        nameId: 'Semua Ruang Proyek',
+        methodology: 'Scrum' as const,
+        lead: 'Bima',
+        categoryEn: 'Portfolio View',
+        categoryId: 'Tampilan Portofolio',
+      },
+    [projects, activeProjectKey],
+  )
+
   const visibleColumns = useMemo(
     () => (mobileCol === 'all' ? COLUMNS : COLUMNS.filter(c => c.id === mobileCol)),
     [mobileCol],
@@ -1517,7 +1847,7 @@ export default function JiraEnterpriseBoardPage() {
           <div className="jira-hero-copy">
             <div className="jira-kicker-row">
               <span className="jira-kicker">
-                <Kanban size={13} /> DREAMEX JIRA CLOUD ENTERPRISE · v8.0
+                <Kanban size={13} /> DREAMEX JIRA CLOUD ENTERPRISE · v9.0
               </span>
               <span className="jira-sprint-pill" data-testid="jira-active-sprint-name">
                 {state.activeSprintName}
@@ -1581,6 +1911,26 @@ export default function JiraEnterpriseBoardPage() {
             <button
               type="button"
               className="button button-ghost"
+              disabled={undoStack.length === 0}
+              data-testid="jira-undo-btn"
+              onClick={handleUndo}
+              title={en ? 'Undo last board action (Ctrl+Z)' : 'Urungkan aksi terakhir (Ctrl+Z)'}
+            >
+              <Undo2 size={15} /> {en ? 'Undo' : 'Urung'}
+            </button>
+            <button
+              type="button"
+              className="button button-ghost"
+              disabled={redoStack.length === 0}
+              data-testid="jira-redo-btn"
+              onClick={handleRedo}
+              title={en ? 'Redo action (Ctrl+Y)' : 'Ulangi aksi (Ctrl+Y)'}
+            >
+              <Redo2 size={15} />
+            </button>
+            <button
+              type="button"
+              className="button button-ghost"
               data-testid="jira-shortcuts-btn"
               onClick={() => setShortcutsOpen(true)}
             >
@@ -1589,13 +1939,35 @@ export default function JiraEnterpriseBoardPage() {
           </div>
         </div>
 
-        {/* Multi-Project Switcher Bar (Atlassian Cloud Projects) */}
+        {/* Multi-Project Switcher Bar (Atlassian Cloud Projects + Portfolio ALL) */}
         <div className="jira-project-bar" data-testid="jira-project-switcher">
           <div className="jira-project-pills" role="group" aria-label={en ? 'Switch Jira Project' : 'Pilih Proyek Jira'}>
-            <span className="jira-kpi-label" style={{ marginRight: 4 }}>
+            <button
+              type="button"
+              className="jira-chip-btn"
+              data-testid="jira-sidebar-toggle"
+              onClick={() => setSidebarOpen(prev => !prev)}
+              title={en ? 'Toggle Jira Left Sidebar ([)' : 'Buka/Tutup Sidebar Kiri Jira ([)'}
+            >
+              <PanelLeft size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+              {sidebarOpen ? (en ? 'Sidebar' : 'Sidebar') : en ? 'Show Nav' : 'Tampilkan Nav'}
+            </button>
+            <span className="jira-kpi-label" style={{ marginRight: 2 }}>
               <FolderKanban size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-              {en ? 'PROJECTS:' : 'PROYEK:'}
+              {en ? 'SPACES:' : 'PROYEK:'}
             </span>
+            <button
+              type="button"
+              data-testid="jira-project-pill-ALL"
+              className={activeProjectKey === 'ALL' ? 'jira-project-pill is-active' : 'jira-project-pill'}
+              onClick={() => {
+                setActiveProjectKey('ALL')
+                flashNotice(en ? 'Showing cross-project Enterprise Portfolio (ALL spaces).' : 'Menampilkan Portofolio Lintas Proyek (SEMUA).')
+              }}
+            >
+              <span className="jira-project-key-tag">ALL</span>
+              <span>{en ? 'Portfolio' : 'Semua'}</span>
+            </button>
             {projects.map(proj => (
               <button
                 key={proj.key}
@@ -1860,21 +2232,132 @@ export default function JiraEnterpriseBoardPage() {
         </div>
       </section>
 
-      {/* 11-View Full Atlassian Cloud Workspace Switcher */}
+      {/* Atlassian Jira Cloud Enterprise App Shell (Collapsible Left Sidebar + Main Workspace) */}
+      <div className={sidebarOpen ? 'jira-cloud-shell' : 'jira-cloud-shell is-sidebar-collapsed'}>
+        {sidebarOpen && (
+          <aside className="jira-cloud-sidebar" data-testid="jira-cloud-sidebar" aria-label={en ? 'Jira Project Sidebar' : 'Sidebar Proyek Jira'}>
+            <div className="jira-sidebar-project-head">
+              <span className="jira-sidebar-avatar">{activeProjectMeta.key}</span>
+              <div style={{ minWidth: 0 }}>
+                <strong style={{ display: 'block', fontSize: 12.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {en ? activeProjectMeta.nameEn : activeProjectMeta.nameId}
+                </strong>
+                <span className="jira-kpi-sub" style={{ fontSize: 10.5 }}>
+                  {activeProjectMeta.methodology} · {en ? activeProjectMeta.categoryEn : activeProjectMeta.categoryId}
+                </span>
+              </div>
+            </div>
+
+            <div className="jira-sidebar-group">
+              <span className="jira-sidebar-group-title">{en ? 'PLANNING' : 'PERENCANAAN'}</span>
+              {(
+                [
+                  { id: 'board', icon: Kanban, en: 'Sprint Board', idLabel: 'Board Sprint', count: activeSprintIssues.length },
+                  { id: 'backlog', icon: Layers3, en: 'Backlog & Poker', idLabel: 'Backlog & Poker', count: projectScopedIssues.length },
+                  { id: 'roadmap', icon: CalendarRange, en: 'Epic Gantt', idLabel: 'Roadmap Gantt', count: epicsList.length },
+                  { id: 'calendar', icon: CalendarDays, en: 'Calendar', idLabel: 'Kalender', count: projectScopedIssues.length },
+                  { id: 'discovery', icon: Lightbulb, en: 'Discovery RICE', idLabel: 'Ide & RICE', count: ideas.length },
+                ] as const
+              ).map(item => {
+                const Icon = item.icon
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    data-testid={`jira-side-${item.id}`}
+                    className={activeTab === item.id ? 'jira-sidebar-btn is-active' : 'jira-sidebar-btn'}
+                    onClick={() => setActiveTab(item.id)}
+                  >
+                    <span className="jira-sidebar-btn-left">
+                      <Icon size={14} />
+                      <span>{en ? item.en : item.idLabel}</span>
+                    </span>
+                    <span className="jira-tab-count">{item.count}</span>
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="jira-sidebar-group">
+              <span className="jira-sidebar-group-title">{en ? 'DELIVERY & OPS' : 'DELIVERY & OPERASI'}</span>
+              {(
+                [
+                  { id: 'releases', icon: PackageCheck, en: 'Releases', idLabel: 'Versi Rilis', count: releases.length },
+                  { id: 'jsm', icon: ShieldAlert, en: 'Service Desk', idLabel: 'Insiden & CAB', count: jsmTickets.length },
+                  { id: 'forms', icon: ClipboardList, en: 'Forms Portal', idLabel: 'Portal Form', count: 4 },
+                  { id: 'wiki', icon: BookOpen, en: 'Confluence Wiki', idLabel: 'Dokumen PRD/ADR', count: wikiDocs.length },
+                  { id: 'navigator', icon: ListChecks, en: 'JQL & Bulk', idLabel: 'JQL & Massal', count: filteredIssues.length },
+                ] as const
+              ).map(item => {
+                const Icon = item.icon
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    data-testid={`jira-side-${item.id}`}
+                    className={activeTab === item.id ? 'jira-sidebar-btn is-active' : 'jira-sidebar-btn'}
+                    onClick={() => setActiveTab(item.id)}
+                  >
+                    <span className="jira-sidebar-btn-left">
+                      <Icon size={14} />
+                      <span>{en ? item.en : item.idLabel}</span>
+                    </span>
+                    <span className="jira-tab-count">{item.count}</span>
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="jira-sidebar-group">
+              <span className="jira-sidebar-group-title">{en ? 'INTELLIGENCE' : 'KECERDASAN & ATURAN'}</span>
+              {(
+                [
+                  { id: 'autopilot', icon: BrainCircuit, en: 'AI Autopilot', idLabel: 'AI Autopilot', count: horizonReport.recommendations.length },
+                  { id: 'reports', icon: BarChart3, en: 'CFD & Reports', idLabel: 'CFD & Laporan', count: 6 },
+                  { id: 'automation', icon: Bot, en: 'Automation & API', idLabel: 'Otomasi & API', count: state.rules.length },
+                  { id: 'workflow', icon: GitMerge, en: 'Workflow & RBAC', idLabel: 'Workflow & Izin', count: 5 },
+                ] as const
+              ).map(item => {
+                const Icon = item.icon
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    data-testid={`jira-side-${item.id}`}
+                    className={activeTab === item.id ? 'jira-sidebar-btn is-active' : 'jira-sidebar-btn'}
+                    onClick={() => setActiveTab(item.id)}
+                  >
+                    <span className="jira-sidebar-btn-left">
+                      <Icon size={14} />
+                      <span>{en ? item.en : item.idLabel}</span>
+                    </span>
+                    <span className="jira-tab-count">{item.count}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </aside>
+        )}
+
+        <div className="jira-cloud-main">
+      {/* 14-View Full Atlassian Cloud Workspace Switcher */}
       <div className="jira-tabs-bar" role="tablist" aria-label={en ? 'Jira workspace views' : 'Tampilan workspace Jira'}>
         {(
           [
             { id: 'board', icon: Kanban, en: 'Sprint Board', idLabel: 'Board Sprint', count: activeSprintIssues.length },
             { id: 'autopilot', icon: BrainCircuit, en: 'AI Autopilot', idLabel: 'AI Autopilot', count: horizonReport.recommendations.length },
-            { id: 'backlog', icon: Layers3, en: 'Backlog & Poker', idLabel: 'Backlog & Poker', count: state.issues.length },
+            { id: 'backlog', icon: Layers3, en: 'Backlog & Poker', idLabel: 'Backlog & Poker', count: projectScopedIssues.length },
             { id: 'roadmap', icon: CalendarRange, en: 'Epic Gantt', idLabel: 'Roadmap Gantt', count: epicsList.length },
+            { id: 'calendar', icon: CalendarDays, en: 'Calendar', idLabel: 'Kalender', count: projectScopedIssues.length },
             { id: 'discovery', icon: Lightbulb, en: 'Discovery RICE', idLabel: 'Ide & RICE', count: ideas.length },
             { id: 'jsm', icon: ShieldAlert, en: 'Service Desk & CAB', idLabel: 'Insiden & CAB', count: jsmTickets.length },
+            { id: 'forms', icon: ClipboardList, en: 'Forms Portal', idLabel: 'Portal Form', count: 4 },
             { id: 'wiki', icon: BookOpen, en: 'Confluence Specs', idLabel: 'Dokumen PRD/ADR', count: wikiDocs.length },
             { id: 'releases', icon: PackageCheck, en: 'Releases', idLabel: 'Versi Rilis', count: releases.length },
             { id: 'navigator', icon: ListChecks, en: 'JQL & Bulk', idLabel: 'JQL & Massal', count: filteredIssues.length },
             { id: 'reports', icon: BarChart3, en: 'CFD & Reports', idLabel: 'CFD & Laporan', count: 6 },
             { id: 'automation', icon: Bot, en: 'Automation & API', idLabel: 'Otomasi & API', count: state.rules.length },
+            { id: 'workflow', icon: GitMerge, en: 'Workflow & RBAC', idLabel: 'Workflow & Izin', count: 5 },
           ] as const
         ).map(tab => {
           const Icon = tab.icon
@@ -2191,7 +2674,7 @@ export default function JiraEnterpriseBoardPage() {
                                   key={issue.id}
                                   draggable
                                   data-testid={`jira-card-${issue.key}`}
-                                  className={cardDensity === 'compact' ? 'jira-card is-compact' : 'jira-card'}
+                                  className={`jira-card${cardDensity === 'compact' ? ' is-compact' : ''}${issue.flagged ? ' is-flagged' : ''}`}
                                   onDragStart={e => {
                                     setDraggingId(issue.id)
                                     e.dataTransfer.setData('text/plain', issue.id)
@@ -2221,6 +2704,12 @@ export default function JiraEnterpriseBoardPage() {
                                   </button>
 
                                   {issue.epicKey && <span className="jira-epic-lozenge">{epicLookup(issue.epicKey)}</span>}
+
+                                  {issue.flagged && (
+                                    <span className="jira-flag-chip">
+                                      <Flag size={10} /> {en ? 'FLAGGED IMPEDIMENT' : 'HAMBATAN DITANDAI'}
+                                    </span>
+                                  )}
 
                                   {issue.blockedByKey && (
                                     <span className="jira-wip-alert">
@@ -3725,6 +4214,52 @@ export default function JiraEnterpriseBoardPage() {
       )}
 
       {/* ====================================================================
+          VIEW 7: JIRA WORK MANAGEMENT DELIVERY CALENDAR
+         ==================================================================== */}
+      {activeTab === 'calendar' && (
+        <JiraCalendarView
+          en={en}
+          issues={projectScopedIssues}
+          onOpenIssue={issueId => setSelectedIssueId(issueId)}
+          onQuickCreateOnDate={handleCalendarQuickCreate}
+        />
+      )}
+
+      {/* ====================================================================
+          VIEW 8: JIRA FORMS BUILDER & PUBLIC INTAKE PORTAL
+         ==================================================================== */}
+      {activeTab === 'forms' && (
+        <JiraFormsPortalView
+          en={en}
+          activeProjectKey={activeProjectKey === 'ALL' ? 'DX' : activeProjectKey}
+          onSubmitIntake={handleFormsPortalSubmit}
+        />
+      )}
+
+      {/* ====================================================================
+          VIEW 9: VISUAL WORKFLOW DESIGNER & RBAC PROJECT SETTINGS
+         ==================================================================== */}
+      {activeTab === 'workflow' && (
+        <JiraWorkflowSettingsView
+          en={en}
+          issues={projectScopedIssues}
+          wipLimits={state.wipLimits}
+          requireSubtaskForDone={requireSubtaskForDone}
+          onToggleRequireSubtask={() => setRequireSubtaskForDone(v => !v)}
+          onUpdateWipLimit={(col, next) =>
+            setState(prev => ({ ...prev, wipLimits: { ...prev.wipLimits, [col]: next } }))
+          }
+          onFilterByStatus={col => {
+            setJqlQuery(`status = ${col}`)
+            setActiveTab('board')
+          }}
+        />
+      )}
+
+        </div>
+      </div>
+
+      {/* ====================================================================
           JIRA ISSUE INSPECTOR DRAWER (CLICK ANY ISSUE)
          ==================================================================== */}
       {selectedIssue && (
@@ -3748,6 +4283,22 @@ export default function JiraEnterpriseBoardPage() {
                 <span className="jira-epic-lozenge">{selectedIssue.epicKey}</span>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                <button
+                  type="button"
+                  data-testid="jira-drawer-flag-btn"
+                  className={selectedIssue.flagged ? 'button button-primary' : 'button button-ghost'}
+                  onClick={() => updateIssue(selectedIssue.id, { flagged: !selectedIssue.flagged })}
+                >
+                  <Flag size={14} /> {selectedIssue.flagged ? (en ? 'Flagged' : 'Ditandai') : en ? 'Flag' : 'Tandai'}
+                </button>
+                <button
+                  type="button"
+                  data-testid="jira-drawer-vote-btn"
+                  className="button button-ghost"
+                  onClick={() => updateIssue(selectedIssue.id, { votes: (selectedIssue.votes ?? 0) + 1 })}
+                >
+                  <ThumbsUp size={14} /> {selectedIssue.votes ?? 0}
+                </button>
                 <button
                   type="button"
                   className={selectedIssue.watching ? 'button button-primary' : 'button button-ghost'}
@@ -3973,6 +4524,92 @@ export default function JiraEnterpriseBoardPage() {
                 </div>
               )
             })()}
+
+            {/* Issue Links (Blocks / Is Blocked By / Relates To / Duplicates) */}
+            <div className="jira-field">
+              <label>
+                <Link2 size={12} style={{ verticalAlign: 'middle', marginRight: 5 }} />
+                {en ? 'Linked Issues' : 'Tautan Antar-Tiket'} ({selectedIssue.linkedIssues?.length ?? 0})
+              </label>
+              {(selectedIssue.linkedIssues?.length ?? 0) > 0 && (
+                <div className="jira-subtask-list">
+                  {selectedIssue.linkedIssues?.map((lnk, idx) => {
+                    const targetObj = state.issues.find(i => i.key === lnk.key)
+                    return (
+                      <div className="jira-subtask-row" key={`${lnk.kind}-${lnk.key}-${idx}`}>
+                        <span>
+                          <span className="jira-kpi-badge" style={{ marginRight: 6 }}>
+                            {lnk.kind.replace('_', ' ').toUpperCase()}
+                          </span>
+                          <button
+                            type="button"
+                            className="jira-card-title-btn"
+                            onClick={() => {
+                              if (targetObj) setSelectedIssueId(targetObj.id)
+                            }}
+                          >
+                            {lnk.key} {targetObj ? `· ${targetObj.title.slice(0, 38)}` : ''}
+                          </button>
+                        </span>
+                        <button
+                          type="button"
+                          className="jira-chip-btn"
+                          onClick={() =>
+                            updateIssue(selectedIssue.id, {
+                              linkedIssues: (selectedIssue.linkedIssues ?? []).filter((_, i) => i !== idx),
+                            })
+                          }
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                <select
+                  className="jira-select"
+                  value={linkKind}
+                  onChange={e => setLinkKind(e.target.value as typeof linkKind)}
+                  aria-label="Issue link type"
+                >
+                  <option value="blocks">blocks</option>
+                  <option value="blocked_by">is blocked by</option>
+                  <option value="relates_to">relates to</option>
+                  <option value="duplicates">duplicates</option>
+                </select>
+                <select
+                  className="jira-select"
+                  value={linkTargetKey}
+                  onChange={e => setLinkTargetKey(e.target.value)}
+                  aria-label="Target issue key"
+                >
+                  {state.issues
+                    .filter(i => i.id !== selectedIssue.id)
+                    .map(i => (
+                      <option key={i.id} value={i.key}>
+                        {i.key} · {i.title.slice(0, 32)}
+                      </option>
+                    ))}
+                </select>
+                <button
+                  type="button"
+                  className="button button-ghost"
+                  onClick={() => {
+                    const current = selectedIssue.linkedIssues ?? []
+                    if (current.some(l => l.kind === linkKind && l.key === linkTargetKey)) return
+                    updateIssue(selectedIssue.id, {
+                      linkedIssues: [...current, { kind: linkKind, key: linkTargetKey }],
+                      ...(linkKind === 'blocked_by' ? { blockedByKey: linkTargetKey } : {}),
+                    })
+                    flashNotice(`Linked ${selectedIssue.key} (${linkKind.replace('_', ' ')}) ${linkTargetKey}`)
+                  }}
+                >
+                  + {en ? 'Link Issue' : 'Tautkan'}
+                </button>
+              </div>
+            </div>
 
             {/* Cross-Suite OS Integration Links */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>

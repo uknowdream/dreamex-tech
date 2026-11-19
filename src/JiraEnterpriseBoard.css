@@ -927,7 +927,7 @@
 .jira-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: 1200;
   background: rgba(3, 8, 18, 0.76);
   backdrop-filter: blur(6px);
   display: flex;
@@ -1634,5 +1634,266 @@ html[data-theme="light"] .jira-col-quick-add button {
   .jira-wiki-layout,
   .jira-shortcut-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+
+/* ==========================================================================
+   v9.0 Atlassian Cloud App Shell Sidebar, Flagged Impediments & Calendar Grid
+   ========================================================================== */
+.jira-cloud-shell {
+  display: grid;
+  grid-template-columns: 244px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.jira-cloud-shell.is-sidebar-collapsed {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.jira-cloud-sidebar {
+  position: sticky;
+  top: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 15px 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(125, 211, 252, 0.2);
+  background: linear-gradient(165deg, rgba(10, 19, 36, 0.96), rgba(6, 12, 24, 0.98));
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.36);
+  max-height: calc(100vh - 104px);
+  overflow-y: auto;
+}
+
+.jira-sidebar-project-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.jira-sidebar-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: 800 12px/1 var(--mono, ui-monospace, monospace);
+  color: #051120;
+  background: linear-gradient(135deg, #c5ff70, #38bdf8);
+  flex-shrink: 0;
+}
+
+.jira-sidebar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.jira-sidebar-group-title {
+  padding: 2px 9px 4px;
+  font: 700 9.5px/1.2 var(--mono, ui-monospace, monospace);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: #7c93b4;
+}
+
+.jira-sidebar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #b8c9e0;
+  font: 600 12px/1.2 inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+}
+
+.jira-sidebar-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f4f8ff;
+}
+
+.jira-sidebar-btn.is-active {
+  background: linear-gradient(135deg, rgba(197, 255, 112, 0.18), rgba(56, 189, 248, 0.14));
+  border-color: rgba(197, 255, 112, 0.42);
+  color: #f4f9ff;
+}
+
+.jira-sidebar-btn-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.jira-cloud-main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Flagged Impediment Card Accent */
+.jira-card.is-flagged {
+  border-color: rgba(251, 191, 36, 0.65);
+  box-shadow: inset 3px 0 0 #fbbf24, 0 8px 22px rgba(251, 191, 36, 0.12);
+}
+
+.jira-flag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font: 700 9.5px/1.2 var(--mono, ui-monospace, monospace);
+  background: rgba(251, 191, 36, 0.18);
+  color: #fde68a;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
+/* Delivery Calendar Grid */
+.jira-cal-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.jira-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(108px, 1fr));
+  gap: 6px;
+  min-width: 760px;
+}
+
+.jira-cal-dow {
+  padding: 6px 8px;
+  text-align: center;
+  font: 700 10px/1.2 var(--mono, ui-monospace, monospace);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8ea3c2;
+}
+
+.jira-cal-cell {
+  min-height: 92px;
+  padding: 7px;
+  border-radius: 11px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(13, 23, 42, 0.72);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.jira-cal-cell.is-empty {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.jira-cal-cell.is-selected {
+  border-color: #c5ff70;
+  background: rgba(197, 255, 112, 0.07);
+}
+
+.jira-cal-day-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font: 700 11px/1 var(--mono, ui-monospace, monospace);
+  color: #cbd8ec;
+}
+
+.jira-cal-milestone {
+  padding: 2px 5px;
+  border-radius: 5px;
+  font: 700 8.5px/1 var(--mono, ui-monospace, monospace);
+  background: rgba(197, 255, 112, 0.18);
+  color: #c5ff70;
+}
+
+.jira-cal-events {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.jira-cal-event {
+  width: 100%;
+  text-align: left;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  line-height: 1.25;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Light Mode v9.0 Overrides */
+html[data-theme="light"] .jira-cloud-sidebar {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.05);
+}
+
+html[data-theme="light"] .jira-sidebar-btn {
+  color: #334155;
+}
+
+html[data-theme="light"] .jira-sidebar-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+html[data-theme="light"] .jira-sidebar-btn.is-active {
+  background: rgba(2, 132, 199, 0.11);
+  border-color: rgba(2, 132, 199, 0.36);
+  color: #0c4a6e;
+}
+
+html[data-theme="light"] .jira-flag-chip {
+  background: rgba(245, 158, 11, 0.16);
+  color: #92400e;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+html[data-theme="light"] .jira-cal-cell {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.11);
+}
+
+html[data-theme="light"] .jira-cal-cell.is-selected {
+  border-color: #0284c7;
+  background: rgba(2, 132, 199, 0.08);
+}
+
+html[data-theme="light"] .jira-cal-day-head {
+  color: #0f172a;
+}
+
+html[data-theme="light"] .jira-cal-milestone {
+  background: rgba(5, 150, 105, 0.14);
+  color: #065f46;
+}
+
+@media (max-width: 1120px) {
+  .jira-cloud-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .jira-cloud-sidebar {
+    display: none;
   }
 }

@@ -442,7 +442,7 @@ function Header() {
                 </label>
                 <div className="nav-mega-featured-strip">
                   <Link to="/jira" onClick={() => document.querySelector('.nav-platform')?.removeAttribute('open')}>
-                    ⚡ {language === 'en' ? 'Jira Cloud v8' : 'Jira Cloud v8'}
+                    ⚡ {language === 'en' ? 'Jira Cloud v9 (14 Modules)' : 'Jira Cloud v9 (14 Modul)'}
                   </Link>
                   <Link to="/prototype" onClick={() => document.querySelector('.nav-platform')?.removeAttribute('open')}>
                     🤖 {language === 'en' ? '5-Agent Studio' : 'Studio 5-Agen'}
@@ -466,7 +466,7 @@ function Header() {
                   <source srcSet="/images/spotlight-ai-os.webp" type="image/webp" />
                   <img className="nav-mega-spotlight-art" src="/images/spotlight-ai-os.jpg" alt="" aria-hidden="true" width={360} height={200} />
                 </picture>
-                <span className="nav-mega-kicker">{language === 'en' ? 'AUTONOMOUS AI WORKSPACE · v8.0' : 'RUANG KERJA AI OTONOM · v8.0'}</span>
+                <span className="nav-mega-kicker">{language === 'en' ? 'AUTONOMOUS AI WORKSPACE · v9.0' : 'RUANG KERJA AI OTONOM · v9.0'}</span>
                 <strong>{language === 'en' ? 'From live prototype to autonomous release.' : 'Dari prototipe hidup hingga rilis otonom.'}</strong>
                 <p>{language === 'en' ? 'Unify 5-agent UI prototyping, full Jira Agile & Sprint boards, AI/Security URL grading, USL architecture, and self-healing QA.' : 'Satukan prototipe UI 5-agen, board Jira Agile & Sprint lengkap, audit URL AI/Keamanan, arsitektur USL, dan QA self-healing.'}</p>
                 <div className="nav-mega-badges" aria-hidden="true"><span>25 Suites</span><span>MCP + BYOK</span><span>Zero-Trust</span></div>

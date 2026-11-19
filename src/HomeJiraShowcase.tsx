@@ -118,8 +118,8 @@ export default function HomeJiraShowcase() {
               <span className="section-kicker">
                 <Kanban size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} />
                 {en
-                  ? 'FLAGSHIP SUITE · AUTONOMOUS JIRA CLOUD ENTERPRISE (v8.0)'
-                  : 'FITUR UNGGULAN · JIRA CLOUD ENTERPRISE OTONOM (v8.0)'}
+                  ? 'FLAGSHIP SUITE · AUTONOMOUS JIRA CLOUD ENTERPRISE (v9.0 · 14 MODULES)'
+                  : 'FITUR UNGGULAN · JIRA CLOUD ENTERPRISE OTONOM (v9.0 · 14 MODUL)'}
               </span>
               <h2 id="home-jira-heading">
                 {en ? (
@@ -136,8 +136,8 @@ export default function HomeJiraShowcase() {
               </h2>
               <p>
                 {en
-                  ? '11 integrated Atlassian-grade modules: Multi-Project Scrum/Kanban, WIP Swimlanes, Backlog & Planning Poker, Epic Gantt, Product Discovery RICE, JSM Incidents & CAB, Confluence Wiki, JQL, CFD Burndown, and a proactive AI Brain that unblocks & plans sprints ahead.'
-                  : '11 modul setara Atlassian Cloud: Multi-Proyek Scrum/Kanban, Swimlane WIP, Backlog & Planning Poker, Gantt Epic, Product Discovery RICE, Insiden JSM & CAB, Wiki Confluence, JQL, Burndown CFD, serta Otak AI yang berpikir ke depan secara otomatis.'}
+                  ? '14 integrated Atlassian-grade modules: Left-Sidebar Project Shell, Multi-Project Spaces (DX/FIN/OPS/AI), WIP Swimlanes, Backlog & Poker, Epic Gantt, Delivery Calendar, Forms Portal, Visual Workflow & RBAC, Discovery RICE, JSM Incidents, Confluence Wiki, Undo/Redo, and Self-Driving AI Autopilot.'
+                  : '14 modul lengkap setara Atlassian Cloud: Sidebar Proyek Kiri, Ruang Multi-Proyek (DX/FIN/OPS/AI), Swimlane WIP, Backlog & Poker, Gantt Epic, Kalender Delivery, Portal Formulir, Desainer Workflow & RBAC, Discovery RICE, Insiden JSM, Wiki Confluence, Undo/Redo, serta AI Autopilot Otonom.'}
               </p>
             </div>
 
@@ -201,10 +201,12 @@ export default function HomeJiraShowcase() {
 
           <div className="home-jira-foot">
             <div className="home-jira-module-pills">
-              <span className="home-jira-module-pill">Multi-Project</span>
+              <span className="home-jira-module-pill">Multi-Project Shell</span>
               <span className="home-jira-module-pill">Kanban WIP & Swimlanes</span>
-              <span className="home-jira-module-pill">Product Discovery RICE</span>
-              <span className="home-jira-module-pill">JSM Incidents & CAB</span>
+              <span className="home-jira-module-pill">Delivery Calendar</span>
+              <span className="home-jira-module-pill">Forms Intake Portal</span>
+              <span className="home-jira-module-pill">Visual Workflow & RBAC</span>
+              <span className="home-jira-module-pill">Discovery RICE & JSM</span>
               <span className="home-jira-module-pill">Confluence PRD/ADR</span>
               <span className="home-jira-module-pill">Live JQL & REST v3 ADF</span>
             </div>

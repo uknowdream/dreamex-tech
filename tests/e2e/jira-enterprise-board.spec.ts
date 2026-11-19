@@ -159,4 +159,49 @@ test.describe('DreamEx Jira Agile & Sprint OS (/jira)', () => {
     await page.keyboard.press('Escape')
     await expect(page.getByTestId('jira-shortcuts-modal')).toHaveCount(0)
   })
+
+  test('v9.0 Jira Pro Shell: Multi-Project isolation (FIN/ALL), Calendar, Forms Portal, Visual Workflow Designer, Flag/Vote & Undo', async ({ page }) => {
+    await page.goto('/jira')
+
+    // Switch to FIN space -> sees dedicated FIN-201 ticket
+    await page.getByTestId('jira-project-pill-FIN').click()
+    await expect(page.getByTestId('jira-card-FIN-201')).toBeVisible()
+    await expect(page.getByTestId('jira-card-DX-102')).toHaveCount(0)
+
+    // Switch to ALL portfolio -> sees both DX and FIN
+    await page.getByTestId('jira-project-pill-ALL').click()
+    await expect(page.getByTestId('jira-card-FIN-201')).toBeVisible()
+    await expect(page.getByTestId('jira-card-DX-102')).toBeVisible()
+
+    // Flag & Vote inside Issue Drawer + verify flagged card highlight
+    await page.getByTestId('jira-card-FIN-201').locator('.jira-card-title-btn').click()
+    await page.getByTestId('jira-drawer-flag-btn').click()
+    await page.getByTestId('jira-drawer-vote-btn').click()
+    await expect(page.getByTestId('jira-drawer-vote-btn')).toContainText('1')
+    await page.keyboard.press('Escape')
+    await expect(page.getByTestId('jira-card-FIN-201')).toContainText(/FLAGGED IMPEDIMENT|HAMBATAN DITANDAI/i)
+
+    // Calendar View -> schedule ticket
+    await page.getByTestId('jira-tab-calendar').click()
+    await expect(page.getByTestId('jira-calendar-panel')).toBeVisible()
+    await page.getByTestId('jira-calendar-quick-input').fill('Verify v7.1 canary telemetry cutover')
+    await page.getByTestId('jira-calendar-add-btn').click()
+    await expect(page.getByTestId('jira-calendar-panel')).toContainText('Verify v7.1 canary')
+
+    // Forms Intake Portal -> submit defect
+    await page.getByTestId('jira-tab-forms').click()
+    await expect(page.getByTestId('jira-forms-panel')).toBeVisible()
+    await page.getByTestId('jira-form-summary-input').fill('Webhook signature header mismatch in APAC')
+    await page.getByTestId('jira-form-submit-btn').click()
+    await expect(page.getByTestId('jira-forms-panel')).toContainText('1 submitted')
+
+    // Undo button should now be enabled after tracked mutations
+    await expect(page.getByTestId('jira-undo-btn')).toBeEnabled()
+    await page.getByTestId('jira-undo-btn').click()
+
+    // Visual Workflow Designer & RBAC Matrix
+    await page.getByTestId('jira-tab-workflow').click()
+    await expect(page.getByTestId('jira-workflow-panel')).toBeVisible()
+    await expect(page.getByRole('img', { name: /workflow state transition|Diagram transisi workflow/i })).toBeVisible()
+  })
 })
