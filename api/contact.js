@@ -1,11 +1,13 @@
 import { createHash } from 'node:crypto'
 import { applyRateLimitHeaders, clientKey, createRateLimiter } from './_rateLimit.js'
+import { getVercelStorageInfo, vercelStorageSet } from './_vercelStorage.js'
 
 const CONTACT_KEY_PREFIX = 'dreamex:contact:v1:'
-const CONTACT_COUNT_KEY = 'dreamex:contact:v1:count'
-const MAX_BODY_BYTES = 8192
-const readLimiter = createRateLimiter({ maxRequests: 60, windowMs: 60_000 })
-const writeLimiter = createRateLimiter({ maxRequests: 8, windowMs: 60_000 })
+const MAX_BODY_BYTES = 16_384
+const VALID_TOPICS = new Set(['demo', 'architecture', 'jira-enterprise', 'partnership'])
+
+const readLimiter = createRateLimiter({ maxRequests: 30, windowMs: 60_000 })
+const writeLimiter = createRateLimiter({ maxRequests: 6, windowMs: 60_000 })
 
 export function resetContactRateLimiter() {
   readLimiter.reset()
@@ -35,35 +37,36 @@ function allowedOrigins() {
   return new Set(configured)
 }
 
-function redisConfig() {
-  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || ''
-  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || ''
-  if (!url || !token) return null
-  let parsed
+function safeWebhookUrl() {
+  const raw = (process.env.CONTACT_WEBHOOK_URL || '').trim()
+  if (!raw) return ''
   try {
-    parsed = new URL(url)
+    const parsed = new URL(raw)
+    if (parsed.protocol !== 'https:') return ''
+    const host = parsed.hostname.toLowerCase()
+    if (host === 'localhost' || host.endsWith('.local') || /^127\.|^10\.|^192\.168\.|^169\.254\./.test(host)) {
+      return ''
+    }
+    return raw
   } catch {
-    return null
+    return ''
   }
-  if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.search || parsed.hash) {
-    return null
-  }
-  return { url: url.replace(/\/+$/, ''), token }
 }
 
-async function redisCommand(config, command) {
-  const response = await fetch(config.url, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${config.token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(command),
-    signal: AbortSignal.timeout(6_000),
-  })
-  if (!response.ok) throw new Error('Storage request failed')
-  const payload = await response.json()
-  if (payload && typeof payload === 'object' && payload.error) {
-    throw new Error('Storage rejected command')
+async function dispatchWebhookNotice(webhookUrl, record) {
+  const summary = `🚀 New DreamEx Tech Inquiry [${record.referenceId}] (${record.topic}) from ${record.name}${record.company ? ` @ ${record.company}` : ''} — ${record.messageLength} chars`
+  try {
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // Compatible with both Slack (text) and Discord (content) incoming webhooks
+      body: JSON.stringify({ text: summary, content: summary }),
+      signal: AbortSignal.timeout(3_500),
+    })
+    return true
+  } catch {
+    return false
   }
-  return payload?.result
 }
 
 function parseBody(req) {
@@ -78,8 +81,6 @@ function parseBody(req) {
   }
   return { error: 'invalid_body' }
 }
-
-const VALID_TOPICS = new Set(['demo', 'architecture', 'jira-enterprise', 'partnership'])
 
 export default async function handler(req, res) {
   const origin = typeof req.headers?.origin === 'string' ? req.headers.origin : ''
@@ -99,13 +100,16 @@ export default async function handler(req, res) {
     return send(res, 429, { error: 'rate_limit_exceeded', retryAfterSec: limit.retryAfterSec })
   }
 
-  const config = redisConfig()
+  const storage = getVercelStorageInfo()
+  const webhookUrl = safeWebhookUrl()
 
   if (req.method === 'GET') {
     return send(res, 200, {
       ok: true,
       service: 'dreamex-contact',
-      persistentStorageConfigured: Boolean(config),
+      persistentStorageConfigured: storage.configured,
+      activeDriver: storage.driver,
+      webhookConfigured: Boolean(webhookUrl),
       topics: [...VALID_TOPICS],
     })
   }
@@ -135,19 +139,47 @@ export default async function handler(req, res) {
     const digest = createHash('sha256').update(`${email}:${Date.now()}`).digest('hex')
     const referenceId = `DX-REQ-${digest.slice(0, 8).toUpperCase()}`
     const createdAt = new Date().toISOString()
+    const record = {
+      referenceId,
+      name,
+      company,
+      topic,
+      messageLength: message.length,
+      emailHash: createHash('sha256').update(email).digest('hex').slice(0, 16),
+      createdAt,
+    }
 
-    if (config) {
+    let persistedDriver = null
+    if (storage.configured) {
       try {
-        const record = { referenceId, name, company, topic, messageLength: message.length, emailHash: createHash('sha256').update(email).digest('hex').slice(0, 16), createdAt }
-        await redisCommand(config, ['SET', `${CONTACT_KEY_PREFIX}${referenceId}`, JSON.stringify(record), 'EX', 60 * 60 * 24 * 90])
-        await redisCommand(config, ['INCR', CONTACT_COUNT_KEY])
-        return send(res, 201, { ok: true, mode: 'persisted', referenceId, createdAt })
+        const result = await vercelStorageSet(`${CONTACT_KEY_PREFIX}${referenceId}`, record, 60 * 60 * 24 * 90)
+        if (result.ok) persistedDriver = result.driver
       } catch {
-        return send(res, 200, { ok: true, mode: 'validated-stateless', referenceId, createdAt })
+        persistedDriver = null
       }
     }
 
-    return send(res, 200, { ok: true, mode: 'validated-stateless', referenceId, createdAt })
+    const webhookDelivered = webhookUrl ? await dispatchWebhookNotice(webhookUrl, record) : false
+
+    if (persistedDriver) {
+      return send(res, 201, {
+        ok: true,
+        mode: 'persisted',
+        driver: persistedDriver,
+        webhookDelivered,
+        referenceId,
+        createdAt,
+      })
+    }
+
+    return send(res, 200, {
+      ok: true,
+      mode: 'validated-stateless',
+      driver: storage.driver,
+      webhookDelivered,
+      referenceId,
+      createdAt,
+    })
   }
 
   res.setHeader('Allow', 'GET, POST, OPTIONS')

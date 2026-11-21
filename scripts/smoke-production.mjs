@@ -19,6 +19,7 @@ const checks = [
   { path: '/contact', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/api/jira-sync', type: 'json', markers: ['"service"', 'dreamex-jira-sync'] },
   { path: '/api/contact', type: 'json', markers: ['"service"', 'dreamex-contact'] },
+  { path: '/api/github-webhook', type: 'json', markers: ['"service"', 'dreamex-github-webhook'] },
   { path: '/api-playground', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/github-ci', type: 'html', markers: ['id="root"', '<div'] },
   { path: '/team-workspace', type: 'html', markers: ['id="root"', '<div'] },

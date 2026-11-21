@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
   BookOpen,
@@ -31,6 +31,7 @@ import {
   type AiProviderId,
 } from './aiClient'
 import { articles } from './articles'
+import { queueJiraTicketsFromSuite } from './jiraInboxBridge'
 import { articleTranslations } from './articleTranslations'
 import {
   buildJiraCurlCommand,
@@ -92,6 +93,7 @@ const INITIAL_RTM_ROWS: ReadonlyArray<RtmRow> = [
 
 export function SovereignWorkbenchPage({ initialPillar = 'eng' }: { initialPillar?: SovereignPillarId }) {
   const { language } = useLanguage()
+  const navigate = useNavigate()
   const { theme } = useTheme()
   const en = language === 'en'
   const [activePillar, setActivePillar] = useState<SovereignPillarId>(initialPillar)
@@ -1151,6 +1153,27 @@ export function SovereignWorkbenchPage({ initialPillar = 'eng' }: { initialPilla
               <button type="button" className="sovereign-btn primary" onClick={() => copyText('gherkin', gherkinSpec)}>
                 {copiedKey === 'gherkin' ? <Check size={14} /> : <Copy size={14} />} {en ? 'Copy Gherkin (.feature)' : 'Salin Gherkin (.feature)'}
               </button>
+              <button
+                type="button"
+                className="sovereign-btn"
+                data-testid="ba-push-to-jira-btn"
+                onClick={() => {
+                  queueJiraTicketsFromSuite([
+                    {
+                      title: `[BA-Gherkin] ${baCapability.slice(0, 96)}`,
+                      description: gherkinSpec,
+                      type: 'story',
+                      priority: 'High',
+                      points: 5,
+                      labels: ['ba-gherkin', 'rtm-linked'],
+                      sourceSuite: 'ba-hub',
+                    },
+                  ])
+                  navigate('/jira')
+                }}
+              >
+                <ClipboardList size={14} /> {en ? 'Send Story to /jira Board →' : 'Kirim Story ke Board /jira →'}
+              </button>
             </div>
           </article>
 
@@ -1338,6 +1361,27 @@ export function SovereignWorkbenchPage({ initialPillar = 'eng' }: { initialPilla
               </button>
               <button type="button" className="sovereign-btn" onClick={() => copyText('jira-curl', jiraCurl)}>
                 {copiedKey === 'jira-curl' ? <Check size={14} /> : <Terminal size={14} />} {en ? 'Copy cURL Webhook' : 'Salin Perintah cURL'}
+              </button>
+              <button
+                type="button"
+                className="sovereign-btn"
+                data-testid="pm-push-to-jira-btn"
+                onClick={() => {
+                  queueJiraTicketsFromSuite([
+                    {
+                      title: `[${jiraEnv}:${jiraModule}] ${jiraSummary.slice(0, 96)}`,
+                      description: jiraMarkdown,
+                      type: jiraType === 'Bug' ? 'bug' : jiraType === 'Story' ? 'story' : 'task',
+                      priority: 'Highest',
+                      points: 5,
+                      labels: ['pm-jira-hub', jiraEnv.toLowerCase()],
+                      sourceSuite: 'pm-jira-hub',
+                    },
+                  ])
+                  navigate('/jira')
+                }}
+              >
+                <ClipboardList size={14} /> {en ? 'Push Directly to /jira Board →' : 'Kirim Langsung ke Board /jira →'}
               </button>
               <button
                 type="button"

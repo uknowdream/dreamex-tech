@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import { applyRateLimitHeaders, clientKey, createRateLimiter } from './_rateLimit.js'
+import { getVercelStorageInfo, vercelStorageGet, vercelStorageSet } from './_vercelStorage.js'
 
 const ROOM_KEY_PREFIX = 'dreamex:jira:room:v1:'
 const MAX_BODY_BYTES = 131_072 // 128 KiB max board snapshot
@@ -32,37 +33,6 @@ function allowedOrigins() {
     configured.push('http://localhost:5173', 'http://localhost:4173', 'http://127.0.0.1:4173')
   }
   return new Set(configured)
-}
-
-function redisConfig() {
-  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || ''
-  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || ''
-  if (!url || !token) return null
-  let parsed
-  try {
-    parsed = new URL(url)
-  } catch {
-    return null
-  }
-  if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.search || parsed.hash) {
-    return null
-  }
-  return { url: url.replace(/\/+$/, ''), token }
-}
-
-async function redisCommand(config, command) {
-  const response = await fetch(config.url, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${config.token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(command),
-    signal: AbortSignal.timeout(6_000),
-  })
-  if (!response.ok) throw new Error('Storage request failed')
-  const payload = await response.json()
-  if (payload && typeof payload === 'object' && payload.error) {
-    throw new Error('Storage rejected command')
-  }
-  return payload?.result
 }
 
 function normalizeRoomCode(raw) {
@@ -106,16 +76,18 @@ export default async function handler(req, res) {
 
   const reqUrl = new URL(req.url || '/api/jira-sync', 'https://dreamex.tech')
   const rawRoom = reqUrl.searchParams.get('room') || ''
-  const config = redisConfig()
+  const storage = getVercelStorageInfo()
 
   // Health probe (no room param)
   if (req.method === 'GET' && !rawRoom) {
     return send(res, 200, {
       ok: true,
       service: 'dreamex-jira-sync',
-      cloudConfigured: Boolean(config),
-      realtimeModes: config
-        ? ['upstash-redis-cloud', 'broadcast-channel', 'compressed-share-url']
+      cloudConfigured: storage.configured,
+      activeDriver: storage.driver,
+      supportedVercelDrivers: storage.supportedVercelDrivers,
+      realtimeModes: storage.configured
+        ? [storage.driver, 'broadcast-channel', 'compressed-share-url']
         : ['broadcast-channel', 'compressed-share-url'],
     })
   }
@@ -128,11 +100,13 @@ export default async function handler(req, res) {
     })
   }
 
-  if (!config) {
+  if (!storage.configured) {
     return send(res, 503, {
       error: 'cloud_storage_not_configured',
       cloudConfigured: false,
-      message: 'Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in Vercel to enable cloud room sync. BroadcastChannel & Shareable URL sync remain active.',
+      activeDriver: storage.driver,
+      message:
+        'Connect Neon Postgres, Upstash Redis, or Vercel Blob in Vercel Dashboard -> Storage to enable cloud room sync. BroadcastChannel & Shareable URL sync remain active.',
     })
   }
 
@@ -141,16 +115,16 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const raw = await redisCommand(config, ['GET', storageKey])
-      if (!raw) {
-        return send(res, 200, { ok: true, found: false, rev: 0, snapshot: null })
+      const parsed = await vercelStorageGet(storageKey)
+      if (!parsed || typeof parsed !== 'object') {
+        return send(res, 200, { ok: true, found: false, rev: 0, driver: storage.driver, snapshot: null })
       }
-      const parsed = JSON.parse(String(raw))
       return send(res, 200, {
         ok: true,
         found: true,
         rev: Number(parsed.rev) || 1,
         updatedAt: parsed.updatedAt || null,
+        driver: storage.driver,
         snapshot: parsed.snapshot || null,
       })
     } catch {
@@ -159,33 +133,30 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'PUT') {
-    const parsedBody = parseBody(req)
-    if (parsedBody.error) {
-      return send(res, parsedBody.error === 'payload_too_large' ? 413 : 400, { error: parsedBody.error })
+    const parsed = parseBody(req)
+    if (parsed.error) {
+      return send(res, parsed.error === 'payload_too_large' ? 413 : 400, { error: parsed.error })
     }
-    const { expectedRev = 0, snapshot } = parsedBody.value || {}
+    const { snapshot, expectedRev } = parsed.value
     if (!snapshot || typeof snapshot !== 'object' || !Array.isArray(snapshot.issues)) {
       return send(res, 400, { error: 'invalid_snapshot', message: 'Snapshot must include an issues array.' })
     }
 
     try {
-      const existingRaw = await redisCommand(config, ['GET', storageKey])
-      const currentRev = existingRaw ? Number(JSON.parse(String(existingRaw)).rev) || 0 : 0
-      if (Number(expectedRev) !== currentRev && expectedRev !== -1) {
+      const existing = await vercelStorageGet(storageKey)
+      const currentRev = existing && typeof existing === 'object' ? Number(existing.rev) || 0 : 0
+      if (typeof expectedRev === 'number' && expectedRev !== currentRev) {
         return send(res, 409, {
           error: 'revision_conflict',
           currentRev,
-          message: 'Remote board has newer updates. Pull latest revision before pushing.',
+          message: 'Remote board has newer updates. Pull latest before pushing.',
         })
       }
       const nextRev = currentRev + 1
-      const record = {
-        rev: nextRev,
-        updatedAt: new Date().toISOString(),
-        snapshot,
-      }
-      await redisCommand(config, ['SET', storageKey, JSON.stringify(record), 'EX', 60 * 60 * 24 * 30])
-      return send(res, 200, { ok: true, rev: nextRev, updatedAt: record.updatedAt })
+      const updatedAt = new Date().toISOString()
+      const record = { rev: nextRev, updatedAt, snapshot }
+      const written = await vercelStorageSet(storageKey, record, 60 * 60 * 24 * 30)
+      return send(res, 200, { ok: true, rev: nextRev, updatedAt, driver: written.driver })
     } catch {
       return send(res, 502, { error: 'storage_unavailable' })
     }

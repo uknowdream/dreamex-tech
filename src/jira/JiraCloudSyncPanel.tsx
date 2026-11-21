@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Cloud, Copy, Github, KeyRound, Link2, Radio, RefreshCw, ShieldCheck } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Cloud, Copy, Database, Github, KeyRound, Link2, Radio, RefreshCw, ShieldCheck, Webhook } from 'lucide-react'
 import { DEFAULT_MODELS, loadSessionAiConfig, saveSessionAiConfig, type AiProviderId } from '../aiClient'
 import type { JiraIssue } from '../JiraEnterpriseBoard'
 
@@ -28,6 +28,22 @@ export function JiraCloudSyncPanel({
   const [cloudRev, setCloudRev] = useState(0)
   const [cloudStatus, setCloudStatus] = useState('')
   const [cloudBusy, setCloudBusy] = useState(false)
+  const [activeDriver, setActiveDriver] = useState<string>('stateless-sovereign')
+
+  useEffect(() => {
+    let active = true
+    fetch('/api/jira-sync', { headers: { Accept: 'application/json' } })
+      .then(r => (r.ok ? r.json() : null))
+      .then((d: { activeDriver?: string } | null) => {
+        if (active && d?.activeDriver) setActiveDriver(d.activeDriver)
+      })
+      .catch(() => {
+        /* Safe local fallback */
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
   // Live GitHub Issues Bridge
   const [repoInput, setRepoInput] = useState('uknowdream/dreamex-tech')
@@ -209,10 +225,16 @@ export function JiraCloudSyncPanel({
                 : 'Sinkronkan Board Lintas Tab, Perangkat Mobile & Ruang Cloud Tim'}
             </h2>
           </div>
-          <span className="jira-kpi-badge">
-            <Radio size={11} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-            {en ? `Live Tab Sync Active (${issuesCount} issues · ${broadcastPeers} syncs)` : `Live Tab Aktif (${issuesCount} tiket · ${broadcastPeers} sync)`}
-          </span>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            <span className="jira-kpi-badge" data-testid="jira-storage-driver-badge">
+              <Database size={11} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+              {en ? `Vercel Driver: ${activeDriver}` : `Driver Vercel: ${activeDriver}`}
+            </span>
+            <span className="jira-kpi-badge">
+              <Radio size={11} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+              {en ? `Live Tab Sync Active (${issuesCount} issues · ${broadcastPeers} syncs)` : `Live Tab Aktif (${issuesCount} tiket · ${broadcastPeers} sync)`}
+            </span>
+          </div>
         </div>
 
         <div className="jira-goal-compiler">
@@ -289,6 +311,40 @@ export function JiraCloudSyncPanel({
             {ghStatus}
           </div>
         )}
+        <div
+          style={{
+            marginTop: 10,
+            paddingTop: 10,
+            borderTop: '1px solid rgba(148, 163, 184, 0.16)',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 8,
+          }}
+        >
+          <span className="jira-kpi-sub">
+            <Webhook size={12} style={{ verticalAlign: 'middle', marginRight: 5 }} />
+            {en
+              ? '2-Way GitHub Webhook (auto-moves DX-### cards on PR open/merge): '
+              : 'Webhook GitHub 2-Arah (pindah tiket DX-### otomatis saat PR dibuka/merge): '}
+            <code>https://dreamex.tech/api/github-webhook</code>
+          </span>
+          <button
+            type="button"
+            className="button button-ghost"
+            onClick={() => {
+              void navigator.clipboard?.writeText('https://dreamex.tech/api/github-webhook')
+              onFlashNotice(
+                en
+                  ? 'Copied GitHub 2-Way Webhook URL! Add it in GitHub Repo -> Settings -> Webhooks.'
+                  : 'URL Webhook GitHub 2-Arah disalin! Pasang di GitHub Repo -> Settings -> Webhooks.',
+              )
+            }}
+          >
+            <Copy size={13} /> {en ? 'Copy Webhook URL' : 'Salin URL Webhook'}
+          </button>
+        </div>
       </article>
 
       {/* Optional Live BYOK AI Session Connector */}

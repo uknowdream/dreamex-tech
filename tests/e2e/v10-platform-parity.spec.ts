@@ -57,4 +57,24 @@ test.describe('DreamEx v10.0 platform parity', () => {
       expect(overflow, `No horizontal overflow at ${width}px`).toBeLessThanOrEqual(1)
     }
   })
+
+  test('v11.0 /ba-hub pushes Gherkin story directly into /jira board, DORA panel loads in Reports, and 12th article shows interactive code snippet', async ({ page }) => {
+    await page.goto('/ba-hub')
+    await page.getByTestId('ba-push-to-jira-btn').click()
+    await expect(page).toHaveURL(/\/jira$/)
+    await expect(page.locator('.jira-card', { hasText: '[BA-Gherkin]' }).first()).toBeVisible()
+
+    // Reports tab -> lazy Executive DORA Metrics panel
+    await page.getByTestId('jira-tab-reports').click()
+    await expect(page.getByTestId('jira-dora-panel')).toBeVisible()
+
+    // Automation tab -> Vercel Storage driver badge & 2-Way GitHub Webhook URL
+    await page.getByTestId('jira-tab-automation').click()
+    await expect(page.getByTestId('jira-storage-driver-badge')).toBeVisible()
+    await expect(page.getByTestId('jira-cloud-sync-panel')).toContainText('/api/github-webhook')
+
+    // Article #10 (v10/v11) -> interactive code snippet rendered via articleEnhancements.ts
+    await page.goto('/blog/realtime-collaboration-local-first')
+    await expect(page.locator('pre code', { hasText: 'pushBoardSnapshot' })).toBeVisible()
+  })
 })

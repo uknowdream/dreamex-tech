@@ -44,6 +44,7 @@ import {
 import { useLanguage } from './i18n'
 import { generateWithByokAi, loadSessionAiConfig } from './aiClient'
 import { useProjectContextBus } from './projectContextBus'
+import { consumeQueuedJiraTickets } from './jiraInboxBridge'
 import {
   analyzeForwardHorizon,
   buildReleaseNotesMarkdown,
@@ -82,6 +83,9 @@ const JiraWorkflowSettingsView = lazy(() =>
 )
 const JiraCloudSyncPanel = lazy(() =>
   import('./jira/JiraCloudSyncPanel').then(m => ({ default: m.JiraCloudSyncPanel })),
+)
+const JiraDoraPanel = lazy(() =>
+  import('./jira/JiraDoraPanel').then(m => ({ default: m.JiraDoraPanel })),
 )
 
 export type JiraStatusId = 'todo' | 'in_progress' | 'review' | 'blocked' | 'done'
@@ -982,7 +986,7 @@ export default function JiraEnterpriseBoardPage() {
     return () => mq.removeEventListener('change', syncMatch)
   }, [])
 
-  // v10.0 Real-Time Multi-Tab BroadcastChannel sync (<5ms across browser tabs)
+  // v10.0 Real-Time Multi-Tab BroadcastChannel sync + v11.0 live presence heartbeat (<5ms)
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.BroadcastChannel !== 'function') return
     const ch = new window.BroadcastChannel('dreamex-jira-live-bus')
@@ -993,12 +997,61 @@ export default function JiraEnterpriseBoardPage() {
         skipBroadcastRef.current = true
         setState(payload.state)
         setBroadcastPeers(n => n + 1)
+      } else if (payload?.type === 'jira-presence-ping') {
+        ch.postMessage({ type: 'jira-presence-pong' })
+        setBroadcastPeers(n => Math.max(1, n))
+      } else if (payload?.type === 'jira-presence-pong') {
+        setBroadcastPeers(n => Math.max(1, n))
       }
     }
+    ch.postMessage({ type: 'jira-presence-ping' })
     return () => {
       ch.close()
       channelRef.current = null
     }
+  }, [])
+
+  // v11.0 Consume any tickets queued from /ba-hub or /pm-jira-hub cross-suite bridge
+  useEffect(() => {
+    const queued = consumeQueuedJiraTickets()
+    if (!queued.length) return
+    const nowIso = new Date().toISOString()
+    setState(prev => {
+      let seq = prev.nextSequence
+      const created: JiraIssue[] = queued.map(d => {
+        const key = `DX-${seq}`
+        seq += 1
+        return {
+          id: uid('suite'),
+          key,
+          title: d.title,
+          description: d.description,
+          type: d.type,
+          status: 'todo',
+          priority: d.priority,
+          points: d.points,
+          assignee: d.type === 'bug' ? 'Nadia' : 'Rizky',
+          epicKey: 'DX-EPIC-1',
+          sprintId: 'sprint-24',
+          labels: d.labels,
+          dueDate: '2026-11-30',
+          component: 'Ledger Core',
+          fixVersion: 'v7.1.0',
+          subtasks: [],
+          comments: [],
+          updatedAt: nowIso,
+        }
+      })
+      return {
+        ...prev,
+        nextSequence: seq,
+        issues: [...created, ...prev.issues],
+        automationLogs: [
+          `[SUITE-BRIDGE] Imported ${created.length} ticket(s) directly from ${queued[0].sourceSuite}.`,
+          ...prev.automationLogs,
+        ],
+      }
+    })
   }, [])
 
   const mutateWithUndo = useCallback((updater: (prev: JiraWorkspaceState) => JiraWorkspaceState) => {
@@ -4022,6 +4075,16 @@ export default function JiraEnterpriseBoardPage() {
          ==================================================================== */}
       {activeTab === 'reports' && (
         <section className="jira-reports-grid" aria-label={en ? 'Agile Burndown and Velocity Reports' : 'Laporan Burndown dan Velocity Agile'}>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <Suspense fallback={<div className="jira-panel-card">{en ? 'Loading DORA Executive Metrics…' : 'Memuat Metrik Eksekutif DORA…'}</div>}>
+              <JiraDoraPanel
+                en={en}
+                issues={projectScopedIssues}
+                releases={releases}
+                incidents={jsmTickets}
+              />
+            </Suspense>
+          </div>
           {/* Sprint Burndown Chart */}
           <article className="jira-panel-card">
             <div>
@@ -4988,9 +5051,33 @@ export default function JiraEnterpriseBoardPage() {
               </div>
             </div>
 
-            {/* Comments & Activity Stream */}
+            {/* Comments & Activity Stream with @mention & QA Evidence Chips */}
             <div className="jira-field">
-              <label>{en ? 'Comments & Audit Activity' : 'Komentar & Riwayat Aktivitas'}</label>
+              <label>{en ? 'Comments, @mentions & QA Evidence' : 'Komentar, @mention & Bukti QA'}</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
+                {TEAM_MEMBERS.map(m => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    className="jira-chip-btn"
+                    onClick={() => setCommentDraft(prev => `${prev}${prev && !prev.endsWith(' ') ? ' ' : ''}@${m.id} `)}
+                  >
+                    @{m.id}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="jira-chip-btn"
+                  data-testid="jira-attach-qa-evidence-btn"
+                  onClick={() =>
+                    setCommentDraft(prev =>
+                      `${prev}${prev ? ' ' : ''}[QA-Evidence: playwright-trace-${selectedIssue.key.toLowerCase()}.zip · 0ms CLS · PASS]`,
+                    )
+                  }
+                >
+                  + {en ? 'Attach QA Trace' : 'Lampirkan Trace QA'}
+                </button>
+              </div>
               <div style={{ display: 'flex', gap: 6 }}>
                 <input
                   data-testid="jira-comment-input"

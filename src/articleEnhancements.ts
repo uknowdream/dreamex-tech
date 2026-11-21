@@ -237,6 +237,71 @@ export function passesRegressionGate(baseline: EvalRunSummary, candidate: EvalRu
 }`,
     },
   },
+  'realtime-collaboration-local-first': {
+    author: 'DreamEx Engineering Editorial',
+    authorRole: 'Distributed State & Real-Time Architecture',
+    updatedAt: '2026-11-22',
+    sections: [
+      { id: 'local-first-resilience', heading: '1. Local-First State as the Source of Speed', startParagraphIndex: 0 },
+      { id: 'broadcast-channel-tabs', heading: '2. Sub-5ms Multi-Tab Sync with Echo Guards', startParagraphIndex: 1 },
+      { id: 'optimistic-revision-409', heading: '3. Optimistic Revision Checks & Shareable Fallbacks', startParagraphIndex: 2 },
+    ],
+    snippet: {
+      language: 'typescript',
+      filename: 'src/sync/optimisticRoomPush.ts',
+      caption: 'Optimistic revision check preventing silent overwrites across concurrent collaborators.',
+      code: `export async function pushBoardSnapshot(room: string, expectedRev: number, snapshot: unknown) {
+  const res = await fetch(\`/api/jira-sync?room=\${encodeURIComponent(room)}\`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ expectedRev, snapshot }),
+  })
+  if (res.status === 409) throw new Error('Revision conflict: pull latest remote state first')
+  return res.json() as Promise<{ ok: boolean; rev: number; driver: string }>
+}`,
+    },
+  },
+  'zero-vulnerability-dependency-upgrades': {
+    author: 'DreamEx Engineering Editorial',
+    authorRole: 'Supply Chain Security & Release Engineering',
+    updatedAt: '2026-11-22',
+    sections: [
+      { id: 'production-audit-triage', heading: '1. Auditing Production Trees & Root Packages', startParagraphIndex: 0 },
+      { id: 'staged-verification-gates', heading: '2. Automated Verification Gates on Every Upgrade', startParagraphIndex: 2 },
+      { id: 'bundle-budget-discipline', heading: '3. Code-Splitting & Enforced Gzip Budgets', startParagraphIndex: 3 },
+    ],
+    snippet: {
+      language: 'bash',
+      filename: 'scripts/release-gate.sh',
+      caption: 'Zero-vulnerability production dependency gate paired with typecheck, build, and SEO checks.',
+      code: `npm audit --omit=dev --audit-level=moderate
+npm run typecheck && npm run lint
+npm run verify:i18n && npm run verify:security
+npm run test:api && npm run build && npm run verify:build`,
+    },
+  },
+  'conversion-architecture-engineering-sites': {
+    author: 'DreamEx Engineering Editorial',
+    authorRole: 'Product Engineering & Trust Architecture',
+    updatedAt: '2026-11-22',
+    sections: [
+      { id: 'focused-conversion-path', heading: '1. Traceable Demo Intake with Server Validation', startParagraphIndex: 0 },
+      { id: 'measurable-case-studies', heading: '2. Outcome-Driven Case Studies Over Buzzwords', startParagraphIndex: 2 },
+      { id: 'public-changelog-trust', heading: '3. Building Long-Term Trust with a Public Changelog', startParagraphIndex: 3 },
+    ],
+    snippet: {
+      language: 'typescript',
+      filename: 'api/contact-reference.ts',
+      caption: 'Generating a deterministic traceable reference ID while hashing prospect email at rest.',
+      code: `import { createHash } from 'node:crypto'
+
+export function buildInquiryReceipt(email: string) {
+  const emailHash = createHash('sha256').update(email.trim().toLowerCase()).digest('hex').slice(0, 16)
+  const referenceId = \`DX-REQ-\${createHash('sha256').update(\`\${emailHash}:\${Date.now()}\`).digest('hex').slice(0, 8).toUpperCase()}\`
+  return { referenceId, emailHash }
+}`,
+    },
+  },
 }
 
 export const articleEnhancementsId: Record<string, ArticleEditorialEnhancement> = {
@@ -382,6 +447,54 @@ export const articleEnhancementsId: Record<string, ArticleEditorialEnhancement> 
       filename: 'src/pm/monteCarloPercentile.ts',
       caption: 'Pemilihan persentil probabilitas penyelesaian sprint secara objektif.',
       code: articleEnhancementsEn['monte-carlo-forecasting-delivery'].snippet.code,
+    },
+  },
+  'realtime-collaboration-local-first': {
+    author: 'Redaksi Engineering DreamEx',
+    authorRole: 'State Terdistribusi & Arsitektur Real-Time',
+    updatedAt: '2026-11-22',
+    sections: [
+      { id: 'local-first-resilience', heading: '1. State Local-First sebagai Sumber Kecepatan', startParagraphIndex: 0 },
+      { id: 'broadcast-channel-tabs', heading: '2. Sinkronisasi Multi-Tab <5ms dengan Echo Guard', startParagraphIndex: 1 },
+      { id: 'optimistic-revision-409', heading: '3. Revisi Optimistik 409 & Tautan Cadangan', startParagraphIndex: 2 },
+    ],
+    snippet: {
+      language: 'typescript',
+      filename: 'src/sync/optimisticRoomPush.ts',
+      caption: 'Pemeriksaan revisi optimistik untuk mencegah penulisan ganda oleh kolaborator bersamaan.',
+      code: articleEnhancementsEn['realtime-collaboration-local-first'].snippet.code,
+    },
+  },
+  'zero-vulnerability-dependency-upgrades': {
+    author: 'Redaksi Engineering DreamEx',
+    authorRole: 'Keamanan Rantai Pasok & Release Engineering',
+    updatedAt: '2026-11-22',
+    sections: [
+      { id: 'production-audit-triage', heading: '1. Audit Dependensi Produksi & Paket Akar', startParagraphIndex: 0 },
+      { id: 'staged-verification-gates', heading: '2. Gerbang Verifikasi Otomatis di Setiap Upgrade', startParagraphIndex: 2 },
+      { id: 'bundle-budget-discipline', heading: '3. Code-Splitting & Disiplin Anggaran Gzip', startParagraphIndex: 3 },
+    ],
+    snippet: {
+      language: 'bash',
+      filename: 'scripts/release-gate.sh',
+      caption: 'Gerbang audit nol kerentanan yang dipadukan dengan typecheck, build, dan validasi SEO.',
+      code: articleEnhancementsEn['zero-vulnerability-dependency-upgrades'].snippet.code,
+    },
+  },
+  'conversion-architecture-engineering-sites': {
+    author: 'Redaksi Engineering DreamEx',
+    authorRole: 'Product Engineering & Arsitektur Kepercayaan',
+    updatedAt: '2026-11-22',
+    sections: [
+      { id: 'focused-conversion-path', heading: '1. Alur Demo Terlacak dengan Validasi Server', startParagraphIndex: 0 },
+      { id: 'measurable-case-studies', heading: '2. Studi Kasus Berbasis Metrik Nyata', startParagraphIndex: 2 },
+      { id: 'public-changelog-trust', heading: '3. Membangun Kepercayaan Jangka Panjang via Changelog', startParagraphIndex: 3 },
+    ],
+    snippet: {
+      language: 'typescript',
+      filename: 'api/contact-reference.ts',
+      caption: 'Menghasilkan ID referensi deterministik sambil melakukan hash email calon klien.',
+      code: articleEnhancementsEn['conversion-architecture-engineering-sites'].snippet.code,
     },
   },
 }
