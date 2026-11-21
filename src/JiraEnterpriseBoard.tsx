@@ -12,7 +12,9 @@ import {
   ClipboardCheck,
   ClipboardList,
   Clock,
+  Cloud,
   Copy,
+  Database,
   Download,
   Eye,
   Filter,
@@ -30,10 +32,12 @@ import {
   PanelLeft,
   Plus,
   Redo2,
+  RefreshCw,
   RotateCcw,
   ShieldAlert,
   Sparkles,
   Star,
+  Table2,
   ThumbsUp,
   Trash2,
   Undo2,
@@ -87,6 +91,9 @@ const JiraCloudSyncPanel = lazy(() =>
 const JiraDoraPanel = lazy(() =>
   import('./jira/JiraDoraPanel').then(m => ({ default: m.JiraDoraPanel })),
 )
+const JiraListView = lazy(() =>
+  import('./jira/JiraListView').then(m => ({ default: m.JiraListView })),
+)
 
 export type JiraStatusId = 'todo' | 'in_progress' | 'review' | 'blocked' | 'done'
 export type JiraIssueKind = 'story' | 'bug' | 'task' | 'security'
@@ -94,6 +101,7 @@ export type JiraPriorityLevel = 'Highest' | 'High' | 'Medium' | 'Low'
 export type JiraSprintId = 'sprint-24' | 'sprint-25' | 'backlog'
 export type JiraViewTab =
   | 'board'
+  | 'list'
   | 'autopilot'
   | 'backlog'
   | 'roadmap'
@@ -975,6 +983,33 @@ export default function JiraEnterpriseBoardPage() {
   const [redoStack, setRedoStack] = useState<JiraWorkspaceState[]>([])
   const [linkKind, setLinkKind] = useState<'blocks' | 'blocked_by' | 'relates_to' | 'duplicates'>('relates_to')
   const [linkTargetKey, setLinkTargetKey] = useState<string>('DX-102')
+
+  // v12.0 Live Neon Postgres / Vercel Cloud Auto-Sync + Compact Atlassian Shell toggle
+  const [showFullTelemetry, setShowFullTelemetry] = useState(false)
+  const [cloudDriver, setCloudDriver] = useState<string>('stateless-sovereign')
+  const [cloudConfigured, setCloudConfigured] = useState(false)
+  const [cloudRoom, setCloudRoom] = useState('dreamex-squad-24')
+  const [cloudRev, setCloudRev] = useState(0)
+  const [cloudAutoSync, setCloudAutoSync] = useState(false)
+  const [cloudSyncing, setCloudSyncing] = useState(false)
+  const [cloudLastSavedAt, setCloudLastSavedAt] = useState<string>('')
+
+  useEffect(() => {
+    let active = true
+    fetch('/api/jira-sync', { headers: { Accept: 'application/json' } })
+      .then(r => (r.ok ? r.json() : null))
+      .then((d: { cloudConfigured?: boolean; activeDriver?: string } | null) => {
+        if (!active || !d) return
+        setCloudConfigured(Boolean(d.cloudConfigured))
+        if (d.activeDriver) setCloudDriver(d.activeDriver)
+      })
+      .catch(() => {
+        /* Local-first fallback */
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
   // v10.0 Track desktop breakpoint so ONLY Left Sidebar OR Horizontal Tabs Bar renders at any viewport
   useEffect(() => {
@@ -1921,7 +1956,7 @@ export default function JiraEnterpriseBoardPage() {
     flashNotice(en ? `Scheduled new issue on ${dueDate}!` : `Tiket baru dijadwalkan pada ${dueDate}!`)
   }
 
-  const handleApplyRemoteSnapshot = (rawSnap: unknown) => {
+  const handleApplyRemoteSnapshot = useCallback((rawSnap: unknown) => {
     const parsed = rawSnap as Partial<JiraWorkspaceState> | null
     if (!parsed || !Array.isArray(parsed.issues) || !parsed.issues.length) {
       flashNotice(en ? 'Remote snapshot did not contain valid issues.' : 'Snapshot cloud tidak memiliki tiket valid.')
@@ -1935,7 +1970,7 @@ export default function JiraEnterpriseBoardPage() {
       automationLogs: [`[CLOUD-SYNC] Pulled ${parsed.issues?.length ?? 0} issue(s) from team Cloud Room.`, ...prev.automationLogs],
     }))
     flashNotice(en ? 'Synced latest board snapshot from Cloud Room!' : 'Berhasil menyinkronkan snapshot terbaru dari Ruang Cloud!')
-  }
+  }, [en, flashNotice, mutateWithUndo])
 
   const handleImportGithubIssues = (
     imported: Array<{ title: string; body: string; labels: string[]; htmlUrl: string; number: number }>,
@@ -1986,6 +2021,115 @@ export default function JiraEnterpriseBoardPage() {
         ? `Imported ${imported.length} live GitHub issue(s) onto ${prefix} board!`
         : `Berhasil mengimpor ${imported.length} issue GitHub langsung ke board ${prefix}!`,
     )
+  }
+
+  const pushTopbarCloudRoom = useCallback(async (silent = false) => {
+    const cleanRoom = cloudRoom.trim()
+    if (cleanRoom.length < 6) return
+    setCloudSyncing(true)
+    try {
+      const res = await fetch(`/api/jira-sync?room=${encodeURIComponent(cleanRoom)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ expectedRev: cloudRev, snapshot: state }),
+      })
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; rev?: number; currentRev?: number; driver?: string }
+      if (res.ok && data.ok) {
+        setCloudRev(Number(data.rev) || cloudRev + 1)
+        setCloudLastSavedAt(nowStamp())
+        if (!silent) {
+          flashNotice(
+            en
+              ? `Saved revision #${data.rev} to ${data.driver || cloudDriver} ("${cleanRoom}").`
+              : `Tersimpan revisi #${data.rev} ke ${data.driver || cloudDriver} ("${cleanRoom}").`,
+          )
+        }
+      } else if (res.status === 409) {
+        setCloudRev(Number(data.currentRev) || cloudRev)
+        if (!silent) {
+          flashNotice(
+            en
+              ? `Remote room is at revision #${data.currentRev}. Click Pull Cloud first.`
+              : `Ruang cloud ada di revisi #${data.currentRev}. Klik Tarik Cloud dahulu.`,
+          )
+        }
+      }
+    } catch {
+      /* Ignore transient offline errors */
+    } finally {
+      setCloudSyncing(false)
+    }
+  }, [cloudDriver, cloudRev, cloudRoom, en, flashNotice, state])
+
+  const pullTopbarCloudRoom = useCallback(async () => {
+    const cleanRoom = cloudRoom.trim()
+    if (cleanRoom.length < 6) return
+    setCloudSyncing(true)
+    try {
+      const res = await fetch(`/api/jira-sync?room=${encodeURIComponent(cleanRoom)}`, {
+        headers: { Accept: 'application/json' },
+      })
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; found?: boolean; rev?: number; snapshot?: unknown }
+      if (res.ok && data.ok && data.found && data.snapshot) {
+        handleApplyRemoteSnapshot(data.snapshot)
+        setCloudRev(Number(data.rev) || 1)
+        setCloudLastSavedAt(nowStamp())
+      } else if (res.ok && data.ok && !data.found) {
+        flashNotice(
+          en
+            ? `Cloud room "${cleanRoom}" is empty. Click Save Cloud to initialize it in ${cloudDriver}.`
+            : `Ruang cloud "${cleanRoom}" masih kosong. Klik Simpan Cloud untuk menyimpannya di ${cloudDriver}.`,
+        )
+      }
+    } catch {
+      flashNotice(en ? 'Cloud room unreachable.' : 'Ruang cloud tidak terjangkau.')
+    } finally {
+      setCloudSyncing(false)
+    }
+  }, [cloudDriver, cloudRoom, en, flashNotice, handleApplyRemoteSnapshot])
+
+  // Debounced Cloud Auto-Sync when user enables Auto-Sync with Neon/Upstash/Blob active
+  useEffect(() => {
+    if (!cloudAutoSync || !cloudConfigured) return
+    const timer = window.setTimeout(() => {
+      void pushTopbarCloudRoom(true)
+    }, 1500)
+    return () => window.clearTimeout(timer)
+  }, [cloudAutoSync, cloudConfigured, state, pushTopbarCloudRoom])
+
+  const handleListQuickCreate = (title: string, type: JiraIssueKind, priority: JiraPriorityLevel) => {
+    const prefix = activeProjectKey === 'ALL' ? 'DX' : activeProjectKey
+    mutateWithUndo(prev => {
+      const key = `${prefix}-${prev.nextSequence}`
+      const created: JiraIssue = {
+        id: uid('list'),
+        key,
+        title,
+        description: `Created inline via Jira Cloud List View (${prefix}).`,
+        type,
+        status: 'todo',
+        priority,
+        points: 3,
+        assignee: type === 'security' ? 'Alya' : type === 'bug' ? 'Nadia' : 'Rizky',
+        epicKey: epicsList[0]?.key ?? 'DX-EPIC-1',
+        sprintId: 'sprint-24',
+        labels: ['list-view'],
+        dueDate: '2026-11-29',
+        estHours: 6,
+        loggedHours: 0,
+        component: 'Ledger Core',
+        fixVersion: 'v7.1.0',
+        subtasks: [],
+        comments: [],
+        updatedAt: new Date().toISOString(),
+      }
+      return {
+        ...prev,
+        nextSequence: prev.nextSequence + 1,
+        issues: [created, ...prev.issues],
+      }
+    })
+    flashNotice(en ? 'Added work item inline in List View!' : 'Item kerja ditambahkan langsung di List View!')
   }
 
   const handleFormsPortalSubmit = (payload: {
@@ -2079,35 +2223,45 @@ export default function JiraEnterpriseBoardPage() {
 
   return (
     <main id="main-content" className="container jira-os-page" data-testid="jira-enterprise-page">
-      {/* Hero Header */}
-      <header className="jira-hero">
+      {/* Compact Atlassian Jira Cloud v12.0 Workspace Header */}
+      <header className="jira-hero jira-hero-compact">
         <div className="jira-hero-top">
           <div className="jira-hero-copy">
             <div className="jira-kicker-row">
               <span className="jira-kicker">
-                <Kanban size={13} /> DREAMEX JIRA CLOUD ENTERPRISE · v9.0
+                <Kanban size={13} /> DREAMEX JIRA CLOUD · v12.0
               </span>
               <span className="jira-sprint-pill" data-testid="jira-active-sprint-name">
                 {state.activeSprintName}
               </span>
+              <span
+                className={cloudConfigured ? 'jira-kpi-badge' : 'jira-kpi-badge is-warn'}
+                data-testid="jira-topbar-db-status"
+                title={en ? 'Active Vercel Storage Driver' : 'Driver Penyimpanan Vercel Aktif'}
+              >
+                <Database size={11} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                {cloudConfigured
+                  ? `${cloudDriver.toUpperCase()} LIVE${cloudRev > 0 ? ` · #${cloudRev}` : ''}`
+                  : en
+                    ? 'LOCAL-FIRST MODE'
+                    : 'MODE LOKAL'}
+              </span>
             </div>
-            <h1>
+            <h1 style={{ fontSize: 'clamp(22px, 2.4vw, 30px)', margin: '6px 0 4px' }}>
               {en ? (
                 <>
-                  Enterprise Jira Board,{' '}
-                  <span>Backlog, Gantt Roadmap & JQL Cloud.</span>
+                  {activeProjectMeta.key} / <span>{activeProjectMeta.nameEn}</span>
                 </>
               ) : (
                 <>
-                  Board Jira Enterprise,{' '}
-                  <span>Backlog, Roadmap Gantt & Cloud JQL.</span>
+                  {activeProjectMeta.key} / <span>{activeProjectMeta.nameId}</span>
                 </>
               )}
             </h1>
-            <p>
+            <p style={{ margin: 0, fontSize: 13.5 }}>
               {en
-                ? 'Plan sprints, drag issues across WIP-guarded Kanban swimlanes, run executable JQL queries, track Epic dependencies & Burndown velocity, automate QA subtasks, and export Atlassian Jira REST v3 ADF or CSV.'
-                : 'Rencanakan sprint, geser tiket di Kanban swimlane berbatas WIP, jalankan kueri JQL langsung, pantau dependensi Epic & grafik Burndown, otomasi subtask QA, dan ekspor ke Atlassian Jira REST v3 ADF atau CSV.'}
+                ? `${state.activeSprintGoal} · ${metrics.doneSp}/${metrics.totalSp} SP (${metrics.pct}%) · WIP ${metrics.inProgressCount}/${state.wipLimits.in_progress || '∞'}`
+                : `${state.activeSprintGoal} · ${metrics.doneSp}/${metrics.totalSp} SP (${metrics.pct}%) · WIP ${metrics.inProgressCount}/${state.wipLimits.in_progress || '∞'}`}
             </p>
           </div>
           <div className="jira-hero-actions">
@@ -2234,7 +2388,56 @@ export default function JiraEnterpriseBoardPage() {
             </button>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+            {cloudConfigured && (
+              <>
+                <input
+                  value={cloudRoom}
+                  onChange={e => setCloudRoom(e.target.value)}
+                  className="jira-select"
+                  style={{ width: 142, fontSize: 12 }}
+                  aria-label={en ? 'Cloud room code' : 'Kode ruang cloud'}
+                  title={en ? 'Neon Postgres sync room code' : 'Kode ruang sinkronisasi Neon Postgres'}
+                />
+                <button
+                  type="button"
+                  className="jira-chip-btn"
+                  data-testid="jira-topbar-cloud-save-btn"
+                  disabled={cloudSyncing}
+                  onClick={() => void pushTopbarCloudRoom(false)}
+                >
+                  <Cloud size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                  {cloudSyncing ? (en ? 'Syncing…' : 'Menyimpan…') : en ? 'Save DB' : 'Simpan DB'}
+                </button>
+                <button
+                  type="button"
+                  className="jira-chip-btn"
+                  data-testid="jira-topbar-cloud-pull-btn"
+                  disabled={cloudSyncing}
+                  onClick={() => void pullTopbarCloudRoom()}
+                >
+                  <RefreshCw size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                  {en ? 'Pull DB' : 'Tarik DB'}
+                </button>
+                <button
+                  type="button"
+                  className={cloudAutoSync ? 'jira-chip-btn is-active' : 'jira-chip-btn'}
+                  data-testid="jira-topbar-autosync-btn"
+                  onClick={() => setCloudAutoSync(v => !v)}
+                  title={cloudLastSavedAt ? `Last synced: ${cloudLastSavedAt}` : undefined}
+                >
+                  {cloudAutoSync ? (en ? 'Auto-Sync: ON' : 'Auto-Sync: AKTIF') : en ? 'Auto-Sync: OFF' : 'Auto-Sync: OFF'}
+                </button>
+              </>
+            )}
+            <button
+              type="button"
+              className="jira-chip-btn"
+              data-testid="jira-toggle-telemetry-btn"
+              onClick={() => setShowFullTelemetry(v => !v)}
+            >
+              {showFullTelemetry ? (en ? 'Hide KPIs' : 'Sembunyikan KPI') : en ? 'Show KPIs' : 'Tampilkan KPI'}
+            </button>
             <button
               type="button"
               className="jira-chip-btn"
@@ -2327,7 +2530,8 @@ export default function JiraEnterpriseBoardPage() {
         )}
       </header>
 
-      {/* Real-Time Agile KPI Strip */}
+      {/* Collapsible Agile KPI Strip (Hidden by default so Sprint Board starts immediately above the fold) */}
+      {showFullTelemetry && (
       <section className="jira-kpi-grid" aria-label={en ? 'Sprint telemetry metrics' : 'Metrik telemetri sprint'}>
         <article className="jira-kpi-card">
           <span className="jira-kpi-label">{en ? 'ACTIVE SPRINT PROGRESS' : 'PROGRES SPRINT AKTIF'}</span>
@@ -2392,6 +2596,7 @@ export default function JiraEnterpriseBoardPage() {
           </span>
         </article>
       </section>
+      )}
 
       {/* Autonomous AI Forward-Thinking Command Strip */}
       <section
@@ -2495,6 +2700,7 @@ export default function JiraEnterpriseBoardPage() {
                     {(
                       [
                         { id: 'board', icon: Kanban, en: 'Sprint Board', idLabel: 'Board Sprint', count: activeSprintIssues.length },
+                        { id: 'list', icon: Table2, en: 'List View', idLabel: 'Daftar Inline', count: projectScopedIssues.length },
                         { id: 'backlog', icon: Layers3, en: 'Backlog & Poker', idLabel: 'Backlog & Poker', count: projectScopedIssues.length },
                         { id: 'roadmap', icon: CalendarRange, en: 'Epic Gantt', idLabel: 'Roadmap Gantt', count: epicsList.length },
                         { id: 'calendar', icon: CalendarDays, en: 'Calendar', idLabel: 'Kalender', count: projectScopedIssues.length },
@@ -2594,6 +2800,7 @@ export default function JiraEnterpriseBoardPage() {
               {(
                 [
                   { id: 'board', icon: Kanban, en: 'Sprint Board', idLabel: 'Board Sprint', count: activeSprintIssues.length },
+                  { id: 'list', icon: Table2, en: 'List View', idLabel: 'Daftar Inline', count: projectScopedIssues.length },
                   { id: 'autopilot', icon: BrainCircuit, en: 'AI Autopilot', idLabel: 'AI Autopilot', count: horizonReport.recommendations.length },
                   { id: 'backlog', icon: Layers3, en: 'Backlog & Poker', idLabel: 'Backlog & Poker', count: projectScopedIssues.length },
                   { id: 'roadmap', icon: CalendarRange, en: 'Epic Gantt', idLabel: 'Roadmap Gantt', count: epicsList.length },
@@ -4487,6 +4694,22 @@ export default function JiraEnterpriseBoardPage() {
       )}
 
       {/* ====================================================================
+          VIEW 6B: ATLASSIAN JIRA CLOUD INLINE LIST VIEW (LAZY-LOADED)
+         ==================================================================== */}
+      {activeTab === 'list' && (
+        <Suspense fallback={<div className="jira-panel-card">{en ? 'Loading Inline List View…' : 'Memuat Tampilan Daftar Inline…'}</div>}>
+          <JiraListView
+            en={en}
+            issues={projectScopedIssues}
+            teamMembers={TEAM_MEMBERS}
+            onOpenIssue={issueId => setSelectedIssueId(issueId)}
+            onInlineUpdate={(issueId, patch) => updateIssue(issueId, patch)}
+            onQuickCreate={handleListQuickCreate}
+          />
+        </Suspense>
+      )}
+
+      {/* ====================================================================
           VIEW 7: JIRA WORK MANAGEMENT DELIVERY CALENDAR (LAZY-LOADED)
          ==================================================================== */}
       {activeTab === 'calendar' && (
@@ -4889,6 +5112,53 @@ export default function JiraEnterpriseBoardPage() {
                 >
                   + {en ? 'Link Issue' : 'Tautkan'}
                 </button>
+              </div>
+            </div>
+
+            {/* Time Tracking & Quick Worklog (+1h / +2h / +4h) */}
+            <div className="jira-field" data-testid="jira-time-tracking-box">
+              <label>
+                <Clock size={12} style={{ verticalAlign: 'middle', marginRight: 5 }} />
+                {en
+                  ? `Time Tracking (${selectedIssue.loggedHours ?? 0}h logged / ${selectedIssue.estHours ?? selectedIssue.points * 2}h estimated)`
+                  : `Pelacakan Waktu (${selectedIssue.loggedHours ?? 0}j tercatat / ${selectedIssue.estHours ?? selectedIssue.points * 2}j estimasi)`}
+              </label>
+              <div className="jira-progress-track" aria-hidden="true" style={{ marginBottom: 8 }}>
+                <span
+                  style={{
+                    width: `${Math.min(100, Math.round(((selectedIssue.loggedHours ?? 0) / Math.max(1, selectedIssue.estHours ?? selectedIssue.points * 2)) * 100))}%`,
+                  }}
+                />
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {[1, 2, 4].map(hrs => (
+                  <button
+                    key={hrs}
+                    type="button"
+                    className="jira-chip-btn"
+                    data-testid={`jira-log-work-${hrs}h`}
+                    onClick={() => {
+                      const nextLogged = (selectedIssue.loggedHours ?? 0) + hrs
+                      updateIssue(selectedIssue.id, {
+                        loggedHours: nextLogged,
+                        estHours: selectedIssue.estHours ?? selectedIssue.points * 2,
+                        comments: [
+                          {
+                            id: uid('wl'),
+                            author: selectedIssue.assignee,
+                            body: `[Worklog] Logged +${hrs}h (total ${nextLogged}h).`,
+                            createdAt: nowStamp(),
+                            kind: 'activity',
+                          },
+                          ...selectedIssue.comments,
+                        ],
+                      })
+                      flashNotice(en ? `Logged +${hrs}h on ${selectedIssue.key}!` : `Mencatat +${hrs} jam kerja pada ${selectedIssue.key}!`)
+                    }}
+                  >
+                    + {en ? `Log ${hrs}h` : `Catat ${hrs}j`}
+                  </button>
+                ))}
               </div>
             </div>
 

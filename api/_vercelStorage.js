@@ -12,7 +12,13 @@ import { neon } from '@neondatabase/serverless'
 let pgSchemaReady = false
 
 function readPostgresUrl() {
-  const raw = (process.env.DATABASE_URL || process.env.POSTGRES_URL || '').trim()
+  const raw = (
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.STORAGE_URL ||
+    process.env.NEON_DATABASE_URL ||
+    ''
+  ).trim()
   if (!raw) return ''
   try {
     const parsed = new URL(raw)

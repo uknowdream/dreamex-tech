@@ -77,4 +77,37 @@ test.describe('DreamEx v10.0 platform parity', () => {
     await page.goto('/blog/realtime-collaboration-local-first')
     await expect(page.locator('pre code', { hasText: 'pushBoardSnapshot' })).toBeVisible()
   })
+
+  test('v12.0 Jira List View inline editor, Time Tracking worklog, collapsible KPIs & 12 unique article cover photos', async ({ page }) => {
+    await page.goto('/jira')
+    await expect(page.getByTestId('jira-topbar-db-status')).toBeVisible()
+
+    // Toggle collapsible KPI telemetry strip
+    await page.getByTestId('jira-toggle-telemetry-btn').click()
+    await expect(page.getByTestId('jira-kpi-sprint-sp')).toBeVisible()
+    await page.getByTestId('jira-toggle-telemetry-btn').click()
+
+    // Switch to List View -> inline status edit + inline item creation
+    await page.getByTestId('jira-tab-list').click()
+    await expect(page.getByTestId('jira-list-panel')).toBeVisible()
+    await page.getByTestId('jira-list-status-DX-102').selectOption('review')
+    await page.getByTestId('jira-list-quick-input').fill('Verify Neon Postgres failover pooling')
+    await page.getByTestId('jira-list-quick-add-btn').click()
+    await expect(page.getByTestId('jira-list-panel')).toContainText('Verify Neon Postgres failover pooling')
+
+    // Open DX-102 drawer from List View -> Log +2h worklog
+    await page.getByTestId('jira-list-row-DX-102').locator('.jira-card-title-btn').click()
+    await expect(page.getByTestId('jira-time-tracking-box')).toBeVisible()
+    await page.getByTestId('jira-log-work-2h').click()
+    await expect(page.getByTestId('jira-issue-drawer')).toContainText('[Worklog] Logged +2h')
+    await page.keyboard.press('Escape')
+
+    // Verify all 12 article cards on Homepage have 12 completely unique cover images (zero duplicates!)
+    await page.goto('/')
+    const srcs = await page.locator('.article-card img').evaluateAll(imgs =>
+      imgs.map(img => img.getAttribute('src') || ''),
+    )
+    expect(srcs.length).toBe(12)
+    expect(new Set(srcs).size).toBe(12)
+  })
 })
