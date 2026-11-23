@@ -574,10 +574,10 @@ export function SovereignWorkbenchPage({ initialPillar = 'eng' }: { initialPilla
           <span className="sovereign-kicker">
             {theme === 'light'
               ? en
-                ? 'DAYLIGHT ALABASTER v6.0 · CLIENT-SOVEREIGN IT WORKBENCH'
+                ? 'DAYLIGHT ALABASTER v13.0 · CLIENT-SOVEREIGN IT WORKBENCH'
                 : 'DAYLIGHT ALABASTER v6.0 · WORKBENCH IT OTONOM DI BROWSER'
               : en
-                ? 'QUANTUM OBSIDIAN v6.0 · CLIENT-SOVEREIGN IT WORKBENCH'
+                ? 'QUANTUM OBSIDIAN v13.0 · CLIENT-SOVEREIGN IT WORKBENCH'
                 : 'QUANTUM OBSIDIAN v6.0 · WORKBENCH IT OTONOM DI BROWSER'}
           </span>
           <div className="sovereign-badge-row">

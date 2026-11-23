@@ -1918,3 +1918,182 @@ html[data-theme="light"] .jira-list-table th {
 .jira-list-table tbody tr:hover {
   background: rgba(56, 189, 248, 0.06);
 }
+
+/* v13.0 Ultra-Compact Above-the-Fold Atlassian Workspace Shell */
+.jira-os-page {
+  padding-top: 10px;
+  gap: 10px;
+}
+
+.jira-hero.jira-hero-compact {
+  padding: 12px 16px;
+  gap: 10px;
+  border-radius: 16px;
+}
+
+.jira-hero.jira-hero-compact .jira-hero-top {
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.jira-compact-title {
+  font-size: clamp(19px, 2vw, 25px);
+  line-height: 1.2;
+  margin: 4px 0 0;
+}
+
+.jira-hero-actions-compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.jira-btn-sm {
+  min-height: 32px !important;
+  padding: 5px 11px !important;
+  font-size: 12.5px !important;
+  border-radius: 9px !important;
+}
+
+.jira-more-tools-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.22);
+}
+
+.jira-project-bar-slim {
+  padding-top: 8px;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.jira-project-bar-slim::-webkit-scrollbar {
+  display: none;
+}
+
+.jira-project-pills-nowrap {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.jira-project-pills-nowrap .jira-project-pill,
+.jira-project-pills-nowrap .jira-chip-btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  padding: 4px 9px;
+  font-size: 11.5px;
+}
+
+.jira-cloud-topbar-controls {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.jira-autopilot-strip.jira-autopilot-slim {
+  padding: 8px 14px;
+  border-radius: 13px;
+  gap: 10px;
+}
+
+.jira-autopilot-next-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 420px;
+}
+
+@media (max-width: 768px) {
+  .jira-hero.jira-hero-compact {
+    padding: 10px 12px;
+  }
+  .jira-autopilot-next-text {
+    display: none;
+  }
+  .jira-autopilot-strip.jira-autopilot-slim {
+    padding: 8px 10px;
+  }
+}
+
+/* v13.0 Pixel-Perfect Kanban Card Badges, Full-Width Board & Single-Row Mobile Tabs */
+.container.jira-os-page {
+  width: min(1440px, calc(100% - 32px));
+}
+
+.jira-cloud-shell {
+  grid-template-columns: 216px minmax(0, 1fr);
+  gap: 14px;
+}
+
+.jira-board-grid {
+  grid-template-columns: repeat(5, minmax(208px, 1fr));
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.jira-card-top {
+  flex-wrap: wrap;
+  row-gap: 4px;
+  column-gap: 5px;
+}
+
+.jira-type-badge,
+.jira-priority-pill,
+.jira-sla-badge,
+.jira-card-key {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.jira-col-head {
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+
+@media (max-width: 1120px) {
+  .jira-tabs-bar {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+    gap: 6px;
+    padding: 6px 8px;
+  }
+  .jira-tabs-bar::-webkit-scrollbar {
+    display: none;
+  }
+  .jira-tab-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 7px 11px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container.jira-os-page {
+    width: calc(100% - 20px);
+  }
+  .jira-autopilot-strip.jira-autopilot-slim {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .jira-autopilot-strip.jira-autopilot-slim > div:last-child {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

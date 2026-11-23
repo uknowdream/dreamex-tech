@@ -650,7 +650,7 @@ export default function AiPrototypeStudioPage() {
         <div>
           <span className="proto-hero-kicker">
             <i className="proto-hero-dot" aria-hidden="true" />
-            {en ? 'AUTONOMOUS AI PROTOTYPE STUDIO · v6.0' : 'STUDIO PROTOTIPE AI OTONOM · v6.0'}
+            {en ? 'AUTONOMOUS AI PROTOTYPE STUDIO · v13.0' : 'STUDIO PROTOTIPE AI OTONOM · v13.0'}
           </span>
           <h1 id="proto-studio-heading" data-testid="proto-studio-title">
             {en ? (

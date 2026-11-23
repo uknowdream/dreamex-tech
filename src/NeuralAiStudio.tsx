@@ -241,6 +241,7 @@ export function NeuralAiStudio() {
   const [streamedLength, setStreamedLength] = useState(0)
   const [copiedOutput, setCopiedOutput] = useState(false)
   const [galleryFilter, setGalleryFilter] = useState<GalleryCategory>('all')
+  const [showVisualGallery, setShowVisualGallery] = useState(false)
   const [lightboxItem, setLightboxItem] = useState<(typeof GALLERY_ITEMS)[number] | null>(null)
   const [byokOpen, setByokOpen] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -617,6 +618,20 @@ export function NeuralAiStudio() {
             </div>
           </div>
 
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginBottom: showVisualGallery ? 16 : 0 }}>
+            <button
+              type="button"
+              className="button button-ghost"
+              data-testid="toggle-visual-gallery-btn"
+              aria-expanded={showVisualGallery}
+              onClick={() => setShowVisualGallery(v => !v)}
+            >
+              {showVisualGallery
+                ? en ? 'Hide Architecture Visuals (6) ▴' : 'Sembunyikan Galeri Visual (6) ▴'
+                : en ? 'Explore Architecture Visuals (6) ▾' : 'Lihat Galeri Visual Arsitektur (6) ▾'}
+            </button>
+          </div>
+          {showVisualGallery && (<>
           <div className="dx-gallery-filters" role="group" aria-label={en ? 'Filter visual blueprints' : 'Filter galeri visual'}>
             {[
               { id: 'all', en: 'All Visuals (6)', idLabel: 'Semua Visual (6)' },
@@ -669,6 +684,7 @@ export function NeuralAiStudio() {
               </article>
             ))}
           </div>
+          </>)}
         </div>
       </section>
 

@@ -85,8 +85,8 @@ const COCKPIT_MODES: Record<CockpitModeId, CockpitMode> = {
   },
   bpm: {
     id: 'bpm',
-    labelEn: '03 · BA & Jira AI',
-    labelId: '03 · BA & Jira AI',
+    labelEn: '03 · Jira AI',
+    labelId: '03 · Jira AI',
     badgeEn: 'GHERKIN BDD · RTM · MONTE CARLO',
     badgeId: 'GHERKIN BDD · RTM · MONTE CARLO',
     image: '/images/cover-ba-pm-jira.jpg',
@@ -208,7 +208,7 @@ export function HeroAiCockpit() {
           <span />
         </div>
         <small className="hero-cockpit-title">
-          <Cpu size={13} /> DreamEx Neural Core · v6.0
+          <Cpu size={13} /> DreamEx Neural Core · v13.0
         </small>
         <span className="terminal-live hero-cockpit-live">
           <i /> {t('terminalLive')}

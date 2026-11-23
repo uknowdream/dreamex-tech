@@ -52,6 +52,7 @@ const CASE_STUDIES = [
 ] as const
 
 const CHANGELOG = [
+  { version: 'v13.0', date: '2026-11-23', en: 'Full UX & visual perfection audit: single-row on-demand Suite Switcher, above-the-fold Atlassian Jira workspace (cuts top chrome 60%+), self-driving Neon Postgres auto-sync & live custom automation rule evaluator, /grader -> /jira auto-ticket bridge with zero broken badges, and zero duplicate photos across the entire homepage.', id: 'Audit menyeluruh UX & visual: Suite Switcher 1 baris on-demand, workspace Jira langsung above-the-fold (pangkas tumpukan atas 60%+), Auto-Sync Neon Postgres otomatis & mesin eksekusi aturan otomasi kustom, jembatan tiket otomatis /grader -> /jira bebas broken badge, serta nol foto duplikat di seluruh beranda.' },
   { version: 'v12.0', date: '2026-11-22', en: 'Live Neon Serverless Postgres cloud auto-sync inside Jira topbar, compact Atlassian Cloud workspace shell, Inline List View spreadsheet editor, Issue Time Tracking worklogs, and 12/12 unique bespoke editorial article covers.', id: 'Sinkronisasi otomatis live Neon Serverless Postgres langsung di topbar Jira, shell Atlassian Cloud ringkas, editor Daftar Inline (List View), Time Tracking worklog tiket, serta 12/12 sampul artikel editorial unik tanpa duplikasi.' },
   { version: 'v11.0', date: '2026-11-22', en: '100% Vercel-native 3-driver storage engine (Neon Postgres / Upstash Redis / Vercel Blob / Zero-DB Sovereign), 2-way GitHub PR/Issue webhook (/api/github-webhook), Slack/Discord demo notifications, Executive DORA Metrics, @mention & QA evidence chips, 1-click /ba-hub & /pm-jira-hub to /jira bridge, and 12/12 interactive article code snippets.', id: 'Mesin penyimpanan 100% native Vercel 3-driver (Neon Postgres / Upstash Redis / Vercel Blob / Zero-DB Sovereign), webhook GitHub 2-arah (/api/github-webhook), notifikasi Slack/Discord demo, Metrik Eksekutif DORA, chip @mention & bukti QA, jembatan 1-klik /ba-hub & /pm-jira-hub ke /jira, serta 12/12 blok kode artikel interaktif.' },
   { version: 'v10.0', date: '2026-11-20', en: 'Cloud sync rooms, multi-tab live sync, shareable board URLs, GitHub Issues bridge, /contact portal, React Router 7, zero npm vulnerabilities.', id: 'Ruang sinkronisasi cloud, sinkron multi-tab langsung, tautan board, jembatan GitHub Issues, portal /contact, React Router 7, nol kerentanan npm.' },
@@ -74,7 +75,7 @@ export default function ContactDemoPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [referenceId, setReferenceId] = useState('')
-  const [openVersion, setOpenVersion] = useState<string>('v12.0')
+  const [openVersion, setOpenVersion] = useState<string>('v13.0')
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()

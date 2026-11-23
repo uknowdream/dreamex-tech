@@ -443,7 +443,10 @@ function Header() {
                 </label>
                 <div className="nav-mega-featured-strip">
                   <Link to="/jira" onClick={() => document.querySelector('.nav-platform')?.removeAttribute('open')}>
-                    ⚡ {language === 'en' ? 'Jira Cloud v9 (14 Modules)' : 'Jira Cloud v9 (14 Modul)'}
+                    ⚡ {language === 'en' ? 'Jira Cloud v13 (15 Modules)' : 'Jira Cloud v13 (15 Modul)'}
+                  </Link>
+                  <Link to="/contact" onClick={() => document.querySelector('.nav-platform')?.removeAttribute('open')}>
+                    📅 {language === 'en' ? 'Book Demo' : 'Pesan Demo'}
                   </Link>
                   <Link to="/prototype" onClick={() => document.querySelector('.nav-platform')?.removeAttribute('open')}>
                     🤖 {language === 'en' ? '5-Agent Studio' : 'Studio 5-Agen'}
@@ -467,7 +470,7 @@ function Header() {
                   <source srcSet="/images/spotlight-ai-os.webp" type="image/webp" />
                   <img className="nav-mega-spotlight-art" src="/images/spotlight-ai-os.jpg" alt="" aria-hidden="true" width={360} height={200} />
                 </picture>
-                <span className="nav-mega-kicker">{language === 'en' ? 'AUTONOMOUS AI WORKSPACE · v9.0' : 'RUANG KERJA AI OTONOM · v9.0'}</span>
+                <span className="nav-mega-kicker">{language === 'en' ? 'AUTONOMOUS AI WORKSPACE · v13.0' : 'RUANG KERJA AI OTONOM · v13.0'}</span>
                 <strong>{language === 'en' ? 'From live prototype to autonomous release.' : 'Dari prototipe hidup hingga rilis otonom.'}</strong>
                 <p>{language === 'en' ? 'Unify 5-agent UI prototyping, full Jira Agile & Sprint boards, AI/Security URL grading, USL architecture, and self-healing QA.' : 'Satukan prototipe UI 5-agen, board Jira Agile & Sprint lengkap, audit URL AI/Keamanan, arsitektur USL, dan QA self-healing.'}</p>
                 <div className="nav-mega-badges" aria-hidden="true"><span>25 Suites</span><span>MCP + BYOK</span><span>Zero-Trust</span></div>
@@ -499,7 +502,7 @@ function Header() {
               <div className={activeMegaPillar !== 'all' && activeMegaPillar !== 'plan' && !navQuery.trim() ? 'nav-mega-group is-pillar-filtered' : 'nav-mega-group'} data-pillar="plan">
                 <span className="nav-group-label">{language === 'en' ? 'PLAN & OPERATE' : 'RENCANAKAN & KELOLA'}</span>
                 <NavLink to="/jira" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><ClipboardList size={15}/></span><span><b>{language === 'en' ? 'Jira Agile & Sprint OS' : 'Board Jira Agile & Sprint'}</b><small>{language === 'en' ? 'Kanban, backlog, Gantt, JQL & burndown' : 'Kanban, backlog, Gantt, JQL & burndown'}</small></span><i className="nav-item-tag" aria-hidden="true">JIRA</i></NavLink>
-                <NavLink to="/prototype" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Sparkles size={15}/></span><span><b>{language === 'en' ? 'AI Prototype Studio' : 'Studio Prototipe AI'}</b><small>{language === 'en' ? '5-agent DAG, live UI sandbox & token ROI' : 'DAG 5-agen, sandbox UI hidup & token ROI'}</small></span><i className="nav-item-tag" aria-hidden="true">v6</i></NavLink>
+                <NavLink to="/prototype" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Sparkles size={15}/></span><span><b>{language === 'en' ? 'AI Prototype Studio' : 'Studio Prototipe AI'}</b><small>{language === 'en' ? '5-agent DAG, live UI sandbox & token ROI' : 'DAG 5-agen, sandbox UI hidup & token ROI'}</small></span><i className="nav-item-tag" aria-hidden="true">AI</i></NavLink>
                 <NavLink to="/control-plane" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Activity size={15}/></span><span><b>Control Plane</b><small>{language === 'en' ? 'Unified release & governance plane' : 'Bidang kendali rilis & tata kelola'}</small></span></NavLink>
                 <NavLink to="/team-workspace" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Layers3 size={15}/></span><span><b>{language === 'en' ? 'Shared Team Workspace' : 'Workspace Tim Bersama'}</b><small>{language === 'en' ? 'Revision-controlled team snapshots' : 'Snapshot tim dengan kontrol revisi'}</small></span></NavLink>
                 <NavLink to="/engineering-intelligence" onClick={() => setDrawerOpen(false)}><span className="nav-link-icon"><Activity size={15}/></span><span><b>Engineering Intelligence</b><small>{language === 'en' ? 'Service catalog & schema diff' : 'Katalog layanan & diff skema API'}</small></span></NavLink>
@@ -773,7 +776,7 @@ function Home() {
       <a className="topic-card" href="#latest" onClick={() => setCategory('QA Automation')}><span className="topic-holo-stage" aria-hidden="true"><picture><source srcSet="/images/cover-qa-automation.webp" type="image/webp" /><img className="topic-holo-img" src="/images/cover-qa-automation.jpg" alt="" loading="lazy" decoding="async" width={640} height={360} /></picture><HoloMotionFx variant="qa" /></span><span className="topic-number">02</span><span className="topic-icon green"><ShieldCheck /></span><h3>{t('qaTopic')}</h3><p>{t('qaDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
       <a className="topic-card" href="#latest" onClick={() => setCategory('AI & Technology')}><span className="topic-holo-stage" aria-hidden="true"><picture><source srcSet="/images/cover-ai-eval.webp" type="image/webp" /><img className="topic-holo-img" src="/images/cover-ai-eval.jpg" alt="" loading="lazy" decoding="async" width={640} height={360} /></picture><HoloMotionFx variant="neural" /></span><span className="topic-number">03</span><span className="topic-icon blue"><Sparkles /></span><h3>{t('aiTopic')}</h3><p>{t('aiDescription')}</p><span className="topic-arrow"><ArrowRight size={16} /></span></a>
     </div></div></section>
-    <section className="featured-section"><div className="container featured-wrap"><div className="featured-label"><span className="section-kicker">{t('featuredHeading')}</span><span className="featured-line" /></div><div className="featured-card"><div className="featured-art"><picture><source srcSet={featuredCover.webpSrc} type="image/webp" /><img className="featured-cover-img" src={featuredCover.src} alt={featuredCover.alt} width={960} height={540} loading="lazy" /></picture><HoloMotionFx variant="qa" /><div className="art-grid" /><div className="art-symbol"><Braces size={72} strokeWidth={1.1} /></div><span className="art-index">DX / 001</span><span className="art-caption">ENGINEERING<br />FOR WHAT'S NEXT</span></div><div className="featured-copy"><span className="category-pill">{categoryLabel(featured.category, language)}</span><p className="featured-overline">{t('featuredInsight')} · {(language === 'en' ? featured.readTime.replace('menit', 'min read') : `${featured.readTime} baca`).toUpperCase()}</p><h2>{featuredTranslation?.title ?? featured.title}</h2><p>{featuredTranslation?.excerpt ?? featured.excerpt}</p><Link className="read-link" to={`/blog/${featured.slug}`}>{t('readFeatured')} <ArrowRight size={16} /></Link></div></div></div></section>
+    <section className="featured-section"><div className="container featured-wrap"><div className="featured-label"><span className="section-kicker">{t('featuredHeading')}</span><span className="featured-line" /></div><div className="featured-card"><div className="featured-art"><picture><source srcSet="/images/showcase-datacenter-ai.webp" type="image/webp" /><img className="featured-cover-img" src="/images/showcase-datacenter-ai.jpg" alt={featuredCover.alt} width={960} height={540} loading="lazy" /></picture><HoloMotionFx variant="qa" /><div className="art-grid" /><div className="art-symbol"><Braces size={72} strokeWidth={1.1} /></div><span className="art-index">DX / 001</span><span className="art-caption">ENGINEERING<br />FOR WHAT'S NEXT</span></div><div className="featured-copy"><span className="category-pill">{categoryLabel(featured.category, language)}</span><p className="featured-overline">{t('featuredInsight')} · {(language === 'en' ? featured.readTime.replace('menit', 'min read') : `${featured.readTime} baca`).toUpperCase()}</p><h2>{featuredTranslation?.title ?? featured.title}</h2><p>{featuredTranslation?.excerpt ?? featured.excerpt}</p><Link className="read-link" to={`/blog/${featured.slug}`}>{t('readFeatured')} <ArrowRight size={16} /></Link></div></div></div></section>
     <section className="articles-section" id="latest"><div className="container">
       {resumeRecord && (() => {
         const resumeArticle = articles.find(item => item.slug === resumeRecord.slug)
@@ -1646,6 +1649,7 @@ function ToolRouteBreadcrumbs() {
   const detectedCluster: SubnavClusterId =
     TOOL_SUBNAV_CLUSTERS.find(cluster => (cluster.routes as readonly string[]).includes(cleanPath))?.id ?? 'agile'
   const [selectedCluster, setSelectedCluster] = useState<SubnavClusterId>(detectedCluster)
+  const [switcherOpen, setSwitcherOpen] = useState(false)
   const [pinnedSuites, setPinnedSuites] = useState<string[]>(() => {
     if (typeof window === 'undefined') return DEFAULT_PINNED_SUITES
     try {
@@ -1660,7 +1664,8 @@ function ToolRouteBreadcrumbs() {
 
   useEffect(() => {
     setSelectedCluster(detectedCluster)
-  }, [detectedCluster])
+    setSwitcherOpen(false)
+  }, [detectedCluster, cleanPath])
 
   const togglePinCurrent = () => {
     if (!NAV_DESTINATIONS[cleanPath]) return
@@ -1685,8 +1690,9 @@ function ToolRouteBreadcrumbs() {
   const homeLabel = en ? 'Home' : 'Beranda'
   const currentLabel = label ? (en ? label.en : label.id) : (NAV_DESTINATIONS[cleanPath]?.[en ? 'en' : 'id'] ?? cleanPath)
   const isPinned = pinnedSuites.includes(cleanPath)
+  const isOsSuiteRoute = hasClusterRoute
 
-  return <div className="tool-context-shell">
+  return <div className={switcherOpen ? 'tool-context-shell is-expanded' : 'tool-context-shell is-compact'}>
     <div className="tool-context-top">
       <div className="tool-breadcrumb-wrap">
         {label ? (
@@ -1700,72 +1706,95 @@ function ToolRouteBreadcrumbs() {
         ) : (
           <span className="tool-context-kicker">{en ? 'ENGINEERING OS MODULE' : 'MODUL OS ENGINEERING'}</span>
         )}
-        {NAV_DESTINATIONS[cleanPath] && (
-          <button
-            type="button"
-            className={isPinned ? 'tool-pin-btn is-pinned' : 'tool-pin-btn'}
-            aria-pressed={isPinned}
-            onClick={togglePinCurrent}
-          >
-            {isPinned ? (en ? '★ Pinned' : '★ Disematkan') : en ? '☆ Pin Suite' : '☆ Sematkan'}
-          </button>
-        )}
-        <button
-          type="button"
-          className="tool-pin-btn"
-          onClick={() => window.dispatchEvent(new Event('dreamex-open-command-palette'))}
-        >
-          Ctrl+K
-        </button>
       </div>
-      <div className="tool-context-clusters" role="group" aria-label={en ? 'Switch OS pillar submenu' : 'Ganti submenu pilar OS'}>
-        {TOOL_SUBNAV_CLUSTERS.map(cluster => (
-          <button
-            key={cluster.id}
-            type="button"
-            className={selectedCluster === cluster.id ? 'tool-cluster-tab is-active' : 'tool-cluster-tab'}
-            aria-pressed={selectedCluster === cluster.id}
-            onClick={() => setSelectedCluster(cluster.id)}
-          >
-            {en ? cluster.en : cluster.idLabel}
-          </button>
-        ))}
+      <div className="tool-context-actions" style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+        {isOsSuiteRoute ? (
+          <>
+            <button
+              type="button"
+              className={switcherOpen ? 'tool-cluster-tab is-active' : 'tool-cluster-tab'}
+              data-testid="os-suite-switcher-toggle"
+              aria-expanded={switcherOpen}
+              onClick={() => setSwitcherOpen(v => !v)}
+            >
+              {switcherOpen ? (en ? 'Hide Suites ▴' : 'Tutup Suite ▴') : en ? 'Switch Suite ▾' : 'Ganti Suite ▾'}
+            </button>
+            {NAV_DESTINATIONS[cleanPath] && (
+              <button
+                type="button"
+                className={isPinned ? 'tool-pin-btn is-pinned' : 'tool-pin-btn'}
+                aria-pressed={isPinned}
+                onClick={togglePinCurrent}
+              >
+                {isPinned ? '★ Pin' : '☆ Pin'}
+              </button>
+            )}
+            <button
+              type="button"
+              className="tool-pin-btn"
+              onClick={() => window.dispatchEvent(new Event('dreamex-open-command-palette'))}
+            >
+              Ctrl+K
+            </button>
+          </>
+        ) : (
+          <Link className="tool-cluster-tab is-active" to="/jira">
+            {en ? 'Open Jira OS →' : 'Buka Jira OS →'}
+          </Link>
+        )}
       </div>
     </div>
-    <nav className="tool-context-subnav" aria-label={en ? 'Suite pillar quick navigation' : 'Navigasi cepat suite engineering'}>
-      {activeGroup.routes.map(routePath => {
-        const dest = NAV_DESTINATIONS[routePath]
-        if (!dest) return null
-        const active = cleanPath === routePath
-        return (
-          <Link
-            key={routePath}
-            to={routePath}
-            className={active ? 'tool-subnav-pill is-active' : 'tool-subnav-pill'}
-            aria-current={active ? 'page' : undefined}
-          >
-            {en ? dest.en : dest.id}
-          </Link>
-        )
-      })}
-    </nav>
-    {pinnedSuites.length > 0 && (
-      <div className="tool-pinned-strip" aria-label={en ? 'Pinned favorite suites' : 'Suite favorit disematkan'}>
-        <span className="tool-pinned-label">★ {en ? 'PINNED:' : 'FAVORIT:'}</span>
-        {pinnedSuites.map(routePath => {
-          const dest = NAV_DESTINATIONS[routePath]
-          if (!dest) return null
-          return (
-            <Link
-              key={routePath}
-              to={routePath}
-              className={cleanPath === routePath ? 'tool-pinned-chip is-active' : 'tool-pinned-chip'}
+    {isOsSuiteRoute && switcherOpen && (
+      <>
+        <div className="tool-context-clusters" role="group" aria-label={en ? 'Switch OS pillar submenu' : 'Ganti submenu pilar OS'}>
+          {TOOL_SUBNAV_CLUSTERS.map(cluster => (
+            <button
+              key={cluster.id}
+              type="button"
+              className={selectedCluster === cluster.id ? 'tool-cluster-tab is-active' : 'tool-cluster-tab'}
+              aria-pressed={selectedCluster === cluster.id}
+              onClick={() => setSelectedCluster(cluster.id)}
             >
-              {en ? dest.en : dest.id}
-            </Link>
-          )
-        })}
-      </div>
+              {en ? cluster.en : cluster.idLabel}
+            </button>
+          ))}
+        </div>
+        <nav className="tool-context-subnav" aria-label={en ? 'Suite pillar quick navigation' : 'Navigasi cepat suite engineering'}>
+          {activeGroup.routes.map(routePath => {
+            const dest = NAV_DESTINATIONS[routePath]
+            if (!dest) return null
+            const active = cleanPath === routePath
+            return (
+              <Link
+                key={routePath}
+                to={routePath}
+                className={active ? 'tool-subnav-pill is-active' : 'tool-subnav-pill'}
+                aria-current={active ? 'page' : undefined}
+              >
+                {en ? dest.en : dest.id}
+              </Link>
+            )
+          })}
+        </nav>
+        {pinnedSuites.length > 0 && (
+          <div className="tool-pinned-strip" aria-label={en ? 'Pinned favorite suites' : 'Suite favorit disematkan'}>
+            <span className="tool-pinned-label">★ {en ? 'PINNED:' : 'FAVORIT:'}</span>
+            {pinnedSuites.map(routePath => {
+              const dest = NAV_DESTINATIONS[routePath]
+              if (!dest) return null
+              return (
+                <Link
+                  key={routePath}
+                  to={routePath}
+                  className={cleanPath === routePath ? 'tool-pinned-chip is-active' : 'tool-pinned-chip'}
+                >
+                  {en ? dest.en : dest.id}
+                </Link>
+              )
+            })}
+          </div>
+        )}
+      </>
     )}
     {syncedProject && (
       <div className="os-context-bus-bar" data-testid="os-context-pill">

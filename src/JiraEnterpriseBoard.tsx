@@ -923,7 +923,9 @@ export default function JiraEnterpriseBoardPage() {
   const [bulkAssignee, setBulkAssignee] = useState<string>('Rizky')
 
   // v7.1 Autonomous Brain, Releases & Custom Rule state
-  const [autopilotEnabled, setAutopilotEnabled] = useState(false)
+  const [autopilotEnabled, setAutopilotEnabled] = useState(true)
+  const [showQuickFilters, setShowQuickFilters] = useState(false)
+  const [showMoreTools, setShowMoreTools] = useState(false)
   const [goalPrompt, setGoalPrompt] = useState('')
   const [aiReasoningTrace, setAiReasoningTrace] = useState<string[]>([
     '[BRAIN-INIT] Multi-horizon graph analyzer online (T+7d Sprint, T+21d Next Sprint, T+42d Release).',
@@ -1000,7 +1002,9 @@ export default function JiraEnterpriseBoardPage() {
       .then(r => (r.ok ? r.json() : null))
       .then((d: { cloudConfigured?: boolean; activeDriver?: string } | null) => {
         if (!active || !d) return
-        setCloudConfigured(Boolean(d.cloudConfigured))
+        const isCloud = Boolean(d.cloudConfigured)
+        setCloudConfigured(isCloud)
+        if (isCloud) setCloudAutoSync(true)
         if (d.activeDriver) setCloudDriver(d.activeDriver)
       })
       .catch(() => {
@@ -1247,16 +1251,37 @@ export default function JiraEnterpriseBoardPage() {
             }
           }
 
+          let nextFixVersion = item.fixVersion
           if (nextStatus === 'done' && ruleDone) {
             const openCount = nextSubtasks.filter(st => !st.done).length
             nextSubtasks = nextSubtasks.map(st => ({ ...st, done: true }))
-            extraLogs.push(`[AUTO-03] ${item.key} transitioned to Done -> ${openCount} open subtask(s) auto-closed.`)
+            if (!nextFixVersion) nextFixVersion = 'v7.1.0'
+            extraLogs.push(`[AUTO-03] ${item.key} transitioned to Done -> ${openCount} open subtask(s) auto-closed & tagged ${nextFixVersion}.`)
             updatedRules = updatedRules.map(r => (r.id === 'rule-done-close-subtasks' ? { ...r, runs: r.runs + 1 } : r))
           }
+
+          // v13.0 Live Runtime Evaluator for all enabled custom user-created rules
+          const sigText = `${item.type} ${item.priority} ${nextStatus} ${item.labels.join(' ')}`.toLowerCase()
+          updatedRules = updatedRules.map(r => {
+            if (!r.enabled || r.id.startsWith('rule-')) return r
+            const trig = r.triggerEn.toLowerCase()
+            const matched =
+              (trig.includes('highest') && item.priority === 'Highest') ||
+              (trig.includes('bug') && item.type === 'bug') ||
+              (trig.includes('security') && item.type === 'security') ||
+              (trig.includes('done') && nextStatus === 'done') ||
+              (trig.includes('blocked') && nextStatus === 'blocked') ||
+              (trig.includes('review') && nextStatus === 'review') ||
+              sigText.includes(trig.split('=').pop()?.trim() || '__none__')
+            if (!matched) return r
+            extraLogs.push(`[${r.code}] Custom rule "${r.nameEn}" auto-fired on ${item.key} -> ${r.actionEn}`)
+            return { ...r, runs: r.runs + 1 }
+          })
 
           return {
             ...item,
             status: nextStatus,
+            fixVersion: nextFixVersion,
             subtasks: nextSubtasks,
             comments: nextComments,
             updatedAt: new Date().toISOString(),
@@ -2223,13 +2248,13 @@ export default function JiraEnterpriseBoardPage() {
 
   return (
     <main id="main-content" className="container jira-os-page" data-testid="jira-enterprise-page">
-      {/* Compact Atlassian Jira Cloud v12.0 Workspace Header */}
+      {/* Ultra-Compact Atlassian Jira Cloud v13.0 Workspace Header */}
       <header className="jira-hero jira-hero-compact">
         <div className="jira-hero-top">
           <div className="jira-hero-copy">
             <div className="jira-kicker-row">
               <span className="jira-kicker">
-                <Kanban size={13} /> DREAMEX JIRA CLOUD · v12.0
+                <Kanban size={12} /> JIRA CLOUD · v13.0
               </span>
               <span className="jira-sprint-pill" data-testid="jira-active-sprint-name">
                 {state.activeSprintName}
@@ -2243,11 +2268,14 @@ export default function JiraEnterpriseBoardPage() {
                 {cloudConfigured
                   ? `${cloudDriver.toUpperCase()} LIVE${cloudRev > 0 ? ` · #${cloudRev}` : ''}`
                   : en
-                    ? 'LOCAL-FIRST MODE'
-                    : 'MODE LOKAL'}
+                    ? 'LOCAL-FIRST'
+                    : 'LOKAL'}
+              </span>
+              <span className="jira-kpi-badge">
+                {metrics.doneSp}/{metrics.totalSp} SP ({metrics.pct}%) · WIP {metrics.inProgressCount}/{state.wipLimits.in_progress || '∞'}
               </span>
             </div>
-            <h1 style={{ fontSize: 'clamp(22px, 2.4vw, 30px)', margin: '6px 0 4px' }}>
+            <h1 className="jira-compact-title">
               {en ? (
                 <>
                   {activeProjectMeta.key} / <span>{activeProjectMeta.nameEn}</span>
@@ -2258,82 +2286,109 @@ export default function JiraEnterpriseBoardPage() {
                 </>
               )}
             </h1>
-            <p style={{ margin: 0, fontSize: 13.5 }}>
-              {en
-                ? `${state.activeSprintGoal} · ${metrics.doneSp}/${metrics.totalSp} SP (${metrics.pct}%) · WIP ${metrics.inProgressCount}/${state.wipLimits.in_progress || '∞'}`
-                : `${state.activeSprintGoal} · ${metrics.doneSp}/${metrics.totalSp} SP (${metrics.pct}%) · WIP ${metrics.inProgressCount}/${state.wipLimits.in_progress || '∞'}`}
-            </p>
           </div>
-          <div className="jira-hero-actions">
+          <div className="jira-hero-actions jira-hero-actions-compact">
             <button
               type="button"
-              className="button button-primary"
+              className="button button-primary jira-btn-sm"
               data-testid="jira-open-create-btn"
               onClick={() => setCreateOpen(true)}
             >
-              <Plus size={16} /> {en ? 'Create Issue' : 'Buat Tiket'}{' '}
+              <Plus size={14} /> {en ? 'Create' : 'Buat'}{' '}
               <span className="jira-shortcut-kbd" aria-hidden="true">C</span>
             </button>
             <button
               type="button"
-              className="button button-ghost"
+              className="button button-ghost jira-btn-sm"
               data-testid="jira-complete-sprint-btn"
               onClick={() => setCompleteSprintOpen(true)}
             >
-              <CheckCircle2 size={15} /> {en ? 'Complete Sprint' : 'Selesaikan Sprint'}
+              <CheckCircle2 size={14} /> {en ? 'Complete Sprint' : 'Selesai Sprint'}
             </button>
             <button
               type="button"
-              className="button button-ghost"
+              className="button button-ghost jira-btn-sm"
+              disabled={undoStack.length === 0}
+              data-testid="jira-undo-btn"
+              onClick={handleUndo}
+              title={en ? 'Undo last board action (Ctrl+Z)' : 'Urungkan aksi terakhir (Ctrl+Z)'}
+            >
+              <Undo2 size={14} />
+            </button>
+            <button
+              type="button"
+              className="button button-ghost jira-btn-sm"
+              disabled={redoStack.length === 0}
+              data-testid="jira-redo-btn"
+              onClick={handleRedo}
+              title={en ? 'Redo action (Ctrl+Y)' : 'Ulangi aksi (Ctrl+Y)'}
+            >
+              <Redo2 size={14} />
+            </button>
+            <button
+              type="button"
+              className="button button-ghost jira-btn-sm"
+              data-testid="jira-shortcuts-btn"
+              onClick={() => setShortcutsOpen(true)}
+              title={en ? 'Keyboard shortcuts (?)' : 'Pintasan keyboard (?)'}
+            >
+              <HelpCircle size={14} />
+            </button>
+            <button
+              type="button"
+              className={showFullTelemetry ? 'jira-chip-btn is-active' : 'jira-chip-btn'}
+              data-testid="jira-toggle-telemetry-btn"
+              onClick={() => setShowFullTelemetry(v => !v)}
+            >
+              {showFullTelemetry ? (en ? 'KPIs ▴' : 'KPI ▴') : en ? 'KPIs ▾' : 'KPI ▾'}
+            </button>
+            <button
+              type="button"
+              className={showMoreTools ? 'jira-chip-btn is-active' : 'jira-chip-btn'}
+              data-testid="jira-more-tools-btn"
+              aria-expanded={showMoreTools}
+              onClick={() => setShowMoreTools(v => !v)}
+            >
+              ⋯ {en ? 'Tools' : 'Alat'}
+            </button>
+          </div>
+        </div>
+
+        {showMoreTools && (
+          <div className="jira-more-tools-row">
+            <button
+              type="button"
+              className="jira-chip-btn"
               onClick={() => downloadFile('dreamex-jira-export.csv', buildJiraCsv(state.issues), 'text/csv;charset=utf-8')}
             >
-              <Download size={15} /> Jira CSV
+              <Download size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} /> Jira CSV
             </button>
             <button
               type="button"
-              className="button button-ghost"
+              className="jira-chip-btn"
+              onClick={() => setCardDensity(d => (d === 'comfortable' ? 'compact' : 'comfortable'))}
+            >
+              {cardDensity === 'comfortable'
+                ? en ? 'Density: Comfortable' : 'Tampilan: Nyaman'
+                : en ? 'Density: Compact' : 'Tampilan: Ringkas'}
+            </button>
+            <button
+              type="button"
+              className="jira-chip-btn"
               onClick={() => {
                 setState(createDefaultState())
                 setSelectedBulkIds([])
                 flashNotice(en ? 'Workspace reset to clean enterprise baseline.' : 'Workspace dikembalikan ke data awal.')
               }}
             >
-              <RotateCcw size={15} /> {en ? 'Reset Demo' : 'Reset Data'}
-            </button>
-            <button
-              type="button"
-              className="button button-ghost"
-              disabled={undoStack.length === 0}
-              data-testid="jira-undo-btn"
-              onClick={handleUndo}
-              title={en ? 'Undo last board action (Ctrl+Z)' : 'Urungkan aksi terakhir (Ctrl+Z)'}
-            >
-              <Undo2 size={15} /> {en ? 'Undo' : 'Urung'}
-            </button>
-            <button
-              type="button"
-              className="button button-ghost"
-              disabled={redoStack.length === 0}
-              data-testid="jira-redo-btn"
-              onClick={handleRedo}
-              title={en ? 'Redo action (Ctrl+Y)' : 'Ulangi aksi (Ctrl+Y)'}
-            >
-              <Redo2 size={15} />
-            </button>
-            <button
-              type="button"
-              className="button button-ghost"
-              data-testid="jira-shortcuts-btn"
-              onClick={() => setShortcutsOpen(true)}
-            >
-              <HelpCircle size={15} /> {en ? 'Shortcuts (?)' : 'Pintasan (?)'}
+              <RotateCcw size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} /> {en ? 'Reset Demo' : 'Reset Data'}
             </button>
           </div>
-        </div>
+        )}
 
-        {/* Multi-Project Switcher Bar (Atlassian Cloud Projects + Portfolio ALL) */}
-        <div className="jira-project-bar" data-testid="jira-project-switcher">
-          <div className="jira-project-pills" role="group" aria-label={en ? 'Switch Jira Project' : 'Pilih Proyek Jira'}>
+        {/* Single-Line Scrollable Project Spaces & Neon Auto-Sync Ribbon */}
+        <div className="jira-project-bar jira-project-bar-slim" data-testid="jira-project-switcher">
+          <div className="jira-project-pills jira-project-pills-nowrap" role="group" aria-label={en ? 'Switch Jira Project' : 'Pilih Proyek Jira'}>
             <button
               type="button"
               className="jira-chip-btn"
@@ -2342,11 +2397,11 @@ export default function JiraEnterpriseBoardPage() {
               title={en ? 'Toggle Jira Left Sidebar ([)' : 'Buka/Tutup Sidebar Kiri Jira ([)'}
             >
               <PanelLeft size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-              {sidebarOpen ? (en ? 'Sidebar' : 'Sidebar') : en ? 'Show Nav' : 'Tampilkan Nav'}
+              {sidebarOpen ? (en ? 'Sidebar' : 'Sidebar') : en ? 'Nav' : 'Nav'}
             </button>
-            <span className="jira-kpi-label" style={{ marginRight: 2 }}>
-              <FolderKanban size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-              {en ? 'SPACES:' : 'PROYEK:'}
+            <span className="jira-kpi-label" style={{ flexShrink: 0 }}>
+              <FolderKanban size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />
+              {en ? 'SPACES' : 'PROYEK'}
             </span>
             <button
               type="button"
@@ -2358,7 +2413,6 @@ export default function JiraEnterpriseBoardPage() {
               }}
             >
               <span className="jira-project-key-tag">ALL</span>
-              <span>{en ? 'Portfolio' : 'Semua'}</span>
             </button>
             {projects.map(proj => (
               <button
@@ -2366,6 +2420,7 @@ export default function JiraEnterpriseBoardPage() {
                 type="button"
                 data-testid={`jira-project-pill-${proj.key}`}
                 className={activeProjectKey === proj.key ? 'jira-project-pill is-active' : 'jira-project-pill'}
+                title={en ? proj.nameEn : proj.nameId}
                 onClick={() => {
                   setActiveProjectKey(proj.key)
                   flashNotice(
@@ -2376,7 +2431,7 @@ export default function JiraEnterpriseBoardPage() {
                 }}
               >
                 <span className="jira-project-key-tag">{proj.key}</span>
-                <span>{en ? proj.nameEn : proj.nameId}</span>
+                <span>{(en ? proj.nameEn : proj.nameId).split(' ').slice(0, 2).join(' ')}</span>
               </button>
             ))}
             <button
@@ -2384,74 +2439,50 @@ export default function JiraEnterpriseBoardPage() {
               className="jira-chip-btn"
               onClick={() => setShowNewProjectForm(v => !v)}
             >
-              + {en ? 'New Project' : 'Proyek Baru'}
+              + {en ? 'Space' : 'Ruang'}
             </button>
           </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
-            {cloudConfigured && (
-              <>
-                <input
-                  value={cloudRoom}
-                  onChange={e => setCloudRoom(e.target.value)}
-                  className="jira-select"
-                  style={{ width: 142, fontSize: 12 }}
-                  aria-label={en ? 'Cloud room code' : 'Kode ruang cloud'}
-                  title={en ? 'Neon Postgres sync room code' : 'Kode ruang sinkronisasi Neon Postgres'}
-                />
-                <button
-                  type="button"
-                  className="jira-chip-btn"
-                  data-testid="jira-topbar-cloud-save-btn"
-                  disabled={cloudSyncing}
-                  onClick={() => void pushTopbarCloudRoom(false)}
-                >
-                  <Cloud size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                  {cloudSyncing ? (en ? 'Syncing…' : 'Menyimpan…') : en ? 'Save DB' : 'Simpan DB'}
-                </button>
-                <button
-                  type="button"
-                  className="jira-chip-btn"
-                  data-testid="jira-topbar-cloud-pull-btn"
-                  disabled={cloudSyncing}
-                  onClick={() => void pullTopbarCloudRoom()}
-                >
-                  <RefreshCw size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                  {en ? 'Pull DB' : 'Tarik DB'}
-                </button>
-                <button
-                  type="button"
-                  className={cloudAutoSync ? 'jira-chip-btn is-active' : 'jira-chip-btn'}
-                  data-testid="jira-topbar-autosync-btn"
-                  onClick={() => setCloudAutoSync(v => !v)}
-                  title={cloudLastSavedAt ? `Last synced: ${cloudLastSavedAt}` : undefined}
-                >
-                  {cloudAutoSync ? (en ? 'Auto-Sync: ON' : 'Auto-Sync: AKTIF') : en ? 'Auto-Sync: OFF' : 'Auto-Sync: OFF'}
-                </button>
-              </>
-            )}
-            <button
-              type="button"
-              className="jira-chip-btn"
-              data-testid="jira-toggle-telemetry-btn"
-              onClick={() => setShowFullTelemetry(v => !v)}
-            >
-              {showFullTelemetry ? (en ? 'Hide KPIs' : 'Sembunyikan KPI') : en ? 'Show KPIs' : 'Tampilkan KPI'}
-            </button>
-            <button
-              type="button"
-              className="jira-chip-btn"
-              onClick={() => setCardDensity(d => (d === 'comfortable' ? 'compact' : 'comfortable'))}
-            >
-              {cardDensity === 'comfortable'
-                ? en
-                  ? 'Density: Comfortable'
-                  : 'Tampilan: Nyaman'
-                : en
-                  ? 'Density: Compact'
-                  : 'Tampilan: Ringkas'}
-            </button>
-          </div>
+          {cloudConfigured && (
+            <div className="jira-cloud-topbar-controls">
+              <input
+                value={cloudRoom}
+                onChange={e => setCloudRoom(e.target.value)}
+                className="jira-select"
+                style={{ width: 132, fontSize: 11.5, padding: '3px 7px' }}
+                aria-label={en ? 'Cloud room code' : 'Kode ruang cloud'}
+              />
+              <button
+                type="button"
+                className="jira-chip-btn"
+                data-testid="jira-topbar-cloud-save-btn"
+                disabled={cloudSyncing}
+                onClick={() => void pushTopbarCloudRoom(false)}
+              >
+                <Cloud size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />
+                {cloudSyncing ? '…' : en ? 'Save' : 'Simpan'}
+              </button>
+              <button
+                type="button"
+                className="jira-chip-btn"
+                data-testid="jira-topbar-cloud-pull-btn"
+                disabled={cloudSyncing}
+                onClick={() => void pullTopbarCloudRoom()}
+              >
+                <RefreshCw size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} />
+                {en ? 'Pull' : 'Tarik'}
+              </button>
+              <button
+                type="button"
+                className={cloudAutoSync ? 'jira-chip-btn is-active' : 'jira-chip-btn'}
+                data-testid="jira-topbar-autosync-btn"
+                onClick={() => setCloudAutoSync(v => !v)}
+                title={cloudLastSavedAt ? `Last synced: ${cloudLastSavedAt}` : undefined}
+              >
+                {cloudAutoSync ? 'Auto: ON' : 'Auto: OFF'}
+              </button>
+            </div>
+          )}
         </div>
 
         {showNewProjectForm && (
@@ -2598,56 +2629,48 @@ export default function JiraEnterpriseBoardPage() {
       </section>
       )}
 
-      {/* Autonomous AI Forward-Thinking Command Strip */}
+      {/* Slim Autonomous AI Command Ribbon */}
       <section
-        className="jira-autopilot-strip"
+        className="jira-autopilot-strip jira-autopilot-slim"
         data-testid="jira-autopilot-strip"
         aria-label={en ? 'Autonomous AI Sprint Autopilot' : 'AI Autopilot Sprint Otonom'}
       >
         <div className="jira-autopilot-main">
           <span className={autopilotEnabled ? 'jira-autopilot-pulse is-live' : 'jira-autopilot-pulse'} />
-          <div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-              <strong style={{ fontSize: 13.5 }}>
-                <BrainCircuit size={15} style={{ verticalAlign: 'middle', marginRight: 5 }} />
-                {en
-                  ? `AI Forward-Thinking Brain · Confidence ${horizonReport.confidenceScore}%`
-                  : `Otak Prediktif AI Otonom · Keyakinan ${horizonReport.confidenceScore}%`}
-              </strong>
-              <span className={horizonReport.recommendations.length > 0 ? 'jira-kpi-badge is-warn' : 'jira-kpi-badge'}>
-                {horizonReport.recommendations.length === 0
-                  ? en
-                    ? 'OPTIMAL HORIZON'
-                    : 'HORIZON OPTIMAL'
-                  : en
-                    ? `${horizonReport.recommendations.length} PROACTIVE INSIGHTS`
-                    : `${horizonReport.recommendations.length} PREDIKSI PROAKTIF`}
-              </span>
-            </div>
-            <div className="jira-kpi-sub" style={{ marginTop: 3 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '4px 10px', minWidth: 0 }}>
+            <strong style={{ fontSize: 12.5, whiteSpace: 'nowrap' }}>
+              <BrainCircuit size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+              {en ? `AI Autopilot · ${horizonReport.confidenceScore}%` : `AI Autopilot · ${horizonReport.confidenceScore}%`}
+            </strong>
+            <span className={horizonReport.recommendations.length > 0 ? 'jira-kpi-badge is-warn' : 'jira-kpi-badge'}>
+              {horizonReport.recommendations.length === 0
+                ? en ? 'OPTIMAL' : 'OPTIMAL'
+                : en ? `${horizonReport.recommendations.length} INSIGHTS` : `${horizonReport.recommendations.length} SARAN`}
+            </span>
+            <span className="jira-kpi-sub jira-autopilot-next-text">
               {horizonReport.recommendations[0]
                 ? en
-                  ? `Next Action: ${horizonReport.recommendations[0].titleEn}`
-                  : `Saran Otomatis Berikutnya: ${horizonReport.recommendations[0].titleId}`
+                  ? horizonReport.recommendations[0].titleEn
+                  : horizonReport.recommendations[0].titleId
                 : en
-                  ? 'Sprint 24 & Sprint 25 capacity, SLA windows, and engineer workloads are balanced.'
-                  : 'Kapasitas Sprint 24 & 25, target SLA, dan beban kerja engineer sudah seimbang otomatis.'}
-            </div>
+                  ? 'Sprint capacity & SLA balanced.'
+                  : 'Kapasitas sprint & SLA seimbang.'}
+            </span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', flexShrink: 0 }}>
           <button
             type="button"
-            className="button button-primary"
+            className="button button-primary jira-btn-sm"
             data-testid="jira-auto-optimize-btn"
             onClick={runAutonomousOptimization}
           >
-            <Zap size={15} /> {en ? 'Auto-Optimize & Plan Ahead' : 'Optimasi & Rencanakan Otomatis'}
+            <Zap size={13} /> {en ? 'Auto-Optimize' : 'Optimasi Otomatis'}
           </button>
           <button
             type="button"
-            className={autopilotEnabled ? 'button button-primary' : 'button button-ghost'}
+            className={autopilotEnabled ? 'jira-chip-btn is-active' : 'jira-chip-btn'}
             data-testid="jira-autopilot-toggle"
             aria-pressed={autopilotEnabled}
             onClick={() => {
@@ -2656,21 +2679,15 @@ export default function JiraEnterpriseBoardPage() {
               if (next) runAutonomousOptimization()
             }}
           >
-            <Bot size={15} />{' '}
-            {autopilotEnabled
-              ? en
-                ? 'Autopilot: ON (Self-Driving)'
-                : 'Autopilot: AKTIF'
-              : en
-                ? 'Enable Self-Driving Mode'
-                : 'Aktifkan Mode Otonom'}
+            <Bot size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+            {autopilotEnabled ? (en ? 'Self-Driving: ON' : 'Otonom: AKTIF') : en ? 'Self-Driving: OFF' : 'Otonom: OFF'}
           </button>
           <button
             type="button"
-            className="button button-ghost"
+            className="jira-chip-btn"
             onClick={() => setActiveTab('autopilot')}
           >
-            <Sparkles size={14} /> {en ? 'Open AI Brain' : 'Buka Ruang AI'}
+            <Sparkles size={12} style={{ verticalAlign: 'middle', marginRight: 3 }} /> {en ? 'AI Brain' : 'Ruang AI'}
           </button>
         </div>
       </section>
@@ -2885,8 +2902,20 @@ export default function JiraEnterpriseBoardPage() {
                 </select>
               </label>
             )}
+
+            <button
+              type="button"
+              className={showQuickFilters || assigneeFilter !== 'ALL' || quickFilter !== 'none' ? 'jira-chip-btn is-active' : 'jira-chip-btn'}
+              data-testid="jira-toggle-filters-btn"
+              aria-expanded={showQuickFilters}
+              onClick={() => setShowQuickFilters(v => !v)}
+            >
+              <Filter size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+              {showQuickFilters ? (en ? 'Hide Filters ▴' : 'Tutup Filter ▴') : en ? 'Quick Filters & PIC ▾' : 'Filter Cepat & PIC ▾'}
+            </button>
           </div>
 
+          {showQuickFilters && (<>
           {/* Saved Starred JQL Filters Bar */}
           <div className="jira-toolbar-row">
             <div className="jira-quick-chips" role="group" aria-label={en ? 'Saved JQL filters' : 'Filter JQL tersimpan'}>
@@ -3004,6 +3033,7 @@ export default function JiraEnterpriseBoardPage() {
               )}
             </div>
           </div>
+          </>)}
         </section>
       )}
 
@@ -4518,11 +4548,29 @@ export default function JiraEnterpriseBoardPage() {
       {activeTab === 'automation' && (
         <section className="jira-backlog-stack" aria-label={en ? 'Jira Automation and REST v3 Sync' : 'Otomasi Jira dan Sinkronisasi REST v3'}>
           <article className="jira-panel-card">
-            <div>
-              <span className="jira-kpi-label">{en ? 'NO-CODE JIRA AUTOMATION RULES' : 'ATURAN OTOMASI JIRA TANPA KODE'}</span>
-              <h2 style={{ margin: '4px 0 0', fontSize: 18 }}>
-                {en ? 'Live Event-Driven Workflow Rules & Custom Builder' : 'Aturan Workflow Otomatis & Pembuat Aturan Baru'}
-              </h2>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+              <div>
+                <span className="jira-kpi-label">{en ? 'NO-CODE JIRA AUTOMATION RULES' : 'ATURAN OTOMASI JIRA TANPA KODE'}</span>
+                <h2 style={{ margin: '4px 0 0', fontSize: 18 }}>
+                  {en ? 'Live Event-Driven Workflow Rules & Custom Builder' : 'Aturan Workflow Otomatis & Pembuat Aturan Baru'}
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="button button-primary jira-btn-sm"
+                data-testid="jira-run-full-sweep-btn"
+                onClick={() => {
+                  runAutonomousOptimization()
+                  if (cloudConfigured) void pushTopbarCloudRoom(true)
+                  flashNotice(
+                    en
+                      ? 'Executed full autonomous sweep across all enabled rules, workloads & cloud sync!'
+                      : 'Seluruh aturan otomasi, penyeimbangan beban kerja & sinkronisasi cloud berhasil dijalankan!',
+                  )
+                }}
+              >
+                <Zap size={14} /> {en ? 'Run Full Autonomous Sweep' : 'Jalankan Semua Otomasi'}
+              </button>
             </div>
 
             <form

@@ -39,7 +39,7 @@ export function EngineeringLaunchpad() {
         })}
       </div>
       <div className="launchpad-foot">
-        <span><span className="launchpad-foot-dot" /> {en ? 'Autonomous v6.0 Multi-Agent OS: Live Prototype · AI Grader · SE · QA · BA · Jira' : 'OS Multi-Agen v6.0 Otonom: Prototipe AI · AI Grader · SE · QA · BA · Jira'}</span>
+        <span><span className="launchpad-foot-dot" /> {en ? 'Autonomous v13.0 Multi-Agent OS: Live Prototype · AI Grader · SE · QA · BA · Jira' : 'OS Multi-Agen v13.0 Otonom: Prototipe AI · AI Grader · SE · QA · BA · Jira'}</span>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
           <Link to="/jira">{en ? 'Jira Agile & Sprint OS (v7)' : 'Board Jira Agile & Sprint (v7)'} <ArrowUpRight size={14} /></Link>
           <Link to="/prototype">{en ? 'AI Prototype Studio (v6)' : 'Studio Prototipe AI (v6)'} <ArrowUpRight size={14} /></Link>

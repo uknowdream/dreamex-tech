@@ -118,8 +118,8 @@ export default function HomeJiraShowcase() {
               <span className="section-kicker">
                 <Kanban size={13} style={{ verticalAlign: 'middle', marginRight: 5 }} />
                 {en
-                  ? 'FLAGSHIP SUITE · AUTONOMOUS JIRA CLOUD ENTERPRISE (v9.0 · 14 MODULES)'
-                  : 'FITUR UNGGULAN · JIRA CLOUD ENTERPRISE OTONOM (v9.0 · 14 MODUL)'}
+                  ? 'FLAGSHIP SUITE · AUTONOMOUS JIRA CLOUD ENTERPRISE (v13.0 · 15 MODULES)'
+                  : 'FITUR UNGGULAN · JIRA CLOUD ENTERPRISE OTONOM (v13.0 · 15 MODUL)'}
               </span>
               <h2 id="home-jira-heading">
                 {en ? (

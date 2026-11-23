@@ -110,4 +110,33 @@ test.describe('DreamEx v10.0 platform parity', () => {
     expect(srcs.length).toBe(12)
     expect(new Set(srcs).size).toBe(12)
   })
+
+  test('v13.0 above-the-fold Jira board, on-demand Suite Switcher, full automation sweep & /grader -> /jira bridge with 0 broken images', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/jira')
+
+    // On-demand Suite Switcher stays compact by default and expands cleanly on click
+    const switcherBtn = page.getByTestId('os-suite-switcher-toggle')
+    await expect(switcherBtn).toBeVisible()
+    await expect(switcherBtn).toHaveAttribute('aria-expanded', 'false')
+
+    // Kanban board starts above the fold on 1440x900 desktop
+    const colTop = await page.getByTestId('jira-col-todo').evaluate(el => el.getBoundingClientRect().top)
+    expect(colTop).toBeLessThan(620)
+
+    // Full autonomous sweep in Automation tab
+    await page.getByTestId('jira-tab-automation').click()
+    await page.getByTestId('jira-run-full-sweep-btn').click()
+
+    // /grader -> 0 broken images & 1-click Auto-Create Jira Tickets bridge
+    await page.goto('/grader')
+    await page.waitForTimeout(300)
+    const brokenImgs = await page.evaluate(() =>
+      Array.from(document.querySelectorAll('img')).filter(i => i.complete && i.naturalWidth === 0).length,
+    )
+    expect(brokenImgs).toBe(0)
+    await page.getByTestId('grader-push-to-jira-btn').click()
+    await expect(page).toHaveURL(/\/jira$/)
+    await expect(page.locator('.jira-card', { hasText: '[Grader:' }).first()).toBeVisible()
+  })
 })

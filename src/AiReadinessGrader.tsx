@@ -1,8 +1,16 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { Award, Check, Copy, ExternalLink, Globe, Printer, RefreshCw, Share2, ShieldCheck, Sparkles, Terminal } from 'lucide-react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Award, Check, ClipboardList, Copy, ExternalLink, Globe, Printer, RefreshCw, Share2, ShieldCheck, Sparkles, Terminal } from 'lucide-react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useLanguage } from './i18n'
+import { queueJiraTicketsFromSuite } from './jiraInboxBridge'
 import './AiReadinessGrader.css'
+
+function buildInlineBadgeDataUri(domain: string, score: number, grade: string): string {
+  const safeDomain = domain.replace(/[<>&"']/g, '').slice(0, 26)
+  const safeGrade = grade.replace(/[<>&"']/g, '').slice(0, 4)
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="268" height="28" role="img" aria-label="DreamEx AI Ready ${score}/100 (${safeGrade})"><rect width="268" height="28" rx="6" fill="#0b1324"/><rect x="172" width="96" height="28" rx="6" fill="#10b981"/><text x="12" y="18" fill="#e2e8f0" font-family="ui-monospace,monospace" font-size="11" font-weight="700">${safeDomain}</text><text x="184" y="18" fill="#04120c" font-family="ui-monospace,monospace" font-size="11" font-weight="800">${score}/100 ${safeGrade}</text></svg>`
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+}
 
 interface GraderPillar {
   id: string
@@ -116,6 +124,7 @@ function buildOfflineHeuristicReport(rawInput: string): GraderReport {
 
 export default function AiReadinessGraderPage() {
   const { language } = useLanguage()
+  const navigate = useNavigate()
   const en = language === 'en'
   const [searchParams, setSearchParams] = useSearchParams()
   const initialDomain = searchParams.get('domain') || 'dreamex.tech'
@@ -250,7 +259,7 @@ export default function AiReadinessGraderPage() {
       <section className="grader-hero" aria-labelledby="grader-heading">
         <span className="grader-kicker">
           <Sparkles size={13} />
-          {en ? 'AI READINESS, ZERO-TRUST SECURITY & ARCHITECTURE GRADER · v6.0' : 'GRADER KESIAPAN AI, KEAMANAN ZERO-TRUST & ARSITEKTUR · v6.0'}
+          {en ? 'AI READINESS, ZERO-TRUST SECURITY & ARCHITECTURE GRADER · v13.0' : 'GRADER KESIAPAN AI, KEAMANAN ZERO-TRUST & ARSITEKTUR · v13.0'}
         </span>
         <h1 id="grader-heading" data-testid="grader-title">
           {en ? (
@@ -387,6 +396,13 @@ export default function AiReadinessGraderPage() {
               alt={`DreamEx AI Ready score ${report.score}/100 (${report.grade}) for ${report.domain}`}
               height={28}
               loading="lazy"
+              onError={e => {
+                const img = e.currentTarget
+                if (!img.dataset.fallbackApplied) {
+                  img.dataset.fallbackApplied = '1'
+                  img.src = buildInlineBadgeDataUri(report.domain, report.score, report.grade)
+                }
+              }}
             />
           </div>
 
@@ -409,6 +425,29 @@ export default function AiReadinessGraderPage() {
               onClick={() => void copyText(shareReportUrl, 'Shareable certificate URL copied!', 'Tautan sertifikat tersalin!')}
             >
               <Share2 size={14} /> {en ? 'Copy Certificate URL' : 'Salin URL Sertifikat'}
+            </button>
+            <button
+              type="button"
+              className="button button-ghost"
+              data-testid="grader-push-to-jira-btn"
+              onClick={() => {
+                const actionChecks = report.checks.filter(c => !c.passed)
+                const targets = actionChecks.length ? actionChecks.slice(0, 3) : report.checks.slice(0, 1)
+                queueJiraTicketsFromSuite(
+                  targets.map(c => ({
+                    title: `[Grader:${report.domain}] ${c.passed ? 'Maintain' : 'Remediate'} ${c.label}`,
+                    description: `${c.detail}\n\nAudited score: ${report.score}/100 (${report.grade}) via DreamEx AI & Security Grader.`,
+                    type: 'security',
+                    priority: c.passed ? 'Medium' : 'Highest',
+                    points: c.passed ? 2 : 5,
+                    labels: ['grader-audit', c.pillar.toLowerCase()],
+                    sourceSuite: 'tools',
+                  })),
+                )
+                navigate('/jira')
+              }}
+            >
+              <ClipboardList size={14} /> {en ? 'Auto-Create Jira Tickets →' : 'Buat Tiket Jira Otomatis →'}
             </button>
             <a
               className="button button-ghost"

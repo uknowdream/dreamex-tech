@@ -1103,18 +1103,23 @@ body {
 /* Contextual OS Submenu Dock on Engineering Suites */
 .tool-context-shell {
   width: min(1160px, calc(100% - 48px));
-  margin: 14px auto 0;
+  margin: 10px auto 0;
   padding: 10px 14px;
-  border-radius: 16px;
+  border-radius: 14px;
   border: 1px solid rgba(125, 211, 252, 0.2);
   background:
     radial-gradient(ellipse 50% 80% at 92% 0%, rgba(56, 189, 248, 0.08), transparent 60%),
     linear-gradient(155deg, rgba(11, 20, 38, 0.9), rgba(6, 11, 22, 0.95));
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24), inset 0 1px rgba(255, 255, 255, 0.06);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), inset 0 1px rgba(255, 255, 255, 0.06);
   display: grid;
-  gap: 9px;
+  gap: 8px;
   min-width: 0;
   max-width: calc(100% - 24px);
+}
+
+.tool-context-shell.is-compact {
+  padding: 6px 12px;
+  gap: 6px;
 }
 
 .tool-context-top {
