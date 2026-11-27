@@ -2459,3 +2459,105 @@ html[data-theme="light"] .tool-pinned-chip {
   border-color: rgba(2, 132, 199, 0.24);
   color: #075985;
 }
+
+/* v14.0 Daylight Alabaster Light Mode Contrast Perfection (Overrides dynamic premium-experience.v2.css cleanly) */
+html[data-theme="light"] #root .home-page .hero-cockpit-tabs {
+  background: #f1f5f9 !important;
+  border-bottom-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+html[data-theme="light"] #root .home-page .hero-cockpit-tab {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.16) !important;
+  color: #334155 !important;
+}
+
+html[data-theme="light"] #root .home-page .hero-cockpit-tab:hover {
+  border-color: rgba(3, 105, 161, 0.45) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] #root .home-page .hero-cockpit-tab.active {
+  background: linear-gradient(135deg, #047857 0%, #0369a1 100%) !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 16px rgba(4, 120, 87, 0.24) !important;
+}
+
+html[data-theme="light"] #root .home-page .hero-mini-btn {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.2) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] #root .home-page .hero-mini-btn:hover {
+  background: #eff6ff !important;
+  border-color: #0284c7 !important;
+  color: #0369a1 !important;
+}
+
+html[data-theme="light"] #root .home-page .filter {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.18) !important;
+  color: #1e293b !important;
+}
+
+html[data-theme="light"] #root .home-page .filter:hover {
+  background: #f1f5f9 !important;
+  border-color: rgba(4, 120, 87, 0.4) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] #root .home-page .filter.active {
+  background: #047857 !important;
+  border-color: #047857 !important;
+  color: #ffffff !important;
+}
+
+html[data-theme="light"] #root .home-page .role-funnel-pill {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.15) !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05) !important;
+}
+
+html[data-theme="light"] #root .home-page .role-funnel-pill b {
+  color: #047857 !important;
+}
+
+html[data-theme="light"] #root .home-page .role-funnel-pill:hover {
+  background: #eff6ff !important;
+  border-color: #0284c7 !important;
+  color: #0369a1 !important;
+}
+
+html[data-theme="light"] .article-card,
+html[data-theme="light"] .related-grid .article-card {
+  background: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06) !important;
+}
+
+html[data-theme="light"] .article-card h3 a,
+html[data-theme="light"] .related-grid .article-card h3 a {
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] .article-card > p,
+html[data-theme="light"] .related-grid .article-card > p {
+  color: #334155 !important;
+}
+
+html[data-theme="light"] .category-pill,
+html[data-theme="light"] .article-header .category-pill {
+  background: #e0f2fe !important;
+  border-color: rgba(3, 105, 161, 0.28) !important;
+  color: #0c4a6e !important;
+}
+
+html[data-theme="light"] .dx-proto-holo-frame {
+  background: linear-gradient(155deg, #ffffff, #eef4fc) !important;
+  border-color: rgba(15, 23, 42, 0.14) !important;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08) !important;
+}

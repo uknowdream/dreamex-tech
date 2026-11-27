@@ -1260,7 +1260,7 @@ export function SovereignWorkbenchPage({ initialPillar = 'eng' }: { initialPilla
           <article className="sovereign-panel" style={{ gridColumn: '1 / -1' }}>
             <div className="sovereign-panel-head">
               <div>
-                <span className="sovereign-kicker">NEW FLAGSHIP SUITE · DREAMEX JIRA AGILE & SPRINT OS (v7.0)</span>
+                <span className="sovereign-kicker">FLAGSHIP SUITE · DREAMEX JIRA CLOUD ENTERPRISE (v14.0)</span>
                 <h2>{en ? 'Need a Full Interactive Jira Kanban Board, Backlog, Gantt Roadmap & Burndown?' : 'Butuh Board Kanban Jira Lengkap, Backlog Sprint, Roadmap Gantt & Grafik Burndown?'}</h2>
                 <p>{en ? 'Launch the standalone Jira Enterprise OS (/jira) with drag-and-drop WIP columns, swimlanes, executable JQL filtering, Epic timelines, automation rules, and bulk Jira CSV/ADF export.' : 'Buka aplikasi penuh Jira Enterprise OS (/jira) dengan drag-and-drop berbatas WIP, swimlane, filter kueri JQL langsung, timeline Epic, aturan otomasi, dan ekspor massal CSV/ADF.'}</p>
               </div>

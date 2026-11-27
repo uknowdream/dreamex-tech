@@ -384,7 +384,7 @@ export default function AiReadinessGraderPage() {
           <h2 style={{ margin: '8px 0 6px', fontSize: 20 }}>
             {en ? 'Share your AI Readiness & Security score' : 'Bagikan skor Kesiapan AI & Keamanan Anda'}
           </h2>
-          <p style={{ margin: 0, fontSize: 13.5, color: '#94a3b8', lineHeight: 1.6 }}>
+          <p style={{ margin: 0, fontSize: 13.5, color: 'var(--muted, #64748b)', lineHeight: 1.6 }}>
             {en
               ? 'Embed this live SVG shield in your repository README.md or share the interactive audit link on LinkedIn & X.'
               : 'Pasang lencana SVG hidup ini di README.md GitHub Anda atau bagikan tautan sertifikat audit ke LinkedIn & X.'}

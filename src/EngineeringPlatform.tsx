@@ -1056,7 +1056,7 @@ export function PerformanceObservatoryPage() {
         <h1>
           {en ? (
             <>
-              Measure what
+              Measure what{' '}
               <br />
               <span>users experience.</span>
             </>
